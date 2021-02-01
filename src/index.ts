@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs'
+import mkdirp from 'mkdirp'
 import chokidar from 'chokidar'
 import { Context, Module } from '@nuxt/types'
 import consola from 'consola'
@@ -16,6 +17,7 @@ export interface GraphqlMiddlewareConfig {
   debug: boolean
   queries: Record<string, string>
   mutations: Record<string, string>
+  outputPath: string
 }
 
 enum FileType {
@@ -29,26 +31,36 @@ interface FileMapItem {
   file: string
 }
 
-function resolveGraphqlFile(file: string, basedir: string): Promise<string> {
+function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
   return fs.promises
     .readFile(file)
     .then((buffer) => buffer.toString())
-    .then((source) => graphqlImport(source, basedir))
+    .then((source) => graphqlImport(source, resolver))
+}
+
+function writeSource(dest: string, filePath: string, source: string) {
+  const fileName = path.basename(filePath)
+  const out = path.resolve(dest, fileName)
+  return fs.promises.writeFile(out, source)
 }
 
 function resolveGraphql(
   files: Record<string, string>,
   map: Map<string, string>,
-  basedir: string,
+  resolver: any,
   filesMap: Map<string, FileMapItem>,
-  type: FileType
+  type: FileType,
+  outputPath: string
 ) {
   return Promise.all(
     Object.keys(files).map((name) => {
       const filePath = files[name]
-      const file = path.resolve(basedir, filePath)
-      return resolveGraphqlFile(file, basedir).then((source) => {
+      const file = resolver(filePath)
+      return resolveGraphqlFile(file, resolver).then((source) => {
         map.set(name, source)
+        if (outputPath) {
+          writeSource(outputPath, filePath, source)
+        }
         filesMap.set(file, {
           type,
           name,
@@ -62,7 +74,7 @@ function resolveGraphql(
 /*
  * Install the Nuxt GraphQL Middleware module.
  */
-const graphqlMiddleware: Module = function () {
+const graphqlMiddleware: Module = async function () {
   const options = this.options
   const provided = (this.options.graphqlMiddleware ||
     {}) as Partial<GraphqlMiddlewareConfig>
@@ -73,8 +85,9 @@ const graphqlMiddleware: Module = function () {
     debug: provided.debug || options.dev,
     queries: provided.queries || {},
     mutations: provided.mutations || {},
+    outputPath: provided.outputPath || '',
   }
-  const rootDir = this.options.rootDir
+  const resolver = this.nuxt.resolver.resolvePath
 
   // Add the API helper plugin.
   this.addPlugin({
@@ -88,19 +101,32 @@ const graphqlMiddleware: Module = function () {
   const queries = new Map()
   const mutations = new Map()
 
+  const outputPath = config.outputPath ? resolver(config.outputPath) : ''
+  if (outputPath) {
+    await mkdirp(outputPath)
+  }
+
   /**
    * Build all queries and mutations.
    */
   function build() {
     logger.log('Building GraphQL files...')
     return Promise.all([
-      resolveGraphql(config.queries, queries, rootDir, fileMap, FileType.Query),
+      resolveGraphql(
+        config.queries,
+        queries,
+        resolver,
+        fileMap,
+        FileType.Query,
+        outputPath
+      ),
       resolveGraphql(
         config.mutations,
         mutations,
-        rootDir,
+        resolver,
         fileMap,
-        FileType.Mutation
+        FileType.Mutation,
+        outputPath
       ),
     ]).then(() => {
       logger.success('Finished building GraphQL files')
@@ -111,10 +137,15 @@ const graphqlMiddleware: Module = function () {
    * Watch *.graphql files and rebuild everything on change.
    */
   function watchFiles() {
+    const ignored = ['node_modules', '.nuxt']
+    if (config.outputPath) {
+      ignored.push(config.outputPath)
+    }
     const filesWatcher = (options._filesWatcher = chokidar.watch(
       './**/*.graphql',
       {
         ignoreInitial: true,
+        ignored,
       }
     ))
 
