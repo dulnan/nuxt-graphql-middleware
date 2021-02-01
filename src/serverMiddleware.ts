@@ -19,15 +19,16 @@ export interface GraphqlServerMiddlewareConfig {
   mutations: Map<string, any>
 }
 
-export default function createServerMiddleware(config: GraphqlServerMiddlewareConfig) {
+export default function createServerMiddleware(
+  config: GraphqlServerMiddlewareConfig
+) {
   const app = express()
   const client = new GraphQLClient(config.graphqlServer)
 
   /**
-  * Handler for the query route.
-  */
+   * Handler for the query route.
+   */
   async function query(req: Request, res: Response) {
-    console.log('QUERY')
     const name = req.query.name as string
 
     if (!name || !config.queries.has(name)) {
@@ -35,20 +36,20 @@ export default function createServerMiddleware(config: GraphqlServerMiddlewareCo
       return
     }
 
-    try  {
+    try {
       const variables = getVariables(req.query.variables as string)
       const query = config.queries.get(name)
       const data = await client.request(query, variables)
       return res.json(data)
-    } catch(e) {
+    } catch (e) {
       console.log(e)
       return res.status(500).send()
     }
   }
 
   /**
-  * Handler for the mutate route.
-  */
+   * Handler for the mutate route.
+   */
   async function mutate(req: Request, res: Response) {
     const name = req.query.name as string
 

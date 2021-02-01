@@ -2,9 +2,9 @@ import path from 'path'
 import fs from 'fs'
 import chokidar from 'chokidar'
 import { Context, Module } from '@nuxt/types'
+import consola from 'consola'
 import serverMiddleware from './serverMiddleware'
 import graphqlImport from './graphqlImport'
-import consola from 'consola'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
@@ -20,7 +20,7 @@ export interface GraphqlMiddlewareConfig {
 
 enum FileType {
   Query = 'query',
-  Mutation = 'mutation'
+  Mutation = 'mutation',
 }
 
 interface FileMapItem {
@@ -29,22 +29,44 @@ interface FileMapItem {
   file: string
 }
 
-function resolveGraphqlFile(file: string, basedir: string) {
-  return graphqlImport(fs.readFileSync(file).toString(), basedir)
+function resolveGraphqlFile(file: string, basedir: string): Promise<string> {
+  return fs.promises
+    .readFile(file)
+    .then((buffer) => buffer.toString())
+    .then((source) => graphqlImport(source, basedir))
 }
 
+function resolveGraphql(
+  files: Record<string, string>,
+  map: Map<string, string>,
+  basedir: string,
+  filesMap: Map<string, FileMapItem>,
+  type: FileType
+) {
+  return Promise.all(
+    Object.keys(files).map((name) => {
+      const filePath = files[name]
+      const file = path.resolve(basedir, filePath)
+      return resolveGraphqlFile(file, basedir).then((source) => {
+        map.set(name, source)
+        filesMap.set(file, {
+          type,
+          name,
+          file,
+        })
+      })
+    })
+  )
+}
 
 /*
- * Attaches a custom renderRoute method.
- *
- * It will store the SSR result in a local cache, if it is deemed cacheable.
- * Only anonymous requests (using the backend "API" user) will receive a cached
- * response.
+ * Install the Nuxt GraphQL Middleware module.
  */
 const graphqlMiddleware: Module = function () {
-  const nuxt: any = this.nuxt
   const options = this.options
-  const provided = (this.options.graphqlMiddleware || {}) as Partial<GraphqlMiddlewareConfig>
+  const provided = (this.options.graphqlMiddleware ||
+    {}) as Partial<GraphqlMiddlewareConfig>
+
   const config: GraphqlMiddlewareConfig = {
     graphqlServer: provided.graphqlServer || '',
     endpointNamespace: provided.endpointNamespace || '/__graphql_middleware',
@@ -54,49 +76,47 @@ const graphqlMiddleware: Module = function () {
   }
   const rootDir = this.options.rootDir
 
-  // Add the cache helper plugin.
+  // Add the API helper plugin.
   this.addPlugin({
     src: PLUGIN_PATH,
     options: {
-      namespace: config.endpointNamespace
-    }
+      namespace: config.endpointNamespace,
+    },
   })
 
   const fileMap: Map<string, FileMapItem> = new Map()
   const queries = new Map()
   const mutations = new Map()
 
-  function resolveGraphql(files: Record<string, string>, map: Map<string, string>, basedir: string, filesMap: Map<string, FileMapItem>, type: FileType) {
-    return Object.keys(files).map(name => {
-      const filePath = files[name]
-      const file = path.resolve(basedir, filePath)
-      const source = resolveGraphqlFile(file, basedir)
-      filesMap.set(file, {
-        type,
-        name,
-        file
-      })
-        return {
-          filePath,
-          name,
-          source
-        }
-    }).forEach((item) => {
-      map.set(item.name, item.source)
-    })
-  }
-
+  /**
+   * Build all queries and mutations.
+   */
   function build() {
     logger.log('Building GraphQL files...')
-    resolveGraphql(config.queries, queries, rootDir, fileMap, FileType.Query)
-    resolveGraphql(config.mutations, mutations, rootDir, fileMap, FileType.Mutation)
-    logger.success('Finished building GraphQL files')
+    return Promise.all([
+      resolveGraphql(config.queries, queries, rootDir, fileMap, FileType.Query),
+      resolveGraphql(
+        config.mutations,
+        mutations,
+        rootDir,
+        fileMap,
+        FileType.Mutation
+      ),
+    ]).then(() => {
+      logger.success('Finished building GraphQL files')
+    })
   }
 
+  /**
+   * Watch *.graphql files and rebuild everything on change.
+   */
   function watchFiles() {
-    const filesWatcher = options._filesWatcher = chokidar.watch('./**/*.graphql', {
-      ignoreInitial: true
-    })
+    const filesWatcher = (options._filesWatcher = chokidar.watch(
+      './**/*.graphql',
+      {
+        ignoreInitial: true,
+      }
+    ))
 
     if (filesWatcher) {
       logger.info('Watching for query changes')
@@ -107,11 +127,14 @@ const graphqlMiddleware: Module = function () {
   }
 
   this.nuxt.hook('build:done', () => {
-    build()
-    if (options.debug) {
-      logger.info('Available queries and mutations:')
-      console.table(Array.from(fileMap.entries()).map(([_key, value]) => value))
-    }
+    build().then(() => {
+      if (options.debug) {
+        logger.info('Available queries and mutations:')
+        console.table(
+          Array.from(fileMap.entries()).map(([_key, value]) => value)
+        )
+      }
+    })
     if (this.nuxt.options.dev) {
       watchFiles()
     }
