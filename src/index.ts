@@ -4,7 +4,9 @@ import mkdirp from 'mkdirp'
 import chokidar from 'chokidar'
 import { Context, Module } from '@nuxt/types'
 import consola from 'consola'
-import serverMiddleware from './serverMiddleware'
+import serverMiddleware, {
+  GraphqlServerMiddlewareConfig,
+} from './serverMiddleware'
 import graphqlImport from './graphqlImport'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
@@ -18,6 +20,7 @@ export interface GraphqlMiddlewareConfig {
   queries: Record<string, string>
   mutations: Record<string, string>
   outputPath: string
+  server?: GraphqlServerMiddlewareConfig
 }
 
 enum FileType {
@@ -86,6 +89,7 @@ const graphqlMiddleware: Module = async function () {
     queries: provided.queries || {},
     mutations: provided.mutations || {},
     outputPath: provided.outputPath || '',
+    server: provided.server,
   }
   const resolver = this.nuxt.resolver.resolvePath
 
@@ -174,11 +178,12 @@ const graphqlMiddleware: Module = async function () {
   // Add out server middleware to manage the cache.
   this.addServerMiddleware({
     path: config.endpointNamespace,
-    handler: serverMiddleware({
-      graphqlServer: config.graphqlServer,
+    handler: serverMiddleware(
+      config.graphqlServer,
       queries,
       mutations,
-    }),
+      config.server
+    ),
   })
 }
 

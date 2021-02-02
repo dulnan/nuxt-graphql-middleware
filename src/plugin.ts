@@ -94,7 +94,7 @@ const apiPlugin: Plugin = (context, inject) => {
   if (process.server) {
     baseURL = 'http://0.0.0.0:3000' + namespace
   }
-  inject('api', new API(baseURL, context.req?.headers))
+  inject('graphql', new API(baseURL, context.req?.headers))
 }
 
 export default apiPlugin
