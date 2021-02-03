@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import { Plugin } from '@nuxt/types'
 
 const IS_DEV = process.env.NODE_ENV === 'development'
@@ -15,7 +16,7 @@ export interface GraphqlMiddlewarePluginConfig {
   cacheInServer?: boolean
 }
 
-class GraphqlMiddlewarePlugin {
+export class GraphqlMiddlewarePlugin {
   baseURL: string
   headers: any
   cache?: Map<string, any>
@@ -86,27 +87,13 @@ class GraphqlMiddlewarePlugin {
   }
 }
 
-declare module 'vue/types/vue' {
-  interface Vue {
-    $graphql: GraphqlMiddlewarePlugin
-  }
-}
-
-declare module '@nuxt/types' {
-  interface NuxtAppOptions {
-    $graphql: GraphqlMiddlewarePlugin
-  }
-  interface Context {
-    $graphql: GraphqlMiddlewarePlugin
-  }
-}
-
 const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
   // @ts-ignore
   const cacheInBrowser = "<%= options.cacheInBrowser || '' %>" === 'true'
   // @ts-ignore
   const cacheInServer = "<%= options.cacheInServer || '' %>" === 'true'
+
   let baseURL = namespace
   if (process.server) {
     baseURL = 'http://0.0.0.0:3000' + namespace

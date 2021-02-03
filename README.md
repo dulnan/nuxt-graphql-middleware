@@ -34,6 +34,9 @@ module.exports = {
     graphqlServer: 'http://example.com/graphql',
     queries: {
       articles: '~/pages/query.articles.graphql',
+    },
+    plugin: {
+      enabled: true
     }
   }
 }

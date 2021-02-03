@@ -17,7 +17,7 @@
   },
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
-  "types": "./lib/types/index.d.ts",
+  "types": "./types.d.ts",
   "files": [
     "lib/"
   ],
