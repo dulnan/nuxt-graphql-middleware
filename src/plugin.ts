@@ -20,14 +20,10 @@ class GraphqlMiddlewarePlugin {
   headers: any
   cache?: Map<string, any>
 
-  constructor(
-    baseURL: string,
-    headers: any,
-    options: GraphqlMiddlewarePluginConfig
-  ) {
+  constructor(baseURL: string, headers: any, useCache: boolean) {
     this.baseURL = baseURL
     this.headers = headers || {}
-    if (options.cacheInBrowser) {
+    if (useCache) {
       this.cache = new Map()
     }
   }
@@ -115,12 +111,12 @@ const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   if (process.server) {
     baseURL = 'http://0.0.0.0:3000' + namespace
   }
+
+  const useCache =
+    (process.server && cacheInServer) || (process.client && cacheInBrowser)
   inject(
     'graphql',
-    new GraphqlMiddlewarePlugin(baseURL, context.req?.headers, {
-      cacheInBrowser,
-      cacheInServer,
-    })
+    new GraphqlMiddlewarePlugin(baseURL, context.req?.headers, useCache)
   )
 }
 
