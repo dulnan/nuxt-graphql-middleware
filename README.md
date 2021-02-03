@@ -115,10 +115,14 @@ Map of query name => filePath.
 Map of mutation name => filePath.
 
 ### outputPath: string
-If set, the module will write the compiled queries and mutations in this folder.
+If set, the module will write the compiled queries and mutations in this
+folder.
 
-### clientPlugin.cacheInBrowser: boolean
-Cache requests in the client plugin.
+### plugin.enabled: boolean
+Enable the helper plugin.
+
+### plugin.cacheInBrowser: boolean
+Cache requests in the plugin (on client side / browser).
 
 This enables a simple cache (using a Map) in the browser, which will cache up
 to 30 queries. This is useful to provide near instant rendering when going back
@@ -126,8 +130,14 @@ and forth in the browser history.
 
 Queries are cached based on their full URL (incl. query string).
 
+### plugin.cacheInServer: boolean
+Same as cacheInBrowser, but the queries are also cached server side.
+*Note:* There is no way to purge this cache! Only use this if you're fine with
+returning potentially outdated responses.
+
 ### server.middleware: (req: Request, res: Response, next: NextFunction) => any
-An express middleware. Can be used for example to add an authentication or CORS check.
+An express middleware. Can be used for example to add an authentication or CORS
+check.
 
 ```javascript
 function(req, res, next) {
@@ -196,8 +206,10 @@ module.exports = {
       createPost: '~/components/Comment/mutation.createPost.graphql'
     },
     outputPath: '~/graphql_tmp'
-    clientPlugin: {
-      cacheInBrowser: true
+    plugin: {
+      enabled: true,
+      cacheInBrowser: true,
+      cacheInServer: false,
     },
     server: {
       middleware: function(req, res, next) {

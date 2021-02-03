@@ -21,7 +21,7 @@ export interface GraphqlMiddlewareConfig {
   queries: Record<string, string>
   mutations: Record<string, string>
   outputPath: string
-  clientPlugin?: GraphqlMiddlewarePluginConfig
+  plugin?: GraphqlMiddlewarePluginConfig
   server?: GraphqlServerMiddlewareConfig
 }
 
@@ -92,18 +92,25 @@ const graphqlMiddleware: Module = async function () {
     mutations: provided.mutations || {},
     outputPath: provided.outputPath || '',
     server: provided.server,
-    clientPlugin: provided.clientPlugin || {},
+    plugin: {
+      enabled: !!provided.plugin?.enabled,
+      cacheInBrowser: !!provided.plugin?.cacheInBrowser,
+      cacheInServer: !!provided.plugin?.cacheInServer,
+    },
   }
   const resolver = this.nuxt.resolver.resolvePath
 
   // Add the API helper plugin.
-  this.addPlugin({
-    src: PLUGIN_PATH,
-    options: {
-      namespace: config.endpointNamespace,
-      cacheInBrowser: config.clientPlugin?.cacheInBrowser ? 'true' : 'false',
-    },
-  })
+  if (config.plugin?.enabled) {
+    this.addPlugin({
+      src: PLUGIN_PATH,
+      options: {
+        namespace: config.endpointNamespace,
+        cacheInBrowser: config.plugin?.cacheInBrowser ? 'true' : 'false',
+        cacheInServer: config.plugin?.cacheInServer ? 'true' : 'false',
+      },
+    })
+  }
 
   const fileMap: Map<string, FileMapItem> = new Map()
   const queries = new Map()

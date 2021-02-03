@@ -10,7 +10,9 @@ function log(action: string, path: string, message: string) {
 }
 
 export interface GraphqlMiddlewarePluginConfig {
+  enabled?: boolean
   cacheInBrowser?: boolean
+  cacheInServer?: boolean
 }
 
 class GraphqlMiddlewarePlugin {
@@ -30,6 +32,9 @@ class GraphqlMiddlewarePlugin {
     }
   }
 
+  /**
+   * Perform a GraphQL query via the middleware.
+   */
   query(name: string, variables?: any) {
     const params = new URLSearchParams({
       name,
@@ -56,7 +61,6 @@ class GraphqlMiddlewarePlugin {
         throw new Error('Server Error')
       })
       .then((data) => {
-        // Only cache on client side.
         // Keep the cache from getting too big.
         if (this.cache && this.cache.size > 30) {
           const key = this.cache.keys().next().value
@@ -67,6 +71,9 @@ class GraphqlMiddlewarePlugin {
       })
   }
 
+  /**
+   * Perform a GraphQL mutation via the middleware.
+   */
   mutate(name: string, variables?: any) {
     const params = new URLSearchParams({
       name,
@@ -85,7 +92,7 @@ class GraphqlMiddlewarePlugin {
 
 declare module 'vue/types/vue' {
   interface Vue {
-    $api: GraphqlMiddlewarePlugin
+    $graphql: GraphqlMiddlewarePlugin
   }
 }
 
@@ -98,10 +105,12 @@ declare module '@nuxt/types' {
   }
 }
 
-const apiPlugin: Plugin = (context, inject) => {
+const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
   // @ts-ignore
-  const cacheInBrowser = "<%= options.browserCache || '' %>" === 'true'
+  const cacheInBrowser = "<%= options.cacheInBrowser || '' %>" === 'true'
+  // @ts-ignore
+  const cacheInServer = "<%= options.cacheInServer || '' %>" === 'true'
   let baseURL = namespace
   if (process.server) {
     baseURL = 'http://0.0.0.0:3000' + namespace
@@ -110,8 +119,9 @@ const apiPlugin: Plugin = (context, inject) => {
     'graphql',
     new GraphqlMiddlewarePlugin(baseURL, context.req?.headers, {
       cacheInBrowser,
+      cacheInServer,
     })
   )
 }
 
-export default apiPlugin
+export default graphqlMiddlewarePlugin

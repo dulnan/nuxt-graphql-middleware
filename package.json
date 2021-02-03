@@ -1,7 +1,8 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Middleware to perform GraphQL requests as a server middleware.",
+  "license": "MIT",
   "author": {
     "name": "Jan Hug",
     "url": "https://dulnan.net",
@@ -24,8 +25,7 @@
     "@graphql-fragment-import/lib": "^1.1.1",
     "express": "^4.17.1",
     "graphql": "^15.5.0",
-    "graphql-request": "^3.4.0",
-    "graphql-tag": "^2.11.0"
+    "graphql-request": "^3.4.0"
   },
   "devDependencies": {
     "@nuxt/types": "^2.14.12",
