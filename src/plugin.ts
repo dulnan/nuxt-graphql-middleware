@@ -9,15 +9,25 @@ function log(action: string, path: string, message: string) {
   }
 }
 
-class API {
+export interface GraphqlMiddlewarePluginConfig {
+  cacheInBrowser?: boolean
+}
+
+class GraphqlMiddlewarePlugin {
   baseURL: string
   headers: any
-  cache: Map<string, any>
+  cache?: Map<string, any>
 
-  constructor(baseURL: string, headers: any) {
+  constructor(
+    baseURL: string,
+    headers: any,
+    options: GraphqlMiddlewarePluginConfig
+  ) {
     this.baseURL = baseURL
     this.headers = headers || {}
-    this.cache = new Map()
+    if (options.cacheInBrowser) {
+      this.cache = new Map()
+    }
   }
 
   query(name: string, variables?: any) {
@@ -26,7 +36,7 @@ class API {
       variables: JSON.stringify(variables || {}),
     })
     const url = this.baseURL + '/query?' + params.toString()
-    if (this.cache.has(url)) {
+    if (this.cache?.has(url)) {
       log('query', url, 'Loading from cache')
       return Promise.resolve(this.cache.get(url))
     }
@@ -48,11 +58,11 @@ class API {
       .then((data) => {
         // Only cache on client side.
         // Keep the cache from getting too big.
-        if (this.cache.size > 30) {
+        if (this.cache && this.cache.size > 30) {
           const key = this.cache.keys().next().value
           this.cache.delete(key)
         }
-        this.cache.set(url, data)
+        this.cache?.set(url, data)
         return data
       })
   }
@@ -75,26 +85,33 @@ class API {
 
 declare module 'vue/types/vue' {
   interface Vue {
-    $api: API
+    $api: GraphqlMiddlewarePlugin
   }
 }
 
 declare module '@nuxt/types' {
   interface NuxtAppOptions {
-    $api: API
+    $graphql: GraphqlMiddlewarePlugin
   }
   interface Context {
-    $api: API
+    $graphql: GraphqlMiddlewarePlugin
   }
 }
 
 const apiPlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
+  // @ts-ignore
+  const cacheInBrowser = "<%= options.browserCache || '' %>" === 'true'
   let baseURL = namespace
   if (process.server) {
     baseURL = 'http://0.0.0.0:3000' + namespace
   }
-  inject('graphql', new API(baseURL, context.req?.headers))
+  inject(
+    'graphql',
+    new GraphqlMiddlewarePlugin(baseURL, context.req?.headers, {
+      cacheInBrowser,
+    })
+  )
 }
 
 export default apiPlugin

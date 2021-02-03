@@ -8,6 +8,7 @@ import serverMiddleware, {
   GraphqlServerMiddlewareConfig,
 } from './serverMiddleware'
 import graphqlImport from './graphqlImport'
+import { GraphqlMiddlewarePluginConfig } from './plugin'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
@@ -20,6 +21,7 @@ export interface GraphqlMiddlewareConfig {
   queries: Record<string, string>
   mutations: Record<string, string>
   outputPath: string
+  clientPlugin?: GraphqlMiddlewarePluginConfig
   server?: GraphqlServerMiddlewareConfig
 }
 
@@ -90,6 +92,7 @@ const graphqlMiddleware: Module = async function () {
     mutations: provided.mutations || {},
     outputPath: provided.outputPath || '',
     server: provided.server,
+    clientPlugin: provided.clientPlugin || {},
   }
   const resolver = this.nuxt.resolver.resolvePath
 
@@ -98,6 +101,7 @@ const graphqlMiddleware: Module = async function () {
     src: PLUGIN_PATH,
     options: {
       namespace: config.endpointNamespace,
+      cacheInBrowser: config.clientPlugin?.cacheInBrowser ? 'true' : 'false',
     },
   })
 

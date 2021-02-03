@@ -17,6 +17,7 @@ So you can have all the benefits of GraphQL but without any bloat.
 - GraphQL queries and mutations using graphql-request
 - Client plugin to perform queries or mutations
 - Fully flexible: Modify request headers, responses or handle errors
+- HMR for queries and mutations
 
 # Setup
 
@@ -44,7 +45,7 @@ module.exports = {
 
 ### Simple query
 ```javascript
-async({ app }) {
+asyncData({ app }) {
   return app.$graphql.query('articles').then(data => {
     return { articles: data.articles }
   })
@@ -57,7 +58,7 @@ Anything you provide in the second argument will be passed 1:1 as variables to
 the GraphQL request.
 
 ```javascript
-async({ app }) {
+asyncData({ app }) {
   return app.$graphql.query('articles', { limit: 10 }).then(data => {
     return { articles: data.articles }
   })
@@ -79,7 +80,7 @@ createPost(post) {
 
 ## Custom requests
 
-You can do your own requests without using the API.
+You can do your own requests without using the plugin.
 Query variables are passed as a JSON encoded string.
 
 ```javascript
@@ -115,6 +116,15 @@ Map of mutation name => filePath.
 
 ### outputPath: string
 If set, the module will write the compiled queries and mutations in this folder.
+
+### clientPlugin.cacheInBrowser: boolean
+Cache requests in the client plugin.
+
+This enables a simple cache (using a Map) in the browser, which will cache up
+to 30 queries. This is useful to provide near instant rendering when going back
+and forth in the browser history.
+
+Queries are cached based on their full URL (incl. query string).
 
 ### server.middleware: (req: Request, res: Response, next: NextFunction) => any
 An express middleware. Can be used for example to add an authentication or CORS check.
@@ -186,6 +196,9 @@ module.exports = {
       createPost: '~/components/Comment/mutation.createPost.graphql'
     },
     outputPath: '~/graphql_tmp'
+    clientPlugin: {
+      cacheInBrowser: true
+    },
     server: {
       middleware: function(req, res, next) {
         if (isLoggedIn(req.headers.cookie)) {
@@ -229,3 +242,6 @@ module.exports = {
   }
 }
 ```
+
+# TODO
+- Pass port to client plugin
