@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Middleware to perform GraphQL requests as a server middleware.",
   "license": "MIT",
   "author": {
@@ -19,7 +19,8 @@
   "module": "./lib/esm/index.js",
   "types": "./types.d.ts",
   "files": [
-    "lib/"
+    "lib/",
+    "types.d.ts"
   ],
   "dependencies": {
     "@graphql-fragment-import/lib": "^1.1.1",

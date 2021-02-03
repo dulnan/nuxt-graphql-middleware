@@ -172,19 +172,17 @@ export const graphqlMiddleware: Module = async function () {
     }
   }
 
-  this.nuxt.hook('build:done', () => {
-    build().then(() => {
-      if (options.debug) {
-        logger.info('Available queries and mutations:')
-        console.table(
-          Array.from(fileMap.entries()).map(([_key, value]) => value)
-        )
-      }
-    })
-    if (this.nuxt.options.dev) {
-      watchFiles()
+  build().then(() => {
+    if (options.debug) {
+      logger.info('Available queries and mutations:')
+      console.table(
+        Array.from(fileMap.entries()).map(([_key, value]) => value)
+      )
     }
   })
+  if (this.nuxt.options.dev) {
+    watchFiles()
+  }
 
   // Add out server middleware to manage the cache.
   this.addServerMiddleware({
