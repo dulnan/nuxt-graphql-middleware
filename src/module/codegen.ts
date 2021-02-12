@@ -25,6 +25,7 @@ export interface GraphqlMiddlewareCodegenConfig {
   resolvedQueriesPath: string
   schemaOutputPath: string
   typesOutputPath: string
+  schemaOptions: any
 }
 
 export default function (
@@ -35,7 +36,9 @@ export default function (
   function generateSchema() {
     return generate(
       {
-        schema: graphqlServer,
+        schema: {
+          [graphqlServer]: options.schemaOptions,
+        },
         pluginLoader,
         generates: {
           [schemaPath]: {

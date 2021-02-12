@@ -203,6 +203,9 @@ Enable TypeScript integration.
 ### typescript.schemaOutputPath: string
 Folder where the downloaded schema.graphql file is saved.
 
+### typescript.schemaOptions: [UrlSchemaOptions](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/utils/plugins-helpers/src/types.ts#L74)
+Options passed to graphql-codegen.
+
 ### typescript.typesOutputPath: string
 Folder where the generated graphql-schema.d.ts and graphql-operations.d.ts
 files are saved.
@@ -236,6 +239,11 @@ module.exports = {
       enabled: true,
       schemaOutputPath: '~/schema',
       typesOutputPath: '~/types',
+      schemaOptions: {
+        headers: {
+          Authorization: 'Basic ' + process.env.BASIC_AUTH
+        }
+      }
     },
     server: {
       middleware: function(req, res, next) {

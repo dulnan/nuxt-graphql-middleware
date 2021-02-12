@@ -101,6 +101,7 @@ export const graphqlMiddleware: Module = async function () {
     graphqlServer: provided.graphqlServer || '',
     typescript: {
       enabled: !!provided.typescript?.enabled,
+      schemaOptions: provided.typescript?.schemaOptions,
       resolvedQueriesPath:
         provided.typescript?.resolvedQueriesPath || provided.outputPath || '',
       schemaOutputPath: provided.typescript?.schemaOutputPath || '~/schema',
@@ -142,6 +143,7 @@ export const graphqlMiddleware: Module = async function () {
   const typesOutputPath = resolver(config.typescript?.typesOutputPath)
   const { generateSchema, generateTypes } = codegen(config.graphqlServer, {
     resolvedQueriesPath: config.outputPath,
+    schemaOptions: config.typescript?.schemaOptions,
     schemaOutputPath,
     typesOutputPath,
   })
