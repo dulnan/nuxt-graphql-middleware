@@ -1,23 +1,27 @@
 # Nuxt GraphQL Middleware
 
-GraphQL in the backend, fetch in the frontend.
+GraphQL in the backend, fetch in the frontend. With TypeScript support.
 
 ## Idea
 When using GraphQL you have to bundle your queries in your frontend build and
 send them with every request. If you have lots of queries and/or fragments,
 this can increase your frontend bundle size significantly. In addition you have
-to expose your entire GraphQL endpoint to the public (or use persisted
+to expose your entire GraphQL endpoint to the public (if you don't use persisted
 queries).
 
 This module aims to fix this by performing any GraphQL requests only on the
 server side. It passes the response to the frontend via a simple JSON endpoint.
 So you can have all the benefits of GraphQL but without any bloat.
 
+It optionally generates TypeScript type files of your schema, queries and
+mutations via [graphql-codegen](https://github.com/dotansimha/graphql-code-generator).
+
 ## Features
 - GraphQL queries and mutations using graphql-request
 - Client plugin to perform queries or mutations
 - Fully flexible: Modify request headers, responses or handle errors
 - HMR for queries and mutations
+- TypeScript integration for schema, queries and mutations
 
 # Setup
 
@@ -32,6 +36,9 @@ module.exports = {
   modules: ['nuxt-graphql-middleware'],
   graphqlMiddleware: {
     graphqlServer: 'http://example.com/graphql',
+    typescript: {
+      enabled: true
+    },
     queries: {
       articles: '~/pages/query.articles.graphql',
     },
@@ -70,7 +77,7 @@ asyncData({ app }) {
 
 ### Simple mutation
 
-Anything you provide in the second argument is used as mutation input.
+Anything you provide in the second argument is used as the mutation input.
 ```javascript
 createPost(post) {
   return app.$graphql.mutate('createPost', post).then(response => {
@@ -190,6 +197,17 @@ Handle GraphQL server mutation responses before they are sent to the client.
 ### server.onMutationError: (error: ClientError, req: Request, res: Response) => any
 Handle GraphQL server mutation errors before they are sent to the client.
 
+### typescript.enabled: boolean
+Enable TypeScript integration.
+
+### typescript.schemaOutputPath: string
+Folder where the downloaded schema.graphql file is saved.
+
+### typescript.typesOutputPath: string
+Folder where the generated graphql-schema.d.ts and graphql-operations.d.ts
+files are saved.
+
+
 ## Full working example
 
 ```javascript
@@ -213,6 +231,11 @@ module.exports = {
       enabled: true,
       cacheInBrowser: true,
       cacheInServer: false,
+    },
+    typescript: {
+      enabled: true,
+      schemaOutputPath: '~/schema',
+      typesOutputPath: '~/types',
     },
     server: {
       middleware: function(req, res, next) {

@@ -46,6 +46,7 @@ export default function createServerMiddleware(
   config?: GraphqlServerMiddlewareConfig
 ) {
   const app = express()
+  app.use(express.json())
   const client = new GraphQLClient(graphqlServer)
 
   if (config?.middleware) {
@@ -76,7 +77,6 @@ export default function createServerMiddleware(
       if (config?.onQueryError) {
         return config.onQueryError(e, req, res)
       }
-      console.log(e)
       return res.status(500).send()
     }
   }
@@ -98,7 +98,7 @@ export default function createServerMiddleware(
       if (config?.onMutationResponse) {
         return config.onMutationResponse(response, req, res)
       }
-      return res.json(response.data)
+      return res.json(response)
     } catch (error) {
       if (config?.onMutationError) {
         return config.onMutationError(error, req, res)

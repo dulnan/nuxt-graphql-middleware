@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Middleware to perform GraphQL requests as a server middleware.",
   "license": "MIT",
   "author": {
@@ -23,6 +23,10 @@
     "types.d.ts"
   ],
   "dependencies": {
+    "@graphql-codegen/cli": "^1.20.1",
+    "@graphql-codegen/schema-ast": "^1.18.1",
+    "@graphql-codegen/typescript": "^1.21.0",
+    "@graphql-codegen/typescript-operations": "^1.17.14",
     "@graphql-fragment-import/lib": "^1.1.1",
     "express": "^4.17.1",
     "graphql": "^15.5.0",

@@ -9,6 +9,7 @@ import serverMiddleware, {
 } from './../serverMiddleware'
 import graphqlImport from './graphqlImport'
 import { GraphqlMiddlewarePluginConfig } from './../plugin'
+import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
@@ -16,6 +17,7 @@ const PLUGIN_PATH = path.resolve(__dirname, './../plugin/index.js')
 
 export interface GraphqlMiddlewareConfig {
   graphqlServer: string
+  typescript?: GraphqlMiddlewareCodegenConfig
   endpointNamespace?: string
   debug: boolean
   queries: Record<string, string>
@@ -80,12 +82,21 @@ function resolveGraphql(
  * Install the Nuxt GraphQL Middleware module.
  */
 export const graphqlMiddleware: Module = async function () {
+  const resolver = this.nuxt.resolver.resolvePath
+
   const options = this.options
   const provided = (this.options.graphqlMiddleware ||
     {}) as Partial<GraphqlMiddlewareConfig>
 
   const config: GraphqlMiddlewareConfig = {
     graphqlServer: provided.graphqlServer || '',
+    typescript: {
+      enabled: !!provided.typescript?.enabled,
+      resolvedQueriesPath:
+        provided.typescript?.resolvedQueriesPath || provided.outputPath || '',
+      schemaOutputPath: provided.typescript?.schemaOutputPath || '~/schema',
+      typesOutputPath: provided.typescript?.typesOutputPath || '~/types',
+    },
     endpointNamespace: provided.endpointNamespace || '/__graphql_middleware',
     debug: provided.debug || options.dev,
     queries: provided.queries || {},
@@ -98,7 +109,6 @@ export const graphqlMiddleware: Module = async function () {
       cacheInServer: !!provided.plugin?.cacheInServer,
     },
   }
-  const resolver = this.nuxt.resolver.resolvePath
 
   // Add the API helper plugin.
   if (config.plugin?.enabled) {
@@ -119,6 +129,18 @@ export const graphqlMiddleware: Module = async function () {
   const outputPath = config.outputPath ? resolver(config.outputPath) : ''
   if (outputPath) {
     await mkdirp(outputPath)
+  }
+
+  const schemaOutputPath = resolver(config.typescript?.schemaOutputPath)
+  const typesOutputPath = resolver(config.typescript?.typesOutputPath)
+  const { generateSchema, generateTypes } = codegen(config.graphqlServer, {
+    resolvedQueriesPath: config.outputPath,
+    schemaOutputPath,
+    typesOutputPath,
+  })
+
+  if (config.typescript?.enabled) {
+    await generateSchema()
   }
 
   /**
@@ -145,6 +167,12 @@ export const graphqlMiddleware: Module = async function () {
       ),
     ]).then(() => {
       logger.success('Finished building GraphQL files')
+
+      if (config.typescript?.enabled) {
+        return generateTypes().then(() => {
+          logger.success('Finished generating GraphQL TypeScript files.')
+        })
+      }
     })
   }
 
@@ -156,13 +184,10 @@ export const graphqlMiddleware: Module = async function () {
     if (config.outputPath) {
       ignored.push(config.outputPath)
     }
-    const filesWatcher = (options._filesWatcher = chokidar.watch(
-      './**/*.graphql',
-      {
-        ignoreInitial: true,
-        ignored,
-      }
-    ))
+    const filesWatcher = chokidar.watch('./**/*.graphql', {
+      ignoreInitial: true,
+      ignored,
+    })
 
     if (filesWatcher) {
       logger.info('Watching for query changes')
@@ -170,19 +195,31 @@ export const graphqlMiddleware: Module = async function () {
         build()
       })
     }
+
+    return filesWatcher
+  }
+
+  let watcher: any
+
+  if (this.nuxt.options.dev) {
+    this.nuxt.hook('build:done', () => {
+      watcher = watchFiles()
+    })
+
+    this.nuxt.hook('close', () => {
+      if (watcher) {
+        options._filesWatcher.close()
+        watcher = undefined
+      }
+    })
   }
 
   build().then(() => {
     if (options.debug) {
       logger.info('Available queries and mutations:')
-      console.table(
-        Array.from(fileMap.entries()).map(([_key, value]) => value)
-      )
+      console.table(Array.from(fileMap.entries()).map(([_key, value]) => value))
     }
   })
-  if (this.nuxt.options.dev) {
-    watchFiles()
-  }
 
   // Add out server middleware to manage the cache.
   this.addServerMiddleware({
