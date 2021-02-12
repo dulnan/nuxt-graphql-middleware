@@ -22,6 +22,7 @@ function pluginLoader(name: string): Promise<any> {
 
 export interface GraphqlMiddlewareCodegenConfig {
   enabled?: boolean
+  skipSchemaDownload?: boolean
   resolvedQueriesPath: string
   schemaOutputPath: string
   typesOutputPath: string

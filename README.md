@@ -203,6 +203,10 @@ Enable TypeScript integration.
 ### typescript.schemaOutputPath: string
 Folder where the downloaded schema.graphql file is saved.
 
+### typescript.skipSchemaDownload: boolean
+Don't download the schema. Use this for example if you commit the schema in
+your repository, so that it's available during deployment.
+
 ### typescript.schemaOptions: [UrlSchemaOptions](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/utils/plugins-helpers/src/types.ts#L74)
 Options passed to graphql-codegen.
 

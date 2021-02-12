@@ -106,6 +106,7 @@ export const graphqlMiddleware: Module = async function () {
         provided.typescript?.resolvedQueriesPath || provided.outputPath || '',
       schemaOutputPath: provided.typescript?.schemaOutputPath || '~/schema',
       typesOutputPath: provided.typescript?.typesOutputPath || '~/types',
+      skipSchemaDownload: !!provided.typescript?.skipSchemaDownload,
     },
     endpointNamespace: provided.endpointNamespace || '/__graphql_middleware',
     debug: provided.debug || options.dev,
@@ -148,7 +149,7 @@ export const graphqlMiddleware: Module = async function () {
     typesOutputPath,
   })
 
-  if (config.typescript?.enabled) {
+  if (config.typescript?.enabled && !config.typescript?.skipSchemaDownload) {
     if (!outputPath) {
       throw new Error('TypeScript enabled, but no outputPath given.')
     }
