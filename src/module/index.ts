@@ -222,7 +222,7 @@ export const graphqlMiddleware: Module = async function () {
 
     this.nuxt.hook('close', () => {
       if (watcher) {
-        options._filesWatcher.close()
+        watcher.close()
         watcher = undefined
       }
     })
