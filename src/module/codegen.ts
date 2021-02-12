@@ -11,7 +11,6 @@ const typescriptConfig = {
 }
 
 function pluginLoader(name: string): Promise<any> {
-  console.log(name)
   if (name === '@graphql-codegen/typescript') {
     return Promise.resolve(PluginTypescript)
   } else if (name === '@graphql-codegen/typescript-operations') {
