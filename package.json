@@ -1,7 +1,7 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "1.0.4",
-  "description": "Middleware to perform GraphQL requests as a server middleware.",
+  "version": "1.1.0",
+  "description": "Module to perform GraphQL requests as a server middleware.",
   "license": "MIT",
   "author": {
     "name": "Jan Hug",

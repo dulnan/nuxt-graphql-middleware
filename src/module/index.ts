@@ -38,6 +38,9 @@ interface FileMapItem {
   file: string
 }
 
+/**
+ * Resolve the given GraphQL file by inlining all fragments.
+ */
 function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
   return fs.promises
     .readFile(file)
@@ -45,12 +48,18 @@ function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
     .then((source) => graphqlImport(source, resolver))
 }
 
+/**
+ * Write a file.
+ */
 function writeSource(dest: string, filePath: string, source: string) {
   const fileName = path.basename(filePath)
   const out = path.resolve(dest, fileName)
   return fs.promises.writeFile(out, source)
 }
 
+/**
+ * Resolves, merges and writes the given GraphQL files.
+ */
 function resolveGraphql(
   files: Record<string, string>,
   map: Map<string, string>,
@@ -71,7 +80,7 @@ function resolveGraphql(
         filesMap.set(file, {
           type,
           name,
-          file,
+          file: filePath,
         })
       })
     })
@@ -126,9 +135,10 @@ export const graphqlMiddleware: Module = async function () {
   const queries = new Map()
   const mutations = new Map()
 
-  const outputPath = config.outputPath ? resolver(config.outputPath) : ''
+  let outputPath = config.outputPath
   if (outputPath) {
-    await mkdirp(outputPath)
+    await mkdirp(config.outputPath)
+    outputPath = resolver(config.outputPath)
   }
 
   const schemaOutputPath = resolver(config.typescript?.schemaOutputPath)
@@ -140,6 +150,9 @@ export const graphqlMiddleware: Module = async function () {
   })
 
   if (config.typescript?.enabled) {
+    if (!outputPath) {
+      throw new Error('TypeScript enabled, but no outputPath given.')
+    }
     await generateSchema()
   }
 
@@ -221,7 +234,7 @@ export const graphqlMiddleware: Module = async function () {
     }
   })
 
-  // Add out server middleware to manage the cache.
+  // Add the server middleware.
   this.addServerMiddleware({
     path: config.endpointNamespace,
     handler: serverMiddleware(
