@@ -91,7 +91,7 @@ function resolveGraphql(
  * Install the Nuxt GraphQL Middleware module.
  */
 export const graphqlMiddleware: Module = async function () {
-  const resolver = this.nuxt.resolver.resolvePath
+  const resolver = this.nuxt.resolver.resolveAlias
 
   const options = this.options
   const provided = (this.options.graphqlMiddleware ||
@@ -135,11 +135,8 @@ export const graphqlMiddleware: Module = async function () {
   const queries = new Map()
   const mutations = new Map()
 
-  let outputPath = config.outputPath
-  if (outputPath) {
-    await mkdirp(config.outputPath)
-    outputPath = resolver(config.outputPath)
-  }
+  const outputPath = config.outputPath ? resolver(config.outputPath) : ''
+  await mkdirp(outputPath)
 
   const schemaOutputPath = resolver(config.typescript?.schemaOutputPath)
   const typesOutputPath = resolver(config.typescript?.typesOutputPath)
@@ -153,6 +150,7 @@ export const graphqlMiddleware: Module = async function () {
     if (!outputPath) {
       throw new Error('TypeScript enabled, but no outputPath given.')
     }
+    await mkdirp(schemaOutputPath)
     await generateSchema()
   }
 
