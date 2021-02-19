@@ -89,6 +89,7 @@ export class GraphqlMiddlewarePlugin {
 
 const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
+  const port = '<%= options.port %>'
   // @ts-ignore
   const cacheInBrowser = "<%= options.cacheInBrowser || '' %>" === 'true'
   // @ts-ignore
@@ -96,7 +97,7 @@ const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
 
   let baseURL = namespace
   if (process.server) {
-    baseURL = 'http://0.0.0.0:3000' + namespace
+    baseURL = 'http://0.0.0.0:' + port + namespace
   }
 
   const useCache =

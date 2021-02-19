@@ -94,6 +94,7 @@ export const graphqlMiddleware: Module = async function () {
   const resolver = this.nuxt.resolver.resolveAlias
 
   const options = this.options
+  const PORT = this.options?.server?.port || 3000
   const provided = (this.options.graphqlMiddleware ||
     {}) as Partial<GraphqlMiddlewareConfig>
 
@@ -127,6 +128,7 @@ export const graphqlMiddleware: Module = async function () {
       src: PLUGIN_PATH,
       options: {
         namespace: config.endpointNamespace,
+        port: PORT,
         cacheInBrowser: config.plugin?.cacheInBrowser ? 'true' : 'false',
         cacheInServer: config.plugin?.cacheInServer ? 'true' : 'false',
       },
@@ -149,7 +151,7 @@ export const graphqlMiddleware: Module = async function () {
     typesOutputPath,
   })
 
-  if (config.typescript?.enabled && !config.typescript?.skipSchemaDownload) {
+  if (config.typescript?.enabled) {
     if (!outputPath) {
       throw new Error('TypeScript enabled, but no outputPath given.')
     }

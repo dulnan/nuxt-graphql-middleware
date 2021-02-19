@@ -35,11 +35,13 @@ export default function (
 ) {
   const schemaPath = path.resolve(options.schemaOutputPath, 'schema.graphql')
   function generateSchema() {
+    const schema = options.skipSchemaDownload
+      ? schemaPath
+      : { [graphqlServer]: options.schemaOptions }
+
     return generate(
       {
-        schema: {
-          [graphqlServer]: options.schemaOptions,
-        },
+        schema,
         pluginLoader,
         generates: {
           [schemaPath]: {
