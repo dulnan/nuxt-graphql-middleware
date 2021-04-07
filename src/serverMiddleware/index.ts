@@ -17,6 +17,7 @@ export interface GraphqlServerMiddlewareConfig {
   middleware?: RequestHandler
   fetchOptions?: any
   buildHeaders?: (req: Request, name: string, type: string) => any
+  buildEndpoint?: (req: Request) => string
   onQueryResponse?: any
   onQueryError?: any
   onMutationResponse?: any
@@ -47,7 +48,25 @@ export default function createServerMiddleware(
 ) {
   const app = express()
   app.use(express.json())
-  const client = new GraphQLClient(graphqlServer)
+
+  const clients: Map<string, GraphQLClient> = new Map()
+
+  function getClient(endpoint: string): GraphQLClient {
+    if (!clients.has(endpoint)) {
+      const client = new GraphQLClient(endpoint)
+      clients.set(endpoint, client)
+    }
+
+    return clients.get(endpoint) as GraphQLClient
+  }
+
+  function getEndpoint(req: Request) {
+    if (config?.buildEndpoint) {
+      return config.buildEndpoint(req)
+    }
+
+    return graphqlServer
+  }
 
   if (config?.middleware) {
     app.use(config.middleware)
@@ -68,6 +87,8 @@ export default function createServerMiddleware(
       const headers = buildHeaders(req, name, 'query', config)
       const variables = getVariables(req.query.variables as string)
       const query = queries.get(name)
+      const endpoint = getEndpoint(req)
+      const client = getClient(endpoint)
       const response = await client.rawRequest(query, variables, headers)
       if (config?.onQueryResponse) {
         return config.onQueryResponse(response, req, res)
@@ -94,6 +115,8 @@ export default function createServerMiddleware(
     const mutation = mutations.get(name)
     try {
       const headers = buildHeaders(req, name, 'mutation', config)
+      const endpoint = getEndpoint(req)
+      const client = getClient(endpoint)
       const response = await client.request(mutation, req.body, headers)
       if (config?.onMutationResponse) {
         return config.onMutationResponse(response, req, res)

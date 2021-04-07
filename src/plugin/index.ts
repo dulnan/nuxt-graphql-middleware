@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Plugin } from '@nuxt/types'
+import { Context, Plugin } from '@nuxt/types'
 
 const IS_DEV = process.env.NODE_ENV === 'development'
 
@@ -19,20 +19,38 @@ export interface GraphqlMiddlewarePluginConfig {
 export class GraphqlMiddlewarePlugin {
   baseURL: string
   headers: any
+  beforeRequestFn: Function | undefined
   cache?: Map<string, any>
+  context: any
 
-  constructor(baseURL: string, headers: any, useCache: boolean) {
+  constructor(
+    baseURL: string,
+    headers: any,
+    useCache: boolean,
+    context: Context
+  ) {
     this.baseURL = baseURL
     this.headers = headers || {}
+    this.context = context
     if (useCache) {
       this.cache = new Map()
     }
   }
 
+  getPluginHeaderValue() {
+    return {
+      'Nuxt-Graphql-Middleware-Route': this.context?.route?.fullPath || '',
+    }
+  }
+
+  beforeRequest(fn: Function) {
+    this.beforeRequestFn = fn
+  }
+
   /**
    * Perform a GraphQL query via the middleware.
    */
-  query(name: string, variables?: any) {
+  query(name: string, variables?: any, headers: any = {}) {
     const params = new URLSearchParams({
       name,
       variables: JSON.stringify(variables || {}),
@@ -43,14 +61,23 @@ export class GraphqlMiddlewarePlugin {
       return Promise.resolve(this.cache.get(url))
     }
     log('query', url, 'Fetching')
-    return fetch(url, {
+
+    let fetchOptions: any = {
       method: 'GET',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        ...headers,
         ...this.headers,
+        ...this.getPluginHeaderValue(),
       },
-    })
+    }
+
+    if (this.beforeRequestFn) {
+      fetchOptions = this.beforeRequestFn(this.context, fetchOptions)
+    }
+
+    return fetch(url, fetchOptions)
       .then((response) => {
         if (response.ok) {
           return response.json()
@@ -71,25 +98,35 @@ export class GraphqlMiddlewarePlugin {
   /**
    * Perform a GraphQL mutation via the middleware.
    */
-  mutate(name: string, variables?: any) {
+  mutate(name: string, variables?: any, headers: any = {}) {
     const params = new URLSearchParams({
       name,
     })
-    return fetch(this.baseURL + '/mutate?' + params.toString(), {
+    let fetchOptions: any = {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        ...headers,
         ...this.headers,
+        ...this.getPluginHeaderValue(),
       },
       body: JSON.stringify(variables),
-    }).then((response) => response.json())
+    }
+    if (this.beforeRequestFn) {
+      fetchOptions = this.beforeRequestFn(this.context, fetchOptions)
+    }
+    return fetch(
+      this.baseURL + '/mutate?' + params.toString(),
+      fetchOptions
+    ).then((response) => response.json())
   }
 }
 
 const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
-  const port = '<%= options.port %>'
+  // TODO: Get the port somehow from the context on SSR.
+  const port = process?.env?.NUXT_PORT || '<%= options.port %>'
   // @ts-ignore
   const cacheInBrowser = "<%= options.cacheInBrowser || '' %>" === 'true'
   // @ts-ignore
@@ -104,7 +141,12 @@ const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
     (process.server && cacheInServer) || (process.client && cacheInBrowser)
   inject(
     'graphql',
-    new GraphqlMiddlewarePlugin(baseURL, context.req?.headers, useCache)
+    new GraphqlMiddlewarePlugin(
+      baseURL,
+      context.req?.headers,
+      useCache,
+      context
+    )
   )
 }
 

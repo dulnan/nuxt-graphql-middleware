@@ -147,6 +147,7 @@ export const graphqlMiddleware: Module = async function () {
   const { generateSchema, generateTypes } = codegen(config.graphqlServer, {
     resolvedQueriesPath: config.outputPath,
     schemaOptions: config.typescript?.schemaOptions,
+    skipSchemaDownload: config.typescript?.skipSchemaDownload,
     schemaOutputPath,
     typesOutputPath,
   })

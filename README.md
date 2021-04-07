@@ -176,6 +176,21 @@ function (req, name, type) {
 }
 ```
 
+### server.buildEndpoint: (req: Request) => string
+Called before every request. This allows you to set the URL for the GraphQL
+server.
+
+This is useful if you have multiple endpoints, for example with a language
+prefix.
+
+```javascript
+function (req) {
+  const language = getLanguageFromHeaders(req.headers)
+  return `https://example.com/${language}/graphql`
+}
+```
+
+
 ### server.onQueryResponse: (response: GraphQLResponse, req: Request, res: Response) => any
 Handle GraphQL server query responses before they are sent to the client.
 
@@ -214,6 +229,53 @@ Options passed to graphql-codegen.
 Folder where the generated graphql-schema.d.ts and graphql-operations.d.ts
 files are saved.
 
+## Extend $graphql plugin
+
+If you want to add custom headers to the request made by `$graphql` to the
+middleware, create a plugin and add a `beforeRequest` method:
+
+```javascript
+export default (pluginContext) => {
+  pluginContext.$graphql.beforeRequest((ctx, options) => {
+    options.headers['accept-language'] = ctx.route.params.lang
+    return options
+  })
+}
+```
+
+You have access to the context via the first parameter. The second parameter
+provides the fetch options, which you have to return.
+
+### Integrate with nuxt-auth
+
+Add a `beforeRequest` method in a custom plugin:
+
+```javascript
+export default (pluginContext) => {
+  pluginContext.$graphql.beforeRequest((ctx, options) => {
+    if (ctx.$auth.loggedIn) {
+      options.headers['authorization'] = ctx.$auth.strategy.token.get()
+    }
+    return options
+  })
+}
+```
+
+Add a `server.buildHeaders` method, where you get the authorization header from
+the client request and pass it on to the server request.
+
+```javascript
+buildHeaders(req, name, type) {
+  const auth = req.headers.authorization
+  if (auth) {
+    return {
+      Authorization: auth,
+    }
+  }
+
+  return {}
+}
+```
 
 ## Full working example
 
