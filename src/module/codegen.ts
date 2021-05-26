@@ -39,14 +39,16 @@ export default function (
       ? schemaPath
       : { [graphqlServer]: options.schemaOptions }
 
+    const configSchemaAst = { ...typescriptConfig, sort: true }
+
     return generate(
       {
         schema,
         pluginLoader,
         generates: {
           [schemaPath]: {
-            plugins: [{ 'schema-ast': typescriptConfig }],
-            config: typescriptConfig,
+            plugins: [{ 'schema-ast': configSchemaAst }],
+            config: configSchemaAst,
           },
           [path.resolve(options.typesOutputPath, 'graphql-schema.d.ts')]: {
             plugins: [{ typescript: typescriptConfig }],
