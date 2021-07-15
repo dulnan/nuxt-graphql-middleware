@@ -51,8 +51,8 @@ function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
 /**
  * Write a file.
  */
-function writeSource(dest: string, filePath: string, source: string) {
-  const fileName = path.basename(filePath)
+function writeSource(dest: string, type: string, name: string, source: string) {
+  const fileName = `${type}.${name}.graphql`
   const out = path.resolve(dest, fileName)
   return fs.promises.writeFile(out, source)
 }
@@ -75,7 +75,7 @@ function resolveGraphql(
       return resolveGraphqlFile(file, resolver).then((source) => {
         map.set(name, source)
         if (outputPath) {
-          writeSource(outputPath, filePath, source)
+          writeSource(outputPath, type, name, source)
         }
         filesMap.set(file, {
           type,
