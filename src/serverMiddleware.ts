@@ -6,8 +6,7 @@ import { GraphQLClient } from 'graphql-request'
  */
 function getVariables(vars: string): any {
   try {
-    const variables = JSON.parse(vars)
-    return variables
+    return JSON.parse(vars)
   } catch (error) {
     return {}
   }

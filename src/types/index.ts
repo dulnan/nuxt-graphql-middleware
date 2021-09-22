@@ -1,11 +1,7 @@
-import Vue from 'vue'
-import '@nuxt/types'
-import { GraphqlMiddlewarePlugin } from './lib/types/plugin'
-import { GraphqlMiddlewareConfig } from './lib/types/module'
-
-declare module '*.vue' {
-  export default Vue
-}
+import type Vue from 'vue'
+import {} from '@nuxt/types'
+import { GraphqlMiddlewareConfig } from '../module'
+import { GraphqlMiddlewarePlugin } from '../runtime/middlewarePlugin'
 
 declare module 'vue/types/vue' {
   interface Vue {

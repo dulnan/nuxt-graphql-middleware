@@ -1,5 +1,4 @@
-import Vue from 'vue'
-import { Context, Plugin } from '@nuxt/types'
+import { Context } from '@nuxt/types'
 
 const IS_DEV = process.env.NODE_ENV === 'development'
 
@@ -122,32 +121,3 @@ export class GraphqlMiddlewarePlugin {
     ).then((response) => response.json())
   }
 }
-
-const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
-  const namespace = "<%= options.namespace || '' %>"
-  // TODO: Get the port somehow from the context on SSR.
-  const port = process?.env?.NUXT_PORT || '<%= options.port %>'
-  // @ts-ignore
-  const cacheInBrowser = "<%= options.cacheInBrowser || '' %>" === 'true'
-  // @ts-ignore
-  const cacheInServer = "<%= options.cacheInServer || '' %>" === 'true'
-
-  let baseURL = namespace
-  if (process.server) {
-    baseURL = 'http://0.0.0.0:' + port + namespace
-  }
-
-  const useCache =
-    (process.server && cacheInServer) || (process.client && cacheInBrowser)
-  inject(
-    'graphql',
-    new GraphqlMiddlewarePlugin(
-      baseURL,
-      context.req?.headers,
-      useCache,
-      context
-    )
-  )
-}
-
-export default graphqlMiddlewarePlugin
