@@ -1,8 +1,10 @@
+// @ts-ignore
 import type Vue from 'vue'
 import {} from '@nuxt/types'
 import { GraphqlMiddlewareConfig } from '../module'
 import { GraphqlMiddlewarePlugin } from '../runtime/middlewarePlugin'
 
+// @ts-ignore
 declare module 'vue/types/vue' {
   interface Vue {
     readonly $graphql: GraphqlMiddlewarePlugin
