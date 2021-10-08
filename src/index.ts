@@ -1,1 +1,2 @@
-export { graphqlMiddleware as default } from './module'
+export * from './module'
+export * from './types'

@@ -2,18 +2,19 @@ import path from 'path'
 import fs from 'fs'
 import mkdirp from 'mkdirp'
 import chokidar from 'chokidar'
-import { Context, Module } from '@nuxt/types'
+import { Module } from '@nuxt/types'
 import consola from 'consola'
+import { resolve } from 'upath'
+import { GraphqlMiddlewarePluginConfig } from './runtime/middlewarePlugin'
 import serverMiddleware, {
   GraphqlServerMiddlewareConfig,
-} from './../serverMiddleware'
+} from './serverMiddleware'
 import graphqlImport from './graphqlImport'
-import { GraphqlMiddlewarePluginConfig } from './../plugin'
 import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
-const PLUGIN_PATH = path.resolve(__dirname, './../plugin/index.js')
+const PLUGIN_PATH = path.resolve(__dirname, '../templates/plugin.js')
 
 export interface GraphqlMiddlewareConfig {
   graphqlServer: string
@@ -90,7 +91,7 @@ function resolveGraphql(
 /*
  * Install the Nuxt GraphQL Middleware module.
  */
-export const graphqlMiddleware: Module = async function () {
+const graphqlMiddleware: Module = async function () {
   const resolver = this.nuxt.resolver.resolveAlias
 
   const options = this.options
@@ -122,9 +123,15 @@ export const graphqlMiddleware: Module = async function () {
     },
   }
 
+  // Transpile and alias runtime
+  const runtimeDir = resolve(__dirname, 'runtime')
+  this.nuxt.options.alias['~nuxtgraphqlmiddleware'] = runtimeDir
+  this.nuxt.options.build.transpile.push(runtimeDir)
+
   // Add the API helper plugin.
   if (config.plugin?.enabled) {
     this.addPlugin({
+      filename: 'graphqlMiddleware.js',
       src: PLUGIN_PATH,
       options: {
         namespace: config.endpointNamespace,
@@ -249,3 +256,5 @@ export const graphqlMiddleware: Module = async function () {
     ),
   })
 }
+
+export default graphqlMiddleware
