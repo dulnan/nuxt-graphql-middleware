@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -16,7 +16,8 @@
   "types": "dist/types.d.ts",
   "typings": "./index.d.ts",
   "files": [
-    "dist/"
+    "dist/",
+    "templates/"
   ],
   "scripts": {
     "build": "siroc build && mkdist --src src/runtime --dist dist/runtime -d --ext js",
