@@ -4,7 +4,6 @@ import mkdirp from 'mkdirp'
 import chokidar from 'chokidar'
 import { Module } from '@nuxt/types'
 import consola from 'consola'
-import { resolve } from 'upath'
 import { GraphqlMiddlewarePluginConfig } from './runtime/middlewarePlugin'
 import serverMiddleware, {
   GraphqlServerMiddlewareConfig,
@@ -14,7 +13,8 @@ import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
-const PLUGIN_PATH = path.resolve(__dirname, '../templates/plugin.js')
+const PLUGIN_PATH = path.resolve(__dirname, '../dist/plugin.mjs')
+logger.info(PLUGIN_PATH)
 
 export interface GraphqlMiddlewareConfig {
   graphqlServer: string
@@ -118,15 +118,16 @@ const graphqlMiddleware: Module = async function () {
     server: provided.server,
     plugin: {
       enabled: !!provided.plugin?.enabled,
+      port: 4000,
       cacheInBrowser: !!provided.plugin?.cacheInBrowser,
       cacheInServer: !!provided.plugin?.cacheInServer,
     },
   }
 
   // Transpile and alias runtime
-  const runtimeDir = resolve(__dirname, 'runtime')
-  this.nuxt.options.alias['~nuxtgraphqlmiddleware'] = runtimeDir
-  this.nuxt.options.build.transpile.push(runtimeDir)
+  // const runtimeDir = resolve(__dirname, 'runtime')
+  // this.nuxt.options.alias['~nuxtgraphqlmiddleware'] = runtimeDir
+  // this.nuxt.options.build.transpile.push(runtimeDir)
 
   // Add the API helper plugin.
   if (config.plugin?.enabled) {

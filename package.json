@@ -12,15 +12,23 @@
     "email": "me@dulnan.net",
     "url": "https://dulnan.net"
   },
-  "main": "dist/module.js",
-  "types": "dist/types.d.ts",
-  "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.mjs",
+      "require": "./module.cjs"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "main": "dist/module.cjs",
+  "types": "./dist/module.d.ts",
   "files": [
-    "dist/",
-    "templates/"
+    "module.cjs",
+    "dist/*.js",
+    "dist/*.mjs",
+    "dist/*.d.ts"
   ],
   "scripts": {
-    "build": "siroc build && mkdist --src src/runtime --dist dist/runtime -d --ext js",
+    "build": "unbuild",
     "dev": "siroc build --watch"
   },
   "dependencies": {
@@ -46,8 +54,8 @@
     "mkdist": "latest",
     "nuxt": "^2.15.8",
     "prettier": "^2.4.1",
-    "siroc": "^0.16.0",
     "typescript": "^4.4.3",
+    "unbuild": "^0.5.11",
     "vue": "^2.6.14"
   }
 }

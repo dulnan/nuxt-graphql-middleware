@@ -11,6 +11,7 @@ function log(action: string, path: string, message: string) {
 
 export interface GraphqlMiddlewarePluginConfig {
   enabled?: boolean
+  port?: number
   cacheInBrowser?: boolean
   cacheInServer?: boolean
 }

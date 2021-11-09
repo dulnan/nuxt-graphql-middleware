@@ -1,6 +1,7 @@
-import { GraphqlMiddlewarePlugin } from '~/modules/nuxt-graphql-middleware'
+import type { Plugin } from '@nuxt/types'
+import { GraphqlMiddlewarePlugin } from '../runtime/middlewarePlugin'
 
-export default function graphqlMiddlewarePlugin(context, inject) {
+const graphqlMiddlewarePlugin: Plugin = (context, inject) => {
   const namespace = "<%= options.namespace || '' %>"
   // TODO: Get the port somehow from the context on SSR.
   const port = process?.env?.NUXT_PORT || '<%= options.port %>'
@@ -26,3 +27,5 @@ export default function graphqlMiddlewarePlugin(context, inject) {
 
   inject('graphql', plugin)
 }
+
+export default graphqlMiddlewarePlugin
