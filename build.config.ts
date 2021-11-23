@@ -12,6 +12,9 @@ export default defineBuildConfig({
     '@nuxt/types',
     '@types/express-serve-static-core',
     'express',
+    'chokidar',
+    'consola',
+    'mkdirp',
   ],
   dependencies: ['esbuild', 'typescript', 'express'],
 })
