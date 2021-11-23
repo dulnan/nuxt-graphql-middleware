@@ -14,12 +14,13 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/module.mjs",
-      "require": "./module.cjs"
+      "import": "./dist/esm/module.mjs",
+      "require": "./dist/cjs/module.js"
     },
-    "./dist/*": "./dist/*"
+    "./dist/*": "./dist/*",
+    "./templates/*": "./dist/templates/*"
   },
-  "main": "dist/module.cjs",
+  "main": "dist/cjs/module.js",
   "types": "./dist/module.d.ts",
   "files": [
     "module.cjs",
@@ -28,24 +29,23 @@
     "dist/*.d.ts"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub"
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^2.2.0",
-    "@graphql-codegen/schema-ast": "^2.2.0",
-    "@graphql-codegen/typescript": "^2.2.2",
-    "@graphql-codegen/typescript-operations": "^2.1.4",
+    "@graphql-codegen/cli": "^2.3.0",
+    "@graphql-codegen/schema-ast": "^2.4.0",
+    "@graphql-codegen/typescript": "^2.4.1",
+    "@graphql-codegen/typescript-operations": "^2.2.1",
     "@graphql-fragment-import/lib": "^1.2.0",
     "express": "^4.17.1",
     "graphql": "^15.6.0",
-    "graphql-request": "^3.5.0"
+    "graphql-request": "^3.6.1"
   },
   "devDependencies": {
     "@nuxt/types": "^2.15.8",
     "@nuxtjs/eslint-config-typescript": "latest",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^16.9.6",
+    "@types/node": "^16.11.9",
     "consola": "^2.15.3",
     "eslint": "latest",
     "eslint-config-prettier": "latest",
@@ -54,8 +54,9 @@
     "mkdist": "latest",
     "nuxt": "^2.15.8",
     "prettier": "^2.4.1",
-    "typescript": "^4.4.3",
-    "unbuild": "^0.5.11",
+    "siroc": "^0.16.0",
+    "typescript": "^4.5.2",
+    "unbuild": "^0.5.13",
     "vue": "^2.6.14"
   }
 }

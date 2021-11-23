@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp'
 import chokidar from 'chokidar'
 import { Module } from '@nuxt/types'
 import consola from 'consola'
-import { GraphqlMiddlewarePluginConfig } from './runtime/middlewarePlugin'
+import { GraphqlMiddlewarePluginConfig } from './templates/plugin'
 import serverMiddleware, {
   GraphqlServerMiddlewareConfig,
 } from './serverMiddleware'
@@ -13,7 +13,7 @@ import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
-const PLUGIN_PATH = path.resolve(__dirname, '../dist/plugin.mjs')
+const PLUGIN_PATH = path.resolve(__dirname, '../cjs/templates/plugin.js')
 logger.info(PLUGIN_PATH)
 
 export interface GraphqlMiddlewareConfig {
