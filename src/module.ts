@@ -13,8 +13,7 @@ import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
 
 const logger = consola.withTag('nuxt-graphql-middleware')
 
-const PLUGIN_PATH = path.resolve(__dirname, '../cjs/templates/plugin.js')
-logger.info(PLUGIN_PATH)
+const PLUGIN_PATH = path.resolve(__dirname, '../dist/plugin.mjs')
 
 export interface GraphqlMiddlewareConfig {
   graphqlServer: string
@@ -123,11 +122,6 @@ const graphqlMiddleware: Module = async function () {
       cacheInServer: !!provided.plugin?.cacheInServer,
     },
   }
-
-  // Transpile and alias runtime
-  // const runtimeDir = resolve(__dirname, 'runtime')
-  // this.nuxt.options.alias['~nuxtgraphqlmiddleware'] = runtimeDir
-  // this.nuxt.options.build.transpile.push(runtimeDir)
 
   // Add the API helper plugin.
   if (config.plugin?.enabled) {

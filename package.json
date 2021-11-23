@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -14,22 +14,25 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/esm/module.mjs",
-      "require": "./dist/cjs/module.js"
+      "import": "./dist/module.mjs",
+      "require": "./module.cjs"
     },
-    "./dist/*": "./dist/*",
-    "./templates/*": "./dist/templates/*"
+    "./dist/*": "./dist/*"
   },
-  "main": "dist/cjs/module.js",
-  "types": "./dist/module.d.ts",
+  "main": "./module.cjs",
+  "types": "./types/index.d.ts",
   "files": [
+    "types/*",
     "module.cjs",
     "dist/*.js",
     "dist/*.mjs",
     "dist/*.d.ts"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
+    "build": "unbuild && npm run generate-types",
+    "dev": "unbuild --stub=true",
+    "generate-types": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "plain-ts": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.3.0",
@@ -54,7 +57,6 @@
     "mkdist": "latest",
     "nuxt": "^2.15.8",
     "prettier": "^2.4.1",
-    "siroc": "^0.16.0",
     "typescript": "^4.5.2",
     "unbuild": "^0.5.13",
     "vue": "^2.6.14"
