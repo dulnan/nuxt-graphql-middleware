@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -12,32 +12,43 @@
     "email": "me@dulnan.net",
     "url": "https://dulnan.net"
   },
-  "main": "dist/module.js",
-  "types": "dist/types.d.ts",
-  "typings": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.mjs",
+      "require": "./module.cjs"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "main": "./module.cjs",
+  "types": "./types/index.d.ts",
   "files": [
-    "dist/",
-    "templates/"
+    "types/*",
+    "module.cjs",
+    "dist/*.js",
+    "dist/*.mjs",
+    "dist/*.d.ts"
   ],
   "scripts": {
-    "build": "siroc build && mkdist --src src/runtime --dist dist/runtime -d --ext js",
-    "dev": "siroc build --watch"
+    "build": "unbuild && npm run generate-types",
+    "dev": "unbuild --stub=true",
+    "generate-types": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "plain-ts": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^2.2.0",
-    "@graphql-codegen/schema-ast": "^2.2.0",
-    "@graphql-codegen/typescript": "^2.2.2",
-    "@graphql-codegen/typescript-operations": "^2.1.4",
+    "@graphql-codegen/cli": "^2.3.0",
+    "@graphql-codegen/schema-ast": "^2.4.0",
+    "@graphql-codegen/typescript": "^2.4.1",
+    "@graphql-codegen/typescript-operations": "^2.2.1",
     "@graphql-fragment-import/lib": "^1.2.0",
     "express": "^4.17.1",
     "graphql": "^15.6.0",
-    "graphql-request": "^3.5.0"
+    "graphql-request": "^3.6.1"
   },
   "devDependencies": {
     "@nuxt/types": "^2.15.8",
     "@nuxtjs/eslint-config-typescript": "latest",
     "@types/mkdirp": "^1.0.2",
-    "@types/node": "^16.9.6",
+    "@types/node": "^16.11.9",
     "consola": "^2.15.3",
     "eslint": "latest",
     "eslint-config-prettier": "latest",
@@ -46,8 +57,8 @@
     "mkdist": "latest",
     "nuxt": "^2.15.8",
     "prettier": "^2.4.1",
-    "siroc": "^0.16.0",
-    "typescript": "^4.4.3",
+    "typescript": "^4.5.2",
+    "unbuild": "^0.5.13",
     "vue": "^2.6.14"
   }
 }
