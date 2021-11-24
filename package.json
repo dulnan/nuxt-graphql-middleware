@@ -26,7 +26,8 @@
     "module.cjs",
     "dist/*.js",
     "dist/*.mjs",
-    "dist/*.d.ts"
+    "dist/*.d.ts",
+    "dist/types/*"
   ],
   "scripts": {
     "build": "unbuild && npm run generate-types",

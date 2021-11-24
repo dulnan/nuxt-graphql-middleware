@@ -24,3 +24,9 @@ declare module '@nuxt/types' {
     graphqlMiddleware?: GraphqlMiddlewareConfig
   }
 }
+
+declare module '@nuxt/schema' {
+  interface NuxtConfig {
+    graphqlMiddleware?: GraphqlMiddlewareConfig
+  }
+}
