@@ -50,7 +50,7 @@ export default function (
             plugins: [{ 'schema-ast': configSchemaAst }],
             config: configSchemaAst,
           },
-          [path.resolve(options.typesOutputPath, 'graphql-schema.d.ts')]: {
+          [path.resolve(options.typesOutputPath, 'graphql-schema.ts')]: {
             plugins: [{ typescript: typescriptConfig }],
             config: typescriptConfig,
           },
@@ -72,7 +72,7 @@ export default function (
         pluginLoader,
         documents: path.resolve(options.resolvedQueriesPath, './*.graphql'),
         generates: {
-          [path.resolve(options.typesOutputPath, 'graphql-operations.d.ts')]: {
+          [path.resolve(options.typesOutputPath, 'graphql-operations.ts')]: {
             plugins: ['typescript', { 'typescript-operations': config }],
             config,
           },
