@@ -64,6 +64,7 @@ export default function (
     const config = {
       ...typescriptConfig,
       onlyOperationTypes: true,
+      ...(options.schemaOptions || {}),
     }
     return generate(
       {
