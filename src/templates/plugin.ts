@@ -47,6 +47,12 @@ export class GraphqlMiddlewarePlugin {
     this.beforeRequestFn = fn
   }
 
+  clearCache() {
+    if (this.cache) {
+      this.cache.clear()
+    }
+  }
+
   /**
    * Perform a GraphQL query via the middleware.
    */
@@ -62,7 +68,7 @@ export class GraphqlMiddlewarePlugin {
     }
     log('query', url, 'Fetching')
 
-    let fetchOptions: any = {
+    const defaultOptions: any = {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -73,26 +79,36 @@ export class GraphqlMiddlewarePlugin {
       },
     }
 
-    if (this.beforeRequestFn) {
-      fetchOptions = this.beforeRequestFn(this.context, fetchOptions)
+    // Call the beforeRequest function to get the merged fetch options.
+    return this.doBeforeRequest(defaultOptions).then((fetchOptions) => {
+      return fetch(url, fetchOptions)
+        .then((response) => {
+          if (response.ok) {
+            return response.json()
+          }
+          throw new Error('Server Error')
+        })
+        .then((data) => {
+          // Keep the cache from getting too big.
+          if (this.cache && this.cache.size > 30) {
+            const key = this.cache.keys().next().value
+            this.cache.delete(key)
+          }
+          this.cache?.set(url, data)
+          return data
+        })
+    })
+  }
+
+  /**
+   * If a beforeRequest function is provided, call it.
+   */
+  doBeforeRequest(fetchOptions: Record<string, any>) {
+    if (!this.beforeRequestFn) {
+      return Promise.resolve(fetchOptions)
     }
 
-    return fetch(url, fetchOptions)
-      .then((response) => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error('Server Error')
-      })
-      .then((data) => {
-        // Keep the cache from getting too big.
-        if (this.cache && this.cache.size > 30) {
-          const key = this.cache.keys().next().value
-          this.cache.delete(key)
-        }
-        this.cache?.set(url, data)
-        return data
-      })
+    return Promise.resolve(this.beforeRequestFn(this.context, fetchOptions))
   }
 
   /**

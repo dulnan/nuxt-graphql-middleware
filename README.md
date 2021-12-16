@@ -246,6 +246,11 @@ export default (pluginContext) => {
 You have access to the context via the first parameter. The second parameter
 provides the fetch options, which you have to return.
 
+It's also possible to return a Promise, useful if you need to handle things
+like a token refresh. Be aware that this method is called before every query or
+mutation request, so make sure it doesn't take too much time.
+
+
 ### Integrate with nuxt-auth
 
 Add a `beforeRequest` method in a custom plugin:
