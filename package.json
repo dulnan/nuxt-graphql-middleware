@@ -15,25 +15,19 @@
   "exports": {
     ".": {
       "import": "./dist/module.mjs",
-      "require": "./module.cjs"
-    },
-    "./dist/*": "./dist/*"
+      "require": "./dist/module.cjs"
+    }
   },
-  "main": "./module.cjs",
-  "types": "./types/index.d.ts",
+  "main": "./dist/module.cjs",
+  "types": "./dist/types.d.ts",
   "files": [
-    "types/*",
-    "module.cjs",
-    "dist/*.js",
-    "dist/*.mjs",
-    "dist/*.d.ts",
-    "dist/types/*"
+    "dist"
   ],
   "scripts": {
-    "build": "unbuild && npm run generate-types",
-    "dev": "unbuild --stub=true",
-    "generate-types": "tsc -p tsconfig.json --emitDeclarationOnly",
-    "plain-ts": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json"
+    "prepack": "nuxt-module-build",
+    "dev": "nuxi dev playground",
+    "dev:build": "nuxi build playground",
+    "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.3.0",
@@ -43,23 +37,18 @@
     "@graphql-fragment-import/lib": "^1.2.0",
     "express": "^4.17.1",
     "graphql": "^16.0.1",
-    "graphql-request": "^3.6.1"
+    "graphql-request": "^3.6.1",
+    "@nuxt/kit": "npm:@nuxt/kit-edge@latest"
   },
   "devDependencies": {
-    "@nuxt/types": "^2.15.8",
+    "@nuxt/module-builder": "latest",
     "@nuxtjs/eslint-config-typescript": "latest",
-    "@types/mkdirp": "^1.0.2",
-    "@types/node": "^16.11.10",
-    "consola": "^2.15.3",
     "eslint": "latest",
+    "nuxt3": "latest",
+    "consola": "^2.15.3",
     "eslint-config-prettier": "latest",
     "eslint-plugin-prettier": "latest",
-    "mkdirp": "^1.0.4",
-    "mkdist": "latest",
-    "nuxt": "^2.15.8",
     "prettier": "^2.5.0",
-    "typescript": "^4.5.2",
-    "unbuild": "^0.5.13",
-    "vue": "^2.6.14"
+    "typescript": "^4.5.2"
   }
 }

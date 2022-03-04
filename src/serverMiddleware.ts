@@ -21,6 +21,7 @@ export interface GraphqlServerMiddlewareConfig {
   onQueryError?: any
   onMutationResponse?: any
   onMutationError?: any
+  port?: any
 }
 
 function buildHeaders(
