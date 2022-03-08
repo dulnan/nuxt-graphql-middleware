@@ -2,6 +2,7 @@ import path from 'path'
 import { generate } from '@graphql-codegen/cli'
 import * as PluginTypescript from '@graphql-codegen/typescript'
 import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
+import * as PluginTypedDocument from '@graphql-codegen/typed-document-node'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 
 const typescriptConfig = {
@@ -13,8 +14,10 @@ const typescriptConfig = {
 function pluginLoader(name: string): Promise<any> {
   if (name === '@graphql-codegen/typescript') {
     return Promise.resolve(PluginTypescript)
-  } else if (name === '@graphql-codegen/typescript-operations') {
+  } else if (name === 'typescript-operations') {
     return Promise.resolve(PluginTypescriptOperations)
+  } else if (name === 'typed-document-node') {
+    return Promise.resolve(PluginTypedDocument)
   } else {
     return Promise.resolve(PluginSchemaAst)
   }
@@ -69,11 +72,14 @@ export default function (
     return generate(
       {
         schema: schemaPath,
-        pluginLoader,
         documents: path.resolve(options.resolvedQueriesPath, './*.graphql'),
         generates: {
           [path.resolve(options.typesOutputPath, 'graphql-operations.ts')]: {
-            plugins: ['typescript', { 'typescript-operations': config }],
+            plugins: [
+              'typescript',
+              { 'typescript-operations': config },
+              'typed-document-node',
+            ],
             config,
           },
         },

@@ -1,15 +1,19 @@
 import { defineNuxtConfig } from 'nuxt3'
 import NuxtGraphQLMiddleware from '..'
+import { AllFilmsDocument, FilmByIdDocument } from './types/graphql-operations'
 
 export default defineNuxtConfig({
-  modules: [
-    NuxtGraphQLMiddleware
-  ],
+  modules: [NuxtGraphQLMiddleware],
   graphqlMiddleware: {
     // Example: https://studio.apollographql.com/sandbox/explorer
     graphqlServer: `https://swapi-graphql.netlify.app/.netlify/functions/index`,
     queries: {
-      filmList: '~/queries/list/filmlist.graphql',
+      film: '~/pages/film/film.graphql',
+      filmList: '~/pages/filmlist.graphql',
+    },
+    types: {
+      film: FilmByIdDocument,
+      filmList: AllFilmsDocument,
     },
     mutations: {},
     plugin: {
@@ -19,17 +23,32 @@ export default defineNuxtConfig({
     },
     endpointNamespace: '/__graphql_middleware',
     debug: true,
-    outputPath: './graphql_queries',
+    outputPath: '~/graphql_queries',
     typescript: {
       enabled: true,
       resolvedQueriesPath: '~/graphql_queries',
-      schemaOutputPath: './schema',
+      schemaOutputPath: '~/schema',
       typesOutputPath: '~/types',
       schemaOptions: {},
       skipSchemaDownload: process.env.NODE_ENV === 'production',
     },
     server: {
-      port: process.env.PORT
-    }
+      buildHeaders(req, name, type) {
+        // If we have cookies, pass them along to the server request.
+        const auth = req.headers.authorization
+        if (auth) {
+          return {
+            Authorization: auth,
+          }
+        }
+
+        return {}
+      },
+      onQueryError(error, req, res) {
+        console.log(error)
+        res.send(500)
+      },
+      port: process.env.NUXT_PORT ?? 3000,
+    },
   },
 })

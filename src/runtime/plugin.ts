@@ -24,10 +24,10 @@ export class GraphqlMiddlewarePlugin {
   context: any
 
   constructor(
-      baseURL: string,
-      headers: any,
-      useCache: boolean,
-      context: Record<string, any>
+    baseURL: string,
+    headers: any,
+    useCache: boolean,
+    context: Record<string, any>
   ) {
     this.baseURL = baseURL
     this.headers = headers || {}
@@ -82,21 +82,21 @@ export class GraphqlMiddlewarePlugin {
     // Call the beforeRequest function to get the merged fetch options.
     return this.doBeforeRequest(defaultOptions).then((fetchOptions) => {
       return fetch(url, fetchOptions)
-          .then((response) => {
-            if (response.ok) {
-              return response.json()
-            }
-            throw new Error('Server Error')
-          })
-          .then((data) => {
-            // Keep the cache from getting too big.
-            if (this.cache && this.cache.size > 30) {
-              const key = this.cache.keys().next().value
-              this.cache.delete(key)
-            }
-            this.cache?.set(url, data)
-            return data
-          })
+        .then((response) => {
+          if (response.ok) {
+            return response.json()
+          }
+          throw new Error('Server Error')
+        })
+        .then((data) => {
+          // Keep the cache from getting too big.
+          if (this.cache && this.cache.size > 30) {
+            const key = this.cache.keys().next().value
+            this.cache.delete(key)
+          }
+          this.cache?.set(url, data)
+          return data
+        })
     })
   }
 
@@ -133,16 +133,15 @@ export class GraphqlMiddlewarePlugin {
       fetchOptions = this.beforeRequestFn(this.context, fetchOptions)
     }
     return fetch(
-        this.baseURL + '/mutate?' + params.toString(),
-        fetchOptions
+      this.baseURL + '/mutate?' + params.toString(),
+      fetchOptions
     ).then((response) => response.json())
   }
 }
 
 export default defineNuxtPlugin((nuxtApp) => {
-
   const namespace = nuxtApp.$config.graphqlMiddleware.namespace
-  const port = process?.env?.NUXT_PORT || nuxtApp.$config.graphqlMiddleware.port
+  const port = nuxtApp.$config.graphqlMiddleware.port
   const cacheInBrowser = nuxtApp.$config.graphqlMiddleware.cacheInBrowser
   const cacheInServer = nuxtApp.$config.graphqlMiddleware.cacheInServer
 
@@ -151,19 +150,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     baseURL = 'http://localhost:' + port + namespace
   }
 
-  const useCache = (process.server && cacheInServer) || (process.client && cacheInBrowser)
+  const useCache =
+    (process.server && cacheInServer) || (process.client && cacheInBrowser)
 
   const plugin = new GraphqlMiddlewarePlugin(
-      baseURL,
-      nuxtApp.ssrContext?.req?.headers,
-      useCache,
-      nuxtApp.ssrContext
+    baseURL,
+    nuxtApp.ssrContext?.req?.headers,
+    useCache,
+    nuxtApp.ssrContext
   )
 
   return {
     provide: {
-      graphql: plugin
-    }
+      graphql: plugin,
+    },
   }
-
 })

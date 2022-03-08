@@ -1,0 +1,10 @@
+[
+  [
+    "film",
+    "query filmById($filmId: ID) {\n    film(id: $filmId) {\n        ...film\n    }\n}\n\nfragment film on Film {\n    title\n    director\n    edited\n}\n"
+  ],
+  [
+    "filmList",
+    "query allFilms {\n    allFilms {\n        films {\n            ...filmList\n        }\n    }\n}\n\n\nfragment filmList on Film {\n    id\n    title\n    edited\n}\n"
+  ]
+]

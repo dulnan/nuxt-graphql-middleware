@@ -3,3 +3,6 @@ node_modules
 temp
 .idea
 playground/.nuxt/*
+playground/.output/*
+playground/schema/*
+playground/types/*

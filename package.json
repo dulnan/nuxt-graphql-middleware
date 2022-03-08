@@ -27,27 +27,34 @@
     "prepack": "nuxt-module-build",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
-    "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground"
+    "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
+    "debug": "NODE_OPTIONS='--inspect' nuxi dev playground",
+    "preview": "nuxi preview",
+    "start": "node playground/.output/server/index.mjs",
+    "build": "nuxt-module-build && nuxi build playground && node playground/.output/server/index.mjs"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.3.0",
     "@graphql-codegen/schema-ast": "^2.4.0",
+    "@graphql-codegen/typed-document-node": "^2.2.5",
     "@graphql-codegen/typescript": "^2.4.1",
     "@graphql-codegen/typescript-operations": "^2.2.1",
     "@graphql-fragment-import/lib": "^1.2.0",
+    "@graphql-typed-document-node/core": "3.1.1",
+    "@nuxt/kit": "npm:@nuxt/kit-edge@latest",
     "express": "^4.17.1",
     "graphql": "^16.0.1",
-    "graphql-request": "^3.6.1",
-    "@nuxt/kit": "npm:@nuxt/kit-edge@latest"
+    "graphql-request": "^3.6.1"
   },
   "devDependencies": {
     "@nuxt/module-builder": "latest",
     "@nuxtjs/eslint-config-typescript": "latest",
-    "eslint": "latest",
-    "nuxt3": "latest",
     "consola": "^2.15.3",
+    "eslint": "latest",
     "eslint-config-prettier": "latest",
     "eslint-plugin-prettier": "latest",
+    "mkdirp": "^1.0.4",
+    "nuxt3": "latest",
     "prettier": "^2.5.0",
     "typescript": "^4.5.2"
   }
