@@ -6,6 +6,7 @@ import { LoadNuxtConfigOptions } from '@nuxt/kit'
 import { NuxtConfigSchema, NuxtOptions } from '@nuxt/schema'
 import { DotenvOptions, loadConfig } from 'c12'
 import { applyDefaults } from 'untyped'
+import { GraphqlMiddlewareConfig } from '../module'
 import runtimeConfig from '#config'
 
 const rootDir = runtimeConfig.graphqlMiddlewareServer.nuxtRootDir as string
@@ -63,12 +64,12 @@ function getClient(endpoint: string): GraphQLClient {
   return clients.get(endpoint) as GraphQLClient
 }
 
-function getEndpoint(req: Request, config: GraphqlServerMiddlewareConfig) {
-  if (config?.buildEndpoint) {
-    return config.buildEndpoint(req)
+function getEndpoint(req: Request, config: GraphqlMiddlewareConfig) {
+  if (config.server.buildEndpoint) {
+    return config.server.buildEndpoint(req)
   }
 
-  return runtimeConfig.graphqlMiddlewareServer.graphqlServer
+  return config.graphqlServer
 }
 
 async function loadNuxtConfig(
@@ -108,11 +109,14 @@ async function query(req: Request, res: Response) {
   const name = req.query.name as string
 
   const nuxtConfig = (await loadNuxtConfig({ rootDir })) as any // NuxtOptions
-  const config = nuxtConfig.graphqlMiddleware
-    .server as GraphqlServerMiddlewareConfig
+  const config = nuxtConfig.graphqlMiddleware as GraphqlMiddlewareConfig
 
   const queryData = fs.readFileSync(
-    resolve(rootDir, 'graphql_queries/queries.all.json'),
+    resolve(
+      rootDir,
+      runtimeConfig.graphqlMiddlewareServer.outputPath,
+      'queries.all.json'
+    ),
     'utf8'
   )
   const queries = new Map(JSON.parse(queryData))
@@ -123,19 +127,19 @@ async function query(req: Request, res: Response) {
   }
 
   try {
-    const headers = buildHeaders(req, name, 'query', config)
+    const headers = buildHeaders(req, name, 'query', config.server)
     const variables = getVariables(req.query.variables as string)
     const query = queries.get(name) as string
     const endpoint = getEndpoint(req, config)
     const client = getClient(endpoint)
     const response = await client.rawRequest(query, variables, headers)
-    if (config?.onQueryResponse) {
-      return config.onQueryResponse(response, req, res)
+    if (config.server.onQueryResponse) {
+      return config.server.onQueryResponse(response, req, res)
     }
     return res.json(response.data)
   } catch (e) {
-    if (config?.onQueryError) {
-      return config.onQueryError(e, req, res)
+    if (config.server.onQueryError) {
+      return config.server.onQueryError(e, req, res)
     }
     return res.status(500).send()
   }
@@ -148,11 +152,14 @@ async function mutate(req: Request, res: Response) {
   const name = req.query.name as string
 
   const nuxtConfig = (await loadNuxtConfig({ rootDir })) as any // NuxtOptions
-  const config = nuxtConfig.graphqlMiddleware
-    .server as GraphqlServerMiddlewareConfig
+  const config = nuxtConfig.graphqlMiddleware as GraphqlMiddlewareConfig
 
   const queryData = fs.readFileSync(
-    resolve(rootDir, 'graphql_queries/mutations.all.json'),
+    resolve(
+      rootDir,
+      runtimeConfig.graphqlMiddlewareServer.outputPath,
+      'mutations.all.json'
+    ),
     'utf8'
   )
   const mutations = new Map(JSON.parse(queryData))
@@ -163,17 +170,17 @@ async function mutate(req: Request, res: Response) {
   }
   const mutation = mutations.get(name) as string
   try {
-    const headers = buildHeaders(req, name, 'mutation', config)
+    const headers = buildHeaders(req, name, 'mutation', config.server)
     const endpoint = getEndpoint(req, config)
     const client = getClient(endpoint)
     const response = await client.request(mutation, req.body, headers)
-    if (config?.onMutationResponse) {
-      return config.onMutationResponse(response, req, res)
+    if (config.server.onMutationResponse) {
+      return config.server.onMutationResponse(response, req, res)
     }
     return res.json(response)
   } catch (error) {
-    if (config?.onMutationError) {
-      return config.onMutationError(error, req, res)
+    if (config.server.onMutationError) {
+      return config.server.onMutationError(error, req, res)
     }
     return res.status(500).send()
   }

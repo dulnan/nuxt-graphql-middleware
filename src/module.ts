@@ -259,7 +259,7 @@ export default defineNuxtModule<GraphqlMiddlewareConfig>({
     nuxt.options.privateRuntimeConfig.graphqlMiddlewareServer = defu(
       nuxt.options.privateRuntimeConfig.graphqlMiddlewareServer,
       {
-        graphqlServer: options.graphqlServer,
+        outputPath: resolveAlias(options.outputPath),
         nuxtRootDir: nuxt.options.rootDir,
       }
     )
