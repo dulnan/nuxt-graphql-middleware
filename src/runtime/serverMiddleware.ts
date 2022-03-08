@@ -72,6 +72,14 @@ function getEndpoint(req: Request, config: GraphqlMiddlewareConfig) {
   return config.graphqlServer
 }
 
+/*
+ * This function is copied over from nuxt kit.
+ * It replaces the following import:
+ * import { loadNuxtConfig } from '@nuxt/kit'
+ * If we include this function directly, we have a rollup error on build:
+ * Rollup error: File: /semver/functions/satisfies.js does not exist
+ *
+ */
 async function loadNuxtConfig(
   opts: LoadNuxtConfigOptions
 ): Promise<NuxtOptions> {
