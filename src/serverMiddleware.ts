@@ -116,7 +116,7 @@ export default function createServerMiddleware(
       const headers = buildHeaders(req, name, 'mutation', config)
       const endpoint = getEndpoint(req)
       const client = getClient(endpoint)
-      const response = await client.request(mutation, req.body, headers)
+      const response = await client.rawRequest(mutation, req.body, headers)
       if (config?.onMutationResponse) {
         return config.onMutationResponse(response, req, res)
       }
