@@ -17,19 +17,25 @@ type GraphqlMiddlewareOperationMap =
 // Variables are either not required at all, required or optional.
 type GetArgs<
   T extends GraphqlMiddlewareQueryName,
-  M extends GraphqlMiddlewareOperationMap
+  M extends GraphqlMiddlewareOperationMap,
 > = M[T][0] extends null
   ? [T]
   : M[T][1] extends false
   ? [T, M[T][0]]
   : [T, M[T][0]?]
 
+type GraphqlResponse<T> = {
+  data: T
+}
+
 // Determine the query result.
-type GetResult<T, M> = M[T] extends undefined ? undefined : M[T][2]
+type GetResult<T, M> = M[T] extends undefined
+  ? undefined
+  : GraphqlResponse<M[T][2]>
 
 function getEndpoint(operation: string, operationName: string): string {
   const config = useRuntimeConfig()
-  return `${config?.public?.['nuxt-graphql-middleware']?.apiPrefix}/${operation}/${operationName}`
+  return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
 }
 
 export const useGraphqlState = (): Ref<GraphqlMiddlewareState> => {
@@ -48,7 +54,7 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
     return Promise.reject(new Error('Invalid query name'))
   }
 
-  const variables = args[1]
+  const variables = args[1] || {}
   let params: Record<string, any> = {}
 
   // Determine if the variables can safely be passed as query params.
@@ -68,7 +74,7 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
   return $fetch(getEndpoint('query', name), {
     params,
     ...state.value.fetchOptions,
-  })
+  }) as Promise<GetResult<T, GraphqlMiddlewareQuery>>
 }
 
 export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
@@ -84,5 +90,5 @@ export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
     method: 'post',
     body,
     ...state.value.fetchOptions,
-  })
+  }) as Promise<GetResult<T, GraphqlMiddlewareMutation>>
 }

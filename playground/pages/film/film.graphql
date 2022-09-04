@@ -1,11 +1,11 @@
 query filmById($filmId: ID) {
-    film(id: $filmId) {
-        ...film
-    }
+  film(id: $filmId) {
+    ...film
+  }
 }
 
 fragment film on Film {
-    title
-    director
-    edited
+  title
+  director
+  edited
 }

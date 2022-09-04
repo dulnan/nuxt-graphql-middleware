@@ -10,7 +10,9 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const film = await useAsyncData('film', () =>
-  useGraphqlQuery('film', { filmId: route.params.id.toString() }),
-).then((data) => data.film)
+const { data: film } = await useAsyncData('film', () =>
+  useGraphqlQuery('filmById', { filmId: route.params.id.toString() }).then(
+    (v) => v.data.film,
+  ),
+)
 </script>

@@ -11,7 +11,9 @@
 </template>
 
 <script setup lang="ts">
-const films = await useAsyncData('init', () =>
-  useGraphqlQuery('filmList', { path: '/en' }),
-).then((data) => data.allFilms.films)
+const { data: films } = await useAsyncData('filmList', () =>
+  useGraphqlQuery('allFilms').then((v) => {
+    return v.data.allFilms.films
+  }),
+)
 </script>
