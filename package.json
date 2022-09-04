@@ -18,7 +18,10 @@
     "prepack": "nuxt-module-build",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
-    "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground"
+    "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
+    "docs:dev": "vitepress dev docs --port 5000",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs --port 5000"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.11.8",
@@ -36,6 +39,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "nuxt": "^3.0.0-rc.8",
-    "prettier": "^2.7.1"
+    "prettier": "^2.7.1",
+    "vitepress": "^1.0.0-alpha.13"
   }
 }

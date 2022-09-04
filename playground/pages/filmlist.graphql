@@ -1,14 +1,13 @@
 query allFilms {
-    allFilms {
-        films {
-            ...filmList
-        }
+  allFilms {
+    films {
+      ...film
     }
+  }
 }
 
-
-fragment filmList on Film {
-    id
-    title
-    edited
+fragment film on Film {
+  id
+  title
+  edited
 }
