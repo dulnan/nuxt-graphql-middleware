@@ -113,11 +113,21 @@ export interface GraphqlMiddlewareConfig {
   serverFetchOptions?: FetchOptions | GraphqlMiddlewareServerFetchOptionsMethod
 
   /**
-   * Don't download the schema.graphql file.
+   * Download the GraphQL schema and store it in the
    *
-   * @default false
+   * @default true
    */
   downloadSchema?: boolean
+
+  /**
+   * Path to the GraphQL schema file.
+   *
+   * If `downloadSchema` is `true`, the downloaded schema is written to this specified path.
+   * If `downloadSchema` is `false`, this file must be present in order to generate types.
+   *
+   * @default './schema.graphql'
+   */
+  schemaPath?: string
 
   /**
    * These options are passed to the graphql-codegen method when generating the operations types.
@@ -143,4 +153,21 @@ export interface GraphqlMiddlewareConfig {
 
 export interface GraphqlMiddlewareState {
   fetchOptions: FetchOptions
+}
+
+export enum GraphqlMiddlewareTemplate {
+  /**
+   * Contains the TS definitions for all GraphQL queries, mutations and fragments.
+   */
+  OperationTypes = 'graphql-operations.d.ts',
+
+  /**
+   * Signature for the GraphQL composable arguments and return types.
+   */
+  ComposableContext = 'nuxt-graphql-middleware.d.ts',
+
+  /**
+   * Exports a single opject containing the compiled queries and mutations.
+   */
+  Documents = 'graphql-documents.mjs',
 }

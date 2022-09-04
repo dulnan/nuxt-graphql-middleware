@@ -7,18 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { NuxtApp } from '#app'
-import { AllFilmsQuery } from '~/types/graphql-operations'
-
-const { data } = await useAsyncData('data', async (ctx: NuxtApp) => {
-  const variables = {}
-
-  return ctx.$graphql
-    .query('filmList', variables)
-    .then((data: AllFilmsQuery) => {
-      return {
-        films: data?.allFilms?.films || [],
-      }
-    })
-})
+const films = await useAsyncData('filmList', () =>
+  useGraphqlQuery('filmList'),
+).then((data) => data.allFilms.films)
 </script>

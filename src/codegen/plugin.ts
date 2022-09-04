@@ -1,7 +1,7 @@
 import {
   Types,
   PluginFunction,
-  oldVisit
+  oldVisit,
 } from '@graphql-codegen/plugin-helpers'
 import { GraphQLSchema, concatAST } from 'graphql'
 import { pascalCase } from 'change-case-all'
@@ -40,9 +40,9 @@ interface CodeResult {
   imports: string[]
 }
 
-function getCodeResult (
+function getCodeResult(
   operations: Record<string, OperationResult>,
-  typeName: string
+  typeName: string,
 ): CodeResult {
   const imports: string[] = []
   let code = ''
@@ -58,17 +58,15 @@ function getCodeResult (
           imports.push(nameVariables)
         }
         const variablesType = hasVariables ? nameVariables : 'null'
-        return `${name}: [${variablesType}, ${
+        return `    ${name}: [${variablesType}, ${
           variablesOptional ? 'true' : 'false'
         }, ${nameResult}]`
       })
       .join(',\n')
 
-    code += `
-export type GraphqlMiddleware${typeName} = {
-  ${queryVariablesType}
-}
-`
+    code += `  export type GraphqlMiddleware${typeName} = {
+${queryVariablesType}
+  }`
   }
 
   return { code, imports }
@@ -80,16 +78,16 @@ export const plugin: PluginFunction<
 > = (
   schema: GraphQLSchema,
   documents: Types.DocumentFile[],
-  config: NamedOperationsObjectPluginConfig
+  config: NamedOperationsObjectPluginConfig,
 ) => {
-  const allAst = concatAST(documents.map(v => v.document))
+  const allAst = concatAST(documents.map((v) => v.document))
 
   const operations: Record<
     'query' | 'mutation',
     Record<string, OperationResult>
   > = {
     query: {},
-    mutation: {}
+    mutation: {},
   }
 
   oldVisit(allAst, {
@@ -103,11 +101,11 @@ export const plugin: PluginFunction<
             hasVariables: node.variableDefinitions.length > 0,
             variablesOptional: node.variableDefinitions.every((v: any) => {
               return v.defaultValue
-            })
+            }),
           }
         }
-      }
-    }
+      },
+    },
   })
 
   let code = ''
@@ -121,9 +119,10 @@ export const plugin: PluginFunction<
   code += resultMutation.code
   imports.push(...resultMutation.imports)
 
-  return `
-import { ${imports.join(', ')} } from './graphql-operations'\n\n
+  return `import {
+  ${imports.join(',\n  ')}
+} from './graphql-operations'\n
 declare module '#build/nuxt-graphql-middleware' {
-  ${code}
+${code}
 }`
 }

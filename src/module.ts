@@ -12,19 +12,15 @@ import {
   resolveAlias,
   useLogger,
 } from '@nuxt/kit'
-import { generateTemplates } from './codegen'
-import type { CodegenResult } from './codegen'
-import { GraphqlMiddlewareConfig } from './types'
+import type { Resolver } from '@nuxt/kit'
+import { generateSchema, generateTemplates } from './codegen'
+import { GraphqlMiddlewareConfig, GraphqlMiddlewareTemplate } from './types'
 const fragmentImport = require('@graphql-fragment-import/lib/inline-imports')
 
 const logger = useLogger('nuxt-graphql-middleware')
 
 export type ModuleOptions = GraphqlMiddlewareConfig
 export type ModuleHooks = {}
-
-interface GraphqlMiddlewareContext {
-  templates: CodegenResult[]
-}
 
 /**
  * Import and inline fragments in GraphQL documents.
@@ -40,10 +36,91 @@ function inlineFragments(source: string, resolver: any) {
   })
 }
 
+/**
+ * Validate the module options.
+ */
 function validateOptions(options: Partial<ModuleOptions>) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
   }
+}
+
+/**
+ * Get the path to the GraphQL schema.
+ */
+async function getSchemaPath(
+  options: ModuleOptions,
+  resolver: Resolver['resolve'],
+): Promise<string> {
+  const dest = resolver(options.schemaPath)
+  if (!options.downloadSchema) {
+    const fileExists = await fsp
+      .access(dest)
+      .then(() => true)
+      .catch(() => false)
+    if (!fileExists) {
+      logger.error(
+        '"downloadSchema" is set to false but no schema exists at ' + dest,
+      )
+      throw new Error('Missing GraphQL schema.')
+    }
+    return dest
+  }
+  const graphqlEndpoint =
+    typeof options.graphqlEndpoint === 'string'
+      ? options.graphqlEndpoint
+      : options.graphqlEndpoint()
+  await generateSchema(graphqlEndpoint, dest)
+  return dest
+}
+
+/**
+ * Read the GraphQL files for the given patterns.
+ */
+async function autoImportDocuments(
+  patterns: string[] = [],
+  srcResolver: Resolver['resolve'],
+): Promise<string[]> {
+  if (!patterns.length) {
+    return Promise.resolve([])
+  }
+  const files = (
+    await resolveFiles(srcResolver(), patterns, {
+      followSymbolicLinks: false,
+    })
+  ).filter((path) => {
+    return !path.includes('schema.gql') && !path.includes('schema.graphql')
+  })
+
+  return Promise.all(
+    files.map((v) => {
+      return fsp.readFile(v).then((v) => v.toString())
+    }),
+  )
+}
+
+/**
+ * Generates the TypeScript definitions and documents files.
+ */
+async function generate(
+  options: ModuleOptions,
+  schemaPath: string,
+  resolver: Resolver['resolve'],
+) {
+  logger.info('Generating GraphQL files...')
+
+  const documents: string[] = [
+    ...(await autoImportDocuments(options.autoImportPatterns, resolver)),
+    ...options.documents,
+  ].map((v) => inlineFragments(v, resolveAlias))
+
+  const templates = await generateTemplates(
+    documents,
+    schemaPath,
+    options.codegenConfig,
+  )
+  logger.success('Generated GraphQL files.')
+  return templates
 }
 
 const defaultOptions: ModuleOptions = {
@@ -58,7 +135,8 @@ const defaultOptions: ModuleOptions = {
       enumValues: 'change-case-all#upperCaseFirst',
     },
   },
-  downloadSchema: false,
+  downloadSchema: true,
+  schemaPath: './schema.graphql',
   serverApiPrefix: '/api/graphql_middleware',
   graphqlEndpoint: '',
   debug: false,
@@ -77,7 +155,13 @@ export default defineNuxtModule<ModuleOptions>({
     validateOptions(options)
 
     const rootDir = nuxt.options.rootDir
-
+    const moduleResolver = createResolver(import.meta.url).resolve
+    const srcResolver = createResolver(nuxt.options.srcDir).resolve
+    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    const schemaPath = await getSchemaPath(options, srcResolver)
+    const ctx = {
+      templates: await generate(options, schemaPath, srcResolver),
+    }
     nuxt.options.runtimeConfig = {
       public: {
         'nuxt-graphql-middleware': {
@@ -88,54 +172,6 @@ export default defineNuxtModule<ModuleOptions>({
         rootDir,
       },
     }
-    const moduleResolver = createResolver(import.meta.url).resolve
-    const srcResolver = createResolver(nuxt.options.srcDir).resolve
-
-    function filterDocumentPath(path: string): boolean {
-      return !path.includes('schema.')
-    }
-
-    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
-    nuxt.options.build.transpile.push(runtimeDir)
-
-    nuxt.hook('autoImports:dirs', (dirs) => {
-      dirs.push(moduleResolver('runtime/composables'))
-    })
-
-    const ctx: GraphqlMiddlewareContext = {
-      templates: [],
-    }
-
-    async function autoImportDocuments(): Promise<string[]> {
-      if (!options.autoImportPatterns.length) {
-        return Promise.resolve([])
-      }
-      const files = (
-        await resolveFiles(srcResolver(), options.autoImportPatterns, {
-          followSymbolicLinks: false,
-        })
-      ).filter(filterDocumentPath)
-
-      return Promise.all(
-        files.map((v) => {
-          return fsp.readFile(v).then((v) => v.toString())
-        }),
-      )
-    }
-
-    async function generate() {
-      logger.info('Generating GraphQL files...')
-
-      const documents: string[] = [
-        ...(await autoImportDocuments()),
-        ...options.documents,
-      ].map((v) => inlineFragments(v, resolveAlias))
-
-      ctx.templates = await generateTemplates(documents, options.codegenConfig)
-      logger.success('Generated GraphQL files.')
-    }
-
-    await generate()
 
     // Watch for file changes.
     nuxt.hook('builder:watch', async (_event, path) => {
@@ -143,17 +179,16 @@ export default defineNuxtModule<ModuleOptions>({
         return
       }
 
-      await generate()
+      ctx.templates = await generate(options, schemaPath, srcResolver)
       await nuxt.callHook('builder:generateApp')
     })
 
-    const templates: string[] = [
-      'graphql-operations.d.ts',
-      'nuxt-graphql-middleware.d.ts',
-      'graphql-documents.mjs',
-    ]
+    nuxt.hook('autoImports:dirs', (dirs) => {
+      dirs.push(moduleResolver('runtime/composables'))
+    })
 
-    templates.forEach((filename) => {
+    // Add the templates to nuxt and provide a callback to load the file contents.
+    Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
       const result = addTemplate({
         write: true,
         filename,
@@ -162,13 +197,15 @@ export default defineNuxtModule<ModuleOptions>({
         },
       })
 
-      if (result.dst.includes('graphql-documents.mjs')) {
+      if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
         nuxt.options.alias['#graphql-operations'] = result.dst
       }
     })
 
+    // Add the state plugin.
     addPlugin(moduleResolver(runtimeDir, 'plugin'), {})
 
+    // Add the server API handler.
     addServerHandler({
       handler: moduleResolver('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
