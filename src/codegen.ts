@@ -1,92 +1,52 @@
-import path from 'path'
 import { generate } from '@graphql-codegen/cli'
 import * as PluginTypescript from '@graphql-codegen/typescript'
 import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
-import * as PluginTypedDocument from '@graphql-codegen/typed-document-node'
-import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
-
-const typescriptConfig = {
-  exportFragmentSpreadSubTypes: true,
-  preResolveTypes: true,
-  skipTypeNameForRoot: true,
-}
+import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
+import * as PluginNuxtGraphqlMiddleware from './codegen/plugin'
+import * as PluginNuxtGraphqlMiddlewareDocuments from './codegen/pluginDocuments'
 
 function pluginLoader(name: string): Promise<any> {
   if (name === '@graphql-codegen/typescript') {
     return Promise.resolve(PluginTypescript)
-  } else if (name === 'typescript-operations') {
+  } else if (name === '@graphql-codegen/typescript-operations') {
     return Promise.resolve(PluginTypescriptOperations)
-  } else if (name === 'typed-document-node') {
-    return Promise.resolve(PluginTypedDocument)
-  } else {
-    return Promise.resolve(PluginSchemaAst)
+  } else if (name === '@graphql-codegen/typescript-nuxt-graphql-middleware') {
+    return Promise.resolve(PluginNuxtGraphqlMiddleware)
+  } else if (
+    name === '@graphql-codegen/typescript-nuxt-graphql-middleware-documents'
+  ) {
+    return Promise.resolve(PluginNuxtGraphqlMiddlewareDocuments)
   }
 }
 
-export interface GraphqlMiddlewareCodegenConfig {
-  enabled?: boolean
-  skipSchemaDownload?: boolean
-  resolvedQueriesPath: string
-  schemaOutputPath: string
-  typesOutputPath: string
-  schemaOptions: any
+export interface CodegenResult {
+  filename: string
+  content: string
 }
 
-export default function (
-  graphqlServer: string,
-  options: GraphqlMiddlewareCodegenConfig
-) {
-  const schemaPath = path.resolve(options.schemaOutputPath, 'schema.graphql')
-  function generateSchema() {
-    const schema = options.skipSchemaDownload
-      ? schemaPath
-      : { [graphqlServer]: options.schemaOptions }
-
-    const configSchemaAst = { ...typescriptConfig, sort: true }
-
-    return generate(
-      {
-        schema,
-        pluginLoader,
-        generates: {
-          [schemaPath]: {
-            plugins: [{ 'schema-ast': configSchemaAst }],
-            config: configSchemaAst,
-          },
-          [path.resolve(options.typesOutputPath, 'graphql-schema.ts')]: {
-            plugins: [{ typescript: typescriptConfig }],
-            config: typescriptConfig,
-          },
+export async function generateTemplates(
+  documents: string[],
+  config: TypeScriptDocumentsPluginConfig,
+): Promise<CodegenResult[]> {
+  return await generate(
+    {
+      schema: './schema.graphql',
+      pluginLoader,
+      silent: true,
+      documents,
+      generates: {
+        'graphql-operations.d.ts': {
+          plugins: ['typescript', 'typescript-operations'],
+          config,
+        },
+        'nuxt-graphql-middleware.d.ts': {
+          plugins: ['typescript-nuxt-graphql-middleware'],
+        },
+        'graphql-documents.mjs': {
+          plugins: ['typescript-nuxt-graphql-middleware-documents'],
         },
       },
-      true
-    )
-  }
-
-  function generateTypes() {
-    const config = {
-      ...typescriptConfig,
-      onlyOperationTypes: true,
-      ...(options.schemaOptions || {}),
-    }
-    return generate(
-      {
-        schema: schemaPath,
-        documents: path.resolve(options.resolvedQueriesPath, './*.graphql'),
-        generates: {
-          [path.resolve(options.typesOutputPath, 'graphql-operations.ts')]: {
-            plugins: [
-              'typescript',
-              { 'typescript-operations': config },
-              'typed-document-node',
-            ],
-            config,
-          },
-        },
-      },
-      true
-    )
-  }
-
-  return { generateSchema, generateTypes }
+    },
+    false,
+  )
 }

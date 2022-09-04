@@ -1,272 +1,177 @@
 import { fileURLToPath } from 'url'
-import fs from 'fs'
-import { dirname, resolve } from 'pathe'
-import mkdirp from 'mkdirp'
-import chokidar from 'chokidar'
+import { promises as fsp } from 'fs'
+import type { NuxtModule } from '@nuxt/schema'
+import { defu } from 'defu'
 import {
   defineNuxtModule,
   addPlugin,
+  addServerHandler,
+  createResolver,
+  addTemplate,
+  resolveFiles,
   resolveAlias,
-  addServerMiddleware,
+  useLogger,
 } from '@nuxt/kit'
-import consola from 'consola'
-import defu from 'defu'
-import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
-import { GraphqlMiddlewarePluginConfig } from './runtime/plugin'
-import { GraphqlServerMiddlewareConfig } from './runtime/serverMiddleware'
-import graphqlImport from './graphqlImport'
+import { generateTemplates } from './codegen'
+import type { CodegenResult } from './codegen'
+import { GraphqlMiddlewareConfig } from './types'
+const fragmentImport = require('@graphql-fragment-import/lib/inline-imports')
 
-const logger = consola.withTag('nuxt-graphql-middleware')
+const logger = useLogger('nuxt-graphql-middleware')
 
-export interface GraphqlMiddlewareConfig {
-  graphqlServer: string
-  typescript?: GraphqlMiddlewareCodegenConfig
-  endpointNamespace?: string
-  debug: boolean
-  queries: Record<string, string>
-  mutations: Record<string, string>
-  outputPath: string
-  plugin?: GraphqlMiddlewarePluginConfig
-  server?: GraphqlServerMiddlewareConfig
-}
+export type ModuleOptions = GraphqlMiddlewareConfig
+export type ModuleHooks = {}
 
-enum FileType {
-  Query = 'query',
-  Mutation = 'mutation',
-}
-
-interface FileMapItem {
-  type: FileType
-  name: string
-  file: string
+interface GraphqlMiddlewareContext {
+  templates: CodegenResult[]
 }
 
 /**
- * Resolve the given GraphQL file by inlining all fragments.
+ * Import and inline fragments in GraphQL documents.
  */
-function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
-  return fs.promises
-    .readFile(file)
-    .then((buffer) => buffer.toString())
-    .then((source) => graphqlImport(source, resolver))
+function inlineFragments(source: string, resolver: any) {
+  return fragmentImport(source, {
+    resolveImport(identifier: string) {
+      return resolver(identifier)
+    },
+    resolveOptions: {
+      basedir: './',
+    },
+  })
 }
 
-/**
- * Write a file.
- */
-function writeSource(
-  dest: string,
-  type: string,
-  name: string,
-  source: string,
-  fileType: string = 'graphql'
-) {
-  const fileName = `${type}.${name}.${fileType}`
-  const out = resolve(dest, fileName)
-  return fs.promises.writeFile(out, source)
+function validateOptions(options: Partial<ModuleOptions>) {
+  if (!options.graphqlEndpoint) {
+    throw new Error('Missing graphqlEndpoint.')
+  }
 }
 
-/**
- * Resolves, merges and writes the given GraphQL files.
- */
-export function resolveGraphql(
-  files: Record<string, string>,
-  map: Map<string, string>,
-  resolver: any,
-  filesMap: Map<string, FileMapItem>,
-  type: FileType,
-  outputPath: string
-) {
-  return Promise.all(
-    Object.keys(files).map((name) => {
-      const filePath = files[name]
-      const file = resolver(filePath)
-      return resolveGraphqlFile(file, resolver).then((source) => {
-        map.set(name, source)
-        if (outputPath) {
-          writeSource(outputPath, type, name, source)
-        }
-        filesMap.set(file, {
-          type,
-          name,
-          file: filePath,
-        })
-      })
-    })
-  )
+const defaultOptions: ModuleOptions = {
+  codegenConfig: {
+    exportFragmentSpreadSubTypes: true,
+    preResolveTypes: true,
+    skipTypeNameForRoot: true,
+    skipTypename: true,
+    useTypeImports: true,
+    onlyOperationTypes: true,
+    namingConvention: {
+      enumValues: 'change-case-all#upperCaseFirst',
+    },
+  },
+  downloadSchema: false,
+  serverApiPrefix: '/api/graphql_middleware',
+  graphqlEndpoint: '',
+  debug: false,
+  documents: [],
+  autoImportPatterns: ['**/*.{gql,graphql}', '!node_modules'],
 }
 
-export default defineNuxtModule<GraphqlMiddlewareConfig>({
+export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'nuxt-graphql-middleware',
     configKey: 'graphqlMiddleware',
   },
-  defaults: {
-    graphqlServer: '/graphql',
-    queries: {},
-    mutations: {},
-    plugin: {
-      enabled: true,
-      cacheInServer: false,
-      cacheInBrowser: true,
-    },
-    debug: false,
-    outputPath: '~/graphql_queries',
-    typescript: {
-      enabled: true,
-      resolvedQueriesPath: '~/graphql_queries',
-      schemaOutputPath: '~/schema',
-      typesOutputPath: '~/types',
-      schemaOptions: {},
-      skipSchemaDownload: process.env.NODE_ENV === 'production',
-    },
-    server: {
-      port: process.env.NUXT_PORT ?? 3000,
-    },
-  },
-  async setup(options, nuxt) {
+  defaults: defaultOptions,
+  async setup(passedOptions, nuxt) {
+    const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
+    validateOptions(options)
+
+    const rootDir = nuxt.options.rootDir
+
+    nuxt.options.runtimeConfig = {
+      public: {
+        'nuxt-graphql-middleware': {
+          serverApiPrefix: options.serverApiPrefix,
+        },
+      },
+      graphqlMiddleware: {
+        rootDir,
+      },
+    }
+    const moduleResolver = createResolver(import.meta.url).resolve
+    const srcResolver = createResolver(nuxt.options.srcDir).resolve
+
+    function filterDocumentPath(path: string): boolean {
+      return !path.includes('schema.')
+    }
+
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    nuxt.options.build.transpile.push(runtimeDir)
 
-    if (options.plugin.enabled) {
-      nuxt.options.build.transpile.push(runtimeDir)
-
-      nuxt.options.publicRuntimeConfig.graphqlMiddleware = {
-        namespace: options.endpointNamespace,
-        port: options.server.port || 3000,
-        cacheInBrowser: options.plugin?.cacheInBrowser ? 'true' : 'false',
-        cacheInServer: options.plugin?.cacheInServer ? 'true' : 'false',
-      }
-
-      addPlugin(resolve(runtimeDir, 'plugin'))
-    }
-
-    const resolver = resolveAlias
-
-    const fileMap: Map<string, FileMapItem> = new Map()
-    const queries = new Map()
-    const mutations = new Map()
-
-    const outputPath = options.outputPath ? resolver(options.outputPath) : ''
-    await mkdirp(outputPath)
-
-    const schemaOutputPath = resolver(options.typescript?.schemaOutputPath)
-    const typesOutputPath = resolver(options.typescript?.typesOutputPath)
-    const { generateSchema, generateTypes } = codegen(options.graphqlServer, {
-      resolvedQueriesPath: resolver(options.outputPath),
-      schemaOptions: options.typescript?.schemaOptions,
-      skipSchemaDownload: options.typescript?.skipSchemaDownload,
-      schemaOutputPath,
-      typesOutputPath,
+    nuxt.hook('autoImports:dirs', (dirs) => {
+      dirs.push(moduleResolver('runtime/composables'))
     })
 
-    if (options.typescript?.enabled) {
-      if (!outputPath) {
-        throw new Error('TypeScript enabled, but no outputPath given.')
-      }
-      await mkdirp(schemaOutputPath)
-      await generateSchema()
+    const ctx: GraphqlMiddlewareContext = {
+      templates: [],
     }
 
-    /**
-     * Build all queries and mutations.
-     */
-    function build() {
-      logger.log('Building GraphQL files...')
-      return Promise.all([
-        resolveGraphql(
-          options.queries,
-          queries,
-          resolver,
-          fileMap,
-          FileType.Query,
-          outputPath
-        ),
-        resolveGraphql(
-          options.mutations,
-          mutations,
-          resolver,
-          fileMap,
-          FileType.Mutation,
-          outputPath
-        ),
-      ]).then(() => {
-        logger.success('Finished building GraphQL files')
-        logger.success('Updating Runtime')
-
-        const outputQueries = JSON.stringify(
-          Array.from(queries.entries()),
-          null,
-          2
-        )
-        writeSource(outputPath, 'queries', 'all', outputQueries, 'json')
-
-        if (options.typescript?.enabled) {
-          return generateTypes().then(() => {
-            logger.success('Finished generating GraphQL TypeScript files.')
-          })
-        }
-      })
-    }
-
-    /**
-     * Watch *.graphql files and rebuild everything on change.
-     */
-    function watchFiles() {
-      const ignored = ['node_modules', '.nuxt']
-      if (options.outputPath) {
-        ignored.push(options.outputPath)
+    async function autoImportDocuments(): Promise<string[]> {
+      if (!options.autoImportPatterns.length) {
+        return Promise.resolve([])
       }
-      const filesWatcher = chokidar.watch('./**/*.graphql', {
-        ignoreInitial: true,
-        ignored,
-      })
-
-      if (filesWatcher) {
-        logger.info('Watching for query changes')
-        filesWatcher.on('change', () => {
-          build()
+      const files = (
+        await resolveFiles(srcResolver(), options.autoImportPatterns, {
+          followSymbolicLinks: false,
         })
+      ).filter(filterDocumentPath)
+
+      return Promise.all(
+        files.map((v) => {
+          return fsp.readFile(v).then((v) => v.toString())
+        }),
+      )
+    }
+
+    async function generate() {
+      logger.info('Generating GraphQL files...')
+
+      const documents: string[] = [
+        ...(await autoImportDocuments()),
+        ...options.documents,
+      ].map((v) => inlineFragments(v, resolveAlias))
+
+      ctx.templates = await generateTemplates(documents, options.codegenConfig)
+      logger.success('Generated GraphQL files.')
+    }
+
+    await generate()
+
+    // Watch for file changes.
+    nuxt.hook('builder:watch', async (_event, path) => {
+      if (!path.match(/\.(gql|graphql)$/)) {
+        return
       }
 
-      return filesWatcher
-    }
+      await generate()
+      await nuxt.callHook('builder:generateApp')
+    })
 
-    let watcher: any
+    const templates: string[] = [
+      'graphql-operations.d.ts',
+      'nuxt-graphql-middleware.d.ts',
+      'graphql-documents.mjs',
+    ]
 
-    if (nuxt.options.dev) {
-      nuxt.hook('build:done', () => {
-        watcher = watchFiles()
+    templates.forEach((filename) => {
+      const result = addTemplate({
+        write: true,
+        filename,
+        getContents: () => {
+          return ctx.templates.find((v) => v.filename === filename).content
+        },
       })
 
-      nuxt.hook('close', () => {
-        if (watcher) {
-          watcher.close()
-          watcher = undefined
-        }
-      })
-    }
-
-    build().then(() => {
-      if (options.debug) {
-        logger.info('Available queries and mutations:')
-        console.table(
-          Array.from(fileMap.entries()).map(([_key, value]) => value)
-        )
+      if (result.dst.includes('graphql-documents.mjs')) {
+        nuxt.options.alias['#graphql-operations'] = result.dst
       }
     })
 
-    // Default runtime config.
-    nuxt.options.privateRuntimeConfig.graphqlMiddlewareServer = defu(
-      nuxt.options.privateRuntimeConfig.graphqlMiddlewareServer,
-      {
-        outputPath: resolveAlias(options.outputPath),
-        nuxtRootDir: nuxt.options.rootDir,
-      }
-    )
+    addPlugin(moduleResolver(runtimeDir, 'plugin'), {})
 
-    addServerMiddleware({
-      path: options.endpointNamespace,
-      handler: resolve(runtimeDir, 'serverMiddleware'),
+    addServerHandler({
+      handler: moduleResolver('./runtime/serverHandler/index'),
+      route: options.serverApiPrefix + '/:operation/:name',
     })
   },
-})
+}) as NuxtModule<ModuleOptions>
