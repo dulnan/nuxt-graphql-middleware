@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div v-if="films">
     <h1>List of Films</h1>
-    <ul v-if="films">
+    <ul>
       <li v-for="film in films" :key="film.id">
         <nuxt-link :to="'/film/' + film.id">{{ film.title }}</nuxt-link>
       </li>
@@ -10,9 +10,10 @@
 </template>
 
 <script setup lang="ts">
+await useGraphqlQuery('allFilms')
 const { data: films } = await useAsyncData('filmList', () =>
-  useGraphqlQuery('allFilms').then((v) => {
-    return v.data.allFilms.films
+  useGraphqlQuery('allFilms').then(({ data }) => {
+    return data.allFilms.films
   }),
 )
 </script>

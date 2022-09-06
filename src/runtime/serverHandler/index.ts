@@ -7,12 +7,13 @@ import {
   getQuery,
   getMethod,
   readBody,
+  getHeader,
 } from 'h3'
 import { QueryObject } from 'ufo'
 import { loadNuxtConfig } from '@nuxt/kit'
 import type { GraphqlMiddlewareConfig } from './../../types'
 import { useRuntimeConfig } from '#imports'
-import operations from '#graphql-operations'
+import operations from '#graphql-documents'
 
 enum GraphqlMiddlewareOperation {
   Query = 'query',

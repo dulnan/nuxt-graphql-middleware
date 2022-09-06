@@ -31,6 +31,8 @@ Write your first query and save it wherever you like. By default all
 `*.graphql` or `*.gql` files in your app (excluding node_modules) are
 auto-imported.
 
+Let's name the query `films`. The file name is not relevant.
+
 ```graphql
 # ./pages/films.query.graphql
 query films {
@@ -44,11 +46,13 @@ query films {
 
 ## Step 4: Use the query
 
-Your query is now exposed as a JSON endpoint:
+Your query is now available under the following URL:
 
 ```
 http://localhost:3000/api/graphql_middleware/query/films
 ```
+
+The 
 
 ### useGraphqlQuery
 

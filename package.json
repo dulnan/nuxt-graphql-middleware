@@ -19,6 +19,7 @@
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
+    "typedoc": "typedoc --plugin typedoc-plugin-markdown --out foobar",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs --port 5000"
@@ -38,8 +39,11 @@
     "eslint": "latest",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "jsdoc-to-markdown": "^7.1.1",
     "nuxt": "^3.0.0-rc.8",
     "prettier": "^2.7.1",
+    "typedoc": "^0.23.14",
+    "typedoc-plugin-markdown": "^3.13.5",
     "vitepress": "^1.0.0-alpha.13"
   }
 }

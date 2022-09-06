@@ -198,6 +198,10 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
+        nuxt.options.alias['#graphql-documents'] = result.dst
+      } else if (
+        result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
+      ) {
         nuxt.options.alias['#graphql-operations'] = result.dst
       }
     })
