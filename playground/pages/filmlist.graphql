@@ -1,13 +1,8 @@
+#import "~/pages/film/film.fragment.graphql"
 query allFilms {
   allFilms {
     films {
       ...film
     }
   }
-}
-
-fragment film on Film {
-  id
-  title
-  edited
 }

@@ -10,7 +10,6 @@
 </template>
 
 <script setup lang="ts">
-await useGraphqlQuery('allFilms')
 const { data: films } = await useAsyncData('filmList', () =>
   useGraphqlQuery('allFilms').then(({ data }) => {
     return data.allFilms.films

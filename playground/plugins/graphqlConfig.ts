@@ -12,7 +12,7 @@ export default defineNuxtPlugin((NuxtApp) => {
       if (!options.params) {
         options.params = {}
       }
-      options.params.t = new Date()
+      options.params.t = Date.now()
     },
   }
-}
+})
