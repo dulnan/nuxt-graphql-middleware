@@ -114,11 +114,7 @@ async function generate(
     ...options.documents,
   ].map((v) => inlineFragments(v, resolveAlias))
 
-  const templates = await generateTemplates(
-    documents,
-    schemaPath,
-    options.codegenConfig,
-  )
+  const templates = await generateTemplates(documents, schemaPath, options)
   logger.success('Generated GraphQL files.')
   return templates
 }

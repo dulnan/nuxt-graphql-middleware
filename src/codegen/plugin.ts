@@ -6,28 +6,8 @@ import {
 import { GraphQLSchema, concatAST } from 'graphql'
 import { pascalCase } from 'change-case-all'
 
-export interface NamedOperationsObjectPluginConfig {
-  /**
-   * @description Allow you to customize the name of the exported identifier
-   * @default namedOperations
-   *
-   * @exampleMarkdown
-   * ```yaml
-   * generates:
-   *   path/to/file.ts:
-   *     plugins:
-   *       - typescript
-   *       - named-operations-object
-   *     config:
-   *       identifierName: ListAllOperations
-   * ```
-   */
-  identifierName?: string
-  /**
-   * @description Will generate a const string instead of regular string.
-   * @default false
-   */
-  useConsts?: boolean
+export interface PluginConfig {
+  serverApiPrefix: string
 }
 
 interface OperationResult {
@@ -37,48 +17,55 @@ interface OperationResult {
 
 interface CodeResult {
   code: string
+  nitroCode: string
   imports: string[]
 }
 
 function getCodeResult(
   operations: Record<string, OperationResult>,
   typeName: string,
+  serverApiPrefix: string,
 ): CodeResult {
   const imports: string[] = []
   let code = ''
+  let nitroCode = ''
   const names = Object.keys(operations)
   if (names.length) {
-    const queryVariablesType = names
-      .map((name) => {
-        const nameResult = pascalCase(name + typeName)
-        imports.push(nameResult)
-        const nameVariables = pascalCase(name + typeName + 'Variables')
-        const { hasVariables, variablesOptional } = operations[name]
-        if (hasVariables) {
-          imports.push(nameVariables)
-        }
-        const variablesType = hasVariables ? nameVariables : 'null'
-        return `    ${name}: [${variablesType}, ${
+    const lines: string[] = []
+    const nitroLines: string[] = []
+
+    names.forEach((name) => {
+      const nameResult = pascalCase(name + typeName)
+      imports.push(nameResult)
+      const nameVariables = pascalCase(name + typeName + 'Variables')
+      const { hasVariables, variablesOptional } = operations[name]
+      if (hasVariables) {
+        imports.push(nameVariables)
+      }
+      const variablesType = hasVariables ? nameVariables : 'null'
+      lines.push(
+        `    ${name}: [${variablesType}, ${
           variablesOptional ? 'true' : 'false'
-        }, ${nameResult}]`
-      })
-      .join(',\n')
+        }, ${nameResult}]`,
+      )
+      nitroLines.push(
+        `    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': Awaited<${nameResult}>`,
+      )
+    })
 
     code += `  export type GraphqlMiddleware${typeName} = {
-${queryVariablesType}
+${lines.join(',\n')}
   }`
+    nitroCode += `${nitroLines.join('\n')}`
   }
 
-  return { code, imports }
+  return { code, imports, nitroCode }
 }
 
-export const plugin: PluginFunction<
-  NamedOperationsObjectPluginConfig,
-  string
-> = (
-  schema: GraphQLSchema,
+export const plugin: PluginFunction<PluginConfig, string> = (
+  _schema: GraphQLSchema,
   documents: Types.DocumentFile[],
-  config: NamedOperationsObjectPluginConfig,
+  config: PluginConfig,
 ) => {
   const allAst = concatAST(documents.map((v) => v.document))
 
@@ -109,14 +96,25 @@ export const plugin: PluginFunction<
   })
 
   let code = ''
+  let nitroCode = ''
   const imports: string[] = []
 
-  const resultQuery = getCodeResult(operations.query, 'Query')
+  const resultQuery = getCodeResult(
+    operations.query,
+    'Query',
+    config.serverApiPrefix,
+  )
   code += resultQuery.code
+  nitroCode += resultQuery.nitroCode
   imports.push(...resultQuery.imports)
 
-  const resultMutation = getCodeResult(operations.mutation, 'Mutation')
+  const resultMutation = getCodeResult(
+    operations.mutation,
+    'Mutation',
+    config.serverApiPrefix,
+  )
   code += resultMutation.code
+  nitroCode += resultMutation.nitroCode
   imports.push(...resultMutation.imports)
 
   return `import {
@@ -124,5 +122,13 @@ export const plugin: PluginFunction<
 } from './graphql-operations'\n
 declare module '#build/nuxt-graphql-middleware' {
 ${code}
-}`
+}
+
+declare module 'nitropack' {
+  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+  interface InternalApi {
+${nitroCode}
+  }
+}
+`
 }

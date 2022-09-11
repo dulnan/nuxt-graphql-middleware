@@ -6,6 +6,7 @@ import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-ope
 import * as PluginNuxtGraphqlMiddleware from './codegen/plugin'
 import * as PluginNuxtGraphqlMiddlewareDocuments from './codegen/pluginDocuments'
 import { GraphqlMiddlewareTemplate } from './types'
+import { ModuleOptions } from './module'
 
 function pluginLoader(name: string): Promise<any> {
   if (name === '@graphql-codegen/typescript') {
@@ -51,7 +52,7 @@ export function generateSchema(
 export function generateTemplates(
   documents: string[],
   schemaPath: string,
-  config: TypeScriptDocumentsPluginConfig,
+  options: ModuleOptions,
 ): Promise<CodegenResult[]> {
   return generate(
     {
@@ -62,10 +63,13 @@ export function generateTemplates(
       generates: {
         [GraphqlMiddlewareTemplate.OperationTypes]: {
           plugins: ['typescript', 'typescript-operations'],
-          config,
+          config: options.codegenConfig,
         },
         [GraphqlMiddlewareTemplate.ComposableContext]: {
           plugins: ['typescript-nuxt-graphql-middleware'],
+          config: {
+            serverApiPrefix: options.serverApiPrefix,
+          },
         },
         [GraphqlMiddlewareTemplate.Documents]: {
           plugins: ['typescript-nuxt-graphql-middleware-documents'],

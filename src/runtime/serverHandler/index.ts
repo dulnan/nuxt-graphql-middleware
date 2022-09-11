@@ -1,4 +1,3 @@
-import { promises as fsp } from 'fs'
 import type { CompatibilityEvent } from 'h3'
 import type { FetchOptions } from 'ohmyfetch'
 import {
@@ -7,7 +6,6 @@ import {
   getQuery,
   getMethod,
   readBody,
-  getHeader,
 } from 'h3'
 import { QueryObject } from 'ufo'
 import { loadNuxtConfig } from '@nuxt/kit'
