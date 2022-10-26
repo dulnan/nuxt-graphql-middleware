@@ -4,8 +4,9 @@
  */
 export default defineEventHandler(async () => {
   // Return value is fully typed.
-  const { allFilms } = await $fetch('/api/graphql_middleware/query/allFilms')
+  // const { data } = await $fetch('/api/graphql_middleware/query/allFilms')
+  const { data } = await useGraphqlQuery('allFilms')
   return {
-    filmTitles: allFilms.films.map((v) => v.title),
+    filmTitles: data.allFilms.films.map((v) => v.title),
   }
 })

@@ -180,7 +180,8 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     nuxt.hook('autoImports:dirs', (dirs) => {
-      dirs.push(moduleResolver('runtime/composables'))
+      const composablesDir = moduleResolver('runtime/composables')
+      dirs.push(composablesDir)
     })
 
     // Add the templates to nuxt and provide a callback to load the file contents.

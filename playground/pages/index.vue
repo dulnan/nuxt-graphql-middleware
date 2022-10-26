@@ -11,8 +11,12 @@
 
 <script setup lang="ts">
 const { data: films } = await useAsyncData('filmList', () =>
-  useGraphqlQuery('allFilms').then(({ data }) => {
-    return data.allFilms.films
-  }),
+  useGraphqlQuery('allFilms')
+    .then((v) => {
+      return v.data.allFilms.films
+    })
+    .catch((e) => {
+      console.log(e)
+    }),
 )
 </script>

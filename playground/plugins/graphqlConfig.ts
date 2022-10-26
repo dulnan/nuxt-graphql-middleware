@@ -1,9 +1,6 @@
 export default defineNuxtPlugin((NuxtApp) => {
   const state = useGraphqlState()
   state.value.fetchOptions = {
-    headers: {
-      foobar: 'test',
-    },
     async onRequest({ request, options }) {
       // Log request
       console.log('[fetch request]', request, options)

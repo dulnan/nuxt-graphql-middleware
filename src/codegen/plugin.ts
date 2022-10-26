@@ -49,7 +49,7 @@ function getCodeResult(
         }, ${nameResult}]`,
       )
       nitroLines.push(
-        `    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': Awaited<${nameResult}>`,
+        `    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': GraphqlMiddlewareResponse<Awaited<${nameResult}>>`,
       )
     })
 
@@ -120,6 +120,11 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   return `import {
   ${imports.join(',\n  ')}
 } from './graphql-operations'\n
+
+type GraphqlMiddlewareResponse<T> = {
+  data: T
+}
+
 declare module '#build/nuxt-graphql-middleware' {
 ${code}
 }
