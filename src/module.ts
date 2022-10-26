@@ -11,6 +11,7 @@ import {
   resolveFiles,
   resolveAlias,
   useLogger,
+  addImportsDir,
 } from '@nuxt/kit'
 import type { Resolver } from '@nuxt/kit'
 import { generateSchema, generateTemplates } from './codegen'
@@ -179,10 +180,7 @@ export default defineNuxtModule<ModuleOptions>({
       await nuxt.callHook('builder:generateApp')
     })
 
-    nuxt.hook('autoImports:dirs', (dirs) => {
-      const composablesDir = moduleResolver('runtime/composables')
-      dirs.push(composablesDir)
-    })
+    addImportsDir(moduleResolver('runtime/composables'))
 
     // Add the templates to nuxt and provide a callback to load the file contents.
     Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
