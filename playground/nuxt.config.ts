@@ -1,4 +1,3 @@
-import { defineNuxtConfig } from 'nuxt'
 import NuxtGraphQLMiddleware from '..'
 
 export default defineNuxtConfig({

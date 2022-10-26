@@ -159,15 +159,11 @@ export default defineNuxtModule<ModuleOptions>({
     const ctx = {
       templates: await generate(options, schemaPath, srcResolver),
     }
-    nuxt.options.runtimeConfig = {
-      public: {
-        'nuxt-graphql-middleware': {
-          serverApiPrefix: options.serverApiPrefix,
-        },
-      },
-      graphqlMiddleware: {
-        rootDir,
-      },
+    nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
+      serverApiPrefix: options.serverApiPrefix,
+    }
+    nuxt.options.runtimeConfig.graphqlMiddleware = {
+      rootDir,
     }
 
     // Watch for file changes.
