@@ -6,7 +6,7 @@ The URL of the GraphQL server.
 You can either provide a string or a method that returns a string.
 If you provide a method it will be called everytime a GraphQL request is
 made in the server API handler. The first argument is the [h3
-event](https://www.jsdocs.io/package/h3#CompatibilityEvent).
+event](https://www.jsdocs.io/package/h3#H3Event).
 
 ### Example: Static URL
 ```typescript

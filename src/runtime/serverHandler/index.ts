@@ -1,4 +1,4 @@
-import type { CompatibilityEvent } from 'h3'
+import type { H3Event } from 'h3'
 import type { FetchOptions } from 'ohmyfetch'
 import {
   defineEventHandler,
@@ -54,7 +54,7 @@ function queryParamToVariables(query: QueryObject) {
  */
 function getEndpoint(
   moduleConfig: GraphqlMiddlewareConfig,
-  event: CompatibilityEvent,
+  event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
 ): string {
@@ -70,7 +70,7 @@ function getEndpoint(
  */
 function getFetchOptions(
   moduleConfig: GraphqlMiddlewareConfig,
-  event: CompatibilityEvent,
+  event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
 ): FetchOptions {

@@ -1,15 +1,15 @@
-import type { CompatibilityEvent } from 'h3'
+import type { H3Event } from 'h3'
 import type { FetchOptions } from 'ohmyfetch'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
-  event?: CompatibilityEvent,
+  event?: H3Event,
   operation?: string,
   operationName?: string,
 ) => string
 
 export type GraphqlMiddlewareServerFetchOptionsMethod = (
-  event?: CompatibilityEvent,
+  event?: H3Event,
   operation?: string,
   operationName?: string,
 ) => FetchOptions
