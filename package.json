@@ -25,13 +25,13 @@
     "docs:serve": "vitepress serve docs --port 5000"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^2.11.8",
+    "@graphql-codegen/cli": "^2.13.12",
     "@graphql-codegen/schema-ast": "^2.5.1",
-    "@graphql-codegen/typescript": "^2.7.3",
-    "@graphql-codegen/typescript-generic-sdk": "^3.0.1",
-    "@graphql-codegen/typescript-operations": "^2.5.3",
+    "@graphql-codegen/typescript": "^2.8.2",
+    "@graphql-codegen/typescript-generic-sdk": "^3.0.4",
+    "@graphql-codegen/typescript-operations": "^2.5.7",
     "@graphql-fragment-import/lib": "^2.0.0",
-    "@nuxt/kit": "^3.0.0-rc.8"
+    "@nuxt/kit": "^3.0.0"
   },
   "devDependencies": {
     "@nuxt/module-builder": "latest",
@@ -40,10 +40,10 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
     "jsdoc-to-markdown": "^7.1.1",
-    "nuxt": "^3.0.0-rc.8",
+    "nuxt": "^3.0.0",
     "prettier": "^2.7.1",
-    "typedoc": "^0.23.14",
-    "typedoc-plugin-markdown": "^3.13.5",
-    "vitepress": "^1.0.0-alpha.13"
+    "typedoc": "^0.23.21",
+    "typedoc-plugin-markdown": "^3.13.6",
+    "vitepress": "^1.0.0-alpha.29"
   }
 }
