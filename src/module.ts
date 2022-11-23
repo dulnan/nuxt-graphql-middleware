@@ -53,7 +53,7 @@ async function getSchemaPath(
   options: ModuleOptions,
   resolver: Resolver['resolve'],
 ): Promise<string> {
-  const dest = resolver(options.schemaPath)
+  const dest = resolver(options.schemaPath!)
   if (!options.downloadSchema) {
     const fileExists = await fsp
       .access(dest)
@@ -66,6 +66,9 @@ async function getSchemaPath(
       throw new Error('Missing GraphQL schema.')
     }
     return dest
+  }
+  if (!options.graphqlEndpoint) {
+    throw new Error('Missing graphqlEndpoint config.')
   }
   const graphqlEndpoint =
     typeof options.graphqlEndpoint === 'string'
@@ -112,7 +115,7 @@ async function generate(
 
   const documents: string[] = [
     ...(await autoImportDocuments(options.autoImportPatterns, resolver)),
-    ...options.documents,
+    ...(options.documents || []),
   ].map((v) => inlineFragments(v, resolveAlias))
 
   const templates = await generateTemplates(documents, schemaPath, options)
@@ -160,7 +163,7 @@ export default defineNuxtModule<ModuleOptions>({
       templates: await generate(options, schemaPath, srcResolver),
     }
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
-      serverApiPrefix: options.serverApiPrefix,
+      serverApiPrefix: options.serverApiPrefix!,
     }
     nuxt.options.runtimeConfig.graphqlMiddleware = {
       rootDir,
@@ -184,7 +187,9 @@ export default defineNuxtModule<ModuleOptions>({
         write: true,
         filename,
         getContents: () => {
-          return ctx.templates.find((v) => v.filename === filename).content
+          return (
+            ctx.templates.find((v) => v.filename === filename)?.content || ''
+          )
         },
       })
 
@@ -195,6 +200,32 @@ export default defineNuxtModule<ModuleOptions>({
       ) {
         nuxt.options.alias['#graphql-operations'] = result.dst
       }
+    })
+
+    nuxt.options.alias['#graphql-composable'] = moduleResolver(
+      'runtime/composables',
+    )
+
+    addTemplate({
+      write: true,
+      filename: 'graphql-documents.d.ts',
+      getContents: () => {
+        return `
+import {
+  GraphqlMiddlerwareQuery,
+  GraphqlMiddlewareMutation,
+} from '#build/nuxt-graphql-middleware'
+
+declare module '#graphql-documents' {
+  type Documents = {
+    query: GraphqlMiddlerwareQuery
+    mutation: GraphqlMiddlerwareMutation
+  }
+  const documents: Documents
+  export { documents }
+}
+`
+      },
     })
 
     // Add the state plugin.

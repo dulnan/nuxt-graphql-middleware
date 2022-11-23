@@ -11,7 +11,7 @@ import { QueryObject } from 'ufo'
 import { loadNuxtConfig } from '@nuxt/kit'
 import type { GraphqlMiddlewareConfig } from './../../types'
 import { useRuntimeConfig } from '#imports'
-import operations from '#graphql-documents'
+import { documents } from '#graphql-documents'
 
 enum GraphqlMiddlewareOperation {
   Query = 'query',
@@ -60,9 +60,10 @@ function getEndpoint(
 ): string {
   if (typeof moduleConfig.graphqlEndpoint === 'string') {
     return moduleConfig.graphqlEndpoint
+  } else if (moduleConfig.graphqlEndpoint) {
+    return moduleConfig.graphqlEndpoint(event, operation, operationName)
   }
-
-  return moduleConfig.graphqlEndpoint(event, operation, operationName)
+  return '/'
 }
 
 /**
@@ -107,7 +108,7 @@ export default defineEventHandler(async (event) => {
 
   // The name of the query or mutation.
   const name = event.context.params.name
-  const query = operations[operation][name]
+  const query = documents[operation][name]
 
   // Query or mutation with this name does not exist.
   if (!query) {
@@ -123,8 +124,8 @@ export default defineEventHandler(async (event) => {
 
   const variables =
     operation === GraphqlMiddlewareOperation.Query
-      ? queryParamToVariables(getQuery(event))
-      : readBody(event)
+      ? queryParamToVariables(getQuery(event) as any)
+      : await readBody(event)
 
   return $fetch(endpoint, {
     method: 'POST',

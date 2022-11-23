@@ -3,7 +3,7 @@ import { useGraphqlState } from '../.nuxt/imports'
 
 export default defineNuxtPlugin(() => {
   const state = useGraphqlState()
-  state.value.fetchOptions = {
+  state.fetchOptions = {
     onRequest({ request, options }) {
       // Log request
       console.log('[fetch request]', request, options)

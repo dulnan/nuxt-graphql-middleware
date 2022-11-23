@@ -1,3 +1,5 @@
+import { useGraphqlQuery } from '#graphql-composable'
+
 /**
  * Custom server route that performs a GraphQL query and returns the mapped
  * data.
