@@ -4,7 +4,9 @@ import {
   oldVisit,
 } from '@graphql-codegen/plugin-helpers'
 import { GraphQLSchema, concatAST } from 'graphql'
+import type { OperationDefinitionNode } from 'graphql'
 import { pascalCase } from 'change-case-all'
+import { falsy } from '../helpers'
 
 export interface PluginConfig {
   serverApiPrefix: string
@@ -55,7 +57,7 @@ function getCodeResult(
 
     code += `  export type GraphqlMiddleware${typeName} = {
 ${lines.join(',\n')}
-  }`
+  }\n`
     nitroCode += `${nitroLines.join('\n')}`
   }
 
@@ -67,7 +69,7 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   documents: Types.DocumentFile[],
   config: PluginConfig,
 ) => {
-  const allAst = concatAST(documents.map((v) => v.document))
+  const allAst = concatAST(documents.map((v) => v.document).filter(falsy))
 
   const operations: Record<
     'query' | 'mutation',
@@ -79,14 +81,16 @@ export const plugin: PluginFunction<PluginConfig, string> = (
 
   oldVisit(allAst, {
     enter: {
-      OperationDefinition: (node) => {
+      OperationDefinition: (node: OperationDefinitionNode) => {
         if (
+          'name' in node &&
           node.name?.value &&
+          'operation' in node &&
           (node.operation === 'query' || node.operation === 'mutation')
         ) {
           operations[node.operation][node.name.value] = {
-            hasVariables: node.variableDefinitions.length > 0,
-            variablesOptional: node.variableDefinitions.every((v: any) => {
+            hasVariables: !!node.variableDefinitions?.length,
+            variablesOptional: !!node.variableDefinitions?.every((v: any) => {
               return v.defaultValue
             }),
           }
@@ -113,8 +117,8 @@ export const plugin: PluginFunction<PluginConfig, string> = (
     'Mutation',
     config.serverApiPrefix,
   )
-  code += resultMutation.code
-  nitroCode += resultMutation.nitroCode
+  code += '\n' + resultMutation.code
+  nitroCode += '\n' + resultMutation.nitroCode
   imports.push(...resultMutation.imports)
 
   return `import {

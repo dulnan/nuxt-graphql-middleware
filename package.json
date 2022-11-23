@@ -19,6 +19,7 @@
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
+    "apollo": "tsc ./playground/apollo/index.ts",
     "typedoc": "typedoc --plugin typedoc-plugin-markdown --out foobar",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
