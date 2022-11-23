@@ -1,0 +1,7 @@
+#import "~/pages/user/user.fragment.graphql"
+
+mutation addUser($user: UserData!) {
+  createUser(user: $user) {
+    ...user
+  }
+}

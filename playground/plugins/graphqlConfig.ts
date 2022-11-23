@@ -1,7 +1,10 @@
-export default defineNuxtPlugin((NuxtApp) => {
+import { defineNuxtPlugin } from 'nuxt/app'
+import { useGraphqlState } from '../.nuxt/imports'
+
+export default defineNuxtPlugin(() => {
   const state = useGraphqlState()
   state.value.fetchOptions = {
-    async onRequest({ request, options }) {
+    onRequest({ request, options }) {
       // Log request
       console.log('[fetch request]', request, options)
 

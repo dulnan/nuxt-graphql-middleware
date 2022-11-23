@@ -1,9 +1,9 @@
-import NuxtGraphQLMiddleware from '..'
+import { defineNuxtConfig } from 'nuxt/config'
+import Module from './..'
 
 export default defineNuxtConfig({
-  modules: [NuxtGraphQLMiddleware],
+  modules: [Module],
   graphqlMiddleware: {
-    graphqlEndpoint:
-      'https://swapi-graphql.netlify.app/.netlify/functions/index',
+    graphqlEndpoint: 'http://localhost:4000',
   },
 })

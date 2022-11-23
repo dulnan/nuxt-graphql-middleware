@@ -1,6 +1,0 @@
-#import "~/pages/film/film.fragment.graphql"
-query filmById($filmId: ID) {
-  film(id: $filmId) {
-    ...film
-  }
-}
