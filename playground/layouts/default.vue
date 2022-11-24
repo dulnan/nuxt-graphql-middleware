@@ -11,6 +11,14 @@
         <div id="navbarBasicExample" class="navbar-menu">
           <div class="navbar-start">
             <nuxt-link class="navbar-item" to="/emails">All emails</nuxt-link>
+            <nuxt-link class="navbar-item" to="/fetch-options"
+              >Fetch options</nuxt-link
+            >
+            <div class="navbar-item">
+              <button class="button is-white" @click="initState">
+                Init default state
+              </button>
+            </div>
             <div class="navbar-item">
               <nuxt-link to="/user/add" class="button is-white"
                 >Add user</nuxt-link
@@ -37,7 +45,8 @@
   </div>
 </template>
 
-<script setup></script>
-
-<!-- Having a script tag with style in layouts leads to errors on the page after build -->
-<!-- Styles are moved to assets/layut/_layout.scss -->
+<script lang="ts" setup>
+function initState() {
+  return useGraphqlMutation('initState')
+}
+</script>

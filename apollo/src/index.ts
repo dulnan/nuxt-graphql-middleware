@@ -2,8 +2,13 @@ import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
 import data from './data.json' assert { type: 'json' }
 
-let users = [...data]
-let idIncrement = users.length
+let users = []
+let idIncrement = 0
+
+function initState() {
+  users = [...data]
+  idIncrement = users.length
+}
 
 function getId() {
   idIncrement++
@@ -28,14 +33,21 @@ const typeDefs = `#graphql
     dateOfBirth: String
   }
 
+  type TestFetchOptions {
+    headerClient: String
+    headerServer: String
+  }
+
   type Query {
     users: [User!]!
     userById(id: ID!): User
+    testFetchOptions: TestFetchOptions
   }
 
   type Mutation {
     createUser(user: UserData!): User!
     deleteUser(id: Int!): Boolean
+    initState: Boolean!
   }
 `
 
@@ -48,6 +60,12 @@ const resolvers = {
       const id = parseInt(args.id)
       return users.find((v) => v.id === id)
     },
+    testFetchOptions: (_parent: any, _args: any, context: any) => {
+      return {
+        headerClient: context.headerClient,
+        headerServer: context.headerServer,
+      }
+    },
   },
   Mutation: {
     createUser: (_: any, args: any) => {
@@ -59,14 +77,48 @@ const resolvers = {
       users = users.filter((v) => v.id !== args.id)
       return true
     },
+    initState: () => {
+      initState()
+      return true
+    },
   },
 }
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  plugins: [
+    {
+      requestDidStart() {
+        return Promise.resolve({
+          willSendResponse(requestContext) {
+            const { response } = requestContext
+            // Augment response with an extension, as long as the operation
+            // actually executed. (The `kind` check allows you to handle
+            // incremental delivery responses specially.)
+            if (
+              response.body.kind === 'single' &&
+              'data' in response.body.singleResult
+            ) {
+              response.http.headers.set('set-cookie', 'foobar=my-cookie-value')
+            }
+            return Promise.resolve()
+          },
+        })
+      },
+    },
+  ],
 })
 
-const { url } = await startStandaloneServer(server, { listen: { port: 4000 } })
+const { url } = await startStandaloneServer(server, {
+  listen: { port: 4000 },
+  context: ({ req }) => {
+    const headerClient = req.headers['x-nuxt-header-client']
+    const headerServer = req.headers['x-nuxt-header-server']
+    return Promise.resolve({ headerClient, headerServer })
+  },
+})
+
+initState()
 
 console.log(`GraphQL server listening at: ${url}`)

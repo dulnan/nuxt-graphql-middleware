@@ -23,7 +23,9 @@
     "typedoc": "typedoc --plugin typedoc-plugin-markdown --out foobar",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
-    "docs:serve": "vitepress serve docs --port 5000"
+    "docs:serve": "vitepress serve docs --port 5000",
+    "cypress": "cypress run --e2e",
+    "cypress:open": "cypress open --e2e"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.13.12",
@@ -38,6 +40,7 @@
     "@nuxt/module-builder": "^0.2.1",
     "@nuxt/schema": "^3.0.0",
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
+    "cypress": "^11.0.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
