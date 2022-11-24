@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import type { FetchOptions } from 'ohmyfetch'
+import type { FetchOptions, FetchResponse } from 'ohmyfetch'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
@@ -13,6 +13,13 @@ export type GraphqlMiddlewareServerFetchOptionsMethod = (
   operation?: string,
   operationName?: string,
 ) => FetchOptions
+
+export type GraphqlMiddlewareOnServerResponseMethod = (
+  event: H3Event,
+  response: FetchResponse<any>,
+  operation?: string,
+  operationName?: string,
+) => any
 
 export interface GraphqlMiddlewareConfig {
   /**
@@ -111,6 +118,33 @@ export interface GraphqlMiddlewareConfig {
    * ```
    */
   serverFetchOptions?: FetchOptions | GraphqlMiddlewareServerFetchOptionsMethod
+
+  /**
+   * Handle the response from the GraphQL server.
+   *
+   * You can alter the response, add additional properties to the data, get
+   * and set headers, etc.
+   *
+   * ```ts
+   * function onServerResponse(event, graphqlResponse) {
+   *   // Set a static header.
+   *   event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
+   *
+   *   // Pass the set-cookie header from the GraphQL server to the client.
+   *   const setCookie = graphqlResponse.headers.get('set-cookie')
+   *   if (setCookie) {
+   *     event.node.res.setHeader('set-cookie', setCookie)
+   *   }
+   *
+   *   // Add additional properties to the response.
+   *   graphqlResponse._data.__customProperty = ['My', 'values']
+   *
+   *   // Return the GraphQL response as is.
+   *   return graphqlResponse._data
+   * }
+   * ```
+   */
+  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod
 
   /**
    * Download the GraphQL schema and store it in the

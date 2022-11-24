@@ -127,18 +127,28 @@ export default defineEventHandler(async (event) => {
       ? queryParamToVariables(getQuery(event) as any)
       : await readBody(event)
 
-  return $fetch(endpoint, {
-    method: 'POST',
-    body: {
-      query,
-      variables,
-    },
-    ...fetchOptions,
-  }).catch((err) => {
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Couldn't execute GraphQL query.",
-      data: err && 'message' in err ? err.mess : err,
+  return $fetch
+    .raw(endpoint, {
+      method: 'POST',
+      body: {
+        query,
+        variables,
+      },
+      ...fetchOptions,
     })
-  })
+    .then((response) => {
+      if (config.onServerResponse) {
+        return config.onServerResponse(event, response, operation, name)
+      }
+      return response._data
+    })
+    .catch((err) => {
+      console.log(err)
+      console.log(Object.keys(err))
+      throw createError({
+        statusCode: 500,
+        statusMessage: "Couldn't execute GraphQL query.",
+        data: err && 'message' in err ? err.mess : err,
+      })
+    })
 })
