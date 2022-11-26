@@ -205,3 +205,8 @@ export enum GraphqlMiddlewareTemplate {
    */
   Documents = 'graphql-documents.mjs',
 }
+
+export enum GraphqlMiddlewareOperation {
+  Query = 'query',
+  Mutation = 'mutation',
+}

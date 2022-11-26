@@ -1,4 +1,5 @@
 import { GraphqlMiddlewareState } from './../../types'
+import { buildRequestParams } from './../helpers'
 import { useRuntimeConfig } from '#imports'
 import type {
   GraphqlMiddlewareQuery,
@@ -64,28 +65,9 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
   if (typeof name !== 'string') {
     return Promise.reject(new Error('Invalid query name'))
   }
-
-  const variables: Record<string, any> = args[1] as any
-  let params: Record<string, any> = {}
-
-  // Determine if the variables can safely be passed as query params.
-  const queryFallback =
-    variables &&
-    Object.keys(variables).some((key) => {
-      const valueType = typeof variables[key]
-      return valueType === 'function' || valueType === 'object'
-    })
-
-  // Variables contain unsafe query param values. Variables object is sent as a single param with object JSON stringified.
-  if (queryFallback) {
-    params.__variables = JSON.stringify(variables)
-  } else {
-    params = variables
-  }
-
   const state = useGraphqlState()
   return $fetch(getEndpoint('query', name), {
-    params,
+    params: buildRequestParams(args[1]),
     ...state.fetchOptions,
   }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
 }

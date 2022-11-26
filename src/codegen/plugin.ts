@@ -6,7 +6,7 @@ import {
 import { GraphQLSchema, concatAST } from 'graphql'
 import type { OperationDefinitionNode } from 'graphql'
 import { pascalCase } from 'change-case-all'
-import { falsy } from '../helpers'
+import { falsy } from '../runtime/helpers'
 
 export interface PluginConfig {
   serverApiPrefix: string

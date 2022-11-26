@@ -6,7 +6,7 @@ import {
 import { GraphQLSchema, concatAST } from 'graphql'
 import type { OperationDefinitionNode } from 'graphql'
 import { useLogger } from '@nuxt/kit'
-import { falsy } from '../helpers'
+import { falsy } from '../runtime/helpers'
 
 const logger = useLogger('nuxt-graphql-middleware')
 
