@@ -30,7 +30,8 @@ export interface CodegenResult {
 export function generateSchema(
   url: string,
   dest: string,
-): Promise<CodegenResult[]> {
+  writeToDisk: boolean,
+): Promise<CodegenResult> {
   return generate(
     {
       schema: url,
@@ -44,8 +45,8 @@ export function generateSchema(
         },
       },
     },
-    true,
-  )
+    writeToDisk,
+  ).then((v) => v[0])
 }
 
 export function generateTemplates(

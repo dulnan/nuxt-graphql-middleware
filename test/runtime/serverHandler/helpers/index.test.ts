@@ -4,6 +4,7 @@ import {
   queryParamToVariables,
   getEndpoint,
   validateRequest,
+  getFetchOptions,
 } from './../../../../src/runtime/serverHandler/helpers'
 
 describe('queryParamToVariables', () => {
@@ -20,6 +21,83 @@ describe('queryParamToVariables', () => {
       one: 'one',
       two: 'two',
     })
+  })
+
+  test('returns the input if the variables are unparsable', () => {
+    expect(
+      queryParamToVariables({
+        __variables: 'invalid',
+      }),
+    ).toEqual({
+      __variables: 'invalid',
+    })
+  })
+})
+
+describe('getFetchOptions', () => {
+  test('Returns the fetch options from a callback', () => {
+    expect(
+      getFetchOptions(
+        {
+          serverFetchOptions: () => {
+            return {
+              headers: {
+                'x-foobar': 'yes',
+              },
+            }
+          },
+        },
+        null as any,
+        'query' as any,
+        'foobar',
+      ),
+    ).toEqual({
+      headers: {
+        'x-foobar': 'yes',
+      },
+    })
+  })
+
+  test('Returns an empty object from a callback returning nothing', () => {
+    expect(
+      getFetchOptions(
+        {
+          serverFetchOptions: () => {
+            return null as any
+          },
+        },
+        null as any,
+        'query' as any,
+        'foobar',
+      ),
+    ).toEqual({})
+  })
+
+  test('Returns the fetch options object', () => {
+    expect(
+      getFetchOptions(
+        {
+          serverFetchOptions: {
+            headers: {
+              'x-foobar': 'yes',
+            },
+          },
+        },
+        null as any,
+        'query' as any,
+        'foobar',
+      ),
+    ).toEqual({
+      headers: {
+        'x-foobar': 'yes',
+      },
+    })
+  })
+
+  test('Returns an empty options object', () => {
+    expect(getFetchOptions({}, null as any, 'query' as any, 'foobar')).toEqual(
+      {},
+    )
   })
 })
 

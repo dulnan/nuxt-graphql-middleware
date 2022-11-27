@@ -74,7 +74,7 @@ async function getSchemaPath(
     typeof options.graphqlEndpoint === 'string'
       ? options.graphqlEndpoint
       : options.graphqlEndpoint()
-  await generateSchema(graphqlEndpoint, dest)
+  await generateSchema(graphqlEndpoint, dest, true)
   return dest
 }
 
@@ -227,9 +227,6 @@ declare module '#graphql-documents' {
 `
       },
     })
-
-    // Add the state plugin.
-    addPlugin(moduleResolver(runtimeDir, 'plugin'), {})
 
     // Add the server API handler.
     addServerHandler({

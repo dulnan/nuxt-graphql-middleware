@@ -61,8 +61,6 @@ export default defineEventHandler(async (event) => {
       return response._data
     })
     .catch((err) => {
-      console.log(err)
-      console.log(Object.keys(err))
       throw createError({
         statusCode: 500,
         statusMessage: "Couldn't execute GraphQL query.",
