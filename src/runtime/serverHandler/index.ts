@@ -13,10 +13,10 @@ import {
 } from './helpers'
 import { getModuleConfig } from './helpers/getModuleConfig'
 import { GraphqlMiddlewareOperation } from './../../types'
-import { documents } from '#graphql-documents'
+import documents from '#graphql-documents'
 
 export default defineEventHandler(async (event) => {
-  // The HTTP method.
+  // The HTTP method. Only GET and POST are supported.
   const method = getMethod(event)
 
   // The operation (either "query" or "mutation").
@@ -25,11 +25,12 @@ export default defineEventHandler(async (event) => {
   // The name of the query or mutation.
   const name = event.context.params.name
 
-  // Make sure the request is valid.
+  // Make sure the request is valid. Will throw an error if the request is
+  // invalid.
   validateRequest(method, operation, name, documents)
 
-  // The GraphQL query document.
-  const query = documents[operation][name]
+  // The GraphQL query document as a string.
+  const query: string = documents[operation][name]
 
   // Load the module configuration.
   const config = await getModuleConfig()
@@ -40,6 +41,7 @@ export default defineEventHandler(async (event) => {
   // Get the fetch options for this request.
   const fetchOptions = getFetchOptions(config, event, operation, name)
 
+  // The variables.
   const variables =
     operation === GraphqlMiddlewareOperation.Query
       ? queryParamToVariables(getQuery(event) as any)

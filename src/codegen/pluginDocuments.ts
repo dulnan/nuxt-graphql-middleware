@@ -42,6 +42,6 @@ export const plugin: PluginFunction<
     },
   })
 
-  return `export const documents = ${JSON.stringify(operations, null, 2)};
-`
+  return `const documents = ${JSON.stringify(operations, null, 2)};
+export default documents;`
 }

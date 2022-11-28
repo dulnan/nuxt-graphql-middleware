@@ -1,0 +1,7 @@
+#import "./foobar.graphql"
+
+query test {
+  user {
+    ...user
+  }
+}

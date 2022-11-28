@@ -1,1 +1,1 @@
-declare module '@graphql-fragment-import/lib/inline-imports'
+declare module '@graphql-fragment-import/lib/inline-imports.js'

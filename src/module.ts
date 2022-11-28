@@ -1,148 +1,26 @@
-import { fileURLToPath } from 'url'
-import { promises as fsp } from 'fs'
 import type { NuxtModule } from '@nuxt/schema'
 import { defu } from 'defu'
 import {
   defineNuxtModule,
-  addPlugin,
   addServerHandler,
   createResolver,
   addTemplate,
-  resolveFiles,
-  resolveAlias,
-  useLogger,
   addImportsDir,
 } from '@nuxt/kit'
-import type { Resolver } from '@nuxt/kit'
-import { generateSchema, generateTemplates } from './codegen'
+import inquirer from 'inquirer'
 import { GraphqlMiddlewareConfig, GraphqlMiddlewareTemplate } from './types'
-const fragmentImport = require('@graphql-fragment-import/lib/inline-imports')
+import {
+  validateOptions,
+  getSchemaPath,
+  generate,
+  defaultOptions,
+  logger,
+} from './helpers'
+import { CodegenResult } from './codegen'
 
-const logger = useLogger('nuxt-graphql-middleware')
-
+// Nuxt needs this.
 export type ModuleOptions = GraphqlMiddlewareConfig
 export type ModuleHooks = {}
-
-/**
- * Import and inline fragments in GraphQL documents.
- */
-function inlineFragments(source: string, resolver: any) {
-  return fragmentImport(source, {
-    resolveImport(identifier: string) {
-      return resolver(identifier)
-    },
-    resolveOptions: {
-      basedir: './',
-    },
-  })
-}
-
-/**
- * Validate the module options.
- */
-function validateOptions(options: Partial<ModuleOptions>) {
-  if (!options.graphqlEndpoint) {
-    throw new Error('Missing graphqlEndpoint.')
-  }
-}
-
-/**
- * Get the path to the GraphQL schema.
- */
-async function getSchemaPath(
-  options: ModuleOptions,
-  resolver: Resolver['resolve'],
-): Promise<string> {
-  const dest = resolver(options.schemaPath!)
-  if (!options.downloadSchema) {
-    const fileExists = await fsp
-      .access(dest)
-      .then(() => true)
-      .catch(() => false)
-    if (!fileExists) {
-      logger.error(
-        '"downloadSchema" is set to false but no schema exists at ' + dest,
-      )
-      throw new Error('Missing GraphQL schema.')
-    }
-    return dest
-  }
-  if (!options.graphqlEndpoint) {
-    throw new Error('Missing graphqlEndpoint config.')
-  }
-  const graphqlEndpoint =
-    typeof options.graphqlEndpoint === 'string'
-      ? options.graphqlEndpoint
-      : options.graphqlEndpoint()
-  await generateSchema(graphqlEndpoint, dest, true)
-  return dest
-}
-
-/**
- * Read the GraphQL files for the given patterns.
- */
-async function autoImportDocuments(
-  patterns: string[] = [],
-  srcResolver: Resolver['resolve'],
-): Promise<string[]> {
-  if (!patterns.length) {
-    return Promise.resolve([])
-  }
-  const files = (
-    await resolveFiles(srcResolver(), patterns, {
-      followSymbolicLinks: false,
-    })
-  ).filter((path) => {
-    return !path.includes('schema.gql') && !path.includes('schema.graphql')
-  })
-
-  return Promise.all(
-    files.map((v) => {
-      return fsp.readFile(v).then((v) => v.toString())
-    }),
-  )
-}
-
-/**
- * Generates the TypeScript definitions and documents files.
- */
-async function generate(
-  options: ModuleOptions,
-  schemaPath: string,
-  resolver: Resolver['resolve'],
-) {
-  logger.info('Generating GraphQL files...')
-
-  const documents: string[] = [
-    ...(await autoImportDocuments(options.autoImportPatterns, resolver)),
-    ...(options.documents || []),
-  ].map((v) => inlineFragments(v, resolveAlias))
-
-  const templates = await generateTemplates(documents, schemaPath, options)
-  logger.success('Generated GraphQL files.')
-  return templates
-}
-
-const defaultOptions: ModuleOptions = {
-  codegenConfig: {
-    exportFragmentSpreadSubTypes: true,
-    preResolveTypes: true,
-    skipTypeNameForRoot: true,
-    skipTypename: true,
-    useTypeImports: true,
-    onlyOperationTypes: true,
-    namingConvention: {
-      enumValues: 'change-case-all#upperCaseFirst',
-    },
-  },
-  downloadSchema: true,
-  schemaPath: './schema.graphql',
-  serverApiPrefix: '/api/graphql_middleware',
-  graphqlEndpoint: '',
-  debug: false,
-  documents: [],
-  autoImportPatterns: ['**/*.{gql,graphql}', '!node_modules'],
-}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -152,16 +30,62 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: defaultOptions,
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
+
+    // Will throw an error if the options are not valid.
     validateOptions(options)
 
     const rootDir = nuxt.options.rootDir
     const moduleResolver = createResolver(import.meta.url).resolve
-    const srcResolver = createResolver(nuxt.options.srcDir).resolve
-    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    const srcDir = nuxt.options.srcDir
+    const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(options, srcResolver)
+
     const ctx = {
-      templates: await generate(options, schemaPath, srcResolver),
+      templates: [] as CodegenResult[],
     }
+
+    let prompt: any = null
+    const generateHandler = async (isFirst = false) => {
+      if (prompt && prompt.ui) {
+        prompt.ui.close()
+        prompt = null
+      }
+
+      try {
+        const templates = await generate(
+          options,
+          schemaPath,
+          srcResolver,
+          srcDir,
+        )
+        ctx.templates = templates
+      } catch (e) {
+        logger.error('Failed to generate GraphQL files.')
+        if (isFirst) {
+          process.exit(1)
+        }
+        if (!options.downloadSchema) {
+          return
+        }
+        process.stdout.write('\n')
+        logger.restoreStd()
+        prompt = inquirer
+          .prompt({
+            type: 'confirm',
+            name: 'accept',
+            message: 'Do you want to reload the GraphQL schema?',
+          })
+          .then(async ({ accept }) => {
+            if (accept) {
+              await getSchemaPath(options, srcResolver)
+              await generateHandler()
+            }
+          })
+      }
+    }
+
+    await generateHandler(true)
+
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
       serverApiPrefix: options.serverApiPrefix!,
     }
@@ -170,15 +94,21 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Watch for file changes.
-    nuxt.hook('builder:watch', async (_event, path) => {
+    nuxt.hook('builder:watch', async (event, path) => {
+      // We only care about GraphQL files.
       if (!path.match(/\.(gql|graphql)$/)) {
         return
       }
+      if (schemaPath.includes(path)) {
+        return
+      }
 
-      ctx.templates = await generate(options, schemaPath, srcResolver)
+      await generateHandler()
       await nuxt.callHook('builder:generateApp')
+      logger.error('GENEARETD')
     })
 
+    // Add composables.
     addImportsDir(moduleResolver('runtime/composables'))
 
     // Add the templates to nuxt and provide a callback to load the file contents.
@@ -187,6 +117,8 @@ export default defineNuxtModule<ModuleOptions>({
         write: true,
         filename,
         getContents: () => {
+          // This will load the contents of the files dynamically. The watcher
+          // hook updates these files if needed.
           return (
             ctx.templates.find((v) => v.filename === filename)?.content || ''
           )
@@ -222,7 +154,7 @@ declare module '#graphql-documents' {
     mutation: GraphqlMiddlerwareMutation
   }
   const documents: Documents
-  export { documents }
+  export default documents
 }
 `
       },

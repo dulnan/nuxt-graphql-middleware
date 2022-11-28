@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse } from 'ohmyfetch'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
+import type { GraphQLError } from 'graphql'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
@@ -187,6 +188,15 @@ export interface GraphqlMiddlewareConfig {
 
 export interface GraphqlMiddlewareState {
   fetchOptions: FetchOptions
+}
+
+export type GraphqlMiddlewareDocument = {
+  content: string
+  isValid?: boolean
+  errors?: GraphQLError[]
+  filename?: string
+  name?: string
+  operation?: string
 }
 
 export enum GraphqlMiddlewareTemplate {
