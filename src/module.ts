@@ -6,6 +6,7 @@ import {
   createResolver,
   addTemplate,
   addImportsDir,
+  updateTemplates,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { GraphqlMiddlewareConfig, GraphqlMiddlewareTemplate } from './types'
@@ -52,19 +53,26 @@ export default defineNuxtModule<ModuleOptions>({
       }
 
       try {
-        const templates = await generate(
+        const { templates, hasErrors } = await generate(
           options,
           schemaPath,
           srcResolver,
           srcDir,
+          isFirst,
         )
         ctx.templates = templates
+        if (hasErrors) {
+          throw new Error('Documents has errors.')
+        }
       } catch (e) {
         logger.error('Failed to generate GraphQL files.')
         if (isFirst) {
           process.exit(1)
         }
         if (!options.downloadSchema) {
+          return
+        }
+        if (!nuxt.options.dev) {
           return
         }
         process.stdout.write('\n')
@@ -93,21 +101,6 @@ export default defineNuxtModule<ModuleOptions>({
       rootDir,
     }
 
-    // Watch for file changes.
-    nuxt.hook('builder:watch', async (event, path) => {
-      // We only care about GraphQL files.
-      if (!path.match(/\.(gql|graphql)$/)) {
-        return
-      }
-      if (schemaPath.includes(path)) {
-        return
-      }
-
-      await generateHandler()
-      await nuxt.callHook('builder:generateApp')
-      logger.error('GENEARETD')
-    })
-
     // Add composables.
     addImportsDir(moduleResolver('runtime/composables'))
 
@@ -116,6 +109,9 @@ export default defineNuxtModule<ModuleOptions>({
       const result = addTemplate({
         write: true,
         filename,
+        options: {
+          nuxtGraphqlMiddleware: true,
+        },
         getContents: () => {
           // This will load the contents of the files dynamically. The watcher
           // hook updates these files if needed.
@@ -154,7 +150,7 @@ declare module '#graphql-documents' {
     mutation: GraphqlMiddlerwareMutation
   }
   const documents: Documents
-  export default documents
+  export documents
 }
 `
       },
@@ -165,5 +161,31 @@ declare module '#graphql-documents' {
       handler: moduleResolver('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
     })
+
+    // Watch for file changes in dev mode.
+    if (nuxt.options.dev) {
+      nuxt.hook('nitro:build:before', (nitro) => {
+        nuxt.hook('builder:watch', async (event, path) => {
+          // We only care about GraphQL files.
+          if (!path.match(/\.(gql|graphql)$/)) {
+            return
+          }
+          if (schemaPath.includes(path)) {
+            return
+          }
+
+          await generateHandler()
+          await updateTemplates({
+            filter: (template) => {
+              return template.options && template.options.nuxtGraphqlMiddleware
+            },
+          })
+
+          // Workaround until https://github.com/nuxt/framework/issues/8720 is
+          // implemented.
+          await nitro.hooks.callHook('dev:reload')
+        })
+      })
+    }
   },
 }) as NuxtModule<ModuleOptions>

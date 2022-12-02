@@ -13,7 +13,7 @@ import {
 } from './helpers'
 import { getModuleConfig } from './helpers/getModuleConfig'
 import { GraphqlMiddlewareOperation } from './../../types'
-import documents from '#graphql-documents'
+import { documents } from '#graphql-documents'
 
 export default defineEventHandler(async (event) => {
   // The HTTP method. Only GET and POST are supported.

@@ -5,10 +5,7 @@ import {
 } from '@graphql-codegen/plugin-helpers'
 import { GraphQLSchema, concatAST } from 'graphql'
 import type { OperationDefinitionNode } from 'graphql'
-import { useLogger } from '@nuxt/kit'
 import { falsy } from '../runtime/helpers'
-
-const logger = useLogger('nuxt-graphql-middleware')
 
 export interface NamedOperationsObjectPluginConfig {}
 
@@ -35,7 +32,6 @@ export const plugin: PluginFunction<
           node.loc?.source &&
           (node.operation === 'query' || node.operation === 'mutation')
         ) {
-          logger.info(`Added ${node.operation}:`.padEnd(24) + node.name.value)
           operations[node.operation][node.name.value] = node.loc.source.body
         }
       },
@@ -43,5 +39,5 @@ export const plugin: PluginFunction<
   })
 
   return `const documents = ${JSON.stringify(operations, null, 2)};
-export default documents;`
+export { documents };`
 }

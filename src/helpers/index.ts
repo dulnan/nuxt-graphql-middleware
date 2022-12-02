@@ -214,6 +214,7 @@ export async function generate(
   schemaPath: string,
   resolver: Resolver['resolve'],
   srcDir: string,
+  logEverything = false,
 ) {
   const schemaContent = await fsp.readFile(schemaPath).then((v) => v.toString())
   const schema = await loadSchema(schemaContent, { loaders: [] })
@@ -232,26 +233,34 @@ export async function generate(
     options,
   )
 
-  const table = new Table({
-    head: ['Operation', 'Name', 'File', 'Errors'].map((v) => chalk.white(v)),
-  })
+  const hasErrors = validated.some((v) => !v.isValid)
+  if (hasErrors || logEverything) {
+    const table = new Table({
+      head: ['Operation', 'Name', 'File', 'Errors'].map((v) => chalk.white(v)),
+    })
 
-  validated.forEach((document) => {
-    table.push(
-      [
-        document.operation || '',
-        document.name || '',
-        document.filename?.replace(srcDir, '') || '',
-        document.errors?.join('\n\n') || '',
-      ].map((v) => {
-        if (document.isValid) {
-          return chalk.green(v)
-        }
-        return chalk.red(v)
-      }),
-    )
-  })
+    validated.forEach((document) => {
+      if (logEverything || !document.isValid) {
+        table.push(
+          [
+            document.operation || '',
+            document.name || '',
+            document.filename?.replace(srcDir, '') || '',
+            document.errors?.join('\n\n') || '',
+          ].map((v) => {
+            if (document.isValid) {
+              return v
+            }
+            return chalk.red(v)
+          }),
+        )
+      }
+    })
 
-  logger.log(table.toString())
-  return templates
+    logger.log(table.toString())
+  }
+
+  logger.info('Finished GraphQL code generation.')
+
+  return { templates, hasErrors }
 }
