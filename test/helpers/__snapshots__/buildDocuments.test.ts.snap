@@ -1,0 +1,49 @@
+// Vitest Snapshot v1
+
+exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
+[
+  {
+    "content": "mutation initState {
+  initState
+}",
+    "filename": "/mnt/9446003b-4690-4fcd-9dba-5e051c432d33/development/nuxt-graphql-middleware/playground/layouts/mutation.initState.graphql",
+  },
+  {
+    "content": "query fetchOptions {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}",
+    "filename": "/mnt/9446003b-4690-4fcd-9dba-5e051c432d33/development/nuxt-graphql-middleware/playground/pages/fetch-options/query.fetchOptions.graphql",
+  },
+  {
+    "content": "mutation deleteUser($id: Int!) {
+  deleteUser(id: $id)
+}",
+    "filename": "/mnt/9446003b-4690-4fcd-9dba-5e051c432d33/development/nuxt-graphql-middleware/playground/pages/mutation.deleteUser.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "/mnt/9446003b-4690-4fcd-9dba-5e051c432d33/development/nuxt-graphql-middleware/playground/pages/user/user.fragment.graphql",
+  },
+]
+`;
+
+exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`] = `
+[
+  {
+    "content": "query foobar {
+        field
+      }",
+    "filename": "nuxt.config.ts",
+  },
+]
+`;

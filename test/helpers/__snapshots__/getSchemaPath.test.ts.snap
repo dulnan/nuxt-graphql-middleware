@@ -1,0 +1,5 @@
+// Vitest Snapshot v1
+
+exports[`getSchemaPath > Throws an error if the schema path is invalid 1`] = `[Error: Missing GraphQL schema.]`;
+
+exports[`getSchemaPath > Throws an error if the schema should be downloaded but no endpoint is defined 1`] = `[Error: Missing graphqlEndpoint config.]`;

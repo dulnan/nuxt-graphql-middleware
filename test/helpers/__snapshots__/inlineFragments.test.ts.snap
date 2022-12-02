@@ -1,0 +1,13 @@
+// Vitest Snapshot v1
+
+exports[`inlineFragments > Inlines fragments 1`] = `
+"
+    #import \\"~/pages/user/user.fragment.graphql\\"
+
+    query userById($id: ID!) {
+      userById(id: $id) {
+        ...user
+      }
+    }
+    "
+`;

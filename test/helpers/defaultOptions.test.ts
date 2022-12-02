@@ -1,0 +1,22 @@
+import { describe, expect, test, vi } from 'vitest'
+import { defaultOptions } from '../../src/helpers'
+
+describe('defaultOptions', () => {
+  test('Provides sane defaults', () => {
+    expect(defaultOptions.autoImportPatterns).toEqual([
+      '**/*.{gql,graphql}',
+      '!node_modules',
+    ])
+
+    expect(defaultOptions.downloadSchema).toEqual(true)
+    expect(defaultOptions.schemaPath).toEqual('./schema.graphql')
+    expect(defaultOptions.serverApiPrefix).toEqual('/api/graphql_middleware')
+    expect(
+      defaultOptions.graphqlEndpoint,
+      'Should be falsy so that an error is thrown during build.',
+    ).toBeFalsy()
+
+    expect(defaultOptions.debug).toBeFalsy()
+    expect(defaultOptions.documents?.length).toEqual(0)
+  })
+})

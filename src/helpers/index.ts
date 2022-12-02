@@ -165,8 +165,11 @@ export function buildDocuments(
 export function parseDocument(
   document: GraphqlMiddlewareDocument,
   srcDir: string,
-): DocumentNode | undefined {
-  const name = document.filename ? document.filename.replace(srcDir, '') : ''
+): DocumentNode {
+  let name = document.filename ? document.filename.replace(srcDir, '') : ''
+  if (name.charAt(0) === '/') {
+    name = name.slice(1)
+  }
   const source = new Source(document.content, name)
   return parse(source)
 }
@@ -180,25 +183,25 @@ export function validateDocuments(
     const document = documents[i]
     try {
       const node = parseDocument(document, srcDir)
-      if (node) {
-        document.errors = validateGraphQlDocuments(schema, [
-          node,
-        ]) as GraphQLError[]
+      document.errors = validateGraphQlDocuments(schema, [
+        node,
+      ]) as GraphQLError[]
 
-        const operation = node.definitions.find(
-          (v) => v.kind === 'OperationDefinition',
-        ) as OperationDefinitionNode | undefined
-        if (operation) {
-          document.name = operation.name?.value
-          document.operation = operation.operation
-        }
-
-        // document.name = node
-        document.isValid = document.errors.length === 0
-      } else {
-        document.isValid = false
+      const operation = node.definitions.find(
+        (v) => v.kind === 'OperationDefinition',
+      ) as OperationDefinitionNode | undefined
+      if (operation) {
+        document.name = operation.name?.value
+        document.operation = operation.operation
       }
+
+      // document.name = node
+      document.isValid = document.errors.length === 0
     } catch (e) {
+      document.errors =
+        e && typeof e === 'object' && e !== null
+          ? [e.message]
+          : ['Validation failed']
       document.isValid = false
     }
   }

@@ -1,0 +1,324 @@
+// Vitest Snapshot v1
+
+exports[`generate > Generates templates correctly for auto imported documents 1`] = `
+{
+  "hasErrors": false,
+  "templates": [
+    {
+      "content": "export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: string;
+  String: string;
+  Boolean: boolean;
+  Int: number;
+  Float: number;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createUser: User;
+  deleteUser?: Maybe<Scalars['Boolean']>;
+  initState: Scalars['Boolean'];
+};
+
+
+export type MutationCreateUserArgs = {
+  user: UserData;
+};
+
+
+export type MutationDeleteUserArgs = {
+  id: Scalars['Int'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  testFetchOptions?: Maybe<TestFetchOptions>;
+  userById?: Maybe<User>;
+  users: Array<User>;
+};
+
+
+export type QueryUserByIdArgs = {
+  id: Scalars['ID'];
+};
+
+export type TestFetchOptions = {
+  __typename?: 'TestFetchOptions';
+  headerClient?: Maybe<Scalars['String']>;
+  headerServer?: Maybe<Scalars['String']>;
+};
+
+export type User = {
+  __typename?: 'User';
+  dateOfBirth?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+  email: Scalars['String'];
+  firstName: Scalars['String'];
+  id: Scalars['Int'];
+  lastName: Scalars['String'];
+};
+
+export type UserData = {
+  dateOfBirth?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  email: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
+};
+
+export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
+
+export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
+
+export type InitStateMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type InitStateMutation = { __typename?: 'Mutation', initState: boolean };
+
+export type DeleteUserMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
+",
+      "filename": "graphql-operations.d.ts",
+      "hooks": {},
+    },
+    {
+      "content": "import {
+  FetchOptionsQuery,
+  InitStateMutation,
+  DeleteUserMutation,
+  DeleteUserMutationVariables
+} from './graphql-operations'
+
+
+type GraphqlMiddlewareResponse<T> = {
+  data: T
+}
+
+declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareQuery = {
+    fetchOptions: [null, true, FetchOptionsQuery]
+  }
+
+  export type GraphqlMiddlewareMutation = {
+    initState: [null, true, InitStateMutation],
+    deleteUser: [DeleteUserMutationVariables, false, DeleteUserMutation]
+  }
+
+}
+
+declare module 'nitropack' {
+  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+  interface InternalApi {
+    'undefined/query/fetchOptions': GraphqlMiddlewareResponse<Awaited<FetchOptionsQuery>>
+    'undefined/mutation/initState': GraphqlMiddlewareResponse<Awaited<InitStateMutation>>
+    'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
+  }
+}
+",
+      "filename": "nuxt-graphql-middleware.d.ts",
+      "hooks": {},
+    },
+    {
+      "content": "const documents = {
+  \\"query\\": {
+    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\"
+  },
+  \\"mutation\\": {
+    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
+    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+  }
+};
+export { documents };",
+      "filename": "graphql-documents.mjs",
+      "hooks": {},
+    },
+  ],
+}
+`;
+
+exports[`generate > Generates templates correctly for provided documents 1`] = `
+{
+  "hasErrors": false,
+  "templates": [
+    {
+      "content": "export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: string;
+  String: string;
+  Boolean: boolean;
+  Int: number;
+  Float: number;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createUser: User;
+  deleteUser?: Maybe<Scalars['Boolean']>;
+  initState: Scalars['Boolean'];
+};
+
+
+export type MutationCreateUserArgs = {
+  user: UserData;
+};
+
+
+export type MutationDeleteUserArgs = {
+  id: Scalars['Int'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  testFetchOptions?: Maybe<TestFetchOptions>;
+  userById?: Maybe<User>;
+  users: Array<User>;
+};
+
+
+export type QueryUserByIdArgs = {
+  id: Scalars['ID'];
+};
+
+export type TestFetchOptions = {
+  __typename?: 'TestFetchOptions';
+  headerClient?: Maybe<Scalars['String']>;
+  headerServer?: Maybe<Scalars['String']>;
+};
+
+export type User = {
+  __typename?: 'User';
+  dateOfBirth?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars['String']>;
+  email: Scalars['String'];
+  firstName: Scalars['String'];
+  id: Scalars['Int'];
+  lastName: Scalars['String'];
+};
+
+export type UserData = {
+  dateOfBirth?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars['String']>;
+  email: Scalars['String'];
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
+};
+
+export type OneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number }> };
+
+export type TwoMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type TwoMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
+",
+      "filename": "graphql-operations.d.ts",
+      "hooks": {},
+    },
+    {
+      "content": "import {
+  OneQuery,
+  TwoMutation,
+  TwoMutationVariables
+} from './graphql-operations'
+
+
+type GraphqlMiddlewareResponse<T> = {
+  data: T
+}
+
+declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareQuery = {
+    one: [null, true, OneQuery]
+  }
+
+  export type GraphqlMiddlewareMutation = {
+    two: [TwoMutationVariables, false, TwoMutation]
+  }
+
+}
+
+declare module 'nitropack' {
+  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+  interface InternalApi {
+    'undefined/query/one': GraphqlMiddlewareResponse<Awaited<OneQuery>>
+    'undefined/mutation/two': GraphqlMiddlewareResponse<Awaited<TwoMutation>>
+  }
+}
+",
+      "filename": "nuxt-graphql-middleware.d.ts",
+      "hooks": {},
+    },
+    {
+      "content": "const documents = {
+  \\"query\\": {
+    \\"one\\": \\"\\\\n            query one {\\\\n              users {\\\\n                id\\\\n              }\\\\n            }\\"
+  },
+  \\"mutation\\": {
+    \\"two\\": \\"\\\\n            mutation two($id: Int!) {\\\\n              deleteUser(id: $id)\\\\n            }\\"
+  }
+};
+export { documents };",
+      "filename": "graphql-documents.mjs",
+      "hooks": {},
+    },
+  ],
+}
+`;
+
+exports[`generate > Renders a table with information about all documents. 1`] = `
+"┌───────────┬──────┬────────────────┬────────┐
+│ [37mOperation[39m │ [37mName[39m │ [37mFile[39m           │ [37mErrors[39m │
+├───────────┼──────┼────────────────┼────────┤
+│           │      │ nuxt.config.ts │        │
+├───────────┼──────┼────────────────┼────────┤
+│ query     │ one  │ nuxt.config.ts │        │
+├───────────┼──────┼────────────────┼────────┤
+│ mutation  │ two  │ nuxt.config.ts │        │
+└───────────┴──────┴────────────────┴────────┘"
+`;
+
+exports[`generate > Renders a table with information about all documents. 2`] = `
+"┌───────────┬──────┬────────────────┬──────────────────────────────────────────────────────────────────────┐
+│ [37mOperation[39m │ [37mName[39m │ [37mFile[39m           │ [37mErrors[39m                                                               │
+├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
+│           │      │ [31mnuxt.config.ts[39m │ [31mSyntax Error: Expected Name, found <EOF>.[39m                            │
+├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
+│ query     │ one  │ nuxt.config.ts │                                                                      │
+├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
+│ [31mmutation[39m  │ [31mtwo[39m  │ [31mnuxt.config.ts[39m │ [31mVariable \\"$id\\" of type \\"Int\\" used in position expecting type \\"Int!\\".[39m │
+│           │      │                │ [31m[39m                                                                     │
+│           │      │                │ [31mnuxt.config.ts:2:26[39m                                                  │
+│           │      │                │ [31m1 |[39m                                                                  │
+│           │      │                │ [31m2 |             mutation two($id: Int) {[39m                             │
+│           │      │                │ [31m  |                          ^[39m                                       │
+│           │      │                │ [31m3 |               deleteUser(id: $id)[39m                                │
+│           │      │                │ [31m[39m                                                                     │
+│           │      │                │ [31mnuxt.config.ts:3:30[39m                                                  │
+│           │      │                │ [31m2 |             mutation two($id: Int) {[39m                             │
+│           │      │                │ [31m3 |               deleteUser(id: $id)[39m                                │
+│           │      │                │ [31m  |                              ^[39m                                   │
+│           │      │                │ [31m4 |             }[39m                                                    │
+└───────────┴──────┴────────────────┴──────────────────────────────────────────────────────────────────────┘"
+`;

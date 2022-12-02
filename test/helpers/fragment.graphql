@@ -1,3 +1,0 @@
-fragment user on User {
-  name
-}

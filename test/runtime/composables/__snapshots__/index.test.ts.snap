@@ -84,6 +84,4 @@ exports[`useGraphqlQuery > Performs a query with string variables 2`] = `
 }
 `;
 
-exports[`useGraphqlQuery > Throws an error for invalid mutation names. 1`] = `[Error: Invalid mutation name]`;
-
 exports[`useGraphqlQuery > Throws an error for invalid query names. 1`] = `[Error: Invalid query name]`;
