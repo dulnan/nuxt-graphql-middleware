@@ -26,7 +26,8 @@
     "cypress": "cypress run --e2e",
     "cypress:open": "cypress open --e2e",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "test:ci": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^2.15.0",

@@ -36,4 +36,4 @@ jobs:
         run: |
           npm ci
           npm run dev:build
-          npm run test
+          npm run test:ci

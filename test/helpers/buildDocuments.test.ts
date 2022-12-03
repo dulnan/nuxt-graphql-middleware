@@ -9,7 +9,12 @@ describe('buildDocuments', () => {
 
   test('Reads and build the documents by pattern', async () => {
     expect(
-      await buildDocuments([], ['**/*.graphql'], resolver),
+      await buildDocuments([], ['**/*.graphql'], resolver).then((v) => {
+        return v.map((doc) => {
+          doc.filename = path.basename(doc.filename!)
+          return doc
+        })
+      }),
     ).toMatchSnapshot()
   })
 
