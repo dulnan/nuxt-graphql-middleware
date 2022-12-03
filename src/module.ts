@@ -65,6 +65,7 @@ export default defineNuxtModule<ModuleOptions>({
           throw new Error('Documents has errors.')
         }
       } catch (e) {
+        console.log(e)
         logger.error('Failed to generate GraphQL files.')
         if (isFirst) {
           process.exit(1)

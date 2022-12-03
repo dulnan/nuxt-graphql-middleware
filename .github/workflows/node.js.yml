@@ -27,6 +27,7 @@ jobs:
         working-directory: apollo
         run: |
           npm ci
+          npm run compile
           npm run start &
         env:
           PORT: 4000
