@@ -58,6 +58,7 @@
     "jsdoc-to-markdown": "^8.0.0",
     "nuxt": "^3.0.0",
     "prettier": "^2.8.0",
+    "strip-ansi": "^7.0.1",
     "typedoc": "^0.23.21",
     "typedoc-plugin-markdown": "^3.14.0",
     "vitepress": "^1.0.0-alpha.29",

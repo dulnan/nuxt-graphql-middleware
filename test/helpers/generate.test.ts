@@ -1,6 +1,7 @@
 import path from 'path'
 import { createResolver } from '@nuxt/kit'
 import { describe, expect, test, vi } from 'vitest'
+import stripAnsi from 'strip-ansi'
 import { generate, logger } from '../../src/helpers'
 
 describe('generate', () => {
@@ -78,10 +79,10 @@ describe('generate', () => {
       true,
     )
 
-    expect(output).toMatchSnapshot()
+    expect(stripAnsi(output)).toMatchSnapshot()
   })
 
-  test('Renders a table with information about all documents.', async () => {
+  test('Renders a table with information about all documents with errors.', async () => {
     let output = ''
     logger.log = (v) => {
       output += v
@@ -93,7 +94,7 @@ describe('generate', () => {
             id
           `,
           `
-            query one {
+            syntax error one {
               users {
                 id
               }
@@ -110,6 +111,6 @@ describe('generate', () => {
       true,
     )
 
-    expect(output).toMatchSnapshot()
+    expect(stripAnsi(output)).toMatchSnapshot()
   })
 })
