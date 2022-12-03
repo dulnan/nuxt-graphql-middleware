@@ -5,6 +5,7 @@ import { GraphqlMiddlewareConfig } from '../src/types'
 
 const graphqlMiddleware: GraphqlMiddlewareConfig = {
   graphqlEndpoint: 'http://localhost:4000',
+
   serverFetchOptions: function (event) {
     const headers: HeadersInit = {
       'x-nuxt-header-server': 'Value from server',
