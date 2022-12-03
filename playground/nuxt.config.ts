@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config'
 import { getHeader } from 'h3'
 import { GraphqlMiddlewareConfig } from '../src/types'
-// import Module from './..'
+import graphqlMiddlewareModule from './../src/module'
 
 const graphqlMiddleware: GraphqlMiddlewareConfig = {
   graphqlEndpoint: 'http://localhost:4000',
@@ -38,6 +38,6 @@ const graphqlMiddleware: GraphqlMiddlewareConfig = {
 }
 
 export default defineNuxtConfig({
-  modules: ['nuxt-graphql-middleware'],
+  modules: [graphqlMiddlewareModule],
   graphqlMiddleware,
 })
