@@ -29,11 +29,11 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^2.14.1",
+    "@graphql-codegen/cli": "^2.15.0",
     "@graphql-codegen/schema-ast": "^2.5.1",
-    "@graphql-codegen/typescript": "^2.8.2",
+    "@graphql-codegen/typescript": "^2.8.3",
     "@graphql-codegen/typescript-generic-sdk": "^3.0.4",
-    "@graphql-codegen/typescript-operations": "^2.5.7",
+    "@graphql-codegen/typescript-operations": "^2.5.8",
     "@graphql-fragment-import/lib": "^2.0.0",
     "@graphql-tools/utils": "^9.1.1",
     "@nuxt/kit": "^3.0.0",
@@ -51,14 +51,14 @@
     "@vitest/coverage-c8": "^0.25.3",
     "capture-console": "^1.0.1",
     "cypress": "^11.2.0",
-    "eslint": "^8.28.0",
+    "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "jsdoc-to-markdown": "^7.1.1",
+    "jsdoc-to-markdown": "^8.0.0",
     "nuxt": "^3.0.0",
     "prettier": "^2.8.0",
     "typedoc": "^0.23.21",
-    "typedoc-plugin-markdown": "^3.13.6",
+    "typedoc-plugin-markdown": "^3.14.0",
     "vitepress": "^1.0.0-alpha.29",
     "vitest": "^0.25.3"
   }

@@ -2,10 +2,10 @@ import { generate, executeCodegen } from '@graphql-codegen/cli'
 import * as PluginTypescript from '@graphql-codegen/typescript'
 import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
-import * as PluginNuxtGraphqlMiddleware from './codegen/plugin'
-import * as PluginNuxtGraphqlMiddlewareDocuments from './codegen/pluginDocuments'
-import { GraphqlMiddlewareDocument, GraphqlMiddlewareTemplate } from './types'
-import { ModuleOptions } from './module'
+import * as PluginNuxtGraphqlMiddleware from './plugin'
+import * as PluginNuxtGraphqlMiddlewareDocuments from './pluginDocuments'
+import { GraphqlMiddlewareTemplate } from './../types'
+import { ModuleOptions } from './../module'
 
 function pluginLoader(name: string): Promise<any> {
   if (name === '@graphql-codegen/typescript') {

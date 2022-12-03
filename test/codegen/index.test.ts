@@ -1,7 +1,7 @@
 import { ModuleOptions } from '@nuxt/schema'
 import { describe, expect, test } from 'vitest'
-import { generateTemplates, generateSchema } from '../src/codegen'
-import { GraphqlMiddlewareTemplate } from '../src/types'
+import { generateTemplates, generateSchema } from '../../src/codegen'
+import { GraphqlMiddlewareTemplate } from '../../src/types'
 const schema = `
 type User {
   name: String!

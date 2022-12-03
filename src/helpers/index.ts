@@ -69,6 +69,7 @@ export function validateOptions(options: Partial<GraphqlMiddlewareConfig>) {
 export async function getSchemaPath(
   options: GraphqlMiddlewareConfig,
   resolver: Resolver['resolve'],
+  writeToDisk = false,
 ): Promise<string> {
   const dest = resolver(options.schemaPath!)
   if (!options.downloadSchema) {
@@ -91,7 +92,7 @@ export async function getSchemaPath(
     typeof options.graphqlEndpoint === 'string'
       ? options.graphqlEndpoint
       : options.graphqlEndpoint()
-  await generateSchema(graphqlEndpoint, dest, true)
+  await generateSchema(graphqlEndpoint, dest, writeToDisk)
   return dest
 }
 

@@ -1,0 +1,404 @@
+// Vitest Snapshot v1
+
+exports[`nuxt-graphql-middleware > Performs a GraphQL mutation. 1`] = `
+{
+  "__customProperty": [
+    "one",
+    "two",
+  ],
+  "data": {
+    "deleteUser": true,
+  },
+}
+`;
+
+exports[`nuxt-graphql-middleware > Performs a GraphQL query. 1`] = `
+{
+  "__customProperty": [
+    "one",
+    "two",
+  ],
+  "data": {
+    "users": [
+      {
+        "dateOfBirth": "1989-05-09",
+        "description": "Nulla ut erat id mauris vulputate elementum. Nullam varius. Nulla facilisi.
+
+Cras non velit nec nisi vulputate nonummy. Maecenas tincidunt lacus at velit. Vivamus vel nulla eget eros elementum pellentesque.
+
+Quisque porta volutpat erat. Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus.",
+        "email": "jkenworthy1@jiathis.com",
+        "firstName": "Johnathan",
+        "id": 2,
+        "lastName": "Kenworthy",
+      },
+      {
+        "dateOfBirth": "1955-08-04",
+        "description": "Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.
+
+Integer ac leo. Pellentesque ultrices mattis odio. Donec vitae nisi.",
+        "email": "lswindells3@slate.com",
+        "firstName": "Leonelle",
+        "id": 4,
+        "lastName": "Swindells",
+      },
+      {
+        "dateOfBirth": "1961-12-11",
+        "description": "Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem. Quisque ut erat.
+
+Curabitur gravida nisi at nibh. In hac habitasse platea dictumst. Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem.",
+        "email": "mtemprell4@spiegel.de",
+        "firstName": "Mack",
+        "id": 5,
+        "lastName": "Temprell",
+      },
+      {
+        "dateOfBirth": "1972-03-18",
+        "description": "Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem.",
+        "email": "mrzehor5@symantec.com",
+        "firstName": "Moishe",
+        "id": 6,
+        "lastName": "Rzehor",
+      },
+      {
+        "dateOfBirth": "1956-01-23",
+        "description": "Phasellus in felis. Donec semper sapien a libero. Nam dui.
+
+Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.",
+        "email": "kkocher6@qq.com",
+        "firstName": "Kerwinn",
+        "id": 7,
+        "lastName": "Kocher",
+      },
+      {
+        "dateOfBirth": "2000-10-18",
+        "description": "Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem. Quisque ut erat.",
+        "email": "crodgier7@webeden.co.uk",
+        "firstName": "Carlen",
+        "id": 8,
+        "lastName": "Rodgier",
+      },
+      {
+        "dateOfBirth": null,
+        "description": "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum.
+
+In hac habitasse platea dictumst. Morbi vestibulum, velit id pretium iaculis, diam erat fermentum justo, nec condimentum neque sapien placerat ante. Nulla justo.",
+        "email": "ebeentjes8@upenn.edu",
+        "firstName": "Elfrida",
+        "id": 9,
+        "lastName": "Beentjes",
+      },
+      {
+        "dateOfBirth": "1974-04-07",
+        "description": "Duis consequat dui nec nisi volutpat eleifend. Donec ut dolor. Morbi vel lectus in quam fringilla rhoncus.
+
+Mauris enim leo, rhoncus sed, vestibulum sit amet, cursus id, turpis. Integer aliquet, massa id lobortis convallis, tortor risus dapibus augue, vel accumsan tellus nisi eu orci. Mauris lacinia sapien quis libero.
+
+Nullam sit amet turpis elementum ligula vehicula consequat. Morbi a ipsum. Integer a nibh.",
+        "email": "ohenrique9@cmu.edu",
+        "firstName": "Ogdan",
+        "id": 10,
+        "lastName": "Henrique",
+      },
+      {
+        "dateOfBirth": "1983-05-22",
+        "description": "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo. Maecenas pulvinar lobortis est.
+
+Phasellus sit amet erat. Nulla tempus. Vivamus in felis eu sapien cursus vestibulum.
+
+Proin eu mi. Nulla ac enim. In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
+        "email": "mglasmana@hhs.gov",
+        "firstName": "Merill",
+        "id": 11,
+        "lastName": "Glasman",
+      },
+      {
+        "dateOfBirth": "1990-10-08",
+        "description": "Etiam vel augue. Vestibulum rutrum rutrum neque. Aenean auctor gravida sem.
+
+Praesent id massa id nisl venenatis lacinia. Aenean sit amet justo. Morbi ut odio.
+
+Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo. In blandit ultrices enim. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
+        "email": "aaveriesb@wix.com",
+        "firstName": "Artie",
+        "id": 12,
+        "lastName": "Averies",
+      },
+      {
+        "dateOfBirth": "1966-06-20",
+        "description": "Fusce consequat. Nulla nisl. Nunc nisl.
+
+Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum.",
+        "email": "bkaiserc@addthis.com",
+        "firstName": "Blakelee",
+        "id": 13,
+        "lastName": "Kaiser",
+      },
+      {
+        "dateOfBirth": "1992-09-12",
+        "description": "Aenean lectus. Pellentesque eget nunc. Donec quis orci eget orci vehicula condimentum.",
+        "email": "ctythertond@ted.com",
+        "firstName": "Cthrine",
+        "id": 14,
+        "lastName": "Tytherton",
+      },
+      {
+        "dateOfBirth": "1956-01-31",
+        "description": "Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.",
+        "email": "bsuerze@ustream.tv",
+        "firstName": "Bonnie",
+        "id": 15,
+        "lastName": "Suerz",
+      },
+      {
+        "dateOfBirth": "1979-01-29",
+        "description": "Suspendisse potenti. In eleifend quam a odio. In hac habitasse platea dictumst.
+
+Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem. Quisque ut erat.",
+        "email": "tkilrowf@sfgate.com",
+        "firstName": "Thelma",
+        "id": 16,
+        "lastName": "Kilrow",
+      },
+      {
+        "dateOfBirth": "1991-11-24",
+        "description": "Quisque porta volutpat erat. Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus.",
+        "email": "sbaakeg@a8.net",
+        "firstName": "Sarita",
+        "id": 17,
+        "lastName": "Baake",
+      },
+      {
+        "dateOfBirth": "1976-03-20",
+        "description": "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus vestibulum sagittis sapien. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
+        "email": "mmathonneth@amazon.co.uk",
+        "firstName": "Misha",
+        "id": 18,
+        "lastName": "Mathonnet",
+      },
+      {
+        "dateOfBirth": "1998-11-16",
+        "description": null,
+        "email": "mjordisoni@utexas.edu",
+        "firstName": "Mary",
+        "id": 19,
+        "lastName": "Jordison",
+      },
+      {
+        "dateOfBirth": "1962-03-10",
+        "description": "Curabitur gravida nisi at nibh. In hac habitasse platea dictumst. Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem.
+
+Integer tincidunt ante vel ipsum. Praesent blandit lacinia erat. Vestibulum sed magna at nunc commodo placerat.
+
+Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.",
+        "email": "hreedshawj@merriam-webster.com",
+        "firstName": "Hobart",
+        "id": 20,
+        "lastName": "Reedshaw",
+      },
+      {
+        "dateOfBirth": "1991-08-24",
+        "description": "Sed ante. Vivamus tortor. Duis mattis egestas metus.
+
+Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.
+
+Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.",
+        "email": "jfogelk@aol.com",
+        "firstName": "Jo",
+        "id": 21,
+        "lastName": "Fogel",
+      },
+      {
+        "dateOfBirth": "1984-01-25",
+        "description": "Aenean fermentum. Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.
+
+Quisque id justo sit amet sapien dignissim vestibulum. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est. Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros.
+
+Vestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.",
+        "email": "mgabeyl@dot.gov",
+        "firstName": "Matthias",
+        "id": 22,
+        "lastName": "Gabey",
+      },
+      {
+        "dateOfBirth": "1998-10-16",
+        "description": null,
+        "email": "gsmurfittm@macromedia.com",
+        "firstName": "Giorgia",
+        "id": 23,
+        "lastName": "Smurfitt",
+      },
+      {
+        "dateOfBirth": null,
+        "description": "Cras non velit nec nisi vulputate nonummy. Maecenas tincidunt lacus at velit. Vivamus vel nulla eget eros elementum pellentesque.
+
+Quisque porta volutpat erat. Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus.
+
+Phasellus in felis. Donec semper sapien a libero. Nam dui.",
+        "email": "iwallikern@deliciousdays.com",
+        "firstName": "Isador",
+        "id": 24,
+        "lastName": "Walliker",
+      },
+      {
+        "dateOfBirth": null,
+        "description": "Sed sagittis. Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci. Nullam molestie nibh in lectus.",
+        "email": "dmorisono@deviantart.com",
+        "firstName": "Dorolisa",
+        "id": 25,
+        "lastName": "Morison",
+      },
+      {
+        "dateOfBirth": "1975-12-21",
+        "description": "Vestibulum ac est lacinia nisi venenatis tristique. Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue. Aliquam erat volutpat.",
+        "email": "fshrimplinp@storify.com",
+        "firstName": "Franciskus",
+        "id": 26,
+        "lastName": "Shrimplin",
+      },
+      {
+        "dateOfBirth": "1978-07-04",
+        "description": "Phasellus in felis. Donec semper sapien a libero. Nam dui.
+
+Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.",
+        "email": "fgarrickq@oracle.com",
+        "firstName": "Frederica",
+        "id": 27,
+        "lastName": "Garrick",
+      },
+      {
+        "dateOfBirth": "1976-09-10",
+        "description": "Phasellus in felis. Donec semper sapien a libero. Nam dui.",
+        "email": "cvondruskar@spiegel.de",
+        "firstName": "Cherry",
+        "id": 28,
+        "lastName": "Vondruska",
+      },
+      {
+        "dateOfBirth": "2000-09-10",
+        "description": "Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.",
+        "email": "dkleemans@ihg.com",
+        "firstName": "Donovan",
+        "id": 29,
+        "lastName": "Kleeman",
+      },
+      {
+        "dateOfBirth": "1952-05-19",
+        "description": "Sed ante. Vivamus tortor. Duis mattis egestas metus.",
+        "email": "egainest@rambler.ru",
+        "firstName": "Eugine",
+        "id": 30,
+        "lastName": "Gaines",
+      },
+      {
+        "dateOfBirth": "1969-02-04",
+        "description": null,
+        "email": "bboodleu@tinyurl.com",
+        "firstName": "Benjie",
+        "id": 31,
+        "lastName": "Boodle",
+      },
+      {
+        "dateOfBirth": null,
+        "description": null,
+        "email": "hkrzysztofiakv@about.com",
+        "firstName": "Hedi",
+        "id": 32,
+        "lastName": "Krzysztofiak",
+      },
+      {
+        "dateOfBirth": "1977-02-03",
+        "description": "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus vestibulum sagittis sapien. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+
+Etiam vel augue. Vestibulum rutrum rutrum neque. Aenean auctor gravida sem.",
+        "email": "ccunradiw@cyberchimps.com",
+        "firstName": "Caroljean",
+        "id": 33,
+        "lastName": "Cunradi",
+      },
+      {
+        "dateOfBirth": null,
+        "description": "Morbi non lectus. Aliquam sit amet diam in magna bibendum imperdiet. Nullam orci pede, venenatis non, sodales sed, tincidunt eu, felis.
+
+Fusce posuere felis sed lacus. Morbi sem mauris, laoreet ut, rhoncus aliquet, pulvinar sed, nisl. Nunc rhoncus dui vel sem.",
+        "email": "tgilbridex@un.org",
+        "firstName": "Tootsie",
+        "id": 34,
+        "lastName": "Gilbride",
+      },
+      {
+        "dateOfBirth": "1979-07-18",
+        "description": "In sagittis dui vel nisl. Duis ac nibh. Fusce lacus purus, aliquet at, feugiat non, pretium quis, lectus.
+
+Suspendisse potenti. In eleifend quam a odio. In hac habitasse platea dictumst.",
+        "email": "trunchmany@noaa.gov",
+        "firstName": "Trish",
+        "id": 35,
+        "lastName": "Runchman",
+      },
+      {
+        "dateOfBirth": "1999-03-24",
+        "description": "In hac habitasse platea dictumst. Etiam faucibus cursus urna. Ut tellus.
+
+Nulla ut erat id mauris vulputate elementum. Nullam varius. Nulla facilisi.",
+        "email": "ibarnsdallz@webnode.com",
+        "firstName": "Ilsa",
+        "id": 36,
+        "lastName": "Barnsdall",
+      },
+      {
+        "dateOfBirth": "1961-03-27",
+        "description": "Phasellus sit amet erat. Nulla tempus. Vivamus in felis eu sapien cursus vestibulum.
+
+Proin eu mi. Nulla ac enim. In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.
+
+Duis aliquam convallis nunc. Proin at turpis a pede posuere nonummy. Integer non velit.",
+        "email": "vnevin10@163.com",
+        "firstName": "Valdemar",
+        "id": 37,
+        "lastName": "Nevin",
+      },
+      {
+        "dateOfBirth": "1958-05-24",
+        "description": "In sagittis dui vel nisl. Duis ac nibh. Fusce lacus purus, aliquet at, feugiat non, pretium quis, lectus.",
+        "email": "jfillary11@berkeley.edu",
+        "firstName": "Juli",
+        "id": 38,
+        "lastName": "Fillary",
+      },
+      {
+        "dateOfBirth": "1973-06-06",
+        "description": "Nullam sit amet turpis elementum ligula vehicula consequat. Morbi a ipsum. Integer a nibh.
+
+In quis justo. Maecenas rhoncus aliquam lacus. Morbi quis tortor id nulla ultrices aliquet.
+
+Maecenas leo odio, condimentum id, luctus nec, molestie sed, justo. Pellentesque viverra pede ac diam. Cras pellentesque volutpat dui.",
+        "email": "gashbolt12@globo.com",
+        "firstName": "Germana",
+        "id": 39,
+        "lastName": "Ashbolt",
+      },
+      {
+        "dateOfBirth": "1975-12-04",
+        "description": "Praesent blandit. Nam nulla. Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.",
+        "email": "rlorriman13@barnesandnoble.com",
+        "firstName": "Reeta",
+        "id": 40,
+        "lastName": "Lorriman",
+      },
+    ],
+  },
+}
+`;
+
+exports[`nuxt-graphql-middleware > Watches files 1`] = `
+{
+  "__customProperty": [
+    "one",
+    "two",
+  ],
+  "data": {
+    "deleteUser": true,
+  },
+}
+`;
