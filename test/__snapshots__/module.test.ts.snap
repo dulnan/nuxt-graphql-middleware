@@ -33,6 +33,18 @@ Quisque porta volutpat erat. Quisque erat eros, viverra eget, congue eget, sempe
         "lastName": "Kenworthy",
       },
       {
+        "dateOfBirth": "1978-05-11",
+        "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Proin risus. Praesent lectus.
+
+Vestibulum quam sapien, varius ut, blandit non, interdum in, ante. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio. Curabitur convallis.
+
+Duis consequat dui nec nisi volutpat eleifend. Donec ut dolor. Morbi vel lectus in quam fringilla rhoncus.",
+        "email": "agillett2@comcast.net",
+        "firstName": "Artemus",
+        "id": 3,
+        "lastName": "Gillett",
+      },
+      {
         "dateOfBirth": "1955-08-04",
         "description": "Proin leo odio, porttitor id, consequat in, consequat ut, nulla. Sed accumsan felis. Ut at dolor quis odio consequat varius.
 
@@ -387,18 +399,6 @@ Maecenas leo odio, condimentum id, luctus nec, molestie sed, justo. Pellentesque
         "lastName": "Lorriman",
       },
     ],
-  },
-}
-`;
-
-exports[`nuxt-graphql-middleware > Watches files 1`] = `
-{
-  "__customProperty": [
-    "one",
-    "two",
-  ],
-  "data": {
-    "deleteUser": true,
   },
 }
 `;
