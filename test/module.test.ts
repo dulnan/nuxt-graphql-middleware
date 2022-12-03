@@ -18,11 +18,17 @@ describe('nuxt-graphql-middleware', async () => {
   })
 
   test('Performs a GraphQL query.', async () => {
-    const data = await $fetch('/api/graphql_middleware/query/users')
+    await $fetch('/api/graphql_middleware/mutation/initState', {
+      method: 'post',
+    })
+    const data = await $fetch('/api/graphql_middleware/query/userById?id=6')
     expect(data).toMatchSnapshot()
   })
 
   test('Performs a GraphQL mutation.', async () => {
+    await $fetch('/api/graphql_middleware/mutation/initState', {
+      method: 'post',
+    })
     const data = await $fetch('/api/graphql_middleware/mutation/deleteUser', {
       method: 'post',
       body: {
