@@ -1,0 +1,33 @@
+type Mutation {
+  createUser(user: UserData!): User!
+  deleteUser(id: Int!): Boolean
+  initState: Boolean!
+}
+
+type Query {
+  testFetchOptions: TestFetchOptions
+  userById(id: ID!): User
+  users: [User!]!
+}
+
+type TestFetchOptions {
+  headerClient: String
+  headerServer: String
+}
+
+type User {
+  dateOfBirth: String
+  description: String
+  email: String!
+  firstName: String!
+  id: Int!
+  lastName: String!
+}
+
+input UserData {
+  dateOfBirth: String
+  description: String
+  email: String!
+  firstName: String!
+  lastName: String!
+}
