@@ -151,7 +151,7 @@ declare module '#graphql-documents' {
     mutation: GraphqlMiddlerwareMutation
   }
   const documents: Documents
-  export documents
+  export { documents }
 }
 `
       },

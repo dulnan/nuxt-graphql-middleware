@@ -1,27 +1,21 @@
+![nuxt-graphql-middleware banner](docs/banner.png?raw=true "Nuxt GraphQL Middleware - Expose queries and mutations as fully typed API routes.")
+
 # Nuxt GraphQL Middleware
 
-GraphQL in the backend, fetch in the frontend. With TypeScript support.
+Expose GraphQL queries and mutations as fully typed API routes.
 
-## Idea
-When using GraphQL you have to bundle your queries in your frontend build and
-send them with every request. If you have lots of queries and/or fragments,
-this can increase your frontend bundle size significantly. In addition you have
-to expose your entire GraphQL endpoint to the public (if you don't use persisted
-queries).
-
-This module aims to fix this by performing any GraphQL requests only on the
-server side. It passes the response to the frontend via a simple JSON endpoint.
-So you can have all the benefits of GraphQL but without any bloat.
-
-It optionally generates TypeScript type files of your schema, queries and
-mutations via [graphql-codegen](https://github.com/dotansimha/graphql-code-generator).
+<p style="text-align: center">
+  [![Test](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml)
+</p>
 
 ## Features
-- GraphQL queries and mutations using graphql-request
-- Client plugin to perform queries or mutations
-- Fully flexible: Modify request headers, responses or handle errors
-- HMR for queries and mutations
-- TypeScript integration for schema, queries and mutations
+- Exposes each query and mutation as an API route
+- GraphQL requests are only done on the server side
+- No GraphQL documents in client bundle
+- Includes composables to perform queries or mutations
+- Modify request headers, responses and handle errors
+- HMR for all GraphQL files
+- Full TypeScript integration for schema, queries, mutations and fragments using [graphql-code-generator](https://github.com/dotansimha/graphql-code-generator)
 
 # Setup
 
@@ -33,6 +27,7 @@ npm install --save nuxt-graphql-middleware
 Minimal configuration needed:
 ```javascript
 export default defineNuxtConfig({
+  modules: ['nuxt-graphql-middleware'],
   graphqlMiddleware: {
     graphqlEndpoint: 'https://example.com/graphql',
   }
@@ -55,10 +50,11 @@ query films {
 
 Your query is now available via the useGraphqlQuery() composable:
 
-
 ```typescript
 const { data } = await useGraphqlQuery('films')
 console.log(data.allFilms.films)
 ```
 
-Alternatively you can call `http://localhost:3000/api/graphql_middleware/query/films`.
+Alternatively you can also call
+`http://localhost:3000/api/graphql_middleware/query/films` to get the same
+result.
