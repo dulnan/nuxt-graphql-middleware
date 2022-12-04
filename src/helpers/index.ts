@@ -36,6 +36,7 @@ export const defaultOptions: GraphqlMiddlewareConfig = {
   serverApiPrefix: '/api/graphql_middleware',
   graphqlEndpoint: '',
   debug: false,
+  includeComposables: true,
   documents: [],
   autoImportPatterns: ['**/*.{gql,graphql}', '!node_modules'],
 }

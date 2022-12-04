@@ -98,6 +98,19 @@ export default defineNuxtConfig({
 }
 ```
 
+## includeComposables: boolean
+Wether the useGraphqlQuery, useGraphqlMutation and useGraphqlState composables
+should be included.
+
+Set this to false if you want to customize how to do your queries and mutations
+inside your app. You can also create your own composables that extend the
+provided composables.
+
+### Default
+```typescript
+true
+```
+
 ## debug: boolean
 Enable detailled debugging messages.
 

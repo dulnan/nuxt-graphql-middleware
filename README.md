@@ -4,9 +4,9 @@
 
 Expose GraphQL queries and mutations as fully typed API routes.
 
-<p style="text-align: center">
-  [![Test](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml)
-</p>
+**[Documentation](https://nuxt-graphql-middleware.dulnan.net)** – **[npm](https://www.npmjs.com/package/nuxt-graphql-middleware)** – **[Version 2.x (for Nuxt 2)](https://github.com/dulnan/nuxt-graphql-middleware/tree/2.x)**
+
+[![Test](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/dulnan/nuxt-graphql-middleware/actions/workflows/node.js.yml)
 
 ## Features
 - Exposes each query and mutation as an API route

@@ -9,6 +9,7 @@ import {
   updateTemplates,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
+import { name, version } from '../package.json'
 import { GraphqlMiddlewareConfig, GraphqlMiddlewareTemplate } from './types'
 import {
   validateOptions,
@@ -25,8 +26,12 @@ export type ModuleHooks = {}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
-    name: 'nuxt-graphql-middleware',
+    name,
     configKey: 'graphqlMiddleware',
+    version,
+    compatibility: {
+      nuxt: '^3.0.0',
+    },
   },
   defaults: defaultOptions,
   async setup(passedOptions, nuxt) {
@@ -41,6 +46,7 @@ export default defineNuxtModule<ModuleOptions>({
     const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(options, srcResolver)
 
+    // Store the generated templates in a locally scoped object.
     const ctx = {
       templates: [] as CodegenResult[],
     }
@@ -102,8 +108,13 @@ export default defineNuxtModule<ModuleOptions>({
       rootDir,
     }
 
-    // Add composables.
-    addImportsDir(moduleResolver('runtime/composables'))
+    if (options.includeComposables) {
+      // Add composables.
+      addImportsDir(moduleResolver('runtime/composables'))
+      nuxt.options.alias['#graphql-composable'] = moduleResolver(
+        'runtime/composables',
+      )
+    }
 
     // Add the templates to nuxt and provide a callback to load the file contents.
     Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
@@ -130,10 +141,6 @@ export default defineNuxtModule<ModuleOptions>({
         nuxt.options.alias['#graphql-operations'] = result.dst
       }
     })
-
-    nuxt.options.alias['#graphql-composable'] = moduleResolver(
-      'runtime/composables',
-    )
 
     addTemplate({
       write: true,

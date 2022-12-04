@@ -67,6 +67,16 @@ export interface GraphqlMiddlewareConfig {
   documents?: string[]
 
   /**
+   * Wether the useGraphqlQuery, useGraphqlMutation and useGraphqlState
+   * composables should be included.
+   *
+   * @default ```ts
+   * true
+   * ```
+   */
+  includeComposables?: boolean
+
+  /**
    * Enable detailled debugging messages.
    *
    * @default false
