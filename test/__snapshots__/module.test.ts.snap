@@ -1,0 +1,32 @@
+// Vitest Snapshot v1
+
+exports[`nuxt-graphql-middleware > Performs a GraphQL mutation. 1`] = `
+{
+  "__customProperty": [
+    "one",
+    "two",
+  ],
+  "data": {
+    "deleteUser": true,
+  },
+}
+`;
+
+exports[`nuxt-graphql-middleware > Performs a GraphQL query. 1`] = `
+{
+  "__customProperty": [
+    "one",
+    "two",
+  ],
+  "data": {
+    "userById": {
+      "dateOfBirth": "1972-03-18",
+      "description": "Morbi porttitor lorem id ligula. Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem.",
+      "email": "mrzehor5@symantec.com",
+      "firstName": "Moishe",
+      "id": 6,
+      "lastName": "Rzehor",
+    },
+  },
+}
+`;

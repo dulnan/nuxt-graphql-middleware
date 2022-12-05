@@ -1,255 +1,214 @@
-import path from 'path'
-import fs from 'fs'
-import mkdirp from 'mkdirp'
-import chokidar from 'chokidar'
-import { Module } from '@nuxt/types'
-import consola from 'consola'
-import { GraphqlMiddlewarePluginConfig } from './templates/plugin'
-import serverMiddleware, {
-  GraphqlServerMiddlewareConfig,
-} from './serverMiddleware'
-import graphqlImport from './graphqlImport'
-import codegen, { GraphqlMiddlewareCodegenConfig } from './codegen'
+import { fileURLToPath } from 'url'
+import type { NuxtModule } from '@nuxt/schema'
+import { defu } from 'defu'
+import {
+  defineNuxtModule,
+  addServerHandler,
+  createResolver,
+  addTemplate,
+  addImportsDir,
+  updateTemplates,
+} from '@nuxt/kit'
+import inquirer from 'inquirer'
+import { name, version } from '../package.json'
+import { GraphqlMiddlewareConfig } from './types'
+import { GraphqlMiddlewareTemplate } from './runtime/settings'
+import {
+  validateOptions,
+  getSchemaPath,
+  generate,
+  defaultOptions,
+  logger,
+} from './helpers'
+import { CodegenResult } from './codegen'
 
-const logger = consola.withTag('nuxt-graphql-middleware')
+// Nuxt needs this.
+export type ModuleOptions = GraphqlMiddlewareConfig
+export type ModuleHooks = {}
 
-const PLUGIN_PATH = path.resolve(__dirname, '../dist/plugin.mjs')
+export default defineNuxtModule<ModuleOptions>({
+  meta: {
+    name,
+    configKey: 'graphqlMiddleware',
+    version,
+    compatibility: {
+      nuxt: '^3.0.0',
+    },
+  },
+  defaults: defaultOptions,
+  async setup(passedOptions, nuxt) {
+    const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
-export interface GraphqlMiddlewareConfig {
-  graphqlServer: string
-  typescript?: GraphqlMiddlewareCodegenConfig
-  endpointNamespace?: string
-  debug: boolean
-  queries: Record<string, string>
-  mutations: Record<string, string>
-  outputPath: string
-  plugin?: GraphqlMiddlewarePluginConfig
-  server?: GraphqlServerMiddlewareConfig
-}
+    // Will throw an error if the options are not valid.
+    validateOptions(options)
 
-enum FileType {
-  Query = 'query',
-  Mutation = 'mutation',
-}
+    const rootDir = nuxt.options.rootDir
+    const moduleResolver = createResolver(import.meta.url).resolve
+    const srcDir = nuxt.options.srcDir
+    const srcResolver = createResolver(srcDir).resolve
+    const schemaPath = await getSchemaPath(options, srcResolver)
 
-interface FileMapItem {
-  type: FileType
-  name: string
-  file: string
-}
+    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    nuxt.options.build.transpile.push(runtimeDir)
 
-/**
- * Resolve the given GraphQL file by inlining all fragments.
- */
-function resolveGraphqlFile(file: string, resolver: any): Promise<string> {
-  return fs.promises
-    .readFile(file)
-    .then((buffer) => buffer.toString())
-    .then((source) => graphqlImport(source, resolver))
-}
+    // Store the generated templates in a locally scoped object.
+    const ctx = {
+      templates: [] as CodegenResult[],
+    }
 
-/**
- * Write a file.
- */
-function writeSource(dest: string, type: string, name: string, source: string) {
-  const fileName = `${type}.${name}.graphql`
-  const out = path.resolve(dest, fileName)
-  return fs.promises.writeFile(out, source)
-}
+    let prompt: any = null
+    const generateHandler = async (isFirst = false) => {
+      if (prompt && prompt.ui) {
+        prompt.ui.close()
+        prompt = null
+      }
 
-/**
- * Resolves, merges and writes the given GraphQL files.
- */
-function resolveGraphql(
-  files: Record<string, string>,
-  map: Map<string, string>,
-  resolver: any,
-  filesMap: Map<string, FileMapItem>,
-  type: FileType,
-  outputPath: string
-) {
-  return Promise.all(
-    Object.keys(files).map((name) => {
-      const filePath = files[name]
-      const file = resolver(filePath)
-      return resolveGraphqlFile(file, resolver).then((source) => {
-        map.set(name, source)
-        if (outputPath) {
-          writeSource(outputPath, type, name, source)
+      try {
+        const { templates, hasErrors } = await generate(
+          options,
+          schemaPath,
+          srcResolver,
+          srcDir,
+          isFirst,
+        )
+        ctx.templates = templates
+        if (hasErrors) {
+          throw new Error('Documents has errors.')
         }
-        filesMap.set(file, {
-          type,
-          name,
-          file: filePath,
-        })
+      } catch (e) {
+        console.log(e)
+        logger.error('Failed to generate GraphQL files.')
+        if (isFirst) {
+          process.exit(1)
+        }
+        if (!options.downloadSchema) {
+          return
+        }
+        if (!nuxt.options.dev) {
+          return
+        }
+        process.stdout.write('\n')
+        logger.restoreStd()
+        prompt = inquirer
+          .prompt({
+            type: 'confirm',
+            name: 'accept',
+            message: 'Do you want to reload the GraphQL schema?',
+          })
+          .then(async ({ accept }) => {
+            if (accept) {
+              await getSchemaPath(options, srcResolver)
+              await generateHandler()
+            }
+          })
+      }
+    }
+
+    await generateHandler(true)
+
+    nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
+      serverApiPrefix: options.serverApiPrefix!,
+    }
+    nuxt.options.runtimeConfig.graphqlMiddleware = {
+      rootDir,
+    }
+
+    if (options.includeComposables) {
+      // Add composables.
+      addImportsDir(moduleResolver('runtime/composables'))
+      nuxt.options.alias['#graphql-composable'] = moduleResolver(
+        'runtime/composables',
+      )
+    }
+
+    // Add the templates to nuxt and provide a callback to load the file contents.
+    Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
+      const result = addTemplate({
+        write: true,
+        filename,
+        options: {
+          nuxtGraphqlMiddleware: true,
+        },
+        getContents: () => {
+          // This will load the contents of the files dynamically. The watcher
+          // hook updates these files if needed.
+          return (
+            ctx.templates.find((v) => v.filename === filename)?.content || ''
+          )
+        },
       })
+
+      if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
+        nuxt.options.alias['#graphql-documents'] = result.dst
+      } else if (
+        result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
+      ) {
+        nuxt.options.alias['#graphql-operations'] = result.dst
+      }
     })
-  )
-}
 
-/*
- * Install the Nuxt GraphQL Middleware module.
- */
-const graphqlMiddleware: Module = async function () {
-  const resolver = this.nuxt.resolver.resolveAlias
+    addTemplate({
+      write: true,
+      filename: 'graphql-documents.d.ts',
+      getContents: () => {
+        return `
+import {
+  GraphqlMiddlerwareQuery,
+  GraphqlMiddlewareMutation,
+} from '#build/nuxt-graphql-middleware'
 
-  const options = this.options
-  const PORT = this.options?.server?.port || 3000
-  const provided = (this.options.graphqlMiddleware ||
-    {}) as Partial<GraphqlMiddlewareConfig>
-
-  const config: GraphqlMiddlewareConfig = {
-    graphqlServer: provided.graphqlServer || '',
-    typescript: {
-      enabled: !!provided.typescript?.enabled,
-      schemaOptions: provided.typescript?.schemaOptions,
-      resolvedQueriesPath:
-        provided.typescript?.resolvedQueriesPath || provided.outputPath || '',
-      schemaOutputPath: provided.typescript?.schemaOutputPath || '~/schema',
-      typesOutputPath: provided.typescript?.typesOutputPath || '~/types',
-      skipSchemaDownload: !!provided.typescript?.skipSchemaDownload,
-    },
-    endpointNamespace: provided.endpointNamespace || '/__graphql_middleware',
-    debug: provided.debug || options.dev,
-    queries: provided.queries || {},
-    mutations: provided.mutations || {},
-    outputPath: provided.outputPath || '',
-    server: provided.server,
-    plugin: {
-      enabled: !!provided.plugin?.enabled,
-      port: 4000,
-      cacheInBrowser: !!provided.plugin?.cacheInBrowser,
-      cacheInServer: !!provided.plugin?.cacheInServer,
-    },
+declare module '#graphql-documents' {
+  type Documents = {
+    query: GraphqlMiddlerwareQuery
+    mutation: GraphqlMiddlerwareMutation
   }
-
-  // Add the API helper plugin.
-  if (config.plugin?.enabled) {
-    this.addPlugin({
-      filename: 'graphqlMiddleware.js',
-      src: PLUGIN_PATH,
-      options: {
-        namespace: config.endpointNamespace,
-        port: PORT,
-        cacheInBrowser: config.plugin?.cacheInBrowser ? 'true' : 'false',
-        cacheInServer: config.plugin?.cacheInServer ? 'true' : 'false',
+  const documents: Documents
+  export { documents }
+}
+`
       },
     })
-  }
 
-  const fileMap: Map<string, FileMapItem> = new Map()
-  const queries = new Map()
-  const mutations = new Map()
+    // Add the server API handler.
+    addServerHandler({
+      handler: moduleResolver('./runtime/serverHandler/index'),
+      route: options.serverApiPrefix + '/:operation/:name',
+    })
 
-  const outputPath = config.outputPath ? resolver(config.outputPath) : ''
-  await mkdirp(outputPath)
+    // @TODO: Why is this needed?!
+    nuxt.hook('nitro:config', (nitroConfig) => {
+      nitroConfig.externals = defu(
+        typeof nitroConfig.externals === 'object' ? nitroConfig.externals : {},
+        {
+          inline: [moduleResolver('./runtime')],
+        },
+      )
+    })
 
-  const schemaOutputPath = resolver(config.typescript?.schemaOutputPath)
-  const typesOutputPath = resolver(config.typescript?.typesOutputPath)
-  const { generateSchema, generateTypes } = codegen(config.graphqlServer, {
-    resolvedQueriesPath: config.outputPath,
-    schemaOptions: config.typescript?.schemaOptions,
-    skipSchemaDownload: config.typescript?.skipSchemaDownload,
-    schemaOutputPath,
-    typesOutputPath,
-  })
+    // Watch for file changes in dev mode.
+    if (nuxt.options.dev) {
+      nuxt.hook('nitro:build:before', (nitro) => {
+        nuxt.hook('builder:watch', async (event, path) => {
+          // We only care about GraphQL files.
+          if (!path.match(/\.(gql|graphql)$/)) {
+            return
+          }
+          if (schemaPath.includes(path)) {
+            return
+          }
 
-  if (config.typescript?.enabled) {
-    if (!outputPath) {
-      throw new Error('TypeScript enabled, but no outputPath given.')
-    }
-    await mkdirp(schemaOutputPath)
-    await generateSchema()
-  }
+          await generateHandler()
+          await updateTemplates({
+            filter: (template) => {
+              return template.options && template.options.nuxtGraphqlMiddleware
+            },
+          })
 
-  /**
-   * Build all queries and mutations.
-   */
-  function build() {
-    logger.log('Building GraphQL files...')
-    return Promise.all([
-      resolveGraphql(
-        config.queries,
-        queries,
-        resolver,
-        fileMap,
-        FileType.Query,
-        outputPath
-      ),
-      resolveGraphql(
-        config.mutations,
-        mutations,
-        resolver,
-        fileMap,
-        FileType.Mutation,
-        outputPath
-      ),
-    ]).then(() => {
-      logger.success('Finished building GraphQL files')
-
-      if (config.typescript?.enabled) {
-        return generateTypes().then(() => {
-          logger.success('Finished generating GraphQL TypeScript files.')
+          // Workaround until https://github.com/nuxt/framework/issues/8720 is
+          // implemented.
+          await nitro.hooks.callHook('dev:reload')
         })
-      }
-    })
-  }
-
-  /**
-   * Watch *.graphql files and rebuild everything on change.
-   */
-  function watchFiles() {
-    const ignored = ['node_modules', '.nuxt']
-    if (config.outputPath) {
-      ignored.push(config.outputPath)
-    }
-    const filesWatcher = chokidar.watch('./**/*.graphql', {
-      ignoreInitial: true,
-      ignored,
-    })
-
-    if (filesWatcher) {
-      logger.info('Watching for query changes')
-      filesWatcher.on('change', () => {
-        build()
       })
     }
-
-    return filesWatcher
-  }
-
-  let watcher: any
-
-  if (this.nuxt.options.dev) {
-    this.nuxt.hook('build:done', () => {
-      watcher = watchFiles()
-    })
-
-    this.nuxt.hook('close', () => {
-      if (watcher) {
-        watcher.close()
-        watcher = undefined
-      }
-    })
-  }
-
-  build().then(() => {
-    if (options.debug) {
-      logger.info('Available queries and mutations:')
-      console.table(Array.from(fileMap.entries()).map(([_key, value]) => value))
-    }
-  })
-
-  // Add the server middleware.
-  this.addServerMiddleware({
-    path: config.endpointNamespace,
-    handler: serverMiddleware(
-      config.graphqlServer,
-      queries,
-      mutations,
-      config.server
-    ),
-  })
-}
-
-export default graphqlMiddleware
+  },
+}) as NuxtModule<ModuleOptions>

@@ -1,0 +1,87 @@
+// Vitest Snapshot v1
+
+exports[`useGraphqlMutation > Performs a mutation 1`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/mutation/foobar",
+    "options": {
+      "body": {},
+      "method": "post",
+    },
+  },
+}
+`;
+
+exports[`useGraphqlMutation > Performs a mutation with variables 1`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/mutation/foobar",
+    "options": {
+      "body": {
+        "user": "foobar",
+      },
+      "method": "post",
+    },
+  },
+}
+`;
+
+exports[`useGraphqlMutation > Throws an error for invalid mutation names. 1`] = `[Error: Invalid mutation name]`;
+
+exports[`useGraphqlQuery > Performs a query 1`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/query/foobar",
+    "options": {
+      "params": {},
+    },
+  },
+}
+`;
+
+exports[`useGraphqlQuery > Performs a query with non-string variables 1`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/query/foobar",
+    "options": {
+      "params": {
+        "__variables": "{\\"numeric\\":123}",
+      },
+    },
+  },
+}
+`;
+
+exports[`useGraphqlQuery > Performs a query with string variables 1`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/query/foobar",
+    "options": {
+      "params": {
+        "stringVar": "foobar",
+      },
+    },
+  },
+}
+`;
+
+exports[`useGraphqlQuery > Performs a query with string variables 2`] = `
+{
+  "_data": {
+    "data": {},
+    "endpoint": "/api/graphql_middleware/query/foobar",
+    "options": {
+      "params": {
+        "stringVar": "foobar",
+      },
+    },
+  },
+}
+`;
+
+exports[`useGraphqlQuery > Throws an error for invalid query names. 1`] = `[Error: Invalid query name]`;

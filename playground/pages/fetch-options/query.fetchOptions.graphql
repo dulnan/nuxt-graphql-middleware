@@ -1,0 +1,6 @@
+query fetchOptions {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}

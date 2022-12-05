@@ -1,0 +1,47 @@
+name: Test
+
+on:
+  push:
+    branches: [ "main", "feature/nuxt3-rewrite" ]
+  pull_request:
+    branches: [ "main", "feature/nuxt3-rewrite" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [19.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Run API in background
+        working-directory: apollo
+        run: |
+          npm ci
+          npm run compile
+          npm run start &
+        env:
+          PORT: 4000
+
+      - name: Run vitest
+        run: |
+          npm ci
+          npm run dev:build
+          npm run test:ci
+
+      - name: Start dev server
+        run: |
+          npm run dev &
+
+      - name: Run cypress E2E tests
+        run: |
+          npm run cypress

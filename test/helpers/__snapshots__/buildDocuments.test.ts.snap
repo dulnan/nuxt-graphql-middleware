@@ -1,0 +1,49 @@
+// Vitest Snapshot v1
+
+exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
+[
+  {
+    "content": "mutation initState {
+  initState
+}",
+    "filename": "mutation.initState.graphql",
+  },
+  {
+    "content": "query fetchOptions {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}",
+    "filename": "query.fetchOptions.graphql",
+  },
+  {
+    "content": "mutation deleteUser($id: Int!) {
+  deleteUser(id: $id)
+}",
+    "filename": "mutation.deleteUser.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "user.fragment.graphql",
+  },
+]
+`;
+
+exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`] = `
+[
+  {
+    "content": "query foobar {
+        field
+      }",
+    "filename": "nuxt.config.ts",
+  },
+]
+`;

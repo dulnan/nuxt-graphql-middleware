@@ -1,0 +1,7 @@
+#import "~/pages/user/user.fragment.graphql"
+
+query users {
+  users {
+    ...user
+  }
+}

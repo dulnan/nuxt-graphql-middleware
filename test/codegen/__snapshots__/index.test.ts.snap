@@ -1,0 +1,134 @@
+// Vitest Snapshot v1
+
+exports[`generateSchema > Generates the correct schema. > schema.graphql 1`] = `
+"type Mutation {
+  login(password: String!, user: String!): User
+}
+
+type Query {
+  getText: String
+  translate(text: String!): String!
+}
+
+type User {
+  email: String!
+  name: String!
+}"
+`;
+
+exports[`generateTemplates > Generates the correct delarations. > graphql-documents.mjs 1`] = `
+"const documents = {
+  \\"query\\": {
+    \\"translate\\": \\"\\\\n  query translate($text: String!) {\\\\n    translate(text: $text)\\\\n  }\\\\n  \\",
+    \\"getText\\": \\"query getText {\\\\n    getText\\\\n  }\\"
+  },
+  \\"mutation\\": {
+    \\"login\\": \\"\\\\n  fragment user on User {\\\\n    name\\\\n    email\\\\n  }\\\\n  mutation login($user: String!, $password: String!) {\\\\n    login(user: $user, password: $password) {\\\\n      ...user\\\\n    }\\\\n  }\\\\n  \\"
+  }
+};
+export { documents };"
+`;
+
+exports[`generateTemplates > Generates the correct delarations. > graphql-operations.d.ts 1`] = `
+"export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: string;
+  String: string;
+  Boolean: boolean;
+  Int: number;
+  Float: number;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  login?: Maybe<User>;
+};
+
+
+export type MutationLoginArgs = {
+  password: Scalars['String'];
+  user: Scalars['String'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  getText?: Maybe<Scalars['String']>;
+  translate: Scalars['String'];
+};
+
+
+export type QueryTranslateArgs = {
+  text: Scalars['String'];
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String'];
+  name: Scalars['String'];
+};
+
+export type UserFragment = { __typename?: 'User', name: string, email: string };
+
+export type LoginMutationVariables = Exact<{
+  user: Scalars['String'];
+  password: Scalars['String'];
+}>;
+
+
+export type LoginMutation = { __typename?: 'Mutation', login?: { __typename?: 'User', name: string, email: string } | null };
+
+export type TranslateQueryVariables = Exact<{
+  text: Scalars['String'];
+}>;
+
+
+export type TranslateQuery = { __typename?: 'Query', translate: string };
+
+export type GetTextQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetTextQuery = { __typename?: 'Query', getText?: string | null };
+"
+`;
+
+exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-middleware.d.ts 1`] = `
+"import {
+  TranslateQuery,
+  TranslateQueryVariables,
+  GetTextQuery,
+  LoginMutation,
+  LoginMutationVariables
+} from './graphql-operations'
+
+
+type GraphqlMiddlewareResponse<T> = {
+  data: T
+}
+
+declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareQuery = {
+    translate: [TranslateQueryVariables, false, TranslateQuery],
+    getText: [null, true, GetTextQuery]
+  }
+
+  export type GraphqlMiddlewareMutation = {
+    login: [LoginMutationVariables, false, LoginMutation]
+  }
+
+}
+
+declare module 'nitropack' {
+  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+  interface InternalApi {
+    '/api/graphql_middleware/query/translate': GraphqlMiddlewareResponse<Awaited<TranslateQuery>>
+    '/api/graphql_middleware/query/getText': GraphqlMiddlewareResponse<Awaited<GetTextQuery>>
+    '/api/graphql_middleware/mutation/login': GraphqlMiddlewareResponse<Awaited<LoginMutation>>
+  }
+}
+"
+`;
