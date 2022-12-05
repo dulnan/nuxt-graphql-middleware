@@ -128,7 +128,7 @@ The prefix for the server route.
 ```
 
 ## serverFetchOptions: FetchOptions | GraphqlMiddlewareServerFetchOptionsMethod
-Provide the options for the ohmyfetch request to the GraphQL server.
+Provide the options for the ofetch request to the GraphQL server.
 
 ### Default
 ```typescript
@@ -152,6 +152,78 @@ export default defineNuxtConfig({
     }
   }
 }
+```
+
+## onServerResponse: GraphqlMiddlewareOnServerResponseMethod
+Handle the response from the GraphQL server.
+
+You can alter the response, add additional properties to the data, get and set
+headers, etc.
+
+### Default
+```typescript
+undefined
+```
+
+### Example: Pass cookie from client to GraphQL server
+```typescript
+import type { H3Event } from 'h3'
+import type { FetchResponse } from 'ofetch'
+
+export default defineNuxtConfig({
+  graphqlMiddleware: {
+    onServerResponse(event: H3Event, graphqlResponse: FetchResponse) {
+      // Set a static header.
+      event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
+
+      // Pass the set-cookie header from the GraphQL response to the client.
+      const setCookie = graphqlResponse.headers.get('set-cookie')
+      if (setCookie) {
+        event.node.res.setHeader('set-cookie', setCookie)
+      }
+
+      // Add additional properties to the response.
+      graphqlResponse._data.__customProperty = ['My', 'values']
+
+      // Return the GraphQL response.
+      return graphqlResponse._data
+    }
+  }
+}
+```
+
+## onServerError: GraphqlMiddlewareOnServerErrorMethod
+Handle a fetch error from the GraphQL request.
+
+Note that errors are only thrown for responses that are not status 200-299. See
+https://github.com/unjs/ofetch#%EF%B8%8F-handling-errors for more information.
+
+### Default
+```typescript
+undefined
+```
+
+### Example: Always return a 200 status to the clients
+```typescript
+import type { H3Event } from 'h3'
+import type { FetchError } from 'ofetch'
+
+export default defineNuxtConfig({
+  graphqlMiddleware: {
+    onServerError(
+      event: H3Event,
+      error: FetchError,
+      operation: string,
+      operationName: string,
+    ) {
+      event.setHeader('cache-control', 'no-cache')
+      return {
+        data: {},
+        errors: [error.message]
+      }
+    }
+  }
+})
 ```
 
 ## downloadSchema: boolean

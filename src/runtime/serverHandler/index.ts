@@ -5,6 +5,7 @@ import {
   getMethod,
   readBody,
 } from 'h3'
+import type { FetchError } from 'ofetch'
 import {
   queryParamToVariables,
   getEndpoint,
@@ -63,10 +64,13 @@ export default defineEventHandler(async (event) => {
       return response._data
     })
     .catch((err) => {
+      if (config.onServerError) {
+        return config.onServerError(event, err, operation, name)
+      }
       throw createError({
         statusCode: 500,
         statusMessage: "Couldn't execute GraphQL query.",
-        data: err && 'message' in err ? err.mess : err,
+        data: err && 'message' in err ? err.message : err,
       })
     })
 })

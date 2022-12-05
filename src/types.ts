@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import type { FetchOptions, FetchResponse } from 'ohmyfetch'
+import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 import type { GraphQLError } from 'graphql'
 
@@ -18,6 +18,13 @@ export type GraphqlMiddlewareServerFetchOptionsMethod = (
 export type GraphqlMiddlewareOnServerResponseMethod = (
   event: H3Event,
   response: FetchResponse<any>,
+  operation?: string,
+  operationName?: string,
+) => any
+
+export type GraphqlMiddlewareOnServerErrorMethod = (
+  event: H3Event,
+  error: FetchError,
   operation?: string,
   operationName?: string,
 ) => any
@@ -110,7 +117,7 @@ export interface GraphqlMiddlewareConfig {
   serverApiPrefix?: string
 
   /**
-   * Provide the options for the ohmyfetch request to the GraphQL server.
+   * Provide the options for the ofetch request to the GraphQL server.
    *
    * @default undefined
    *
@@ -137,11 +144,14 @@ export interface GraphqlMiddlewareConfig {
    * and set headers, etc.
    *
    * ```ts
-   * function onServerResponse(event, graphqlResponse) {
+   * import type { H3Event } from 'h3'
+   * import type { FetchResponse } from 'ofetch'
+   *
+   * function onServerResponse(event: H3Event, graphqlResponse: FetchResponse) {
    *   // Set a static header.
    *   event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
    *
-   *   // Pass the set-cookie header from the GraphQL server to the client.
+   *   // Pass the set-cookie header from the GraphQL response to the client.
    *   const setCookie = graphqlResponse.headers.get('set-cookie')
    *   if (setCookie) {
    *     event.node.res.setHeader('set-cookie', setCookie)
@@ -150,12 +160,41 @@ export interface GraphqlMiddlewareConfig {
    *   // Add additional properties to the response.
    *   graphqlResponse._data.__customProperty = ['My', 'values']
    *
-   *   // Return the GraphQL response as is.
+   *   // Return the GraphQL response.
    *   return graphqlResponse._data
    * }
    * ```
    */
   onServerResponse?: GraphqlMiddlewareOnServerResponseMethod
+
+  /**
+   * Handle a fetch error from the GraphQL request.
+   *
+   * Note that errors are only thrown for responses that are not status
+   * 200-299. See https://github.com/unjs/ofetch#%EF%B8%8F-handling-errors for
+   * more information.
+   *
+   * ```ts
+   * import { createError } from 'h3'
+   * import type { H3Event } from 'h3'
+   * import type { FetchError } from 'ofetch'
+   *
+   * function onServerError(
+   *   event: H3Event,
+   *   error: FetchError,
+   *   operation: string,
+   *   operationName: string,
+   * ) {
+   *   // Throw a h3 error.
+   *   throw createError({
+   *     statusCode: 500,
+   *     statusMessage: `Couldn't execute GraphQL ${operation} "${operationName}".`,
+   *     data: error.message
+   *   })
+   * }
+   * ```
+   */
+  onServerError?: GraphqlMiddlewareOnServerErrorMethod
 
   /**
    * Download the GraphQL schema and store it in the
