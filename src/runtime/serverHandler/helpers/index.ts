@@ -1,7 +1,7 @@
 import { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
 import { createError } from 'h3'
-import type { FetchOptions } from 'ohmyfetch'
+import type { FetchOptions } from 'ofetch'
 import type { GraphqlMiddlewareConfig } from './../../../types'
 import { GraphqlMiddlewareOperation } from './../../../types'
 

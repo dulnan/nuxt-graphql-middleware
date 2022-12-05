@@ -3,8 +3,8 @@ import {
   PluginFunction,
   oldVisit,
 } from '@graphql-codegen/plugin-helpers'
-import { GraphQLSchema, concatAST } from 'graphql'
-import type { OperationDefinitionNode } from 'graphql'
+import { concatAST } from 'graphql'
+import type { OperationDefinitionNode, GraphQLSchema } from 'graphql'
 import { falsy } from '../runtime/helpers'
 
 export interface NamedOperationsObjectPluginConfig {}

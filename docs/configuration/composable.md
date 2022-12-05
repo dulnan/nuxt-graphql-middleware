@@ -3,7 +3,7 @@
 If you use the provided `useGraphqlQuery`/`useGraphqlMutation` composables, you
 can use the `useGraphqlState` composable to set custom fetch options.
 
-Nuxt's $fetch uses [ohmyfetch](https://github.com/unjs/ohmyfetch) behind the
+Nuxt's $fetch uses [ofetch](https://github.com/unjs/ofetch) behind the
 scenes, so check out their documentation for all available options.
 
 Configuration is usually done by creating a [Nuxt
@@ -33,8 +33,8 @@ export default defineNuxtPlugin((NuxtApp) => {
 
 ## Example: Alter the request using interceptors
 
-By using ohmyfetch's [`onRequest`
-interceptor](https://github.com/unjs/ohmyfetch#onrequest-request-options-) you
+By using ofetch's [`onRequest`
+interceptor](https://github.com/unjs/ofetch#onrequest-request-options-) you
 can alter the request right before it is made.
 
 In this example a query parameter is added to every request. Useful if you use
