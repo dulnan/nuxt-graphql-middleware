@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url'
 import type { NuxtModule } from '@nuxt/schema'
 import { defu } from 'defu'
 import {
@@ -46,6 +47,9 @@ export default defineNuxtModule<ModuleOptions>({
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(options, srcResolver)
+
+    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    nuxt.options.build.transpile.push(runtimeDir)
 
     // Store the generated templates in a locally scoped object.
     const ctx = {
@@ -169,6 +173,16 @@ declare module '#graphql-documents' {
     addServerHandler({
       handler: moduleResolver('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
+    })
+
+    // @TODO: Why is this needed?!
+    nuxt.hook('nitro:config', (nitroConfig) => {
+      nitroConfig.externals = defu(
+        typeof nitroConfig.externals === 'object' ? nitroConfig.externals : {},
+        {
+          inline: [moduleResolver('./runtime')],
+        },
+      )
     })
 
     // Watch for file changes in dev mode.
