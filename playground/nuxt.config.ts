@@ -5,7 +5,7 @@ import graphqlMiddlewareModule from './../src/module'
 
 const graphqlMiddleware: GraphqlMiddlewareConfig = {
   graphqlEndpoint: 'http://localhost:4000',
-  downloadSchema: true,
+  downloadSchema: false,
 
   serverFetchOptions: function (event) {
     const headers: HeadersInit = {
