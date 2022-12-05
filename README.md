@@ -58,3 +58,8 @@ console.log(data.allFilms.films)
 Alternatively you can also call
 `http://localhost:3000/api/graphql_middleware/query/films` to get the same
 result.
+
+## Nuxt 2
+
+The 3.x releases are only compatible with Nuxt 3. The [2.x branch](https://github.com/dulnan/nuxt-graphql-middleware/tree/2.x) and releases
+on npm are compatible with Nuxt 2.
