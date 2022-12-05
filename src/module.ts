@@ -10,7 +10,8 @@ import {
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { name, version } from '../package.json'
-import { GraphqlMiddlewareConfig, GraphqlMiddlewareTemplate } from './types'
+import { GraphqlMiddlewareConfig } from './types'
+import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import {
   validateOptions,
   getSchemaPath,

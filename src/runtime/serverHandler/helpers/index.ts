@@ -3,7 +3,7 @@ import type { H3Event } from 'h3'
 import { createError } from 'h3'
 import type { FetchOptions } from 'ofetch'
 import type { GraphqlMiddlewareConfig } from './../../../types'
-import { GraphqlMiddlewareOperation } from './../../../types'
+import { GraphqlMiddlewareOperation } from './../../settings'
 
 // Get the variables from query parameters.
 //

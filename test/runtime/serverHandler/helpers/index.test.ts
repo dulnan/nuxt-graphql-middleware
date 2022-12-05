@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { GraphqlMiddlewareOperation } from './../../../../src/types'
+import { GraphqlMiddlewareOperation } from './../../../../src/runtime/settings'
 import {
   queryParamToVariables,
   getEndpoint,

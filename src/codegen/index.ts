@@ -4,7 +4,7 @@ import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operati
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 import * as PluginNuxtGraphqlMiddleware from './plugin'
 import * as PluginNuxtGraphqlMiddlewareDocuments from './pluginDocuments'
-import { GraphqlMiddlewareTemplate } from './../types'
+import { GraphqlMiddlewareTemplate } from './../runtime/settings'
 import { ModuleOptions } from './../module'
 
 function pluginLoader(name: string): Promise<any> {

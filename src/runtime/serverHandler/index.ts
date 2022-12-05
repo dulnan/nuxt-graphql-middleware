@@ -13,7 +13,7 @@ import {
   validateRequest,
 } from './helpers'
 import { getModuleConfig } from './helpers/getModuleConfig'
-import { GraphqlMiddlewareOperation } from './../../types'
+import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
 
 export default defineEventHandler(async (event) => {
