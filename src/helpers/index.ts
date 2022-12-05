@@ -1,6 +1,7 @@
 import { promises as fsp } from 'fs'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
 import type { Resolver } from '@nuxt/kit'
+// @ts-ignore
 import fragmentImport from '@graphql-fragment-import/lib/inline-imports.js'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import { loadSchema } from '@graphql-tools/load'
@@ -200,10 +201,7 @@ export function validateDocuments(
       // document.name = node
       document.isValid = document.errors.length === 0
     } catch (e) {
-      document.errors =
-        e && typeof e === 'object' && e !== null
-          ? [e.message]
-          : ['Validation failed']
+      document.errors = [e as GraphQLError]
       document.isValid = false
     }
   }
