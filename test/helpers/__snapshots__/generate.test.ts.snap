@@ -292,8 +292,19 @@ exports[`generate > Renders a table with information about all documents with er
 │ Operation │ Name │ File           │ Errors                                                               │
 ├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
 │           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>.                            │
+│           │      │                │                                                                      │
+│           │      │                │ nuxt.config.ts:3:11                                                  │
+│           │      │                │ 2 |             id                                                   │
+│           │      │                │ 3 |                                                                  │
+│           │      │                │   |           ^                                                      │
 ├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
 │           │      │ nuxt.config.ts │ Syntax Error: Unexpected Name \\"syntax\\".                              │
+│           │      │                │                                                                      │
+│           │      │                │ nuxt.config.ts:2:13                                                  │
+│           │      │                │ 1 |                                                                  │
+│           │      │                │ 2 |             syntax error one {                                   │
+│           │      │                │   |             ^                                                    │
+│           │      │                │ 3 |               users {                                            │
 ├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
 │ mutation  │ two  │ nuxt.config.ts │ Variable \\"$id\\" of type \\"Int\\" used in position expecting type \\"Int!\\". │
 │           │      │                │                                                                      │
