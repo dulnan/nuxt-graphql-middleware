@@ -46,7 +46,11 @@ export default defineNuxtModule<ModuleOptions>({
     const moduleResolver = createResolver(import.meta.url).resolve
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
-    const schemaPath = await getSchemaPath(options, srcResolver)
+    const schemaPath = await getSchemaPath(
+      options,
+      srcResolver,
+      options.downloadSchema,
+    )
 
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
@@ -97,7 +101,7 @@ export default defineNuxtModule<ModuleOptions>({
           })
           .then(async ({ accept }) => {
             if (accept) {
-              await getSchemaPath(options, srcResolver)
+              await getSchemaPath(options, srcResolver, true)
               await generateHandler()
             }
           })
