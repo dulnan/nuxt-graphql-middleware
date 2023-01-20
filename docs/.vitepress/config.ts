@@ -3,13 +3,41 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   base: (process.env.BASE_URL as `/${string}/` | undefined) || '/',
   title: 'Nuxt GraphQL Middleware',
-  description: '',
-  locales: {
-    '/': {
-      lang: 'en-US',
-    },
+  lang: 'en',
+  description:
+    'Expose GraphQL queries and mutations as fully typed API endpoints.',
+  transformHead: (ctx) => {
+    let url =
+      '/' + ctx.pageData.relativePath.replace('index.md', '').replace('.md', '')
+    if (url === '/') {
+      url = ''
+    }
+    return Promise.resolve([
+      ...ctx.head,
+      [
+        'link',
+        {
+          rel: 'canonical',
+          href: 'https://nuxt-graphql-middleware.dulnan.net' + url,
+        },
+      ],
+    ])
   },
   themeConfig: {
+    footer: {
+      message: 'Released under the MIT License.',
+      copyright: 'Copyright © 2021-present Jan Hug',
+    },
+    nav: [
+      {
+        text: 'NPM',
+        link: 'https://www.npmjs.com/package/nuxt-graphql-middleware',
+      },
+      {
+        text: 'GitHub',
+        link: 'https://github.com/dulnan/nuxt-graphql-middleware',
+      },
+    ],
     sidebar: [
       {
         text: 'Introduction',
@@ -34,6 +62,10 @@ export default defineConfig({
           {
             text: 'Module',
             link: '/configuration/module',
+          },
+          {
+            text: 'Server Options',
+            link: '/configuration/server-options',
           },
           {
             text: 'Full Example',

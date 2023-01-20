@@ -93,11 +93,18 @@ export interface GraphqlMiddlewareConfig {
   /**
    * The URL of the GraphQL server.
    *
-   * You can leave this empty and provide a method that determines the endpoint
+   * For the runtime execution you can provide a method that determines the endpoint
    * during runtime. See the app/graphqlMiddleware.serverOptions.ts documentation
    * for more information.
    */
-  graphqlEndpoint?: string
+  graphqlEndpoint: string
+
+  /**
+   * Download the GraphQL schema and store it on disk.
+   *
+   * @default true
+   */
+  downloadSchema?: boolean
 
   /**
    * The prefix for the server route.
@@ -107,13 +114,6 @@ export interface GraphqlMiddlewareConfig {
    * ```
    */
   serverApiPrefix?: string
-
-  /**
-   * Download the GraphQL schema and store it on disk.
-   *
-   * @default true
-   */
-  downloadSchema?: boolean
 
   /**
    * Path to the GraphQL schema file.

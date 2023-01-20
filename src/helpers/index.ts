@@ -90,11 +90,7 @@ export async function getSchemaPath(
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint config.')
   }
-  const graphqlEndpoint =
-    typeof options.graphqlEndpoint === 'string'
-      ? options.graphqlEndpoint
-      : options.graphqlEndpoint()
-  await generateSchema(graphqlEndpoint, dest, writeToDisk)
+  await generateSchema(options.graphqlEndpoint, dest, writeToDisk)
   return dest
 }
 
