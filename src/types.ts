@@ -7,27 +7,27 @@ export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
   operation?: string,
   operationName?: string,
-) => string
+) => string | Promise<string> | void
 
 export type GraphqlMiddlewareServerFetchOptionsMethod = (
   event?: H3Event,
   operation?: string,
   operationName?: string,
-) => FetchOptions
+) => FetchOptions | Promise<FetchOptions>
 
 export type GraphqlMiddlewareOnServerResponseMethod = (
   event: H3Event,
   response: FetchResponse<any>,
   operation?: string,
   operationName?: string,
-) => any
+) => any | Promise<any>
 
 export type GraphqlMiddlewareOnServerErrorMethod = (
   event: H3Event,
   error: FetchError,
   operation?: string,
   operationName?: string,
-) => any
+) => any | Promise<any>
 
 export interface GraphqlMiddlewareConfig {
   /**
@@ -93,19 +93,11 @@ export interface GraphqlMiddlewareConfig {
   /**
    * The URL of the GraphQL server.
    *
-   * You can either provide a string or a method that returns a string.
-   * If you provide a method it will be called everytime a GraphQL request is
-   * made in the server API handler.
-   *
-   * @example
-   * ```ts
-   * function graphqlEndpoint(event, operation, operationName) {
-   *   const language = getLanguageFromRequest(event)
-   *   return `https://api.example.com/${language}/graphql`
-   * }
-   * ```
+   * You can leave this empty and provide a method that determines the endpoint
+   * during runtime. See the app/graphqlMiddleware.serverOptions.ts documentation
+   * for more information.
    */
-  graphqlEndpoint?: string | GraphqlMiddlewareGraphqlEndpointMethod
+  graphqlEndpoint?: string
 
   /**
    * The prefix for the server route.
@@ -115,6 +107,64 @@ export interface GraphqlMiddlewareConfig {
    * ```
    */
   serverApiPrefix?: string
+
+  /**
+   * Download the GraphQL schema and store it on disk.
+   *
+   * @default true
+   */
+  downloadSchema?: boolean
+
+  /**
+   * Path to the GraphQL schema file.
+   *
+   * If `downloadSchema` is `true`, the downloaded schema is written to this specified path.
+   * If `downloadSchema` is `false`, this file must be present in order to generate types.
+   *
+   * @default './schema.graphql'
+   */
+  schemaPath?: string
+
+  /**
+   * These options are passed to the graphql-codegen method when generating the operations types.
+   *
+   * {@link https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations}
+   * @default
+   * ```ts
+   * const codegenConfig = {
+   *   exportFragmentSpreadSubTypes: true,
+   *   preResolveTypes: true,
+   *   skipTypeNameForRoot: true,
+   *   skipTypename: true,
+   *   useTypeImports: true,
+   *   onlyOperationTypes: true,
+   *   namingConvention: {
+   *     enumValues: 'change-case-all#upperCaseFirst',
+   *   },
+   * }
+   * ```
+   */
+  codegenConfig?: TypeScriptDocumentsPluginConfig
+}
+
+/**
+ * Configuration options during runtime.
+ */
+export type GraphqlMiddlewareServerOptions = {
+  /**
+   * Custom callback to return the GraphQL endpoint per request.
+   *
+   * @default undefined
+   *
+   * @example
+   * ```ts
+   * function graphqlEndpoint(event, operation, operationName) {
+   *   const language = getLanguageFromRequest(event)
+   *   return `https://api.example.com/${language}/graphql`
+   * }
+   * ```
+   */
+  graphqlEndpoint?: GraphqlMiddlewareGraphqlEndpointMethod
 
   /**
    * Provide the options for the ofetch request to the GraphQL server.
@@ -135,7 +185,7 @@ export interface GraphqlMiddlewareConfig {
    * }
    * ```
    */
-  serverFetchOptions?: FetchOptions | GraphqlMiddlewareServerFetchOptionsMethod
+  serverFetchOptions?: GraphqlMiddlewareServerFetchOptionsMethod
 
   /**
    * Handle the response from the GraphQL server.
@@ -195,44 +245,6 @@ export interface GraphqlMiddlewareConfig {
    * ```
    */
   onServerError?: GraphqlMiddlewareOnServerErrorMethod
-
-  /**
-   * Download the GraphQL schema and store it in the
-   *
-   * @default true
-   */
-  downloadSchema?: boolean
-
-  /**
-   * Path to the GraphQL schema file.
-   *
-   * If `downloadSchema` is `true`, the downloaded schema is written to this specified path.
-   * If `downloadSchema` is `false`, this file must be present in order to generate types.
-   *
-   * @default './schema.graphql'
-   */
-  schemaPath?: string
-
-  /**
-   * These options are passed to the graphql-codegen method when generating the operations types.
-   *
-   * {@link https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations}
-   * @default
-   * ```ts
-   * const codegenConfig = {
-   *   exportFragmentSpreadSubTypes: true,
-   *   preResolveTypes: true,
-   *   skipTypeNameForRoot: true,
-   *   skipTypename: true,
-   *   useTypeImports: true,
-   *   onlyOperationTypes: true,
-   *   namingConvention: {
-   *     enumValues: 'change-case-all#upperCaseFirst',
-   *   },
-   * }
-   * ```
-   */
-  codegenConfig?: TypeScriptDocumentsPluginConfig
 }
 
 export interface GraphqlMiddlewareState {
@@ -246,4 +258,8 @@ export type GraphqlMiddlewareDocument = {
   filename?: string
   name?: string
   operation?: string
+}
+
+export type GraphqlMiddlewareRuntimeConfig = {
+  graphqlEndpoint?: string
 }

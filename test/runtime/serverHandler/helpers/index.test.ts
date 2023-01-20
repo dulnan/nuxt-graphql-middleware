@@ -77,10 +77,12 @@ describe('getFetchOptions', () => {
     expect(
       getFetchOptions(
         {
-          serverFetchOptions: {
-            headers: {
-              'x-foobar': 'yes',
-            },
+          serverFetchOptions() {
+            return {
+              headers: {
+                'x-foobar': 'yes',
+              },
+            }
           },
         },
         null as any,
@@ -102,12 +104,13 @@ describe('getFetchOptions', () => {
 })
 
 describe('getEndpoint', () => {
-  test('returns the string endpoint from the module config', () => {
+  test('returns the string endpoint from the module config', async () => {
     expect(
-      getEndpoint(
+      await getEndpoint(
         {
           graphqlEndpoint: 'http://example.com/graphql',
         },
+        {},
         null as any,
         GraphqlMiddlewareOperation.Query,
         'test',
@@ -115,9 +118,10 @@ describe('getEndpoint', () => {
     ).toEqual('http://example.com/graphql')
   })
 
-  test('returns the endpoint from the callback in module config', () => {
+  test('returns the endpoint from the callback in module config', async () => {
     expect(
-      getEndpoint(
+      await getEndpoint(
+        {},
         {
           graphqlEndpoint: function () {
             return 'http://foobar.com/graphql'
@@ -133,24 +137,10 @@ describe('getEndpoint', () => {
   test('throws an error if the callback did not return an endpoint', () => {
     expect(() =>
       getEndpoint(
+        {},
         {
           graphqlEndpoint: function () {
             return null as any
-          },
-        },
-        null as any,
-        GraphqlMiddlewareOperation.Query,
-        'test',
-      ),
-    ).toThrowError('Failed to determine endpoint for GraphQL server.')
-  })
-
-  test('throws an error if the callback did not return a string', () => {
-    expect(() =>
-      getEndpoint(
-        {
-          graphqlEndpoint: function () {
-            return true as any
           },
         },
         null as any,

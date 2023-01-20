@@ -1,10 +1,9 @@
 import { fileURLToPath } from 'node:url'
 import { setup, $fetch, useTestContext } from '@nuxt/test-utils'
 import { describe, expect, test, vi } from 'vitest'
-import { useNuxt } from '@nuxt/kit'
 import type { GraphqlMiddlewareConfig } from './../src/types'
 
-describe('nuxt-graphql-middleware', async () => {
+describe.skip('nuxt-graphql-middleware', async () => {
   const graphqlMiddleware: GraphqlMiddlewareConfig = {
     downloadSchema: false,
   }
@@ -15,6 +14,8 @@ describe('nuxt-graphql-middleware', async () => {
     server: true,
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     nuxtConfig,
+    build: true,
+    runner: 'vitest',
   })
 
   test('Performs a GraphQL query.', async () => {

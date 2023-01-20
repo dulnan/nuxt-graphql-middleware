@@ -11,7 +11,10 @@ import {
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { name, version } from '../package.json'
-import { GraphqlMiddlewareConfig } from './types'
+import {
+  GraphqlMiddlewareConfig,
+  GraphqlMiddlewareServerOptions,
+} from './types'
 import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import {
   validateOptions,
@@ -19,8 +22,10 @@ import {
   generate,
   defaultOptions,
   logger,
+  fileExists,
 } from './helpers'
 import { CodegenResult } from './codegen'
+export type { GraphqlMiddlewareServerOptions } from './types'
 
 // Nuxt needs this.
 export type ModuleOptions = GraphqlMiddlewareConfig
@@ -42,7 +47,6 @@ export default defineNuxtModule<ModuleOptions>({
     // Will throw an error if the options are not valid.
     validateOptions(options)
 
-    const rootDir = nuxt.options.rootDir
     const moduleResolver = createResolver(import.meta.url).resolve
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
@@ -113,8 +117,9 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
       serverApiPrefix: options.serverApiPrefix!,
     }
+
     nuxt.options.runtimeConfig.graphqlMiddleware = {
-      rootDir,
+      graphqlEndpoint: options.graphqlEndpoint || '',
     }
 
     if (options.includeComposables) {
@@ -173,6 +178,43 @@ declare module '#graphql-documents' {
       },
     })
 
+    // Shamelessly copied and adapted from:
+    // https://github.com/nuxt-modules/prismic/blob/fd90dc9acaa474f79b8831db5b8f46a9a9f039ca/src/module.ts#L55
+    //
+    // Creates the template with runtime server configuration used by the
+    // GraphQL server handler.
+    const extensions = ['js', 'mjs', 'ts']
+    const resolvedPath = '~/app/graphqlMiddleware.serverOptions'
+      .replace(/^(~~|@@)/, nuxt.options.rootDir)
+      .replace(/^(~|@)/, nuxt.options.srcDir)
+    // nuxt.options.build.transpile.push(resolvedPath)
+    const template = (() => {
+      const resolvedFilename = `graphqlMiddleware.serverOptions.ts`
+
+      const maybeUserFile = fileExists(resolvedPath, extensions)
+
+      if (maybeUserFile) {
+        return addTemplate({
+          filename: resolvedFilename,
+          write: true,
+          getContents: () => `export { default } from '${resolvedPath}'`,
+        })
+      }
+
+      // Else provide `undefined` fallback
+      return addTemplate({
+        filename: resolvedFilename,
+        write: true,
+        getContents: () => 'export default {}',
+      })
+    })()
+
+    nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
+    nuxt.options.nitro.externals.inline =
+      nuxt.options.nitro.externals.inline || []
+    nuxt.options.nitro.externals.inline.push(template.dst)
+    nuxt.options.alias['#graphql-middleware-server-options'] = template.dst
+
     // Add the server API handler.
     addServerHandler({
       handler: moduleResolver('./runtime/serverHandler/index'),
@@ -216,3 +258,9 @@ declare module '#graphql-documents' {
     }
   },
 }) as NuxtModule<ModuleOptions>
+
+export function defineGraphqlServerOptions(
+  options: GraphqlMiddlewareServerOptions,
+) {
+  return options
+}

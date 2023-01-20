@@ -1,4 +1,4 @@
-import { promises as fsp } from 'fs'
+import { existsSync, promises as fsp } from 'node:fs'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
 import type { Resolver } from '@nuxt/kit'
 // @ts-ignore
@@ -266,4 +266,22 @@ export async function generate(
   logger.info('Finished GraphQL code generation.')
 
   return { templates, hasErrors }
+}
+
+export const fileExists = (
+  path?: string,
+  extensions = ['js', 'ts'],
+): string | null => {
+  if (!path) {
+    return null
+  } else if (existsSync(path)) {
+    // If path already contains/forces the extension
+    return path
+  }
+
+  const extension = extensions.find((extension) =>
+    existsSync(`${path}.${extension}`),
+  )
+
+  return extension ? `${path}.${extension}` : null
 }

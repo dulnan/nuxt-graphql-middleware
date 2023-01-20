@@ -1,20 +1,17 @@
-import {
-  defineEventHandler,
-  createError,
-  getQuery,
-  getMethod,
-  readBody,
-} from 'h3'
-import type { FetchError } from 'ofetch'
+import { defineEventHandler, getQuery, getMethod, readBody } from 'h3'
+import { GraphqlMiddlewareRuntimeConfig } from '../../types'
 import {
   queryParamToVariables,
   getEndpoint,
   getFetchOptions,
   validateRequest,
+  onServerResponse,
+  onServerError,
 } from './helpers'
-import { getModuleConfig } from './helpers/getModuleConfig'
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
+import { useRuntimeConfig } from '#imports'
+import serverOptions from '#graphql-middleware-server-options'
 
 export default defineEventHandler(async (event) => {
   // The HTTP method. Only GET and POST are supported.
@@ -33,16 +30,28 @@ export default defineEventHandler(async (event) => {
   // The GraphQL query document as a string.
   const query: string = documents[operation][name]
 
-  // Load the module configuration.
-  const config = await getModuleConfig()
+  // Get the runtime config.
+  const runtimeConfig = useRuntimeConfig()
+    .graphqlMiddleware as GraphqlMiddlewareRuntimeConfig
 
   // Determine the endpoint of the GraphQL server.
-  const endpoint = getEndpoint(config, event, operation, name)
+  const endpoint = await getEndpoint(
+    runtimeConfig,
+    serverOptions,
+    event,
+    operation,
+    name,
+  )
 
   // Get the fetch options for this request.
-  const fetchOptions = getFetchOptions(config, event, operation, name)
+  const fetchOptions = await getFetchOptions(
+    serverOptions,
+    event,
+    operation,
+    name,
+  )
 
-  // The variables.
+  // Get the query variables or mutation input.
   const variables =
     operation === GraphqlMiddlewareOperation.Query
       ? queryParamToVariables(getQuery(event) as any)
@@ -58,19 +67,9 @@ export default defineEventHandler(async (event) => {
       ...fetchOptions,
     })
     .then((response) => {
-      if (config.onServerResponse) {
-        return config.onServerResponse(event, response, operation, name)
-      }
-      return response._data
+      return onServerResponse(serverOptions, event, response, operation, name)
     })
-    .catch((err) => {
-      if (config.onServerError) {
-        return config.onServerError(event, err, operation, name)
-      }
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Couldn't execute GraphQL query.",
-        data: err && 'message' in err ? err.message : err,
-      })
+    .catch((error) => {
+      return onServerError(serverOptions, event, error, operation, name)
     })
 })
