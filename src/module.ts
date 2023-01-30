@@ -1,5 +1,4 @@
 import { fileURLToPath } from 'url'
-import type { NuxtModule } from '@nuxt/schema'
 import { defu } from 'defu'
 import {
   defineNuxtModule,
@@ -10,11 +9,8 @@ import {
   updateTemplates,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
+import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 import { name, version } from '../package.json'
-import {
-  GraphqlMiddlewareConfig,
-  GraphqlMiddlewareServerOptions,
-} from './types'
 import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import {
   validateOptions,
@@ -27,8 +23,125 @@ import {
 import { CodegenResult } from './codegen'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
+export interface ModuleOptions {
+  /**
+   * File glob patterns for the auto import feature.
+   *
+   * If left empty, no documents are auto imported.
+   *
+   * @default
+   * ```json
+   * ["**\/.{gql,graphql}", "!node_modules"]
+   * ```
+   *
+   * @example
+   * ```ts
+   * // Load .graphql files from pages folder and from a node_modules dependency.
+   * const autoImportPatterns = [
+   *   './pages/**\/*.graphql',
+   *   'node_modules/my_library/dist/**\/*.graphql'
+   * ]
+   * ```
+   */
+  autoImportPatterns?: string[]
+
+  /**
+   * Additional raw documents to include.
+   *
+   * Useful if for example you need to generate queries during build time.
+   *
+   * @default []
+   *
+   * @example
+   * ```ts
+   * const documents = [`
+   *   query myQuery {
+   *     articles {
+   *       title
+   *       id
+   *     }
+   *   }`,
+   *   ...getGeneratedDocuments()
+   * ]
+   * ```
+   */
+  documents?: string[]
+
+  /**
+   * Wether the useGraphqlQuery, useGraphqlMutation and useGraphqlState
+   * composables should be included.
+   *
+   * @default ```ts
+   * true
+   * ```
+   */
+  includeComposables?: boolean
+
+  /**
+   * Enable detailled debugging messages.
+   *
+   * @default false
+   */
+  debug?: boolean
+
+  /**
+   * The URL of the GraphQL server.
+   *
+   * For the runtime execution you can provide a method that determines the endpoint
+   * during runtime. See the app/graphqlMiddleware.serverOptions.ts documentation
+   * for more information.
+   */
+  graphqlEndpoint: string
+
+  /**
+   * Download the GraphQL schema and store it on disk.
+   *
+   * @default true
+   */
+  downloadSchema?: boolean
+
+  /**
+   * The prefix for the server route.
+   *
+   * @default ```ts
+   * "/api/graphql_middleware"
+   * ```
+   */
+  serverApiPrefix?: string
+
+  /**
+   * Path to the GraphQL schema file.
+   *
+   * If `downloadSchema` is `true`, the downloaded schema is written to this specified path.
+   * If `downloadSchema` is `false`, this file must be present in order to generate types.
+   *
+   * @default './schema.graphql'
+   */
+  schemaPath?: string
+
+  /**
+   * These options are passed to the graphql-codegen method when generating the operations types.
+   *
+   * {@link https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations}
+   * @default
+   * ```ts
+   * const codegenConfig = {
+   *   exportFragmentSpreadSubTypes: true,
+   *   preResolveTypes: true,
+   *   skipTypeNameForRoot: true,
+   *   skipTypename: true,
+   *   useTypeImports: true,
+   *   onlyOperationTypes: true,
+   *   namingConvention: {
+   *     enumValues: 'change-case-all#upperCaseFirst',
+   *   },
+   * }
+   * ```
+   */
+  codegenConfig?: TypeScriptDocumentsPluginConfig
+}
+
 // Nuxt needs this.
-export type ModuleOptions = GraphqlMiddlewareConfig
 export type ModuleHooks = {}
 
 export default defineNuxtModule<ModuleOptions>({
@@ -37,7 +150,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '^3.0.0',
+      nuxt: '^3.1.0',
     },
   },
   defaults: defaultOptions,
@@ -178,6 +291,11 @@ declare module '#graphql-documents' {
       },
     })
 
+    // Add the import alias to define custom server options in userland.
+    nuxt.options.alias['#graphql-server-options'] = moduleResolver(
+      'runtime/serverOptions',
+    )
+
     // Shamelessly copied and adapted from:
     // https://github.com/nuxt-modules/prismic/blob/fd90dc9acaa474f79b8831db5b8f46a9a9f039ca/src/module.ts#L55
     //
@@ -213,7 +331,8 @@ declare module '#graphql-documents' {
     nuxt.options.nitro.externals.inline =
       nuxt.options.nitro.externals.inline || []
     nuxt.options.nitro.externals.inline.push(template.dst)
-    nuxt.options.alias['#graphql-middleware-server-options'] = template.dst
+    nuxt.options.alias['#graphql-middleware-server-options-build'] =
+      template.dst
 
     // Add the server API handler.
     addServerHandler({
@@ -257,10 +376,4 @@ declare module '#graphql-documents' {
       })
     }
   },
-}) as NuxtModule<ModuleOptions>
-
-export function defineGraphqlServerOptions(
-  options: GraphqlMiddlewareServerOptions,
-) {
-  return options
-}
+})

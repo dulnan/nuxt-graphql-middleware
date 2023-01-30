@@ -72,7 +72,7 @@ function validateDeprecated(options: any) {
 
       if (key === 'graphqlEndpoint') {
         logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
 import acceptLanguageParser from 'accept-language-parser';
 
@@ -86,12 +86,12 @@ export default defineGraphqlServerOptions({
     const language = languages[0]?.code || 'en'
     return \`https://api.example.com/\${language}/graphql\`
   }
-}`)
+})`)
       }
 
       if (key === 'serverFetchOptions') {
         logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
 
 // Pass the cookie from the client request to the GraphQL request.
@@ -103,12 +103,12 @@ export default defineGraphqlServerOptions({
       }
     }
   }
-}`)
+})`)
       }
 
       if (key === 'onServerResponse') {
         logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
@@ -129,12 +129,12 @@ export default defineGraphqlServerOptions({
     // Return the GraphQL response.
     return graphqlResponse._data
   }
-}`)
+})`)
       }
 
       if (key === 'onServerError') {
         logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 
@@ -146,8 +146,7 @@ export default defineGraphqlServerOptions({
       errors: [error.message]
     }
   }
-})
-`)
+})`)
       }
 
       throw new TypeError('Invalid configuration for graphqlMiddleware.' + key)

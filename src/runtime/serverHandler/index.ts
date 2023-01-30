@@ -11,7 +11,7 @@ import {
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
 import { useRuntimeConfig } from '#imports'
-import serverOptions from '#graphql-middleware-server-options'
+import serverOptions from '#graphql-middleware-server-options-build'
 
 export default defineEventHandler(async (event) => {
   // The HTTP method. Only GET and POST are supported.
@@ -59,7 +59,8 @@ export default defineEventHandler(async (event) => {
 
   return $fetch
     .raw(endpoint, {
-      method: 'POST',
+      // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
+      method: 'POST' as any,
       body: {
         query,
         variables,

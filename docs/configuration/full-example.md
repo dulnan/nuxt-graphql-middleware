@@ -96,7 +96,7 @@ export default defineNuxtConfig({
 ## Full ~/app/graphqlMiddleware.serverOptions.ts example
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader, createError } from 'h3'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'

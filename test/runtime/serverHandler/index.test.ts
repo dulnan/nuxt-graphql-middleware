@@ -28,7 +28,7 @@ vi.mock('#imports', () => {
   }
 })
 
-vi.mock('#graphql-middleware-server-options', () => {
+vi.mock('#graphql-middleware-server-options-build', () => {
   return {
     default: {
       onServerResponse: (event, response) => {

@@ -1,5 +1,5 @@
 import { getHeader } from 'h3'
-import { defineGraphqlServerOptions } from './../../src/module'
+import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
 
 export default defineGraphqlServerOptions({
   graphqlEndpoint() {

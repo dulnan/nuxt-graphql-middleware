@@ -11,7 +11,7 @@ the `app` folder in your Nuxt root.
 ::: code-group
 
 ```typescript [~/app/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 
 export default defineGraphqlServerOptions({
   // ...
@@ -37,7 +37,7 @@ Here we determine the current language from the incoming `Accept-Language`
 header and use it to target a specific language-prefixed GraphQL endpoint.
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
 import acceptLanguageParser from 'accept-language-parser';
 
@@ -51,7 +51,7 @@ export default defineGraphqlServerOptions({
     const language = languages[0]?.code || 'en'
     return `https://api.example.com/${language}/graphql`
   }
-}
+})
 ```
 
 ## serverFetchOptions
@@ -68,7 +68,7 @@ type GraphqlMiddlewareServerFetchOptionsMethod = (
 
 ### Example: Pass cookie from client to GraphQL server
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
 
 // Pass the cookie from the client request to the GraphQL request.
@@ -80,7 +80,7 @@ export default defineGraphqlServerOptions({
       }
     }
   }
-}
+})
 ```
 
 ## onServerResponse
@@ -101,7 +101,7 @@ type GraphqlMiddlewareOnServerResponseMethod = (
 
 ### Example: Pass cookie from client to GraphQL server
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
@@ -122,7 +122,7 @@ export default defineGraphqlServerOptions({
     // Return the GraphQL response.
     return graphqlResponse._data
   }
-}
+})
 ```
 
 ## onServerError
@@ -143,7 +143,7 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 
 ### Example: Always return a 200 status to the clients
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware'
+import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 

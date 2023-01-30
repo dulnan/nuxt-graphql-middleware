@@ -68,7 +68,8 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
   const state = useGraphqlState()
   return $fetch(getEndpoint('query', name), {
     params: buildRequestParams(args[1]),
-    ...state.fetchOptions,
+    // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
+    ...(state.fetchOptions as any),
   }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
 }
 
@@ -82,7 +83,8 @@ export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
     return Promise.reject(new Error('Invalid mutation name'))
   }
   return $fetch(getEndpoint('mutation', name), {
-    method: 'post',
+    // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
+    method: 'post' as any,
     body,
     ...state.fetchOptions,
   }) as Promise<GetMutationResult<T, GraphqlMiddlewareMutation>>
