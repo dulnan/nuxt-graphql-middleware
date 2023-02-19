@@ -1,4 +1,6 @@
 import { generate, executeCodegen } from '@graphql-codegen/cli'
+import { Types } from '@graphql-codegen/plugin-helpers'
+import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import * as PluginTypescript from '@graphql-codegen/typescript'
 import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
@@ -28,27 +30,35 @@ export interface CodegenResult {
   content: string
 }
 export function generateSchema(
-  url: string,
+  moduleOptions: ModuleOptions,
   dest: string,
   writeToDisk: boolean,
 ): Promise<CodegenResult> {
-  return generate(
-    {
-      schema: url,
-      pluginLoader,
-      silent: true,
-      errorsOnly: true,
-      generates: {
-        [dest]: {
-          plugins: ['schema-ast'],
-          config: {
-            sort: true,
-          },
-        },
+  const pluginConfig: Types.UrlSchemaOptions | undefined =
+    moduleOptions.codegenSchemaConfig?.urlSchemaOptions
+
+  const schemaAstConfig: SchemaASTConfig = moduleOptions.codegenSchemaConfig
+    ?.schemaAstConfig || {
+    sort: true,
+  }
+
+  const config: Types.Config & {
+    cwd?: string
+  } = {
+    schema: moduleOptions.graphqlEndpoint,
+    pluginLoader,
+    silent: true,
+    errorsOnly: true,
+    config: pluginConfig,
+
+    generates: {
+      [dest]: {
+        plugins: ['schema-ast'],
+        config: schemaAstConfig,
       },
     },
-    writeToDisk,
-  ).then((v) => v[0])
+  }
+  return generate(config, writeToDisk).then((v) => v[0])
 }
 
 export function generateTemplates(

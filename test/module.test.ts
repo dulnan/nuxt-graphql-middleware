@@ -1,10 +1,11 @@
 import { fileURLToPath } from 'node:url'
 import { setup, $fetch, useTestContext } from '@nuxt/test-utils'
 import { describe, expect, test, vi } from 'vitest'
-import type { GraphqlMiddlewareConfig } from './../src/types'
+import type { ModuleOptions } from './../src/module'
 
 describe.skip('nuxt-graphql-middleware', async () => {
-  const graphqlMiddleware: GraphqlMiddlewareConfig = {
+  const graphqlMiddleware: ModuleOptions = {
+    graphqlEndpoint: '/',
     downloadSchema: false,
   }
   const nuxtConfig: any = {

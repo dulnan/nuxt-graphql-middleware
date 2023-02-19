@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
+import { GraphQLError } from 'graphql'
 import data from './data.json' assert { type: 'json' }
 
 let users = []
@@ -115,6 +116,13 @@ const { url } = await startStandaloneServer(server, {
   context: ({ req }) => {
     const headerClient = req.headers['x-nuxt-header-client']
     const headerServer = req.headers['x-nuxt-header-server']
+    const token = req.headers.authentication || ''
+    if (token !== 'server-token')
+      throw new GraphQLError('you must be logged in to query this schema', {
+        extensions: {
+          code: 'UNAUTHENTICATED',
+        },
+      })
     return Promise.resolve({ headerClient, headerServer })
   },
 })

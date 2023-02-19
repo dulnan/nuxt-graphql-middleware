@@ -9,6 +9,7 @@ export default defineGraphqlServerOptions({
   serverFetchOptions: function (event) {
     const headers: HeadersInit = {
       'x-nuxt-header-server': 'Value from server',
+      authentication: 'server-token',
     }
     if (event) {
       const headerValue = getHeader(event, 'x-nuxt-header-client')

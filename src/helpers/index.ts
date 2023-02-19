@@ -16,11 +16,12 @@ import type {
 import { parse, Source } from 'graphql'
 import { falsy } from '../runtime/helpers'
 import { generateSchema, generateTemplates } from './../codegen'
-import { GraphqlMiddlewareConfig, GraphqlMiddlewareDocument } from './../types'
+import { GraphqlMiddlewareDocument } from './../types'
+import { ModuleOptions } from './../module'
 
 export const logger = useLogger('nuxt-graphql-middleware')
 
-export const defaultOptions: GraphqlMiddlewareConfig = {
+export const defaultOptions: ModuleOptions = {
   codegenConfig: {
     exportFragmentSpreadSubTypes: true,
     preResolveTypes: true,
@@ -157,7 +158,7 @@ export default defineGraphqlServerOptions({
 /**
  * Validate the module options.
  */
-export function validateOptions(options: Partial<GraphqlMiddlewareConfig>) {
+export function validateOptions(options: Partial<ModuleOptions>) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
   }
@@ -169,7 +170,7 @@ export function validateOptions(options: Partial<GraphqlMiddlewareConfig>) {
  * Get the path to the GraphQL schema.
  */
 export async function getSchemaPath(
-  options: GraphqlMiddlewareConfig,
+  options: ModuleOptions,
   resolver: Resolver['resolve'],
   writeToDisk = false,
 ): Promise<string> {
@@ -190,7 +191,7 @@ export async function getSchemaPath(
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint config.')
   }
-  await generateSchema(options.graphqlEndpoint, dest, writeToDisk)
+  await generateSchema(options, dest, writeToDisk)
   return dest
 }
 
@@ -309,7 +310,7 @@ export function validateDocuments(
  * Generates the TypeScript definitions and documents files.
  */
 export async function generate(
-  options: GraphqlMiddlewareConfig,
+  options: ModuleOptions,
   schemaPath: string,
   resolver: Resolver['resolve'],
   srcDir: string,

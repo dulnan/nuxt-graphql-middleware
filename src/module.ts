@@ -1,4 +1,6 @@
 import { fileURLToPath } from 'url'
+import type { Types } from '@graphql-codegen/plugin-helpers'
+import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import { defu } from 'defu'
 import {
   defineNuxtModule,
@@ -120,7 +122,8 @@ export interface ModuleOptions {
   schemaPath?: string
 
   /**
-   * These options are passed to the graphql-codegen method when generating the operations types.
+   * These options are passed to the graphql-codegen method when generating the
+   * TypeScript operations types.
    *
    * {@link https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations}
    * @default
@@ -139,6 +142,33 @@ export interface ModuleOptions {
    * ```
    */
   codegenConfig?: TypeScriptDocumentsPluginConfig
+
+  /**
+   * Configuration for graphql-codegen when downloading the schema.
+   */
+  codegenSchemaConfig?: {
+    /**
+     * Configure how the schema.graphql file should be generated.
+     */
+    schemaAstConfig?: SchemaASTConfig
+
+    /**
+     * Configure how the schema-ast introspection request should be made.
+     *
+     * Usually this is where you can provide a custom authentication header:
+     *
+     * ```typescript
+     * const codegenSchemaConfig = {
+     *   urlSchemaOptions: {
+     *     headers: {
+     *       authentication: 'foobar',
+     *     }
+     *   }
+     * }
+     * ```
+     */
+    urlSchemaOptions?: Types.UrlSchemaOptions
+  }
 }
 
 // Nuxt needs this.

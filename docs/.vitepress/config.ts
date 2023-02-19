@@ -75,6 +75,10 @@ export default defineConfig({
             text: 'Composable',
             link: '/configuration/composable',
           },
+          {
+            text: 'Using Auth Headers',
+            link: '/configuration/using-auth-headers',
+          },
         ],
       },
     ],

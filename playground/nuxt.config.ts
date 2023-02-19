@@ -1,10 +1,17 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import graphqlMiddlewareModule from './../src/module'
+import graphqlMiddlewareModule, { ModuleOptions } from './../src/module'
 
-const graphqlMiddleware = {
+const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
-  downloadSchema: false,
-  // serverFetchOptions: function () {},
+  downloadSchema: true,
+  codegenConfig: {},
+  codegenSchemaConfig: {
+    urlSchemaOptions: {
+      headers: {
+        authentication: 'server-token',
+      },
+    },
+  },
 }
 
 export default defineNuxtConfig({

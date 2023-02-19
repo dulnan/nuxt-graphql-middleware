@@ -89,8 +89,21 @@ export default defineNuxtConfig({
       nonOptionalTypename: false,
       skipTypename: true,
     },
+
+    codegenSchemaConfig: {
+      schemaAstConfig: {
+        includeDirectives: true,
+        includeIntrospectionTypes: true,
+        sort: true,
+      },
+      urlSchemaOptions: {
+        headers: {
+          authentication: 'IBZxopckhZLalbbIzgp7VE0ae/+N0FAsA6D/31jDBuU='
+        }
+      }
+    }
   }
-}
+})
 ```
 
 ## Full ~/app/graphqlMiddleware.serverOptions.ts example
