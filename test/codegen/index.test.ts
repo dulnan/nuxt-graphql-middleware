@@ -1,5 +1,5 @@
-import { ModuleOptions } from '@nuxt/schema'
 import { describe, expect, test } from 'vitest'
+import { ModuleOptions } from '../../src/module'
 import { generateTemplates, generateSchema } from '../../src/codegen'
 import { GraphqlMiddlewareTemplate } from '../../src/runtime/settings'
 const schema = `
@@ -50,7 +50,12 @@ async function testTemplateWithConfig(
 describe('generateSchema', () => {
   test('Generates the correct schema.', async () => {
     const generatedSchema = await generateSchema(
-      schema,
+      // "Hack" workaround: Passing a schema definition as the URL works here
+      // because graphql-codegen allows passing either a URL or schema here. We
+      // skip downloading the schema this way.
+      {
+        graphqlEndpoint: schema,
+      },
       'schema.graphql',
       false,
     )
