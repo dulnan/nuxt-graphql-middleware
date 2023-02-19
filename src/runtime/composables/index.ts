@@ -1,3 +1,4 @@
+import type { FetchOptions } from 'ofetch'
 import { GraphqlMiddlewareState } from './../../types'
 import { buildRequestParams } from './../helpers'
 import { useRuntimeConfig } from '#imports'
@@ -31,6 +32,7 @@ type GetMutationArgs<
 
 type GraphqlResponse<T> = {
   data: T
+  errors: any[]
 }
 
 // Determine the query result.
@@ -58,34 +60,82 @@ export const useGraphqlState = (): GraphqlMiddlewareState => {
   return state
 }
 
+type QueryObjectArgs<
+  T extends GraphqlMiddlewareQueryName,
+  M extends GraphqlMiddlewareQuery,
+> = M[T][0] extends null
+  ? {
+      name: T
+      fetchOptions?: FetchOptions
+      variables?: null
+    }
+  : {
+      name: T
+      variables: M[T][0]
+      fetchOptions?: FetchOptions
+    }
+
+type MutationObjectArgs<
+  T extends GraphqlMiddlewareMutationName,
+  M extends GraphqlMiddlewareMutation,
+> = M[T][0] extends null
+  ? {
+      name: T
+      variables?: null
+      fetchOptions?: FetchOptions
+    }
+  : {
+      name: T
+      variables: M[T][0]
+      fetchOptions?: FetchOptions
+    }
+
 export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
-  ...args: GetQueryArgs<T, GraphqlMiddlewareQuery>
+  ...args:
+    | GetQueryArgs<T, GraphqlMiddlewareQuery>
+    | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
 ): Promise<GetQueryResult<T, GraphqlMiddlewareQuery>> {
-  const name = args[0]
-  if (typeof name !== 'string') {
-    return Promise.reject(new Error('Invalid query name'))
-  }
+  const [name, variables, fetchOptions = {}] =
+    typeof args[0] === 'string'
+      ? [args[0], args[1]]
+      : [args[0].name, args[0].variables, args[0].fetchOptions]
+
   const state = useGraphqlState()
   return $fetch(getEndpoint('query', name), {
-    params: buildRequestParams(args[1]),
+    params: buildRequestParams(variables),
     // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
     ...(state.fetchOptions as any),
+    ...fetchOptions,
+  }).then((v: any) => {
+    return {
+      data: v.data,
+      errors: v.errors || [],
+    }
   }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
 }
 
 export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
-  ...args: GetMutationArgs<T, GraphqlMiddlewareMutation>
+  ...args:
+    | GetMutationArgs<T, GraphqlMiddlewareMutation>
+    | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
 ): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
+  const [name, variables, fetchOptions = {}] =
+    typeof args[0] === 'string'
+      ? [args[0], args[1]]
+      : [args[0].name, args[0].variables, args[0].fetchOptions]
+
   const state = useGraphqlState()
-  const name = args[0]
-  const body = args[1] || {}
-  if (typeof name !== 'string') {
-    return Promise.reject(new Error('Invalid mutation name'))
-  }
+
   return $fetch(getEndpoint('mutation', name), {
     // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
     method: 'post' as any,
-    body,
+    body: variables,
     ...state.fetchOptions,
+    ...fetchOptions,
+  }).then((v: any) => {
+    return {
+      data: v.data,
+      errors: v.errors || [],
+    }
   }) as Promise<GetMutationResult<T, GraphqlMiddlewareMutation>>
 }

@@ -48,6 +48,23 @@ console.log(data.allFilms.films)
 console.log(data.allFilms?.films)
 ```
 
+### Fetch Options
+
+You can also pass an object instead, which allows you to additionally provide
+fetch options for the request:
+
+```typescript
+const { data } = await useGraphqlQuery({
+  name: 'filmById',
+  variables: { id: '123' },
+  fetchOptions: {
+    headers: {
+      authorization: 'foobar'
+    }
+  }
+})
+```
+
 ## useGraphqlMutation
 
 Same usage like useGraphqlQuery:

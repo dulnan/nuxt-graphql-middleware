@@ -14,6 +14,18 @@
             <nuxt-link class="navbar-item" to="/fetch-options"
               >Fetch options</nuxt-link
             >
+            <nuxt-link class="navbar-item" to="/mutation/trigger-error"
+              >Trigger error</nuxt-link
+            >
+            <nuxt-link class="navbar-item" to="/query/get-error"
+              >Query error</nuxt-link
+            >
+            <nuxt-link class="navbar-item" to="/query/invalid-query-error"
+              >Invalid query error</nuxt-link
+            >
+            <nuxt-link class="navbar-item" to="/query/simulate-endpoint-down"
+              >Simulate endpoint down</nuxt-link
+            >
             <div class="navbar-item">
               <button class="button is-white" @click="initState">
                 Init default state
@@ -24,17 +36,6 @@
                 >Add user</nuxt-link
               >
             </div>
-          </div>
-
-          <div class="navbar-end">
-            <a
-              href="https://github.com/dulnan/nuxt-graphql-middleware"
-              class="navbar-item"
-            >
-              Github
-            </a>
-
-            <a href="/" class="navbar-item"> Documentation </a>
           </div>
         </div>
       </div>

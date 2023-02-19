@@ -158,9 +158,10 @@ export function onServerError(
   if (serverOptions.onServerError) {
     return serverOptions.onServerError(event, error, operation, operationName)
   }
+  const message = error && 'message' in error ? error.message : ''
   throw createError({
     statusCode: 500,
-    statusMessage: "Couldn't execute GraphQL query.",
+    statusMessage: "Couldn't execute GraphQL query: " + message,
     data: error && 'message' in error ? error.message : error,
   })
 }

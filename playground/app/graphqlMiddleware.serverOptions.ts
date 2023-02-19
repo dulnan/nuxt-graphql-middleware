@@ -2,8 +2,10 @@ import { getHeader } from 'h3'
 import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
 
 export default defineGraphqlServerOptions({
-  graphqlEndpoint() {
-    console.log('METHOD CALLED')
+  graphqlEndpoint(event, operation, operationName) {
+    if (operationName === 'simulateEndpointDown') {
+      return 'http://invalid/graphql'
+    }
   },
 
   serverFetchOptions: function (event) {
