@@ -64,6 +64,7 @@ export default defineEventHandler(async (event) => {
       body: {
         query,
         variables,
+        operationName: name,
       },
       ...fetchOptions,
     })
