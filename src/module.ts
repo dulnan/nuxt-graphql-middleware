@@ -203,6 +203,11 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
+    // Add sane default for the autoImportPatterns option.
+    if (!passedOptions.autoImportPatterns) {
+      options.autoImportPatterns = ['**/*.{gql,graphql}', '!node_modules']
+    }
+
     // Will throw an error if the options are not valid.
     validateOptions(options)
 

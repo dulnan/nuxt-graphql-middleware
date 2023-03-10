@@ -42,7 +42,7 @@ export const defaultOptions: ModuleOptions = {
   debug: false,
   includeComposables: true,
   documents: [],
-  autoImportPatterns: ['**/*.{gql,graphql}', '!node_modules'],
+  autoImportPatterns: [],
 }
 
 /**

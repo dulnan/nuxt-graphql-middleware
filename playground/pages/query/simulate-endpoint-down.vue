@@ -10,6 +10,4 @@
 const result = await useAsyncData(async () => {
   return await useGraphqlQuery('simulateEndpointDown')
 })
-
-console.log(result.error)
 </script>

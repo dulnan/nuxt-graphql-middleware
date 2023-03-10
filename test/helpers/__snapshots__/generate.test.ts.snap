@@ -125,14 +125,11 @@ export type DeleteUserMutationVariables = Exact<{
 
 export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
 ",
-  "filename": "graphql-operations.d.ts",
-  "hooks": {},
-}
-`;
-
-exports[`generate > Generates templates correctly for auto imported documents 3`] = `
-{
-  "content": "import {
+      "filename": "graphql-operations.d.ts",
+      "hooks": {},
+    },
+    {
+      "content": "import {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
   GetErrorQuery,
@@ -214,10 +211,14 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
     {
       "content": "const documents = {
   \\"query\\": {
-    \\"one\\": \\"query one {\\\\n  users {\\\\n    id\\\\n  }\\\\n}\\"
+    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
   },
   \\"mutation\\": {
-    \\"two\\": \\"mutation two($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
+    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
+    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
   }
 };
 export { documents };",
