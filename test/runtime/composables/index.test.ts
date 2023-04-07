@@ -21,11 +21,9 @@ vi.mock('#imports', () => {
 
 const fetchMock = (endpoint: string, options: any) => {
   return Promise.resolve({
-    _data: {
-      data: {},
-      options,
-      endpoint,
-    },
+    data: {},
+    options,
+    endpoint,
   })
 }
 
