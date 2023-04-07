@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`generate > Generates templates correctly for auto imported documents 1`] = `
 {
@@ -24,6 +24,7 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']>;
   initState: Scalars['Boolean'];
+  triggerError?: Maybe<Scalars['Boolean']>;
 };
 
 
@@ -38,6 +39,7 @@ export type MutationDeleteUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  getError?: Maybe<Scalars['Boolean']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -72,6 +74,11 @@ export type UserData = {
   lastName: Scalars['String'];
 };
 
+export type SimulateEndpointDownQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SimulateEndpointDownQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
+
 export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -79,10 +86,20 @@ export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __t
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
 
+export type GetErrorQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetErrorQuery = { __typename?: 'Query', getError?: boolean | null };
+
 export type InitStateMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type InitStateMutation = { __typename?: 'Mutation', initState: boolean };
+
+export type TriggerErrorMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TriggerErrorMutation = { __typename?: 'Mutation', triggerError?: boolean | null };
 
 export type DeleteUserMutationVariables = Exact<{
   id: Scalars['Int'];
@@ -96,8 +113,11 @@ export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean
     },
     {
       "content": "import {
+  SimulateEndpointDownQuery,
   FetchOptionsQuery,
+  GetErrorQuery,
   InitStateMutation,
+  TriggerErrorMutation,
   DeleteUserMutation,
   DeleteUserMutationVariables
 } from './graphql-operations'
@@ -109,11 +129,14 @@ type GraphqlMiddlewareResponse<T> = {
 
 declare module '#build/nuxt-graphql-middleware' {
   export type GraphqlMiddlewareQuery = {
-    fetchOptions: [null, true, FetchOptionsQuery]
+    simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
+    fetchOptions: [null, true, FetchOptionsQuery],
+    getError: [null, true, GetErrorQuery]
   }
 
   export type GraphqlMiddlewareMutation = {
     initState: [null, true, InitStateMutation],
+    triggerError: [null, true, TriggerErrorMutation],
     deleteUser: [DeleteUserMutationVariables, false, DeleteUserMutation]
   }
 
@@ -122,8 +145,11 @@ declare module '#build/nuxt-graphql-middleware' {
 declare module 'nitropack' {
   type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
+    'undefined/query/simulateEndpointDown': GraphqlMiddlewareResponse<Awaited<SimulateEndpointDownQuery>>
     'undefined/query/fetchOptions': GraphqlMiddlewareResponse<Awaited<FetchOptionsQuery>>
+    'undefined/query/getError': GraphqlMiddlewareResponse<Awaited<GetErrorQuery>>
     'undefined/mutation/initState': GraphqlMiddlewareResponse<Awaited<InitStateMutation>>
+    'undefined/mutation/triggerError': GraphqlMiddlewareResponse<Awaited<TriggerErrorMutation>>
     'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
   }
 }
@@ -134,10 +160,13 @@ declare module 'nitropack' {
     {
       "content": "const documents = {
   \\"query\\": {
-    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\"
+    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
   },
   \\"mutation\\": {
     \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
+    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
     \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
   }
 };
@@ -173,6 +202,7 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']>;
   initState: Scalars['Boolean'];
+  triggerError?: Maybe<Scalars['Boolean']>;
 };
 
 
@@ -187,6 +217,7 @@ export type MutationDeleteUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  getError?: Maybe<Scalars['Boolean']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
