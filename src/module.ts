@@ -382,6 +382,10 @@ declare module '#graphql-documents' {
 
     // Watch for file changes in dev mode.
     if (nuxt.options.dev) {
+      addServerHandler({
+        handler: moduleResolver('./runtime/serverHandler/debug'),
+        route: options.serverApiPrefix + '/debug',
+      })
       nuxt.hook('nitro:build:before', (nitro) => {
         nuxt.hook('builder:watch', async (event, path) => {
           // We only care about GraphQL files.
