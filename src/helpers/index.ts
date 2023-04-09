@@ -1,5 +1,6 @@
 import { existsSync, promises as fsp } from 'node:fs'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
+import { resolve } from 'pathe'
 import type { Resolver } from '@nuxt/kit'
 // @ts-ignore
 import fragmentImport from '@graphql-fragment-import/lib/inline-imports.js'
@@ -15,7 +16,7 @@ import type {
 } from 'graphql'
 import { parse, Source } from 'graphql'
 import { falsy } from '../runtime/helpers'
-import { generateSchema, generateTemplates } from './../codegen'
+import { CodegenResult, generateSchema, generateTemplates } from './../codegen'
 import { GraphqlMiddlewareDocument } from './../types'
 import { ModuleOptions } from './../module'
 
@@ -362,7 +363,7 @@ export async function generate(
 
   logger.info('Finished GraphQL code generation.')
 
-  return { templates, hasErrors }
+  return { templates, hasErrors, documents: validated }
 }
 
 export const fileExists = (
@@ -381,4 +382,18 @@ export const fileExists = (
   )
 
   return extension ? `${path}.${extension}` : null
+}
+
+export async function outputDocuments(
+  outputPath: string,
+  documents: GraphqlMiddlewareDocument[],
+) {
+  await fsp.mkdir(outputPath, { recursive: true })
+  documents.forEach((v) => {
+    if (v.operation && v.name) {
+      const fileName = [v.operation, v.name, 'graphql'].join('.')
+      const filePath = resolve(outputPath, fileName)
+      fsp.writeFile(filePath, v.content)
+    }
+  })
 }

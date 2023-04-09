@@ -54,6 +54,7 @@ export default defineConfig({
           { text: 'Fragments', link: '/features/fragments' },
           { text: 'Composables', link: '/features/composables' },
           { text: 'TypeScript', link: '/features/typescript' },
+          { text: 'Debug', link: '/features/debug' },
         ],
       },
       {

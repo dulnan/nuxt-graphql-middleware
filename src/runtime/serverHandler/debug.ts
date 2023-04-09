@@ -1,33 +1,50 @@
 import { defineEventHandler } from 'h3'
-import { GraphqlMiddlewareRuntimeConfig } from '../../types'
 import { documents } from '#graphql-documents'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(() => {
-  let body = '<h1>nuxt-graphql-middleware debug</h1>'
-
   function getEndpoint(operation: string, operationName: string): string {
     const config = useRuntimeConfig()
     return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
   }
 
+  let body = '<h1>nuxt-graphql-middleware debug</h1>'
+
+  body += '<table><tbody>'
   Object.entries(documents).forEach(([operationType, items]) => {
-    body += `<h2>${operationType}</h2>`
     Object.entries(items).forEach(([operationName, operation]) => {
+      body += '<tr>'
+      body += `<td style="font-size: 1.5rem">${operationType}</td>`
       const url = getEndpoint(operationType, operationName)
-      body += `<h3>${operationName}</h3>`
-      body += `<a href="${url}">${url}</a>`
-      body += `<textarea rows="10">${operation}</textarea>`
+      body += `<td>
+        <strong style="font-size: 1.5rem">${operationName}</strong><br>
+        <a href="${url}">${url}</a>
+      </td>`
+      body += `<td style="width: 30%"><textarea readonly rows="5">${operation}</textarea></td>`
+      body += '</tr>'
     })
   })
+  body += '</tbody></table>'
 
   return `
     <html>
       <head>
     <style>
+    body {
+      font-family: sans-serif;
+    }
     textarea {
-    display: block;
+      display: block;
       width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      vertical-align: top;
+      border-bottom: 1px solid;
+      padding: 0.5rem 0;
     }
     </style>
       </head>

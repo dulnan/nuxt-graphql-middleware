@@ -42,17 +42,35 @@ describe('Debug Server Handler', () => {
           <html>
             <head>
           <style>
+          body {
+            font-family: sans-serif;
+          }
           textarea {
-          display: block;
+            display: block;
             width: 100%;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          td {
+            vertical-align: top;
+            border-bottom: 1px solid;
+            padding: 0.5rem 0;
           }
           </style>
             </head>
-            <body><h1>nuxt-graphql-middleware debug</h1><h2>query</h2><h3>foobar</h3><a href=\\"/nuxt-graphql-middleware/query/foobar\\">/nuxt-graphql-middleware/query/foobar</a><textarea rows=\\"10\\">query foobar {
+            <body><h1>nuxt-graphql-middleware debug</h1><table><tbody><tr><td style=\\"font-size: 1.5rem\\">query</td><td>
+              <strong style=\\"font-size: 1.5rem\\">foobar</strong><br>
+              <a href=\\"/nuxt-graphql-middleware/query/foobar\\">/nuxt-graphql-middleware/query/foobar</a>
+            </td><td style=\\"width: 30%\\"><textarea readonly rows=\\"5\\">query foobar {
         getUserId
-      }</textarea><h2>mutation</h2><h3>barfoo</h3><a href=\\"/nuxt-graphql-middleware/mutation/barfoo\\">/nuxt-graphql-middleware/mutation/barfoo</a><textarea rows=\\"10\\">mutation barfoo {
+      }</textarea></td></tr><tr><td style=\\"font-size: 1.5rem\\">mutation</td><td>
+              <strong style=\\"font-size: 1.5rem\\">barfoo</strong><br>
+              <a href=\\"/nuxt-graphql-middleware/mutation/barfoo\\">/nuxt-graphql-middleware/mutation/barfoo</a>
+            </td><td style=\\"width: 30%\\"><textarea readonly rows=\\"5\\">mutation barfoo {
         login
-      }</textarea></body>
+      }</textarea></td></tr></tbody></table></body>
           </html>
           "
     `)

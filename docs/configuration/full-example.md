@@ -1,6 +1,7 @@
 # Full Configuration Example
 
 ## Minimal
+
 For the module to work you only need to provide a `graphqlEndpoint` value.
 
 ```typescript
@@ -18,7 +19,7 @@ export default defineNuxtConfig({
 ```typescript
 import { defineNuxtConfig } from 'nuxt'
 import { getHeader } from 'h3'
-import acceptLanguageParser from 'accept-language-parser';
+import acceptLanguageParser from 'accept-language-parser'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -36,7 +37,7 @@ export default defineNuxtConfig({
     autoImportPatterns: [
       'pages/**/*.{gql,graphql}',
       'components/**/*.{gql,graphql}',
-      'node_modules/super-cms-client/queries/*.graphql'
+      'node_modules/super-cms-client/queries/*.graphql',
     ],
 
     /**
@@ -60,16 +61,24 @@ export default defineNuxtConfig({
     debug: isDev,
 
     /**
+     * Output all compiled documents in
+     * .nuxt/nuxt-graphql-middleware/documents.
+     */
+    outputDocuments: true,
+
+    /**
      * Generate a query at build time.
      */
-    documents: [`
+    documents: [
+      `
     query myQuery {
       articlesForSite(site: "${process.env.SITE}") {
         title
         id
       }
     }
-    `],
+    `,
+    ],
 
     /**
      * Override default configuration to create better TypeScript types.
@@ -98,11 +107,11 @@ export default defineNuxtConfig({
       },
       urlSchemaOptions: {
         headers: {
-          authentication: 'IBZxopckhZLalbbIzgp7VE0ae/+N0FAsA6D/31jDBuU='
-        }
-      }
-    }
-  }
+          authentication: 'IBZxopckhZLalbbIzgp7VE0ae/+N0FAsA6D/31jDBuU=',
+        },
+      },
+    },
+  },
 })
 ```
 
@@ -116,15 +125,15 @@ import type { FetchError } from 'ofetch'
 
 export default defineGraphqlServerOptions({
   /**
-    * Determine the GraphQL endpoint on every request.
-    *
-    * The GraphQL endpoint used depends on the language prefix for correctly
-    * returning the content in the correct language.
-    */
+   * Determine the GraphQL endpoint on every request.
+   *
+   * The GraphQL endpoint used depends on the language prefix for correctly
+   * returning the content in the correct language.
+   */
   graphqlEndpoint(event, operation, operationName) {
     // Get accepted languages.
     const acceptLanguage = getHeader('accept-language')
-    const languages = acceptLanguageParser.parse(acceptLanguage);
+    const languages = acceptLanguageParser.parse(acceptLanguage)
 
     // Use first match or fallback to English.
     const language = languages[0]?.code || 'en'
@@ -138,8 +147,8 @@ export default defineGraphqlServerOptions({
     // Pass the cookie from the client request to the GraphQL request.
     return {
       headers: {
-        Cookie: getHeader(event, 'cookie')
-      }
+        Cookie: getHeader(event, 'cookie'),
+      },
     }
   },
 
@@ -152,7 +161,7 @@ export default defineGraphqlServerOptions({
     throw createError({
       statusCode: 500,
       statusMessage: `Couldn't execute GraphQL ${operation} "${operationName}".`,
-      data: error.message
+      data: error.message,
     })
   },
 

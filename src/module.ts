@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
+import { resolve } from 'pathe'
 import { defu } from 'defu'
 import {
   defineNuxtModule,
@@ -21,6 +22,7 @@ import {
   defaultOptions,
   logger,
   fileExists,
+  outputDocuments,
 } from './helpers'
 import { CodegenResult } from './codegen'
 export type { GraphqlMiddlewareServerOptions } from './types'
@@ -169,6 +171,12 @@ export interface ModuleOptions {
      */
     urlSchemaOptions?: Types.UrlSchemaOptions
   }
+
+  /**
+   * Set to true if you want to output each compiled query and mutation in the
+   * .nuxt folder.
+   */
+  outputDocuments?: boolean
 }
 
 // Nuxt needs this.
@@ -215,7 +223,7 @@ export default defineNuxtModule<ModuleOptions>({
       }
 
       try {
-        const { templates, hasErrors } = await generate(
+        const { templates, hasErrors, documents } = await generate(
           options,
           schemaPath,
           srcResolver,
@@ -223,6 +231,19 @@ export default defineNuxtModule<ModuleOptions>({
           isFirst,
         )
         ctx.templates = templates
+
+        // Output the generated documents if desired.
+        if (options.outputDocuments) {
+          const destFolder = resolve(
+            nuxt.options.buildDir,
+            'nuxt-graphql-middleware/documents',
+          )
+
+          outputDocuments(destFolder, documents)
+          if (isFirst) {
+            logger.info('Documents generated at ' + destFolder)
+          }
+        }
         if (hasErrors) {
           throw new Error('Documents has errors.')
         }
@@ -230,6 +251,7 @@ export default defineNuxtModule<ModuleOptions>({
         console.log(e)
         logger.error('Failed to generate GraphQL files.')
         if (isFirst) {
+          // Exit process if there are errors in the first run.
           process.exit(1)
         }
         if (!options.downloadSchema) {
@@ -387,7 +409,7 @@ declare module '#graphql-documents' {
         route: options.serverApiPrefix + '/debug',
       })
       nuxt.hook('nitro:build:before', (nitro) => {
-        nuxt.hook('builder:watch', async (event, path) => {
+        nuxt.hook('builder:watch', async (_event, path) => {
           // We only care about GraphQL files.
           if (!path.match(/\.(gql|graphql)$/)) {
             return
