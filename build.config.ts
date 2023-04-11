@@ -10,6 +10,7 @@ export default defineBuildConfig({
     'chalk',
     '@graphql-codegen/plugin-helpers',
     'defu',
+    'pathe',
     'change-case',
     'change-case-all',
   ],

@@ -363,7 +363,18 @@ export async function generate(
 
   logger.info('Finished GraphQL code generation.')
 
-  return { templates, hasErrors, documents: validated }
+  return {
+    templates: templates.sort((a, b) => {
+      return a.filename.localeCompare(b.filename)
+    }),
+    hasErrors,
+    documents: validated.sort((a, b) => {
+      if (a.filename && b.filename) {
+        return a.filename.localeCompare(b.filename)
+      }
+      return -1
+    }),
+  }
 }
 
 export const fileExists = (

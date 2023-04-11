@@ -86,6 +86,23 @@ exports[`generate > Generates templates correctly for auto imported documents 1`
   "hasErrors": false,
   "templates": [
     {
+      "content": "const documents = {
+  \\"query\\": {
+    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
+  },
+  \\"mutation\\": {
+    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
+    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
+    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+  }
+};
+export { documents };",
+      "filename": "graphql-documents.mjs",
+      "hooks": {},
+    },
+    {
       "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -238,23 +255,6 @@ declare module 'nitropack' {
       "filename": "nuxt-graphql-middleware.d.ts",
       "hooks": {},
     },
-    {
-      "content": "const documents = {
-  \\"query\\": {
-    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
-    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
-    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
-  },
-  \\"mutation\\": {
-    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
-    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
-    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
-  }
-};
-export { documents };",
-      "filename": "graphql-documents.mjs",
-      "hooks": {},
-    },
   ],
 }
 `;
@@ -289,6 +289,19 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
   ],
   "hasErrors": false,
   "templates": [
+    {
+      "content": "const documents = {
+  \\"query\\": {
+    \\"one\\": \\"\\\\n            query one {\\\\n              users {\\\\n                id\\\\n              }\\\\n            }\\"
+  },
+  \\"mutation\\": {
+    \\"two\\": \\"\\\\n            mutation two($id: Int!) {\\\\n              deleteUser(id: $id)\\\\n            }\\"
+  }
+};
+export { documents };",
+      "filename": "graphql-documents.mjs",
+      "hooks": {},
+    },
     {
       "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -406,19 +419,6 @@ declare module 'nitropack' {
 }
 ",
       "filename": "nuxt-graphql-middleware.d.ts",
-      "hooks": {},
-    },
-    {
-      "content": "const documents = {
-  \\"query\\": {
-    \\"one\\": \\"\\\\n            query one {\\\\n              users {\\\\n                id\\\\n              }\\\\n            }\\"
-  },
-  \\"mutation\\": {
-    \\"two\\": \\"\\\\n            mutation two($id: Int!) {\\\\n              deleteUser(id: $id)\\\\n            }\\"
-  }
-};
-export { documents };",
-      "filename": "graphql-documents.mjs",
       "hooks": {},
     },
   ],
