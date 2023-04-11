@@ -59,9 +59,9 @@ const { data } = await useGraphqlQuery({
   variables: { id: '123' },
   fetchOptions: {
     headers: {
-      authorization: 'foobar'
-    }
-  }
+      authorization: 'foobar',
+    },
+  },
 })
 ```
 

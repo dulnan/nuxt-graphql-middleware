@@ -1,14 +1,14 @@
 # TypeScript Codegen
 
 Type definitions for your queries, mutations and fragments are generated
-automatically using [GraphQL Code
-Generator](https://www.graphql-code-generator.com/plugins/typescript/typescript).
+automatically using
+[GraphQL Code Generator](https://www.graphql-code-generator.com/plugins/typescript/typescript).
 
 You can provide custom configuration for graphql-codegen using the
-[`codegenConfig` configuration
-property](/configuration/module.html#codegenconfig-typescriptdocumentspluginconfig).
+[`codegenConfig` configuration property](/configuration/module.html#codegenconfig-typescriptdocumentspluginconfig).
 
 ## Queries
+
 Given this query:
 
 ```graphql
@@ -70,7 +70,7 @@ export default defineComponent({
   props: {
     films: {
       type: Array as PropType<FilmFragment[]>,
-      default: () => []
+      default: () => [],
     },
   },
 })

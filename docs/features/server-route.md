@@ -4,10 +4,10 @@ All GraphQL requests are only performed on the server. This is done by exposing
 a server route for each query and mutation, which performs the GraphQL request
 and then returns the response.
 
-By using Nuxt's built-in server handler feature all requests to the
-server route during SSR are directly passed from $fetch to the server route.
-This means there is no unnecessary request made from your app to your app. It's
-esentially like directly making the request to the GraphQL endpoint.
+By using Nuxt's built-in server handler feature all requests to the server route
+during SSR are directly passed from $fetch to the server route. This means there
+is no unnecessary request made from your app to your app. It's esentially like
+directly making the request to the GraphQL endpoint.
 
 ## Query
 
@@ -58,8 +58,8 @@ as a single param `__variables`.
 ```typescript
 const variables = {
   search: {
-    text: 'foobar'
-  }
+    text: 'foobar',
+  },
 }
 ```
 

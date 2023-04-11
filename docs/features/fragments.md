@@ -3,6 +3,7 @@
 You can create reusable fragments and import them in other GraphQL files.
 
 #### components/Film/film.fragment.graphql
+
 ```graphql
 fragment film on Film {
   id
@@ -12,6 +13,7 @@ fragment film on Film {
 ```
 
 #### pages/allFilms.query.graphql
+
 ```graphql
 #import "~/components/Film/film.fragment.graphql"
 
@@ -24,5 +26,5 @@ query allFilms {
 }
 ```
 
-The path is always relative to your app root and is being resolved by Nuxt,
-e.g. you can also use aliases like `~`, `@` or `#custom-alias`.
+The path is always relative to your app root and is being resolved by Nuxt, e.g.
+you can also use aliases like `~`, `@` or `#custom-alias`.

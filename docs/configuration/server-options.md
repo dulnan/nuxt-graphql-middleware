@@ -5,8 +5,8 @@ GraphQL server is located in a special runtime file located at
 `~/app/graphqlMiddleware.serverOptions.ts`. This file is bundled together with
 the nitro build in the .output folder.
 
-Create a file called `graphqlMiddleware.serverOptions.ts` (or js/mjs) inside
-the `app` folder in your Nuxt root.
+Create a file called `graphqlMiddleware.serverOptions.ts` (or js/mjs) inside the
+`app` folder in your Nuxt root.
 
 ::: code-group
 
@@ -17,6 +17,7 @@ export default defineGraphqlServerOptions({
   // ...
 })
 ```
+
 :::
 
 ## graphqlEndpoint
@@ -39,18 +40,18 @@ header and use it to target a specific language-prefixed GraphQL endpoint.
 ```typescript
 import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
-import acceptLanguageParser from 'accept-language-parser';
+import acceptLanguageParser from 'accept-language-parser'
 
 export default defineGraphqlServerOptions({
   graphqlEndpoint(event, operation, operationName) {
     // Get accepted languages.
     const acceptLanguage = getHeader('accept-language')
-    const languages = acceptLanguageParser.parse(acceptLanguage);
+    const languages = acceptLanguageParser.parse(acceptLanguage)
 
     // Use first match or fallback to English.
     const language = languages[0]?.code || 'en'
     return `https://api.example.com/${language}/graphql`
-  }
+  },
 })
 ```
 
@@ -67,6 +68,7 @@ type GraphqlMiddlewareServerFetchOptionsMethod = (
 ```
 
 ### Example: Pass cookie from client to GraphQL server
+
 ```typescript
 import { defineGraphqlServerOptions } from '#graphql-server-options'
 import { getHeader } from 'h3'
@@ -76,10 +78,10 @@ export default defineGraphqlServerOptions({
   serverFetchOptions(event, operation, operationName) {
     return {
       headers: {
-        Cookie: getHeader(event, 'cookie')
-      }
+        Cookie: getHeader(event, 'cookie'),
+      },
     }
-  }
+  },
 })
 ```
 
@@ -100,6 +102,7 @@ type GraphqlMiddlewareOnServerResponseMethod = (
 ```
 
 ### Example: Pass cookie from client to GraphQL server
+
 ```typescript
 import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
@@ -121,7 +124,7 @@ export default defineGraphqlServerOptions({
 
     // Return the GraphQL response.
     return graphqlResponse._data
-  }
+  },
 })
 ```
 
@@ -142,18 +145,19 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ```
 
 ### Example: Always return a 200 status to the clients
+
 ```typescript
 import { defineGraphqlServerOptions } from '#graphql-server-options'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 
 export default defineGraphqlServerOptions({
-  onServerError( event, error, operation, operationName) {
+  onServerError(event, error, operation, operationName) {
     event.setHeader('cache-control', 'no-cache')
     return {
       data: {},
-      errors: [error.message]
+      errors: [error.message],
     }
-  }
+  },
 })
 ```
