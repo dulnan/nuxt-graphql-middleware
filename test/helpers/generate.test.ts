@@ -13,17 +13,37 @@ describe('generate', () => {
   )
 
   test('Generates templates correctly for auto imported documents', async () => {
-    expect(
-      await generate(
-        {
-          documents: [],
-          autoImportPatterns: ['**/*.graphql'],
-        },
-        schemaPath,
-        resolver,
-        srcDir,
-      ),
-    ).toMatchSnapshot()
+    const result = await generate(
+      {
+        documents: [],
+        autoImportPatterns: ['**/*.graphql'],
+      },
+      schemaPath,
+      resolver,
+      srcDir,
+    )
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.documents).toHaveLength(7)
+    expect(result.templates).toHaveLength(3)
+
+    const possibleTemplates = [
+      'graphql-documents.mjs',
+      'graphql-operations.d.ts',
+      'nuxt-graphql-middleware.d.ts',
+    ]
+
+    const a = result.templates.find(
+      (t) => t.filename === 'graphql-documents.mjs',
+    )
+    const b = result.templates.find(
+      (t) => t.filename === 'graphql-operations.d.ts',
+    )
+    const c = result.templates.find(
+      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+    )
+    expect(a).toMatchSnapshot()
+    expect(b).toMatchSnapshot()
+    expect(c).toMatchSnapshot()
   })
 
   test('Generates templates correctly for provided documents', async () => {

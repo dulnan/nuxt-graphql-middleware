@@ -2,91 +2,7 @@
 
 exports[`generate > Generates templates correctly for auto imported documents 1`] = `
 {
-  "documents": [
-    {
-      "content": "mutation initState {
-  initState
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/layouts/mutation.initState.graphql",
-      "isValid": true,
-      "name": "initState",
-      "operation": "mutation",
-    },
-    {
-      "content": "query fetchOptions {
-  testFetchOptions {
-    headerClient
-    headerServer
-  }
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/fetch-options/query.fetchOptions.graphql",
-      "isValid": true,
-      "name": "fetchOptions",
-      "operation": "query",
-    },
-    {
-      "content": "mutation deleteUser($id: Int!) {
-  deleteUser(id: $id)
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/mutation.deleteUser.graphql",
-      "isValid": true,
-      "name": "deleteUser",
-      "operation": "mutation",
-    },
-    {
-      "content": "mutation triggerError {
-  triggerError
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/mutation/mutation.triggerError.graphql",
-      "isValid": true,
-      "name": "triggerError",
-      "operation": "mutation",
-    },
-    {
-      "content": "query getError {
-  getError
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/query/query.getError.graphql",
-      "isValid": true,
-      "name": "getError",
-      "operation": "query",
-    },
-    {
-      "content": "query simulateEndpointDown {
-  testFetchOptions {
-    headerClient
-    headerServer
-  }
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/query/query.simulateEndpointDown.graphql",
-      "isValid": true,
-      "name": "simulateEndpointDown",
-      "operation": "query",
-    },
-    {
-      "content": "fragment user on User {
-  id
-  firstName
-  lastName
-  email
-  description
-  dateOfBirth
-}",
-      "errors": [],
-      "filename": "/home/dulnan/Development/nuxt-graphql-middleware/playground/pages/user/user.fragment.graphql",
-      "isValid": true,
-    },
-  ],
-  "hasErrors": false,
-  "templates": [
-    {
-      "content": "const documents = {
+  "content": "const documents = {
   \\"query\\": {
     \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
     \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
@@ -99,11 +15,14 @@ exports[`generate > Generates templates correctly for auto imported documents 1`
   }
 };
 export { documents };",
-      "filename": "graphql-documents.mjs",
-      "hooks": {},
-    },
-    {
-      "content": "export type Maybe<T> = T | null;
+  "filename": "graphql-documents.mjs",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents 2`] = `
+{
+  "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -206,11 +125,14 @@ export type DeleteUserMutationVariables = Exact<{
 
 export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
 ",
-      "filename": "graphql-operations.d.ts",
-      "hooks": {},
-    },
-    {
-      "content": "import {
+  "filename": "graphql-operations.d.ts",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents 3`] = `
+{
+  "content": "import {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
   GetErrorQuery,
@@ -252,10 +174,8 @@ declare module 'nitropack' {
   }
 }
 ",
-      "filename": "nuxt-graphql-middleware.d.ts",
-      "hooks": {},
-    },
-  ],
+  "filename": "nuxt-graphql-middleware.d.ts",
+  "hooks": {},
 }
 `;
 
