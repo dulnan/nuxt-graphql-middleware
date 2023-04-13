@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import { ModuleOptions } from '../../src/module'
-import { generateTemplates, generateSchema } from '../../src/codegen'
+import {
+  generateTemplates,
+  generateSchema,
+  pluginLoader,
+} from '../../src/codegen'
 import { GraphqlMiddlewareTemplate } from '../../src/runtime/settings'
+
 const schema = `
 type User {
   name: String!
@@ -63,10 +68,26 @@ describe('generateSchema', () => {
   })
 })
 
+describe('pluginLoader', () => {
+  test('Loads the correct plugin.', async () => {
+    const plugin = await pluginLoader('@graphql-codegen/typescript')
+    expect(plugin).toBeTruthy()
+  })
+
+  test('Throws an error if plugin is invalid.', () => {
+    expect(() => {
+      pluginLoader('@graphql-codegen/this-does-not-exist')
+    }).toThrowErrorMatchingInlineSnapshot(
+      '"graphql-codegen plugin not found: @graphql-codegen/this-does-not-exist"',
+    )
+  })
+})
+
 describe('generateTemplates', () => {
   test('Generates the correct delarations.', async () => {
     const result = await generateTemplates(documents, schema, {
       serverApiPrefix: '/api/graphql_middleware',
+      graphqlEndpoint: '/foobar',
     })
 
     result.forEach((v) => {
@@ -76,13 +97,19 @@ describe('generateTemplates', () => {
 
   test('Generates the correct nitropack delarations.', async () => {
     const one = await testTemplateWithConfig(
-      { serverApiPrefix: '/api/graphql_middleware' },
+      {
+        serverApiPrefix: '/api/graphql_middleware',
+        graphqlEndpoint: '/foobar',
+      },
       GraphqlMiddlewareTemplate.ComposableContext,
     )
     expect(one).toContain('/api/graphql_middleware/query/getText')
 
     const two = await testTemplateWithConfig(
-      { serverApiPrefix: '/api/custom-endpoint' },
+      {
+        serverApiPrefix: '/api/custom-endpoint',
+        graphqlEndpoint: '/foobar',
+      },
       GraphqlMiddlewareTemplate.ComposableContext,
     )
     expect(two).toContain('/api/custom-endpoint/query/getText')

@@ -9,26 +9,45 @@ import * as PluginNuxtGraphqlMiddlewareDocuments from './pluginDocuments'
 import { GraphqlMiddlewareTemplate } from './../runtime/settings'
 import { ModuleOptions } from './../module'
 
-function pluginLoader(name: string): Promise<any> {
-  if (name === '@graphql-codegen/typescript') {
-    return Promise.resolve(PluginTypescript)
-  } else if (name === '@graphql-codegen/typescript-operations') {
-    return Promise.resolve(PluginTypescriptOperations)
-  } else if (name === '@graphql-codegen/typescript-nuxt-graphql-middleware') {
-    return Promise.resolve(PluginNuxtGraphqlMiddleware)
-  } else if (
-    name === '@graphql-codegen/typescript-nuxt-graphql-middleware-documents'
-  ) {
-    return Promise.resolve(PluginNuxtGraphqlMiddlewareDocuments)
-  } else {
-    return Promise.resolve(PluginSchemaAst)
+/**
+ * Loads the correct plugin for graphql-codegen.
+ */
+export function pluginLoader(name: string): Promise<any> {
+  switch (name) {
+    case '@graphql-codegen/typescript':
+      return Promise.resolve(PluginTypescript)
+
+    case '@graphql-codegen/typescript-operations':
+      return Promise.resolve(PluginTypescriptOperations)
+
+    case '@graphql-codegen/typescript-nuxt-graphql-middleware':
+      return Promise.resolve(PluginNuxtGraphqlMiddleware)
+
+    case '@graphql-codegen/typescript-nuxt-graphql-middleware-documents':
+      return Promise.resolve(PluginNuxtGraphqlMiddlewareDocuments)
+
+    case '@graphql-codegen/schema-ast':
+      return Promise.resolve(PluginSchemaAst)
   }
+
+  throw new Error(`graphql-codegen plugin not found: ${name}`)
 }
 
 export interface CodegenResult {
+  /*
+   * The name of the generated file.
+   */
   filename: string
+
+  /**
+   * The content of the generated file.
+   */
   content: string
 }
+
+/**
+ * Generates the schema.
+ */
 export function generateSchema(
   moduleOptions: ModuleOptions,
   dest: string,
