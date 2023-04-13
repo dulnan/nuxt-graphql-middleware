@@ -6,6 +6,7 @@
 
 <script lang="ts" setup>
 const result = await useAsyncData(async () => {
+  // @ts-ignore
   return await useGraphqlQuery('invalidquery')
 })
 

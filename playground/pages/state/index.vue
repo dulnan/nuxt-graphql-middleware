@@ -15,13 +15,13 @@
 <script setup lang="ts">
 import { useFetch } from 'nuxt/app'
 
-const state = useGraphqlState()
+const state = useGraphqlState() as any
 
 if (state && !state.foobar) {
   state.foobar = Math.round(Math.random() * 1000000)
 }
 
-const foobarValue = useState('stateTest', '')
+const foobarValue = useState('stateTest', () => '')
 
 if (process.server) {
   foobarValue.value = state.foobar

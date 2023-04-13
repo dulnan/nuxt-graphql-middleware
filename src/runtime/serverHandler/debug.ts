@@ -26,28 +26,28 @@ export default defineEventHandler(() => {
   body += '</tbody></table>'
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-    <style>
-    body {
-      font-family: sans-serif;
-    }
-    textarea {
-      display: block;
-      width: 100%;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    td {
-      vertical-align: top;
-      border-bottom: 1px solid;
-      padding: 0.5rem 0;
-    }
-    </style>
+        <style>
+          body {
+            font-family: sans-serif;
+          }
+          textarea {
+            display: block;
+            width: 100%;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          td {
+            vertical-align: top;
+            border-bottom: 1px solid;
+            padding: 0.5rem 0;
+        }
+        </style>
       </head>
       <body>${body}</body>
-    </html>
-    `
+    </html>`
 })

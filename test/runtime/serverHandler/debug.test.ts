@@ -36,26 +36,27 @@ describe('Debug Server Handler', () => {
   test('Should render debug information correctly.', () => {
     expect(eventHandler({} as any)).toMatchInlineSnapshot(`
       "
+          <!DOCTYPE html>
           <html>
             <head>
-          <style>
-          body {
-            font-family: sans-serif;
-          }
-          textarea {
-            display: block;
-            width: 100%;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-          }
-          td {
-            vertical-align: top;
-            border-bottom: 1px solid;
-            padding: 0.5rem 0;
-          }
-          </style>
+              <style>
+                body {
+                  font-family: sans-serif;
+                }
+                textarea {
+                  display: block;
+                  width: 100%;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                }
+                td {
+                  vertical-align: top;
+                  border-bottom: 1px solid;
+                  padding: 0.5rem 0;
+              }
+              </style>
             </head>
             <body><h1>nuxt-graphql-middleware debug</h1><table><tbody><tr><td style=\\"font-size: 1.5rem\\">query</td><td>
               <strong style=\\"font-size: 1.5rem\\">foobar</strong><br>
@@ -68,8 +69,7 @@ describe('Debug Server Handler', () => {
             </td><td style=\\"width: 30%\\"><textarea readonly rows=\\"5\\">mutation barfoo {
         login
       }</textarea></td></tr></tbody></table></body>
-          </html>
-          "
+          </html>"
     `)
   })
 })
