@@ -5,6 +5,16 @@ import {
   useGraphqlState,
 } from './../../../src/runtime/composables'
 
+const useNuxtApp = function () {
+  return {
+    $graphqlState: {
+      fetchOptions: {},
+    },
+  }
+}
+
+vi.stubGlobal('useNuxtApp', useNuxtApp)
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {

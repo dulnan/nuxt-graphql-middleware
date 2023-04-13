@@ -10,6 +10,7 @@ import {
   addTemplate,
   addImportsDir,
   updateTemplates,
+  addPlugin,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
@@ -390,6 +391,10 @@ declare module '#graphql-documents' {
     addServerHandler({
       handler: moduleResolver('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
+    })
+
+    addPlugin(moduleResolver('./runtime/plugins/provideState'), {
+      append: false,
     })
 
     // @TODO: Why is this needed?!

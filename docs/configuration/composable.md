@@ -12,10 +12,19 @@ app that loads and sets the configuration. This can technically also be done
 anywhere in your app (e.g. in page components), but it is advised to only do
 this in a single place (the plugin).
 
-## Example: Pass a static custom headers
+## Example: Pass static custom headers
 
 In this example a static header value is set which will be sent for every
-request initiated by this module's composables to the server route.
+request initiated by this module's useGraphqlQuery or useGraphqlMutation
+composables to the server route.
+
+::: warning
+
+The state is only used for requests made from within a Nuxt app context (e.g.
+pages, route middleware, etc.). Usually this is used to "pass" information from
+the client/browser context to the middleware.
+
+:::
 
 ```typescript
 // plugins/graphqlConfig.ts
@@ -24,7 +33,11 @@ export default defineNuxtPlugin((NuxtApp) => {
   // Get the configuration state.
   const state = useGraphqlState()
 
-  state.value.fetchOptions = {
+  if (!state) {
+    return
+  }
+
+  state.fetchOptions = {
     headers: {
       CustomHeader: 'foobar',
     },
@@ -49,10 +62,14 @@ cache.
 export default defineNuxtPlugin((NuxtApp) => {
   const state = useGraphqlState()
 
+  if (!state) {
+    return
+  }
+
   // A hash generated at build time and passed in publicRuntimeConfig.
   const { buildHash } = useRuntimeConfig()
 
-  state.value.fetchOptions = {
+  state.fetchOptions = {
     async onRequest({ request, options }) {
       if (!options.params) {
         options.params = {}

@@ -2,12 +2,15 @@ import type { FetchOptions } from 'ofetch'
 import { GraphqlMiddlewareState } from './../../types'
 import { buildRequestParams } from './../helpers'
 import { useRuntimeConfig } from '#imports'
+
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
 
+// Possible query names.
 type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
+// Possible mutation names.
 type GraphqlMiddlewareMutationName = keyof GraphqlMiddlewareMutation
 
 // Determine the argument signature for the query method.
@@ -21,6 +24,7 @@ type GetQueryArgs<
   ? [T, M[T][0]]
   : [T, M[T][0]?]
 
+// Determine the argument signature for the mutation method.
 type GetMutationArgs<
   T extends GraphqlMiddlewareMutationName,
   M extends GraphqlMiddlewareMutation,
@@ -30,6 +34,7 @@ type GetMutationArgs<
   ? [T, M[T][0]]
   : [T, M[T][0]?]
 
+// Type for the query or mutation responses.
 type GraphqlResponse<T> = {
   data: T
   errors: any[]
@@ -52,12 +57,14 @@ function getEndpoint(operation: string, operationName: string): string {
   return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
 }
 
-const state: GraphqlMiddlewareState = {
-  fetchOptions: {},
-}
-
-export const useGraphqlState = (): GraphqlMiddlewareState => {
-  return state
+export const useGraphqlState = function (): GraphqlMiddlewareState | null {
+  try {
+    const app = useNuxtApp()
+    if (app.$graphqlState) {
+      return app.$graphqlState as GraphqlMiddlewareState
+    }
+  } catch (_e) {}
+  return null
 }
 
 type QueryObjectArgs<
@@ -90,6 +97,28 @@ type MutationObjectArgs<
       fetchOptions?: FetchOptions
     }
 
+function performRequest(
+  operation: string,
+  operationName: string,
+  method: 'get' | 'post',
+  options: FetchOptions,
+) {
+  const state = useGraphqlState()
+  return $fetch<GraphqlResponse<any>>(getEndpoint(operation, operationName), {
+    ...(state && state.fetchOptions ? state.fetchOptions : {}),
+    ...options,
+    method,
+  }).then((v) => {
+    return {
+      data: v.data,
+      errors: v.errors || [],
+    }
+  })
+}
+
+/**
+ * Performs a GraphQL query.
+ */
 export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
   ...args:
     | GetQueryArgs<T, GraphqlMiddlewareQuery>
@@ -100,42 +129,27 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
       ? [args[0], args[1]]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
-  const state = useGraphqlState()
-  return $fetch(getEndpoint('query', name), {
+  return performRequest('query', name, 'get', {
     params: buildRequestParams(variables),
-    // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
-    ...(state.fetchOptions as any),
     ...fetchOptions,
-  }).then((v: any) => {
-    return {
-      data: v.data,
-      errors: v.errors || [],
-    }
   }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
 }
 
+/**
+ * Performs a GraphQL mutation.
+ */
 export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
   ...args:
     | GetMutationArgs<T, GraphqlMiddlewareMutation>
     | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
 ): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
-  const [name, variables, fetchOptions = {}] =
+  const [name, body, fetchOptions = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1]]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
-  const state = useGraphqlState()
-
-  return $fetch(getEndpoint('mutation', name), {
-    // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
-    method: 'post' as any,
-    body: variables,
-    ...state.fetchOptions,
+  return performRequest('mutation', name, 'post', {
+    body,
     ...fetchOptions,
-  }).then((v: any) => {
-    return {
-      data: v.data,
-      errors: v.errors || [],
-    }
   }) as Promise<GetMutationResult<T, GraphqlMiddlewareMutation>>
 }
