@@ -1,7 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 import { GraphqlMiddlewareState } from './../../types'
 import { buildRequestParams } from './../helpers'
-import { useRuntimeConfig } from '#imports'
 
 import type {
   GraphqlMiddlewareQuery,

@@ -16,17 +16,14 @@ vi.mock('#graphql-documents', () => {
   }
 })
 
-vi.mock('#imports', () => {
+const useRuntimeConfig = () => {
   return {
-    useRuntimeConfig: () => {
-      return {
-        graphqlMiddleware: {
-          graphqlEndpoint: 'http//localhost/graphql',
-        },
-      }
+    graphqlMiddleware: {
+      graphqlEndpoint: 'http//localhost/graphql',
     },
   }
-})
+}
+vi.stubGlobal('useRuntimeConfig', useRuntimeConfig)
 
 vi.mock('#graphql-middleware-server-options-build', () => {
   return {

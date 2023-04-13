@@ -15,19 +15,16 @@ const useNuxtApp = function () {
 
 vi.stubGlobal('useNuxtApp', useNuxtApp)
 
-vi.mock('#imports', () => {
+const useRuntimeConfig = () => {
   return {
-    useRuntimeConfig: () => {
-      return {
-        public: {
-          'nuxt-graphql-middleware': {
-            serverApiPrefix: '/api/graphql_middleware',
-          },
-        },
-      }
+    public: {
+      'nuxt-graphql-middleware': {
+        serverApiPrefix: '/api/graphql_middleware',
+      },
     },
   }
-})
+}
+vi.stubGlobal('useRuntimeConfig', useRuntimeConfig)
 
 const fetchMock = (endpoint: string, options: any) => {
   return Promise.resolve({

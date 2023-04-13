@@ -10,7 +10,6 @@ import {
 } from './helpers'
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
-import { useRuntimeConfig } from '#imports'
 import serverOptions from '#graphql-middleware-server-options-build'
 
 export default defineEventHandler(async (event) => {
@@ -18,10 +17,11 @@ export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
   // The operation (either "query" or "mutation").
-  const operation = event.context.params.operation as GraphqlMiddlewareOperation
+  const operation = event.context?.params
+    ?.operation as GraphqlMiddlewareOperation
 
   // The name of the query or mutation.
-  const name = event.context.params.name
+  const name = event.context?.params?.name as string
 
   // Make sure the request is valid. Will throw an error if the request is
   // invalid.
