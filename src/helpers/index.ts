@@ -13,6 +13,7 @@ import type {
   GraphQLError,
   DocumentNode,
   OperationDefinitionNode,
+  FragmentDefinitionNode,
 } from 'graphql'
 import { parse, Source } from 'graphql'
 import { falsy } from '../runtime/helpers'
@@ -294,6 +295,11 @@ export function validateDocuments(
       if (operation) {
         document.name = operation.name?.value
         document.operation = operation.operation
+      } else {
+        const fragment = node.definitions.find(
+          (v) => v.kind === 'FragmentDefinition',
+        ) as FragmentDefinitionNode
+        document.name = fragment.name?.value
       }
 
       // document.name = node
@@ -374,10 +380,9 @@ export async function generate(
     }),
     hasErrors,
     documents: validated.sort((a, b) => {
-      if (a.filename && b.filename) {
-        return a.filename.localeCompare(b.filename)
-      }
-      return -1
+      const nameA = a.name || ''
+      const nameB = b.name || ''
+      return nameA.localeCompare(nameB)
     }),
   }
 }

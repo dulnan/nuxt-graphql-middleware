@@ -3,6 +3,7 @@ import type { Types } from '@graphql-codegen/plugin-helpers'
 import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import { resolve } from 'pathe'
 import { defu } from 'defu'
+import { BirpcGroup } from 'birpc'
 import {
   defineNuxtModule,
   addServerHandler,
@@ -14,7 +15,9 @@ import {
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
+import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
+import { setupDevToolsUI } from './devtools'
 import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import {
   validateOptions,
@@ -26,6 +29,8 @@ import {
   outputDocuments,
 } from './helpers'
 import { CodegenResult } from './codegen'
+import type { ClientFunctions, ServerFunctions } from './rpc-types'
+import { GraphqlMiddlewareDocument } from './types'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 export interface ModuleOptions {
@@ -183,6 +188,8 @@ export interface ModuleOptions {
 // Nuxt needs this.
 export type ModuleHooks = {}
 
+const RPC_NAMESPACE = 'nuxt-graphql-middleware-rpc'
+
 export default defineNuxtModule<ModuleOptions>({
   meta: {
     name,
@@ -214,7 +221,10 @@ export default defineNuxtModule<ModuleOptions>({
     // Store the generated templates in a locally scoped object.
     const ctx = {
       templates: [] as CodegenResult[],
+      documents: [] as GraphqlMiddlewareDocument[],
     }
+
+    let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | null = null
 
     let prompt:
       | (Promise<{ accept: any }> & {
@@ -237,6 +247,8 @@ export default defineNuxtModule<ModuleOptions>({
           isFirst,
         )
         ctx.templates = templates
+        ctx.documents = documents
+        rpc?.broadcast.documentsUpdated(documents)
 
         // Output the generated documents if desired.
         if (options.outputDocuments) {
@@ -414,6 +426,8 @@ declare module '#graphql-documents' {
 
     // Watch for file changes in dev mode.
     if (nuxt.options.dev) {
+      const clientPath = moduleResolver('./client')
+      setupDevToolsUI(nuxt, clientPath)
       addServerHandler({
         handler: moduleResolver('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
@@ -441,5 +455,21 @@ declare module '#graphql-documents' {
         })
       })
     }
+
+    onDevToolsInitialized(async () => {
+      rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
+        // register server RPC functions
+        getMyModuleOptions() {
+          return options
+        },
+        getDocuments() {
+          return ctx.documents
+        },
+      })
+
+      // call client RPC functions
+      // since it might have multiple clients connected, we use `broadcast` to call all of them
+      await rpc.broadcast.showNotification('Hello from My Module!')
+    })
   },
 })
