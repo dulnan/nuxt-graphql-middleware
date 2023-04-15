@@ -361,7 +361,12 @@ export async function generate(
     logger.log(table.toString())
   }
 
-  logger.info('Finished GraphQL code generation.')
+  process.stdout.write('\n')
+  logger.restoreStd()
+
+  hasErrors
+    ? logger.error('GraphQL code generation failed with errors.')
+    : logger.success('Finished GraphQL code generation.')
 
   return {
     templates: templates.sort((a, b) => {

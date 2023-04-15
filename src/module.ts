@@ -216,9 +216,14 @@ export default defineNuxtModule<ModuleOptions>({
       templates: [] as CodegenResult[],
     }
 
-    let prompt: any = null
+    let prompt:
+      | (Promise<{ accept: any }> & {
+          ui: inquirer.ui.Prompt<{ accept: any }>
+        })
+      | null = null
     const generateHandler = async (isFirst = false) => {
       if (prompt && prompt.ui) {
+        // @ts-ignore
         prompt.ui.close()
         prompt = null
       }
@@ -263,22 +268,22 @@ export default defineNuxtModule<ModuleOptions>({
         }
         process.stdout.write('\n')
         logger.restoreStd()
-        prompt = inquirer
-          .prompt({
-            type: 'confirm',
-            name: 'accept',
-            message: 'Do you want to reload the GraphQL schema?',
-          })
-          .then(async ({ accept }) => {
-            if (accept) {
-              await getSchemaPath(options, srcResolver, true)
-              await generateHandler()
-            }
-          })
+        prompt = inquirer.prompt({
+          type: 'confirm',
+          name: 'accept',
+          message: 'Do you want to reload the GraphQL schema?',
+        })
+
+        prompt.then(async ({ accept }) => {
+          if (accept) {
+            await getSchemaPath(options, srcResolver, true)
+            await generateHandler()
+          }
+        })
       }
     }
 
-    await generateHandler(true)
+    generateHandler(true)
 
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
       serverApiPrefix: options.serverApiPrefix!,
