@@ -15,9 +15,9 @@ import type {
   OperationDefinitionNode,
   FragmentDefinitionNode,
 } from 'graphql'
-import { parse, Source } from 'graphql'
+import { parse, Source, print } from 'graphql'
 import { falsy } from '../runtime/helpers'
-import { CodegenResult, generateSchema, generateTemplates } from './../codegen'
+import { generateSchema, generateTemplates } from './../codegen'
 import { GraphqlMiddlewareDocument } from './../types'
 import { ModuleOptions } from './../module'
 
@@ -285,6 +285,7 @@ export function validateDocuments(
     const document = documents[i]
     try {
       const node = parseDocument(document, srcDir)
+      document.content = print(node)
       document.errors = validateGraphQlDocuments(schema, [
         node,
       ]) as GraphQLError[]
