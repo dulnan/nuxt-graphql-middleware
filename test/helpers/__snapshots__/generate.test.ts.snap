@@ -183,12 +183,11 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
 {
   "documents": [
     {
-      "content": "
-            query one {
-              users {
-                id
-              }
-            }",
+      "content": "query one {
+  users {
+    id
+  }
+}",
       "errors": [],
       "filename": "nuxt.config.ts",
       "isValid": true,
@@ -196,10 +195,9 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
       "operation": "query",
     },
     {
-      "content": "
-            mutation two($id: Int!) {
-              deleteUser(id: $id)
-            }",
+      "content": "mutation two($id: Int!) {
+  deleteUser(id: $id)
+}",
       "errors": [],
       "filename": "nuxt.config.ts",
       "isValid": true,
@@ -212,10 +210,10 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
     {
       "content": "const documents = {
   \\"query\\": {
-    \\"one\\": \\"\\\\n            query one {\\\\n              users {\\\\n                id\\\\n              }\\\\n            }\\"
+    \\"one\\": \\"query one {\\\\n  users {\\\\n    id\\\\n  }\\\\n}\\"
   },
   \\"mutation\\": {
-    \\"two\\": \\"\\\\n            mutation two($id: Int!) {\\\\n              deleteUser(id: $id)\\\\n            }\\"
+    \\"two\\": \\"mutation two($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
   }
 };
 export { documents };",
@@ -292,17 +290,17 @@ export type UserData = {
   lastName: Scalars['String'];
 };
 
-export type OneQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number }> };
-
 export type TwoMutationVariables = Exact<{
   id: Scalars['Int'];
 }>;
 
 
 export type TwoMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
+
+export type OneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number }> };
 ",
       "filename": "graphql-operations.d.ts",
       "hooks": {},
@@ -384,7 +382,7 @@ exports[`generate > Renders a table with information about all documents. 1`] = 
 "┌───────────┬──────┬────────────────┬────────┐
 │ Operation │ Name │ File           │ Errors │
 ├───────────┼──────┼────────────────┼────────┤
-│           │      │ nuxt.config.ts │        │
+│           │ user │ nuxt.config.ts │        │
 ├───────────┼──────┼────────────────┼────────┤
 │ query     │ one  │ nuxt.config.ts │        │
 ├───────────┼──────┼────────────────┼────────┤

@@ -6,6 +6,15 @@ const graphqlMiddleware: ModuleOptions = {
   downloadSchema: true,
   codegenConfig: {},
   outputDocuments: true,
+  documents: [
+    `
+    query usersFromConfig {
+      users {
+        id
+      }
+    }
+    `,
+  ],
   codegenSchemaConfig: {
     urlSchemaOptions: {
       headers: {
