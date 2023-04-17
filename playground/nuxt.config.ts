@@ -6,6 +6,12 @@ const graphqlMiddleware: ModuleOptions = {
   downloadSchema: true,
   codegenConfig: {},
   outputDocuments: true,
+  autoImportPatterns: [
+    './pages/**/*.graphql',
+    './components/**/*.graphql',
+    './layouts/**/*.graphql',
+    './server/**/*.graphql',
+  ],
   documents: [
     `
     query usersFromConfig {
@@ -25,7 +31,7 @@ const graphqlMiddleware: ModuleOptions = {
 }
 
 export default defineNuxtConfig({
-  modules: [graphqlMiddlewareModule],
+  modules: [graphqlMiddlewareModule, '@nuxt/devtools'],
   graphqlMiddleware,
   ssr: true,
 } as any)

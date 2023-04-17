@@ -28,7 +28,7 @@ vi.stubGlobal('useRuntimeConfig', useRuntimeConfig)
 
 const fetchMock = (endpoint: string, options: any) => {
   return Promise.resolve({
-    data: {},
+    data: undefined,
     options,
     endpoint,
   })

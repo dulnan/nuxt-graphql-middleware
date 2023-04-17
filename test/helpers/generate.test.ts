@@ -16,7 +16,12 @@ describe('generate', () => {
     const result = await generate(
       {
         documents: [],
-        autoImportPatterns: ['**/*.graphql'],
+        autoImportPatterns: [
+          './pages/**/*.graphql',
+          './components/**/*.graphql',
+          './layouts/**/*.graphql',
+          './server/**/*.graphql',
+        ],
       },
       schemaPath,
       resolver,
