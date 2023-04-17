@@ -283,6 +283,9 @@ export function validateDocuments(
 ): GraphqlMiddlewareDocument[] {
   for (let i = 0; i < documents.length; i++) {
     const document = documents[i]
+    if (document.filename) {
+      document.relativePath = document.filename.replace(srcDir + '/', '')
+    }
     try {
       const node = parseDocument(document, srcDir)
       document.content = print(node)
@@ -309,6 +312,10 @@ export function validateDocuments(
       document.errors = [e as GraphQLError]
       document.isValid = false
     }
+
+    document.id = [document.operation, document.name, document.filename]
+      .filter(Boolean)
+      .join('_')
   }
 
   return documents
@@ -353,7 +360,7 @@ export async function generate(
           [
             document.operation || '',
             document.name || '',
-            document.filename?.replace(srcDir, '') || '',
+            document.relativePath || '',
             document.errors?.join('\n\n') || '',
           ].map((v) => {
             if (document.isValid) {

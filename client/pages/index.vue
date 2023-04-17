@@ -1,71 +1,94 @@
 <template>
   <div class="relative" style="height: 100vh">
     <div class="flex h-full">
-      <div class="h-full" border="r base" h-full="" style="width: 30%">
+      <div
+        class="h-full border-r border-r-gray-800"
+        h-full=""
+        style="width: 22rem; min-width: 0; flex: 0 0 auto"
+      >
+        <div
+          flex="~ col gap2"
+          border="b base"
+          class="border-b-gray-800 p3 flex-1"
+        >
+          <NTextInput
+            v-model="search"
+            placeholder="Search documents..."
+            icon="carbon-search"
+            class="w-full"
+          />
+        </div>
         <button
-          v-for="doc in documents"
+          v-for="doc in documentsFiltered"
           :key="doc.content"
           class="text-secondary hover:n-bg-hover flex select-none truncate px2 py2 font-mono text-sm w-full"
-          @click="selected = doc"
+          :class="{ 'text-red-500': !doc.isValid }"
+          @click="selectedId = doc.id"
         >
           <div style="width: 6rem" class="text-left">
-            <span
-              v-if="doc.operation === 'query'"
-              class="mx-0.5 select-none whitespace-nowrap rounded px-1.5 py-0.5 text-xs"
-              bg-green-400:10=""
-              text-green-400=""
-              >Query</span
-            >
-            <span
+            <Tag v-if="doc.operation === 'query'" green text="Query" />
+            <Tag
               v-else-if="doc.operation === 'mutation'"
-              class="mx-0.5 select-none whitespace-nowrap rounded px-1.5 py-0.5 text-xs"
-              bg-orange-400:10=""
-              text-orange-400=""
-              >Mutation</span
-            >
-            <span
-              v-else
-              class="mx-0.5 select-none whitespace-nowrap rounded px-1.5 py-0.5 text-xs"
-              bg-gray-400:10=""
-              text-gray=""
-              >Fragment</span
-            >
+              orange
+              text="Mutation"
+            />
+            <Tag v-else text="Fragment" />
           </div>
           <div>{{ doc.name }}</div>
         </button>
       </div>
       <div class="splitpanes__splitter"></div>
       <div v-if="selected" class="h-full relative w-full">
-        <div class="h-full of-hidden p2">
-          <h2 class="font-mono mb4 text-sm">{{ selected.filename }}</h2>
-          <NCodeBlock :code="selected.content" lang="graphql" />
-        </div>
+        <DocumentDetail
+          v-bind="selected"
+          :server-api-prefix="serverApiPrefix"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  useDevtoolsClient,
-  onDevtoolsClientConnected,
-} from '@nuxt/devtools-kit/iframe-client'
+import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 
 const RPC_NAMESPACE = 'nuxt-graphql-middleware-rpc'
 
-const selected = ref(null)
+const selectedId = ref('')
 const documents = ref([])
+const search = ref('')
+const serverApiPrefix = ref('')
+
+const selected = computed(() => {
+  if (!selectedId.value) {
+    return
+  }
+  return documents.value.find((v) => v.id === selectedId.value)
+})
 
 onDevtoolsClientConnected(async (client) => {
   const rpc = client.devtools.extendClientRpc(RPC_NAMESPACE, {
     documentsUpdated(updated) {
       documents.value = updated
-      console.log(documents.value)
     },
   })
 
   documents.value = await rpc.getDocuments()
 
-  console.log(documents.value)
+  const options = await rpc.getModuleOptions()
+  serverApiPrefix.value = options.serverApiPrefix
+})
+
+const documentsFiltered = computed(() => {
+  if (!search.value) {
+    return documents.value
+  }
+
+  return documents.value.filter((v) => {
+    const searchText = [v.relativePath, v.name]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+    return searchText.includes(search.value.toLowerCase())
+  })
 })
 </script>

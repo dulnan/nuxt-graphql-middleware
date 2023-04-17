@@ -459,7 +459,7 @@ declare module '#graphql-documents' {
     onDevToolsInitialized(async () => {
       rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
         // register server RPC functions
-        getMyModuleOptions() {
+        getModuleOptions() {
           return options
         },
         getDocuments() {

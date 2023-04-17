@@ -2,7 +2,7 @@ import { GraphqlMiddlewareDocument } from './types'
 
 // rpc-types.ts
 export interface ServerFunctions {
-  getMyModuleOptions(): any
+  getModuleOptions(): any
   getDocuments(): GraphqlMiddlewareDocument[]
 }
 

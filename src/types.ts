@@ -133,10 +133,12 @@ export interface GraphqlMiddlewareState {
 }
 
 export type GraphqlMiddlewareDocument = {
+  id?: string
   content: string
   isValid?: boolean
   errors?: GraphQLError[]
   filename?: string
+  relativePath?: string
   name?: string
   operation?: string
 }
