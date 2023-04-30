@@ -50,6 +50,24 @@
 
 <script setup lang="ts">
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
+import MiniSearch from 'minisearch'
+
+let miniSearch = new MiniSearch({
+  fields: ['content', 'name', 'filename'],
+  storeFields: [
+    'id',
+    'content',
+    'isValid',
+    'errors',
+    'filename',
+    'relativePath',
+    'name',
+    'operation',
+  ],
+  searchOptions: {
+    fuzzy: 0.7,
+  },
+})
 
 const RPC_NAMESPACE = 'nuxt-graphql-middleware-rpc'
 
@@ -65,15 +83,21 @@ const selected = computed(() => {
   return documents.value.find((v) => v.id === selectedId.value)
 })
 
+async function updateDocuments(newDocuments: any[]) {
+  miniSearch.removeAll()
+  documents.value = newDocuments
+  await miniSearch.addAll(newDocuments)
+}
+
 onDevtoolsClientConnected(async (client) => {
   const rpc = client.devtools.extendClientRpc(RPC_NAMESPACE, {
     documentsUpdated(updated) {
-      documents.value = updated
+      updateDocuments(updated)
     },
   })
 
-  documents.value = await rpc.getDocuments()
-
+  const newDocuments = await rpc.getDocuments()
+  updateDocuments(newDocuments)
   const options = await rpc.getModuleOptions()
   serverApiPrefix.value = options.serverApiPrefix
 })
@@ -83,12 +107,8 @@ const documentsFiltered = computed(() => {
     return documents.value
   }
 
-  return documents.value.filter((v) => {
-    const searchText = [v.relativePath, v.name]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-    return searchText.includes(search.value.toLowerCase())
-  })
+  const results = miniSearch.search(search.value)
+  console.log(miniSearch)
+  return results
 })
 </script>
