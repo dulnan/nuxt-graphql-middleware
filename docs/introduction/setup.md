@@ -51,12 +51,10 @@ Your query is now available under the following URL:
 http://localhost:3000/api/graphql_middleware/query/films
 ```
 
-The
-
 ### useGraphqlQuery
 
-nuxt-graphql-middleware provides a composable for easy querying. Arguments and
-return values are fully typed.
+The module provides a composable for easy querying. Arguments and return values
+are fully typed.
 
 ```typescript
 const { data } = await useGraphqlQuery('films')

@@ -49,12 +49,12 @@ export default defineConfig({
       {
         text: 'Features',
         items: [
-          { text: 'Server Routes', link: '/features/server-route' },
+          { text: 'Composables', link: '/features/composables' },
           { text: 'Auto Import', link: '/features/auto-import' },
           { text: 'Fragments', link: '/features/fragments' },
-          { text: 'Composables', link: '/features/composables' },
           { text: 'TypeScript', link: '/features/typescript' },
           { text: 'Debug', link: '/features/debug' },
+          { text: 'Server Routes', link: '/features/server-route' },
         ],
       },
       {
