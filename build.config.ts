@@ -13,5 +13,9 @@ export default defineBuildConfig({
     'pathe',
     'change-case',
     'change-case-all',
+    'sirv',
+    'totalist/sync',
+    '@polka/url',
+    'mrmime',
   ],
 })

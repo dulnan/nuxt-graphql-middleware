@@ -27,4 +27,5 @@ const graphqlMiddleware: ModuleOptions = {
 export default defineNuxtConfig({
   modules: [graphqlMiddlewareModule],
   graphqlMiddleware,
+  ssr: true,
 } as any)
