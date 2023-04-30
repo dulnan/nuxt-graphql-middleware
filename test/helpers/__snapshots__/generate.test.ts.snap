@@ -190,9 +190,11 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
 }",
       "errors": [],
       "filename": "nuxt.config.ts",
+      "id": "query_one_nuxt.config.ts",
       "isValid": true,
       "name": "one",
       "operation": "query",
+      "relativePath": "nuxt.config.ts",
     },
     {
       "content": "mutation two($id: Int!) {
@@ -200,9 +202,11 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
 }",
       "errors": [],
       "filename": "nuxt.config.ts",
+      "id": "mutation_two_nuxt.config.ts",
       "isValid": true,
       "name": "two",
       "operation": "mutation",
+      "relativePath": "nuxt.config.ts",
     },
   ],
   "hasErrors": false,
