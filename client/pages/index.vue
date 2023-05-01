@@ -18,23 +18,33 @@
             class="w-full"
           />
         </div>
-        <button
+        <div
           v-for="doc in documentsFiltered"
           :key="doc.content"
-          class="text-secondary hover:n-bg-hover flex select-none truncate px2 py2 font-mono text-sm w-full"
-          :class="{ 'text-red-500': !doc.isValid }"
-          @click="selectedId = doc.id"
+          class="relative group"
         >
-          <div style="width: 6rem" class="text-left">
-            <Tag v-if="doc.operation === 'query'" green text="Query" />
-            <Tag
-              v-else-if="doc.operation === 'mutation'"
-              orange
-              text="Mutation"
-            />
-          </div>
-          <div>{{ doc.name }}</div>
-        </button>
+          <button
+            class="text-secondary hover:n-bg-hover flex select-none truncate px2 py2 font-mono text-sm w-full"
+            :class="{ 'text-red-500': !doc.isValid }"
+            @click="selectedId = doc.id"
+          >
+            <div style="width: 6rem" class="text-left">
+              <Tag v-if="doc.operation === 'query'" green text="Query" />
+              <Tag
+                v-else-if="doc.operation === 'mutation'"
+                orange
+                text="Mutation"
+              />
+            </div>
+            <div>{{ doc.name }}</div>
+          </button>
+          <button
+            class="absolute right-0 top-0 text-sm h-full flex items-center opacity-0 group-hover:opacity-100 pr2"
+            @click="copyToClipboard(doc)"
+          >
+            <span>Copy</span>
+          </button>
+        </div>
       </div>
       <div class="splitpanes__splitter"></div>
       <div v-if="selected" class="h-full relative w-full of-auto">
@@ -100,6 +110,25 @@ onDevtoolsClientConnected(async (client) => {
   const options = await rpc.getModuleOptions()
   serverApiPrefix.value = options.serverApiPrefix
 })
+
+function copyToClipboard(item: any) {
+  const textArea = document.createElement('textarea')
+  textArea.value = item.content
+
+  textArea.style.top = '0'
+  textArea.style.left = '0'
+  textArea.style.position = 'fixed'
+
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+
+  try {
+    const successful = document.execCommand('copy')
+  } catch (_e) {}
+
+  document.body.removeChild(textArea)
+}
 
 const documentsFiltered = computed(() => {
   if (!search.value) {
