@@ -18,19 +18,22 @@ vi.mock('#graphql-documents', () => {
   }
 })
 
-const useRuntimeConfig = () => {
+vi.mock('#imports', () => {
   return {
-    public: {
-      'nuxt-graphql-middleware': {
-        serverApiPrefix: '/nuxt-graphql-middleware',
-      },
-    },
-    graphqlMiddleware: {
-      graphqlEndpoint: 'http//localhost/graphql',
+    useRuntimeConfig: () => {
+      return {
+        public: {
+          'nuxt-graphql-middleware': {
+            serverApiPrefix: '/nuxt-graphql-middleware',
+          },
+        },
+        graphqlMiddleware: {
+          graphqlEndpoint: 'http//localhost/graphql',
+        },
+      }
     },
   }
-}
-vi.stubGlobal('useRuntimeConfig', useRuntimeConfig)
+})
 
 describe('Debug Server Handler', () => {
   test('Should render debug information correctly.', () => {

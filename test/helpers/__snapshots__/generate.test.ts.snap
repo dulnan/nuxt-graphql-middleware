@@ -383,13 +383,13 @@ exports[`generate > Renders a table with information about all documents with er
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `
-"┌───────────┬──────┬────────────────┬────────┐
-│ Operation │ Name │ File           │ Errors │
-├───────────┼──────┼────────────────┼────────┤
-│           │ user │ nuxt.config.ts │        │
-├───────────┼──────┼────────────────┼────────┤
-│ query     │ one  │ nuxt.config.ts │        │
-├───────────┼──────┼────────────────┼────────┤
-│ mutation  │ two  │ nuxt.config.ts │        │
-└───────────┴──────┴────────────────┴────────┘"
+"┌───────────┬────────────────┬────────────────┬────────┐
+│ Operation │ Name           │ File           │ Errors │
+├───────────┼────────────────┼────────────────┼────────┤
+│           │ nuxt.config.ts │ nuxt.config.ts │        │
+├───────────┼────────────────┼────────────────┼────────┤
+│ query     │ one            │ nuxt.config.ts │        │
+├───────────┼────────────────┼────────────────┼────────┤
+│ mutation  │ two            │ nuxt.config.ts │        │
+└───────────┴────────────────┴────────────────┴────────┘"
 `;

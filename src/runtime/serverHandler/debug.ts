@@ -1,5 +1,6 @@
 import { defineEventHandler } from 'h3'
 import { documents } from '#graphql-documents'
+import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(() => {
   function getEndpoint(operation: string, operationName: string): string {
