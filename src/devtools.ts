@@ -39,7 +39,7 @@ export function setupDevToolsUI(nuxt: Nuxt, clientPath: string) {
       // title to display in the tab
       title: 'GraphQL Middleware',
       // any icon from Iconify, or a URL to an image
-      icon: 'carbon:apps',
+      icon: 'akar-icons:graphql-fill',
       // iframe view
       view: {
         type: 'iframe',
