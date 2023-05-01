@@ -43,6 +43,7 @@ export const defaultOptions: ModuleOptions = {
   includeComposables: true,
   documents: [],
   autoImportPatterns: [],
+  devtools: true,
 }
 
 /**
@@ -303,7 +304,7 @@ export function validateDocuments(
         const fragment = node.definitions.find(
           (v) => v.kind === 'FragmentDefinition',
         ) as FragmentDefinitionNode
-        document.name = fragment.name?.value
+        document.name = document.relativePath
       }
 
       // document.name = node

@@ -29,7 +29,7 @@ import {
   outputDocuments,
 } from './helpers'
 import { CodegenResult } from './codegen'
-import type { ClientFunctions, ServerFunctions } from './rpc-types'
+import { ClientFunctions, ServerFunctions } from './rpc-types'
 import { GraphqlMiddlewareDocument } from './types'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
@@ -183,12 +183,17 @@ export interface ModuleOptions {
    * .nuxt folder.
    */
   outputDocuments?: boolean
+
+  /**
+   * Enable Nuxt DevTools integration.
+   */
+  devtools?: boolean
 }
 
 // Nuxt needs this.
 export type ModuleHooks = {}
 
-const RPC_NAMESPACE = 'nuxt-graphql-middleware-rpc'
+const RPC_NAMESPACE = 'nuxt-graphql-middleware'
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -230,6 +235,19 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | null = null
+    if (options.devtools) {
+      const clientPath = moduleResolver('./client')
+      setupDevToolsUI(nuxt, clientPath)
+      rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
+        // register server RPC functions
+        getModuleOptions() {
+          return options
+        },
+        getDocuments() {
+          return ctx.documents
+        },
+      })
+    }
 
     let prompt:
       | (Promise<{ accept: any }> & {
@@ -431,8 +449,6 @@ declare module '#graphql-documents' {
 
     // Watch for file changes in dev mode.
     if (nuxt.options.dev) {
-      const clientPath = moduleResolver('./client')
-      setupDevToolsUI(nuxt, clientPath)
       addServerHandler({
         handler: moduleResolver('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
@@ -460,21 +476,5 @@ declare module '#graphql-documents' {
         })
       })
     }
-
-    onDevToolsInitialized(async () => {
-      rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
-        // register server RPC functions
-        getModuleOptions() {
-          return options
-        },
-        getDocuments() {
-          return ctx.documents
-        },
-      })
-
-      // call client RPC functions
-      // since it might have multiple clients connected, we use `broadcast` to call all of them
-      await rpc.broadcast.showNotification('Hello from My Module!')
-    })
   },
 })

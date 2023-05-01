@@ -2,7 +2,7 @@
   <div class="relative" style="height: 100vh">
     <div class="flex h-full">
       <div
-        class="h-full border-r border-r-gray-800"
+        class="h-full border-r border-r-gray-800 of-auto"
         h-full=""
         style="width: 22rem; min-width: 0; flex: 0 0 auto"
       >
@@ -32,13 +32,12 @@
               orange
               text="Mutation"
             />
-            <Tag v-else text="Fragment" />
           </div>
           <div>{{ doc.name }}</div>
         </button>
       </div>
       <div class="splitpanes__splitter"></div>
-      <div v-if="selected" class="h-full relative w-full">
+      <div v-if="selected" class="h-full relative w-full of-auto">
         <DocumentDetail
           v-bind="selected"
           :server-api-prefix="serverApiPrefix"
@@ -69,7 +68,7 @@ let miniSearch = new MiniSearch({
   },
 })
 
-const RPC_NAMESPACE = 'nuxt-graphql-middleware-rpc'
+const RPC_NAMESPACE = 'nuxt-graphql-middleware'
 
 const selectedId = ref('')
 const documents = ref([])
@@ -85,7 +84,7 @@ const selected = computed(() => {
 
 async function updateDocuments(newDocuments: any[]) {
   miniSearch.removeAll()
-  documents.value = newDocuments
+  documents.value = newDocuments.filter((v) => !!v.operation)
   await miniSearch.addAll(newDocuments)
 }
 
@@ -108,7 +107,6 @@ const documentsFiltered = computed(() => {
   }
 
   const results = miniSearch.search(search.value)
-  console.log(miniSearch)
   return results
 })
 </script>

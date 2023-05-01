@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full of-hidden p2">
+  <div class="h-full of-auto p2">
     <div class="p5">
       <h2 class="font-mono mb4 font-bold text-3xl">{{ name }}</h2>
       <div v-if="url" class="mb3">
