@@ -11,6 +11,7 @@ import {
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
 import serverOptions from '#graphql-middleware-server-options-build'
+import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   // The HTTP method. Only GET and POST are supported.
