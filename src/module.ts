@@ -236,17 +236,31 @@ export default defineNuxtModule<ModuleOptions>({
 
     let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | null = null
     if (options.devtools) {
-      const clientPath = moduleResolver('./client')
-      setupDevToolsUI(nuxt, clientPath)
-      rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
-        // register server RPC functions
-        getModuleOptions() {
-          return options
-        },
-        getDocuments() {
-          return ctx.documents
-        },
-      })
+      // Hack needed because in a playground environment the call
+      // onDevToolsInitialized is needed, but when the module is actually
+      // installed in a Nuxt app, this callback is never called and thus
+      // the RPC never extended.
+      const setupRpc = () => {
+        const clientPath = moduleResolver('./client')
+        setupDevToolsUI(nuxt, clientPath)
+        rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
+          // register server RPC functions
+          getModuleOptions() {
+            return options
+          },
+          getDocuments() {
+            return ctx.documents
+          },
+        })
+      }
+
+      try {
+        setupRpc()
+      } catch (_e) {
+        onDevToolsInitialized(() => {
+          setupRpc()
+        })
+      }
     }
 
     let prompt:
