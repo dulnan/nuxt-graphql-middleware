@@ -1,0 +1,6 @@
+query simulateEndpointDown {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}

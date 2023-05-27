@@ -1,5 +1,6 @@
-import { promises as fsp } from 'fs'
+import { existsSync, promises as fsp } from 'node:fs'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
+import { resolve } from 'pathe'
 import type { Resolver } from '@nuxt/kit'
 // @ts-ignore
 import fragmentImport from '@graphql-fragment-import/lib/inline-imports.js'
@@ -12,15 +13,17 @@ import type {
   GraphQLError,
   DocumentNode,
   OperationDefinitionNode,
+  FragmentDefinitionNode,
 } from 'graphql'
-import { parse, Source } from 'graphql'
+import { parse, Source, print } from 'graphql'
 import { falsy } from '../runtime/helpers'
 import { generateSchema, generateTemplates } from './../codegen'
-import { GraphqlMiddlewareConfig, GraphqlMiddlewareDocument } from './../types'
+import { GraphqlMiddlewareDocument } from './../types'
+import { ModuleOptions } from './../module'
 
 export const logger = useLogger('nuxt-graphql-middleware')
 
-export const defaultOptions: GraphqlMiddlewareConfig = {
+export const defaultOptions: ModuleOptions = {
   codegenConfig: {
     exportFragmentSpreadSubTypes: true,
     preResolveTypes: true,
@@ -39,7 +42,8 @@ export const defaultOptions: GraphqlMiddlewareConfig = {
   debug: false,
   includeComposables: true,
   documents: [],
-  autoImportPatterns: ['**/*.{gql,graphql}', '!node_modules'],
+  autoImportPatterns: [],
+  devtools: true,
 }
 
 /**
@@ -56,20 +60,120 @@ export function inlineFragments(source: string, resolver: any): string {
   })
 }
 
+function validateDeprecated(options: any) {
+  const deprecatedKeys = [
+    'graphqlEndpoint',
+    'serverFetchOptions',
+    'onServerResponse',
+    'onServerError',
+  ]
+
+  deprecatedKeys.forEach((key) => {
+    if (typeof options[key] === 'function') {
+      logger.error(
+        `Providing a function for "${key}" via nuxt.config.ts has been removed. Please move the configuration to ~/app/graphqlMiddleware.serverOptions.ts.`,
+      )
+
+      if (key === 'graphqlEndpoint') {
+        logger.info(`
+import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { getHeader } from 'h3'
+import acceptLanguageParser from 'accept-language-parser';
+
+export default defineGraphqlServerOptions({
+  graphqlEndpoint(event, operation, operationName) {
+    // Get accepted languages.
+    const acceptLanguage = getHeader('accept-language')
+    const languages = acceptLanguageParser.parse(acceptLanguage);
+
+    // Use first match or fallback to English.
+    const language = languages[0]?.code || 'en'
+    return \`https://api.example.com/\${language}/graphql\`
+  }
+})`)
+      }
+
+      if (key === 'serverFetchOptions') {
+        logger.info(`
+import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { getHeader } from 'h3'
+
+// Pass the cookie from the client request to the GraphQL request.
+export default defineGraphqlServerOptions({
+  serverFetchOptions(event, operation, operationName) {
+    return {
+      headers: {
+        Cookie: getHeader(event, 'cookie')
+      }
+    }
+  }
+})`)
+      }
+
+      if (key === 'onServerResponse') {
+        logger.info(`
+import { defineGraphqlServerOptions } from '#graphql-server-options'
+import type { H3Event } from 'h3'
+import type { FetchResponse } from 'ofetch'
+
+export default defineGraphqlServerOptions({
+  onServerResponse(event, graphqlResponse) {
+    // Set a static header.
+    event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
+
+    // Pass the set-cookie header from the GraphQL response to the client.
+    const setCookie = graphqlResponse.headers.get('set-cookie')
+    if (setCookie) {
+      event.node.res.setHeader('set-cookie', setCookie)
+    }
+
+    // Add additional properties to the response.
+    graphqlResponse._data.__customProperty = ['My', 'values']
+
+    // Return the GraphQL response.
+    return graphqlResponse._data
+  }
+})`)
+      }
+
+      if (key === 'onServerError') {
+        logger.info(`
+import { defineGraphqlServerOptions } from '#graphql-server-options'
+import type { H3Event } from 'h3'
+import type { FetchError } from 'ofetch'
+
+export default defineGraphqlServerOptions({
+  onServerError( event, error, operation, operationName) {
+    event.setHeader('cache-control', 'no-cache')
+    return {
+      data: {},
+      errors: [error.message]
+    }
+  }
+})`)
+      }
+
+      throw new TypeError('Invalid configuration for graphqlMiddleware.' + key)
+    }
+  })
+}
+
 /**
  * Validate the module options.
  */
-export function validateOptions(options: Partial<GraphqlMiddlewareConfig>) {
+export function validateOptions(options: Partial<ModuleOptions>) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
   }
+
+  validateDeprecated(options)
 }
 
 /**
  * Get the path to the GraphQL schema.
  */
 export async function getSchemaPath(
-  options: GraphqlMiddlewareConfig,
+  options: ModuleOptions,
   resolver: Resolver['resolve'],
   writeToDisk = false,
 ): Promise<string> {
@@ -90,11 +194,7 @@ export async function getSchemaPath(
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint config.')
   }
-  const graphqlEndpoint =
-    typeof options.graphqlEndpoint === 'string'
-      ? options.graphqlEndpoint
-      : options.graphqlEndpoint()
-  await generateSchema(graphqlEndpoint, dest, writeToDisk)
+  await generateSchema(options, dest, writeToDisk)
   return dest
 }
 
@@ -184,8 +284,12 @@ export function validateDocuments(
 ): GraphqlMiddlewareDocument[] {
   for (let i = 0; i < documents.length; i++) {
     const document = documents[i]
+    if (document.filename) {
+      document.relativePath = document.filename.replace(srcDir + '/', '')
+    }
     try {
       const node = parseDocument(document, srcDir)
+      document.content = print(node)
       document.errors = validateGraphQlDocuments(schema, [
         node,
       ]) as GraphQLError[]
@@ -196,6 +300,11 @@ export function validateDocuments(
       if (operation) {
         document.name = operation.name?.value
         document.operation = operation.operation
+      } else {
+        const fragment = node.definitions.find(
+          (v) => v.kind === 'FragmentDefinition',
+        ) as FragmentDefinitionNode
+        document.name = document.relativePath
       }
 
       // document.name = node
@@ -204,6 +313,10 @@ export function validateDocuments(
       document.errors = [e as GraphQLError]
       document.isValid = false
     }
+
+    document.id = [document.operation, document.name, document.filename]
+      .filter(Boolean)
+      .join('_')
   }
 
   return documents
@@ -213,7 +326,7 @@ export function validateDocuments(
  * Generates the TypeScript definitions and documents files.
  */
 export async function generate(
-  options: GraphqlMiddlewareConfig,
+  options: ModuleOptions,
   schemaPath: string,
   resolver: Resolver['resolve'],
   srcDir: string,
@@ -248,7 +361,7 @@ export async function generate(
           [
             document.operation || '',
             document.name || '',
-            document.filename?.replace(srcDir, '') || '',
+            document.relativePath || '',
             document.errors?.join('\n\n') || '',
           ].map((v) => {
             if (document.isValid) {
@@ -263,7 +376,54 @@ export async function generate(
     logger.log(table.toString())
   }
 
-  logger.info('Finished GraphQL code generation.')
+  process.stdout.write('\n')
+  logger.restoreStd()
 
-  return { templates, hasErrors }
+  hasErrors
+    ? logger.error('GraphQL code generation failed with errors.')
+    : logger.success('Finished GraphQL code generation.')
+
+  return {
+    templates: templates.sort((a, b) => {
+      return a.filename.localeCompare(b.filename)
+    }),
+    hasErrors,
+    documents: validated.sort((a, b) => {
+      const nameA = a.name || ''
+      const nameB = b.name || ''
+      return nameA.localeCompare(nameB)
+    }),
+  }
+}
+
+export const fileExists = (
+  path?: string,
+  extensions = ['js', 'ts'],
+): string | null => {
+  if (!path) {
+    return null
+  } else if (existsSync(path)) {
+    // If path already contains/forces the extension
+    return path
+  }
+
+  const extension = extensions.find((extension) =>
+    existsSync(`${path}.${extension}`),
+  )
+
+  return extension ? `${path}.${extension}` : null
+}
+
+export async function outputDocuments(
+  outputPath: string,
+  documents: GraphqlMiddlewareDocument[],
+) {
+  await fsp.mkdir(outputPath, { recursive: true })
+  documents.forEach((v) => {
+    if (v.operation && v.name) {
+      const fileName = [v.operation, v.name, 'graphql'].join('.')
+      const filePath = resolve(outputPath, fileName)
+      fsp.writeFile(filePath, v.content)
+    }
+  })
 }

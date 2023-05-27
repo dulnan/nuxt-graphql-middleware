@@ -1,12 +1,16 @@
+import type { FetchOptions } from 'ofetch'
 import { GraphqlMiddlewareState } from './../../types'
 import { buildRequestParams } from './../helpers'
 import { useRuntimeConfig } from '#imports'
+
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
 
+// Possible query names.
 type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
+// Possible mutation names.
 type GraphqlMiddlewareMutationName = keyof GraphqlMiddlewareMutation
 
 // Determine the argument signature for the query method.
@@ -20,6 +24,7 @@ type GetQueryArgs<
   ? [T, M[T][0]]
   : [T, M[T][0]?]
 
+// Determine the argument signature for the mutation method.
 type GetMutationArgs<
   T extends GraphqlMiddlewareMutationName,
   M extends GraphqlMiddlewareMutation,
@@ -29,8 +34,10 @@ type GetMutationArgs<
   ? [T, M[T][0]]
   : [T, M[T][0]?]
 
+// Type for the query or mutation responses.
 type GraphqlResponse<T> = {
   data: T
+  errors: any[]
 }
 
 // Determine the query result.
@@ -50,40 +57,99 @@ function getEndpoint(operation: string, operationName: string): string {
   return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
 }
 
-const state: GraphqlMiddlewareState = {
-  fetchOptions: {},
+export const useGraphqlState = function (): GraphqlMiddlewareState | null {
+  try {
+    const app = useNuxtApp()
+    if (app.$graphqlState) {
+      return app.$graphqlState as GraphqlMiddlewareState
+    }
+  } catch (_e) {}
+  return null
 }
 
-export const useGraphqlState = (): GraphqlMiddlewareState => {
-  return state
-}
+type QueryObjectArgs<
+  T extends GraphqlMiddlewareQueryName,
+  M extends GraphqlMiddlewareQuery,
+> = M[T][0] extends null
+  ? {
+      name: T
+      fetchOptions?: FetchOptions
+      variables?: null
+    }
+  : {
+      name: T
+      variables: M[T][0]
+      fetchOptions?: FetchOptions
+    }
 
-export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
-  ...args: GetQueryArgs<T, GraphqlMiddlewareQuery>
-): Promise<GetQueryResult<T, GraphqlMiddlewareQuery>> {
-  const name = args[0]
-  if (typeof name !== 'string') {
-    return Promise.reject(new Error('Invalid query name'))
-  }
+type MutationObjectArgs<
+  T extends GraphqlMiddlewareMutationName,
+  M extends GraphqlMiddlewareMutation,
+> = M[T][0] extends null
+  ? {
+      name: T
+      variables?: null
+      fetchOptions?: FetchOptions
+    }
+  : {
+      name: T
+      variables: M[T][0]
+      fetchOptions?: FetchOptions
+    }
+
+function performRequest(
+  operation: string,
+  operationName: string,
+  method: 'get' | 'post',
+  options: FetchOptions,
+) {
   const state = useGraphqlState()
-  return $fetch(getEndpoint('query', name), {
-    params: buildRequestParams(args[1]),
-    ...state.fetchOptions,
+  return $fetch<GraphqlResponse<any>>(getEndpoint(operation, operationName), {
+    ...(state && state.fetchOptions ? state.fetchOptions : {}),
+    ...options,
+    method,
+  }).then((v) => {
+    return {
+      data: v.data,
+      errors: v.errors || [],
+    }
+  })
+}
+
+/**
+ * Performs a GraphQL query.
+ */
+export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
+  ...args:
+    | GetQueryArgs<T, GraphqlMiddlewareQuery>
+    | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
+): Promise<GetQueryResult<T, GraphqlMiddlewareQuery>> {
+  const [name, variables, fetchOptions = {}] =
+    typeof args[0] === 'string'
+      ? [args[0], args[1]]
+      : [args[0].name, args[0].variables, args[0].fetchOptions]
+
+  return performRequest('query', name, 'get', {
+    params: buildRequestParams(variables),
+    ...fetchOptions,
   }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
 }
 
+/**
+ * Performs a GraphQL mutation.
+ */
 export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
-  ...args: GetMutationArgs<T, GraphqlMiddlewareMutation>
+  ...args:
+    | GetMutationArgs<T, GraphqlMiddlewareMutation>
+    | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
 ): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
-  const state = useGraphqlState()
-  const name = args[0]
-  const body = args[1] || {}
-  if (typeof name !== 'string') {
-    return Promise.reject(new Error('Invalid mutation name'))
-  }
-  return $fetch(getEndpoint('mutation', name), {
-    method: 'post',
+  const [name, body, fetchOptions = {}] =
+    typeof args[0] === 'string'
+      ? [args[0], args[1]]
+      : [args[0].name, args[0].variables, args[0].fetchOptions]
+
+  return performRequest('mutation', name, 'post', {
     body,
-    ...state.fetchOptions,
+    ...fetchOptions,
   }) as Promise<GetMutationResult<T, GraphqlMiddlewareMutation>>
 }

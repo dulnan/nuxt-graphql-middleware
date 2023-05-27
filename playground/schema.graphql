@@ -2,9 +2,11 @@ type Mutation {
   createUser(user: UserData!): User!
   deleteUser(id: Int!): Boolean
   initState: Boolean!
+  triggerError: Boolean
 }
 
 type Query {
+  getError: Boolean
   testFetchOptions: TestFetchOptions
   userById(id: ID!): User
   users: [User!]!

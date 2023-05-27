@@ -1,5 +1,5 @@
 import { defineNuxtPlugin } from 'nuxt/app'
-// import { useGraphqlState } from '../.nuxt/imports'
+import { useGraphqlState } from '../.nuxt/imports'
 
 /**
  * This is only called when performing a query or mutation from within the nuxt
@@ -7,6 +7,9 @@ import { defineNuxtPlugin } from 'nuxt/app'
  */
 export default defineNuxtPlugin(() => {
   const state = useGraphqlState()
+  if (!state) {
+    return
+  }
   state.fetchOptions = {
     onRequest({ request, options }) {
       // Log request

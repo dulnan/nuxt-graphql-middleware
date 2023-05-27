@@ -1,4 +1,4 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
 [
@@ -22,6 +22,27 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   deleteUser(id: $id)
 }",
     "filename": "mutation.deleteUser.graphql",
+  },
+  {
+    "content": "mutation triggerError {
+  triggerError
+}",
+    "filename": "mutation.triggerError.graphql",
+  },
+  {
+    "content": "query getError {
+  getError
+}",
+    "filename": "query.getError.graphql",
+  },
+  {
+    "content": "query simulateEndpointDown {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}",
+    "filename": "query.simulateEndpointDown.graphql",
   },
   {
     "content": "fragment user on User {

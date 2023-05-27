@@ -19,25 +19,29 @@ vi.mock('#graphql-documents', () => {
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
-      return { graphqlMiddleware: {} }
+      return {
+        public: {
+          'nuxt-graphql-middleware': {
+            serverApiPrefix: '/nuxt-graphql-middleware',
+          },
+        },
+        graphqlMiddleware: {
+          graphqlEndpoint: 'http//localhost/graphql',
+        },
+      }
     },
   }
 })
 
-vi.mock('@nuxt/kit', () => {
+vi.mock('#graphql-middleware-server-options-build', () => {
   return {
-    loadNuxtConfig: () => {
-      return Promise.resolve({
-        graphqlMiddleware: {
-          graphqlEndpoint: 'http//localhost/graphql',
-          onServerResponse: (event, response) => {
-            return {
-              ...response._data,
-              __customProperty: 'foobar',
-            }
-          },
-        },
-      })
+    default: {
+      onServerResponse: (event, response) => {
+        return {
+          ...response._data,
+          __customProperty: 'foobar',
+        }
+      },
     },
   }
 })

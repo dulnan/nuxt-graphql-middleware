@@ -6,8 +6,8 @@ editLink: true
 # Overview
 
 nuxt-graphql-middleware exposes your GraphQL queries and mutations as simple
-JSON endpoints using [Nuxt server
-routes](https://v3.nuxtjs.org/guide/features/server-routes/).
+JSON endpoints using
+[Nuxt server routes](https://v3.nuxtjs.org/guide/features/server-routes/).
 
 It offers fully typed
 [composables](https://vuejs.org/guide/reusability/composables.html) to perform
@@ -23,13 +23,13 @@ This module was created to solve the following problems:
 - GraphQL server is exposed
 - Client libraries tend be large
 
-Sure, there are various ways that each of these problems can be solved, but
-they tend to be quite complex and require lots of build tooling.
+Sure, there are various ways that each of these problems can be solved, but they
+tend to be quite complex and require lots of build tooling.
 
 ## Solution: GraphQL only on the server
 
-By moving all GraphQL requests and logic to the server side of your Nuxt app,
-we can solve all of the listed problems:
+By moving all GraphQL requests and logic to the server side of your Nuxt app, we
+can solve all of the listed problems:
 
 - No queries are bundled
 - Queries are GET requests and can be easily cached

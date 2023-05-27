@@ -48,6 +48,23 @@ console.log(data.allFilms.films)
 console.log(data.allFilms?.films)
 ```
 
+### Fetch Options
+
+You can also pass an object instead, which allows you to additionally provide
+fetch options for the request:
+
+```typescript
+const { data } = await useGraphqlQuery({
+  name: 'filmById',
+  variables: { id: '123' },
+  fetchOptions: {
+    headers: {
+      authorization: 'foobar',
+    },
+  },
+})
+```
+
 ## useGraphqlMutation
 
 Same usage like useGraphqlQuery:
@@ -59,3 +76,31 @@ const { data } = await useGraphqlMutation('trackVisit')
 ```typescript
 const { data } = await useGraphqlMutation('addToCart', { id: '456' })
 ```
+
+## useGraphqlState
+
+This composable allows you to set fetch options for the useGraphqlQuery and
+useGraphqlMutation composables. One common use case is to pass custom request
+headers to the GraphQL middleware request:
+
+```typescript
+// plugins/graphqlConfig.ts
+
+export default defineNuxtPlugin((NuxtApp) => {
+  // Get the configuration state.
+  const state = useGraphqlState()
+
+  if (!state) {
+    return
+  }
+
+  state.fetchOptions = {
+    headers: {
+      CustomHeader: 'foobar',
+    },
+  }
+}
+```
+
+You can find more examples in the
+[composables configuration section](/configuration/composable).

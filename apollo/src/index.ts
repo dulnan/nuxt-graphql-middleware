@@ -1,5 +1,7 @@
 import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
+import { createGraphQLError } from '@graphql-tools/utils'
+import { GraphQLError } from 'graphql'
 import data from './data.json' assert { type: 'json' }
 
 let users = []
@@ -42,12 +44,14 @@ const typeDefs = `#graphql
     users: [User!]!
     userById(id: ID!): User
     testFetchOptions: TestFetchOptions
+    getError: Boolean
   }
 
   type Mutation {
     createUser(user: UserData!): User!
     deleteUser(id: Int!): Boolean
     initState: Boolean!
+    triggerError: Boolean
   }
 `
 
@@ -66,6 +70,13 @@ const resolvers = {
         headerServer: context.headerServer,
       }
     },
+    getError: () => {
+      throw new GraphQLError('Something is wrong with your data.', {
+        extensions: {
+          code: 'WRONG_DATA',
+        },
+      })
+    },
   },
   Mutation: {
     createUser: (_: any, args: any) => {
@@ -80,6 +91,14 @@ const resolvers = {
     initState: () => {
       initState()
       return true
+    },
+
+    triggerError: () => {
+      throw new GraphQLError('Something is wrong with your data.', {
+        extensions: {
+          code: 'WRONG_DATA',
+        },
+      })
     },
   },
 }
@@ -115,6 +134,13 @@ const { url } = await startStandaloneServer(server, {
   context: ({ req }) => {
     const headerClient = req.headers['x-nuxt-header-client']
     const headerServer = req.headers['x-nuxt-header-server']
+    const token = req.headers.authentication || ''
+    if (token !== 'server-token')
+      throw new GraphQLError('you must be logged in to query this schema', {
+        extensions: {
+          code: 'UNAUTHENTICATED',
+        },
+      })
     return Promise.resolve({ headerClient, headerServer })
   },
 })

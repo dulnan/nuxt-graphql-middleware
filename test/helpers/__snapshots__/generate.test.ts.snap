@@ -1,11 +1,28 @@
-// Vitest Snapshot v1
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`generate > Generates templates correctly for auto imported documents 1`] = `
 {
-  "hasErrors": false,
-  "templates": [
-    {
-      "content": "export type Maybe<T> = T | null;
+  "content": "const documents = {
+  \\"query\\": {
+    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
+    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
+  },
+  \\"mutation\\": {
+    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
+    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
+    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+  }
+};
+export { documents };",
+  "filename": "graphql-documents.mjs",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents 2`] = `
+{
+  "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -24,6 +41,7 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']>;
   initState: Scalars['Boolean'];
+  triggerError?: Maybe<Scalars['Boolean']>;
 };
 
 
@@ -38,6 +56,7 @@ export type MutationDeleteUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  getError?: Maybe<Scalars['Boolean']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -72,6 +91,11 @@ export type UserData = {
   lastName: Scalars['String'];
 };
 
+export type SimulateEndpointDownQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SimulateEndpointDownQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
+
 export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -79,10 +103,20 @@ export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __t
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
 
+export type GetErrorQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetErrorQuery = { __typename?: 'Query', getError?: boolean | null };
+
 export type InitStateMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type InitStateMutation = { __typename?: 'Mutation', initState: boolean };
+
+export type TriggerErrorMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TriggerErrorMutation = { __typename?: 'Mutation', triggerError?: boolean | null };
 
 export type DeleteUserMutationVariables = Exact<{
   id: Scalars['Int'];
@@ -91,13 +125,19 @@ export type DeleteUserMutationVariables = Exact<{
 
 export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
 ",
-      "filename": "graphql-operations.d.ts",
-      "hooks": {},
-    },
-    {
-      "content": "import {
+  "filename": "graphql-operations.d.ts",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents 3`] = `
+{
+  "content": "import {
+  SimulateEndpointDownQuery,
   FetchOptionsQuery,
+  GetErrorQuery,
   InitStateMutation,
+  TriggerErrorMutation,
   DeleteUserMutation,
   DeleteUserMutationVariables
 } from './graphql-operations'
@@ -109,11 +149,14 @@ type GraphqlMiddlewareResponse<T> = {
 
 declare module '#build/nuxt-graphql-middleware' {
   export type GraphqlMiddlewareQuery = {
-    fetchOptions: [null, true, FetchOptionsQuery]
+    simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
+    fetchOptions: [null, true, FetchOptionsQuery],
+    getError: [null, true, GetErrorQuery]
   }
 
   export type GraphqlMiddlewareMutation = {
     initState: [null, true, InitStateMutation],
+    triggerError: [null, true, TriggerErrorMutation],
     deleteUser: [DeleteUserMutationVariables, false, DeleteUserMutation]
   }
 
@@ -122,37 +165,65 @@ declare module '#build/nuxt-graphql-middleware' {
 declare module 'nitropack' {
   type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
+    'undefined/query/simulateEndpointDown': GraphqlMiddlewareResponse<Awaited<SimulateEndpointDownQuery>>
     'undefined/query/fetchOptions': GraphqlMiddlewareResponse<Awaited<FetchOptionsQuery>>
+    'undefined/query/getError': GraphqlMiddlewareResponse<Awaited<GetErrorQuery>>
     'undefined/mutation/initState': GraphqlMiddlewareResponse<Awaited<InitStateMutation>>
+    'undefined/mutation/triggerError': GraphqlMiddlewareResponse<Awaited<TriggerErrorMutation>>
     'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
   }
 }
 ",
-      "filename": "nuxt-graphql-middleware.d.ts",
-      "hooks": {},
+  "filename": "nuxt-graphql-middleware.d.ts",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for provided documents 1`] = `
+{
+  "documents": [
+    {
+      "content": "query one {
+  users {
+    id
+  }
+}",
+      "errors": [],
+      "filename": "nuxt.config.ts",
+      "id": "query_one_nuxt.config.ts",
+      "isValid": true,
+      "name": "one",
+      "operation": "query",
+      "relativePath": "nuxt.config.ts",
     },
+    {
+      "content": "mutation two($id: Int!) {
+  deleteUser(id: $id)
+}",
+      "errors": [],
+      "filename": "nuxt.config.ts",
+      "id": "mutation_two_nuxt.config.ts",
+      "isValid": true,
+      "name": "two",
+      "operation": "mutation",
+      "relativePath": "nuxt.config.ts",
+    },
+  ],
+  "hasErrors": false,
+  "templates": [
     {
       "content": "const documents = {
   \\"query\\": {
-    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\"
+    \\"one\\": \\"query one {\\\\n  users {\\\\n    id\\\\n  }\\\\n}\\"
   },
   \\"mutation\\": {
-    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
-    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+    \\"two\\": \\"mutation two($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
   }
 };
 export { documents };",
       "filename": "graphql-documents.mjs",
       "hooks": {},
     },
-  ],
-}
-`;
-
-exports[`generate > Generates templates correctly for provided documents 1`] = `
-{
-  "hasErrors": false,
-  "templates": [
     {
       "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -173,6 +244,7 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']>;
   initState: Scalars['Boolean'];
+  triggerError?: Maybe<Scalars['Boolean']>;
 };
 
 
@@ -187,6 +259,7 @@ export type MutationDeleteUserArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  getError?: Maybe<Scalars['Boolean']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -221,17 +294,17 @@ export type UserData = {
   lastName: Scalars['String'];
 };
 
-export type OneQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number }> };
-
 export type TwoMutationVariables = Exact<{
   id: Scalars['Int'];
 }>;
 
 
 export type TwoMutation = { __typename?: 'Mutation', deleteUser?: boolean | null };
+
+export type OneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number }> };
 ",
       "filename": "graphql-operations.d.ts",
       "hooks": {},
@@ -268,19 +341,6 @@ declare module 'nitropack' {
 }
 ",
       "filename": "nuxt-graphql-middleware.d.ts",
-      "hooks": {},
-    },
-    {
-      "content": "const documents = {
-  \\"query\\": {
-    \\"one\\": \\"\\\\n            query one {\\\\n              users {\\\\n                id\\\\n              }\\\\n            }\\"
-  },
-  \\"mutation\\": {
-    \\"two\\": \\"\\\\n            mutation two($id: Int!) {\\\\n              deleteUser(id: $id)\\\\n            }\\"
-  }
-};
-export { documents };",
-      "filename": "graphql-documents.mjs",
       "hooks": {},
     },
   ],
@@ -323,13 +383,13 @@ exports[`generate > Renders a table with information about all documents with er
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `
-"┌───────────┬──────┬────────────────┬────────┐
-│ Operation │ Name │ File           │ Errors │
-├───────────┼──────┼────────────────┼────────┤
-│           │      │ nuxt.config.ts │        │
-├───────────┼──────┼────────────────┼────────┤
-│ query     │ one  │ nuxt.config.ts │        │
-├───────────┼──────┼────────────────┼────────┤
-│ mutation  │ two  │ nuxt.config.ts │        │
-└───────────┴──────┴────────────────┴────────┘"
+"┌───────────┬────────────────┬────────────────┬────────┐
+│ Operation │ Name           │ File           │ Errors │
+├───────────┼────────────────┼────────────────┼────────┤
+│           │ nuxt.config.ts │ nuxt.config.ts │        │
+├───────────┼────────────────┼────────────────┼────────┤
+│ query     │ one            │ nuxt.config.ts │        │
+├───────────┼────────────────┼────────────────┼────────┤
+│ mutation  │ two            │ nuxt.config.ts │        │
+└───────────┴────────────────┴────────────────┴────────┘"
 `;

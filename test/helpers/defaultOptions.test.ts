@@ -3,10 +3,7 @@ import { defaultOptions } from '../../src/helpers'
 
 describe('defaultOptions', () => {
   test('Provides sane defaults', () => {
-    expect(defaultOptions.autoImportPatterns).toEqual([
-      '**/*.{gql,graphql}',
-      '!node_modules',
-    ])
+    expect(defaultOptions.autoImportPatterns).toEqual([])
 
     expect(defaultOptions.downloadSchema).toEqual(true)
     expect(defaultOptions.schemaPath).toEqual('./schema.graphql')

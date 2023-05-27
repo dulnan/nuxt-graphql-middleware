@@ -1,8 +1,11 @@
 import { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
 import { createError } from 'h3'
-import type { FetchOptions } from 'ofetch'
-import type { GraphqlMiddlewareConfig } from './../../../types'
+import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
+import type {
+  GraphqlMiddlewareRuntimeConfig,
+  GraphqlMiddlewareServerOptions,
+} from './../../../types'
 import { GraphqlMiddlewareOperation } from './../../settings'
 
 // Get the variables from query parameters.
@@ -26,22 +29,28 @@ export function queryParamToVariables(query: QueryObject) {
  * Get the URL of the GraphQL endpoint.
  */
 export function getEndpoint(
-  moduleConfig: GraphqlMiddlewareConfig,
+  config: GraphqlMiddlewareRuntimeConfig,
+  serverOptions: GraphqlMiddlewareServerOptions,
   event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
-): string {
-  if (typeof moduleConfig.graphqlEndpoint === 'string') {
-    return moduleConfig.graphqlEndpoint
-  } else if (typeof moduleConfig.graphqlEndpoint === 'function') {
-    const endpoint = moduleConfig.graphqlEndpoint(
+): string | Promise<string> {
+  // Check if a custom graphqlEndpoint method exists.
+  if (serverOptions.graphqlEndpoint) {
+    const result = serverOptions.graphqlEndpoint(
       event,
       operation,
       operationName,
     )
-    if (endpoint && typeof endpoint === 'string') {
-      return endpoint
+
+    // Only return if the method returned somethind. This way we fall back to
+    // config at build time.
+    if (result) {
+      return Promise.resolve(result)
     }
+  }
+  if (config.graphqlEndpoint) {
+    return config.graphqlEndpoint
   }
   throw new Error('Failed to determine endpoint for GraphQL server.')
 }
@@ -50,17 +59,15 @@ export function getEndpoint(
  * Get the options for the $fetch request to the GraphQL server.
  */
 export function getFetchOptions(
-  moduleConfig: GraphqlMiddlewareConfig,
+  serverOptions: GraphqlMiddlewareServerOptions,
   event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
-): FetchOptions {
-  if (typeof moduleConfig.serverFetchOptions === 'function') {
+): FetchOptions | Promise<FetchOptions> {
+  if (serverOptions.serverFetchOptions) {
     return (
-      moduleConfig.serverFetchOptions(event, operation, operationName) || {}
+      serverOptions.serverFetchOptions(event, operation, operationName) || {}
     )
-  } else if (typeof moduleConfig.serverFetchOptions === 'object') {
-    return moduleConfig.serverFetchOptions
   }
 
   return {}
@@ -114,4 +121,47 @@ export function validateRequest(
   if (!documents[operation][name]) {
     throwError(`Operation "${operation}" with name "${name}" not found.`)
   }
+}
+
+/**
+ * Handle GraphQL server response.
+ */
+export function onServerResponse(
+  serverOptions: GraphqlMiddlewareServerOptions,
+  event: H3Event,
+  response: FetchResponse<any>,
+  operation?: string,
+  operationName?: string,
+) {
+  if (serverOptions.onServerResponse) {
+    return serverOptions.onServerResponse(
+      event,
+      response,
+      operation,
+      operationName,
+    )
+  }
+
+  return response._data
+}
+
+/**
+ * Handle GraphQL server errors.
+ */
+export function onServerError(
+  serverOptions: GraphqlMiddlewareServerOptions,
+  event: H3Event,
+  error: FetchError,
+  operation?: string,
+  operationName?: string,
+) {
+  if (serverOptions.onServerError) {
+    return serverOptions.onServerError(event, error, operation, operationName)
+  }
+  const message = error && 'message' in error ? error.message : ''
+  throw createError({
+    statusCode: 500,
+    statusMessage: "Couldn't execute GraphQL query: " + message,
+    data: error && 'message' in error ? error.message : error,
+  })
 }

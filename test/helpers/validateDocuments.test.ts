@@ -60,4 +60,39 @@ describe('validateDocuments', () => {
       )[0],
     ).property('isValid', false)
   })
+
+  test('Formats document content', async () => {
+    const schemaContent = `
+    type Query {
+      getText: Text
+    }
+
+    type Text {
+      value: String
+    }
+    `
+
+    const schema = await loadSchema(schemaContent, { loaders: [] })
+
+    expect(
+      validateDocuments(
+        schema,
+        [
+          {
+            content: `query myQuery {
+getText {
+        value
+        }      }`,
+          },
+        ],
+        '/foobar',
+      )[0].content,
+    ).toMatchInlineSnapshot(`
+      "query myQuery {
+        getText {
+          value
+        }
+      }"
+    `)
+  })
 })

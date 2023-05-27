@@ -5,14 +5,27 @@ import {
   useGraphqlState,
 } from './../../../src/runtime/composables'
 
+const useNuxtApp = function () {
+  return {
+    $graphqlState: {
+      fetchOptions: {},
+    },
+  }
+}
+
+vi.stubGlobal('useNuxtApp', useNuxtApp)
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
       return {
         public: {
           'nuxt-graphql-middleware': {
-            serverApiPrefix: '/api/graphql_middleware',
+            serverApiPrefix: '/nuxt-graphql-middleware',
           },
+        },
+        graphqlMiddleware: {
+          graphqlEndpoint: 'http//localhost/graphql',
         },
       }
     },
@@ -21,11 +34,9 @@ vi.mock('#imports', () => {
 
 const fetchMock = (endpoint: string, options: any) => {
   return Promise.resolve({
-    _data: {
-      data: {},
-      options,
-      endpoint,
-    },
+    data: undefined,
+    options,
+    endpoint,
   })
 }
 
