@@ -1,5 +1,6 @@
 import express, { Request, RequestHandler, Response } from 'express'
 import { GraphQLClient } from 'graphql-request'
+import * as Dom from 'graphql-request/dist/types.dom'
 
 /**
  * Try to parse the variables from the client, which are encoded as JSON.
@@ -21,6 +22,10 @@ export interface GraphqlServerMiddlewareConfig {
   onQueryError?: any
   onMutationResponse?: any
   onMutationError?: any
+
+  // Options when initializing the GraphQLClient.
+  // Possibility to add a custom fetch implementation or to pass in a custom http-agent.
+  graphqlClientOptions?: Dom.RequestInit
 }
 
 function buildHeaders(
@@ -52,7 +57,7 @@ export default function createServerMiddleware(
 
   function getClient(endpoint: string): GraphQLClient {
     if (!clients.has(endpoint)) {
-      const client = new GraphQLClient(endpoint)
+      const client = new GraphQLClient(endpoint, config?.graphqlClientOptions)
       clients.set(endpoint, client)
     }
 
