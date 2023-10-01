@@ -11,7 +11,7 @@ Create a file called `graphqlMiddleware.serverOptions.ts` (or js/mjs) inside the
 ::: code-group
 
 ```typescript [~/app/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 
 export default defineGraphqlServerOptions({
   // ...
@@ -19,6 +19,69 @@ export default defineGraphqlServerOptions({
 ```
 
 :::
+
+## doGraphqlRequest
+
+Provide a custom method that performs the request to the GraphQL server. It
+receives a single `context` object argument that contains everything required to
+perform the request.
+
+The method is called in the /api/graphql server handler. It can do the request
+using `fetch`, `graphql-request` or even a full-fledged library like
+`@apollo/client`.
+
+If a custom method is provided all other options (such as graphqlEndpoint,
+serverFetchOptions or onServerResponse) are ignored. The return value of the
+method is directly returned as the response in the server route.
+
+### Example: Custom fetch with retry
+
+This example assumes some kind of cookie based token authentication. If the
+request fails because of an expired token it will refresh the token and then
+retry the request.
+
+```typescript
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { refreshToken } from './../helpers'
+
+export default defineGraphqlServerOptions({
+  async doGraphqlRequest({
+    event,
+    operationName,
+    operationDocument,
+    variables,
+  }) {
+    function doRequest(token: string) {
+      return $fetch.raw('https://example.com/graphql', {
+        method: 'POST',
+        ignoreResponseError: true,
+        body: {
+          query: operationDocument,
+          variables,
+          operationName,
+        },
+        headers: {
+          token,
+        },
+      })
+    }
+
+    // Do the first request.
+    const incomingToken = getHeader(event, 'cookie')
+    let result = await doRequest(incomingToken)
+
+    // If the status is 401 refresh the token.
+    if (result.status === 401) {
+      const newToken = await refreshToken(incomingToken)
+      // Retry the request.
+      result = await doRequest(newToken)
+    }
+
+    // Return the GraphQL response.
+    return result._data
+  },
+})
+```
 
 ## graphqlEndpoint
 
@@ -38,7 +101,7 @@ Here we determine the current language from the incoming `Accept-Language`
 header and use it to target a specific language-prefixed GraphQL endpoint.
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader } from 'h3'
 import acceptLanguageParser from 'accept-language-parser'
 
@@ -70,7 +133,7 @@ type GraphqlMiddlewareServerFetchOptionsMethod = (
 ### Example: Pass cookie from client to GraphQL server
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader } from 'h3'
 
 // Pass the cookie from the client request to the GraphQL request.
@@ -104,7 +167,7 @@ type GraphqlMiddlewareOnServerResponseMethod = (
 ### Example: Pass cookie from client to GraphQL server
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
@@ -147,7 +210,7 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ### Example: Always return a 200 status to the clients
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 

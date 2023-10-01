@@ -28,6 +28,37 @@ export type GraphqlMiddlewareOnServerErrorMethod = (
   operationName?: string,
 ) => any | Promise<any>
 
+export type GraphqlMiddlewareDoRequestMethodContext = {
+  /**
+   * The incoming request event from H3.
+   */
+  event: H3Event
+
+  /**
+   * The type of operation.
+   */
+  operation: 'query' | 'mutation'
+
+  /**
+   * The name of the operation.
+   */
+  operationName: string
+
+  /**
+   * The operation document (the raw GraphQL query/mutation as a string).
+   */
+  operationDocument: string
+
+  /**
+   * Variables for the operation.
+   */
+  variables: Record<string, any>
+}
+
+export type GraphqlMiddlewareDoRequestMethod = (
+  context: GraphqlMiddlewareDoRequestMethodContext,
+) => Promise<{ data: any; errors?: any[] }>
+
 /**
  * Configuration options during runtime.
  */
@@ -126,6 +157,43 @@ export type GraphqlMiddlewareServerOptions = {
    * ```
    */
   onServerError?: GraphqlMiddlewareOnServerErrorMethod
+
+  /**
+   * Provide a custom fetch method for requests to the GraphQL server.
+   *
+   * This can be used if onServerError, onServerResponse, serverFetchOptions
+   * and graphqlEndpoint are not enough to meet your requirements.
+   *
+   * The method will be called in the /api/graphql server route and should
+   * perform the GraphQL request and return the response.
+   *
+   * An example use case might be to handle expired tokens.
+   *
+   * * ```ts
+   * async function doGraphqlRequest({
+   *   event,
+   *   operation,
+   *   operationName,
+   *   operationDocument,
+   *   variables,
+   * }) {
+   *   const result = await $fetch.raw('https://example.com/graphql', {
+   *     method: 'POST'
+   *     body: {
+   *       query: operationDocument,
+   *       variables,
+   *       operationName
+   *     },
+   *     headers: {
+   *       'custom-header': 'foobar'
+   *     }
+   *   })
+   *
+   *   return result._data
+   * }
+   * ```
+   */
+  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod
 }
 
 export interface GraphqlMiddlewareState {

@@ -77,7 +77,7 @@ function validateDeprecated(options: any) {
 
       if (key === 'graphqlEndpoint') {
         logger.info(`
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader } from 'h3'
 import acceptLanguageParser from 'accept-language-parser';
 
@@ -96,7 +96,7 @@ export default defineGraphqlServerOptions({
 
       if (key === 'serverFetchOptions') {
         logger.info(`
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader } from 'h3'
 
 // Pass the cookie from the client request to the GraphQL request.
@@ -113,7 +113,7 @@ export default defineGraphqlServerOptions({
 
       if (key === 'onServerResponse') {
         logger.info(`
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
@@ -139,7 +139,7 @@ export default defineGraphqlServerOptions({
 
       if (key === 'onServerError') {
         logger.info(`
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 

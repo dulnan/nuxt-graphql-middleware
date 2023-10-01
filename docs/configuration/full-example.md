@@ -118,7 +118,7 @@ export default defineNuxtConfig({
 ## Full ~/app/graphqlMiddleware.serverOptions.ts example
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader, createError } from 'h3'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
@@ -153,7 +153,7 @@ export default defineGraphqlServerOptions({
   },
 
   /**
-   * Handle 4xx/5xx errors happening when making the GraphQL request to the
+   * Handle 4xx/5xx errors happening when making the request to the
    * GraphQL server.
    */
   onServerError(event, error, operation, operationName) {

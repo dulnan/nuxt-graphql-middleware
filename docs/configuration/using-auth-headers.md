@@ -35,7 +35,7 @@ Define a `serverFetchOptions` callback in
 GraphQL request is made.
 
 ```typescript
-import { defineGraphqlServerOptions } from '#graphql-server-options'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import { getHeader, createError } from 'h3'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'

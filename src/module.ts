@@ -408,11 +408,6 @@ declare module '#graphql-documents' {
       },
     })
 
-    // Add the import alias to define custom server options in userland.
-    nuxt.options.alias['#graphql-server-options'] = moduleResolver(
-      'runtime/serverOptions',
-    )
-
     // Shamelessly copied and adapted from:
     // https://github.com/nuxt-modules/prismic/blob/fd90dc9acaa474f79b8831db5b8f46a9a9f039ca/src/module.ts#L55
     //
