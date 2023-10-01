@@ -16,8 +16,6 @@ Middleware** tab.
 There is a server route available during development that outputs all queries
 and mutations.
 
-http://localhost:3000/api/graphql_middleware/debug
-
 ![Screenshot of the debug endpoint](./../debug-endpoint.png)
 
 ## Output compiled queries and mutations
