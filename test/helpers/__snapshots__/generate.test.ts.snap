@@ -27,21 +27,23 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createUser: User;
-  deleteUser?: Maybe<Scalars['Boolean']>;
-  initState: Scalars['Boolean'];
-  triggerError?: Maybe<Scalars['Boolean']>;
+  deleteUser?: Maybe<Scalars['Boolean']['output']>;
+  initState: Scalars['Boolean']['output'];
+  triggerError?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
@@ -51,12 +53,12 @@ export type MutationCreateUserArgs = {
 
 
 export type MutationDeleteUserArgs = {
-  id: Scalars['Int'];
+  id: Scalars['Int']['input'];
 };
 
 export type Query = {
   __typename?: 'Query';
-  getError?: Maybe<Scalars['Boolean']>;
+  getError?: Maybe<Scalars['Boolean']['output']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -64,31 +66,31 @@ export type Query = {
 
 
 export type QueryUserByIdArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type TestFetchOptions = {
   __typename?: 'TestFetchOptions';
-  headerClient?: Maybe<Scalars['String']>;
-  headerServer?: Maybe<Scalars['String']>;
+  headerClient?: Maybe<Scalars['String']['output']>;
+  headerServer?: Maybe<Scalars['String']['output']>;
 };
 
 export type User = {
   __typename?: 'User';
-  dateOfBirth?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  email: Scalars['String'];
-  firstName: Scalars['String'];
-  id: Scalars['Int'];
-  lastName: Scalars['String'];
+  dateOfBirth?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  firstName: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  lastName: Scalars['String']['output'];
 };
 
 export type UserData = {
-  dateOfBirth?: InputMaybe<Scalars['String']>;
-  description?: InputMaybe<Scalars['String']>;
-  email: Scalars['String'];
-  firstName: Scalars['String'];
-  lastName: Scalars['String'];
+  dateOfBirth?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
 };
 
 export type SimulateEndpointDownQueryVariables = Exact<{ [key: string]: never; }>;
@@ -119,7 +121,7 @@ export type TriggerErrorMutationVariables = Exact<{ [key: string]: never; }>;
 export type TriggerErrorMutation = { __typename?: 'Mutation', triggerError?: boolean | null };
 
 export type DeleteUserMutationVariables = Exact<{
-  id: Scalars['Int'];
+  id: Scalars['Int']['input'];
 }>;
 
 
@@ -230,21 +232,23 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createUser: User;
-  deleteUser?: Maybe<Scalars['Boolean']>;
-  initState: Scalars['Boolean'];
-  triggerError?: Maybe<Scalars['Boolean']>;
+  deleteUser?: Maybe<Scalars['Boolean']['output']>;
+  initState: Scalars['Boolean']['output'];
+  triggerError?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
@@ -254,12 +258,12 @@ export type MutationCreateUserArgs = {
 
 
 export type MutationDeleteUserArgs = {
-  id: Scalars['Int'];
+  id: Scalars['Int']['input'];
 };
 
 export type Query = {
   __typename?: 'Query';
-  getError?: Maybe<Scalars['Boolean']>;
+  getError?: Maybe<Scalars['Boolean']['output']>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -267,35 +271,35 @@ export type Query = {
 
 
 export type QueryUserByIdArgs = {
-  id: Scalars['ID'];
+  id: Scalars['ID']['input'];
 };
 
 export type TestFetchOptions = {
   __typename?: 'TestFetchOptions';
-  headerClient?: Maybe<Scalars['String']>;
-  headerServer?: Maybe<Scalars['String']>;
+  headerClient?: Maybe<Scalars['String']['output']>;
+  headerServer?: Maybe<Scalars['String']['output']>;
 };
 
 export type User = {
   __typename?: 'User';
-  dateOfBirth?: Maybe<Scalars['String']>;
-  description?: Maybe<Scalars['String']>;
-  email: Scalars['String'];
-  firstName: Scalars['String'];
-  id: Scalars['Int'];
-  lastName: Scalars['String'];
+  dateOfBirth?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  firstName: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  lastName: Scalars['String']['output'];
 };
 
 export type UserData = {
-  dateOfBirth?: InputMaybe<Scalars['String']>;
-  description?: InputMaybe<Scalars['String']>;
-  email: Scalars['String'];
-  firstName: Scalars['String'];
-  lastName: Scalars['String'];
+  dateOfBirth?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
 };
 
 export type TwoMutationVariables = Exact<{
-  id: Scalars['Int'];
+  id: Scalars['Int']['input'];
 }>;
 
 
@@ -348,38 +352,16 @@ declare module 'nitropack' {
 `;
 
 exports[`generate > Renders a table with information about all documents with errors. 1`] = `
-"┌───────────┬──────┬────────────────┬──────────────────────────────────────────────────────────────────────┐
-│ Operation │ Name │ File           │ Errors                                                               │
-├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
-│           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>.                            │
-│           │      │                │                                                                      │
-│           │      │                │ nuxt.config.ts:3:11                                                  │
-│           │      │                │ 2 |             id                                                   │
-│           │      │                │ 3 |                                                                  │
-│           │      │                │   |           ^                                                      │
-├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
-│           │      │ nuxt.config.ts │ Syntax Error: Unexpected Name \\"syntax\\".                              │
-│           │      │                │                                                                      │
-│           │      │                │ nuxt.config.ts:2:13                                                  │
-│           │      │                │ 1 |                                                                  │
-│           │      │                │ 2 |             syntax error one {                                   │
-│           │      │                │   |             ^                                                    │
-│           │      │                │ 3 |               users {                                            │
-├───────────┼──────┼────────────────┼──────────────────────────────────────────────────────────────────────┤
-│ mutation  │ two  │ nuxt.config.ts │ Variable \\"$id\\" of type \\"Int\\" used in position expecting type \\"Int!\\". │
-│           │      │                │                                                                      │
-│           │      │                │ nuxt.config.ts:2:26                                                  │
-│           │      │                │ 1 |                                                                  │
-│           │      │                │ 2 |             mutation two($id: Int) {                             │
-│           │      │                │   |                          ^                                       │
-│           │      │                │ 3 |               deleteUser(id: $id)                                │
-│           │      │                │                                                                      │
-│           │      │                │ nuxt.config.ts:3:30                                                  │
-│           │      │                │ 2 |             mutation two($id: Int) {                             │
-│           │      │                │ 3 |               deleteUser(id: $id)                                │
-│           │      │                │   |                              ^                                   │
-│           │      │                │ 4 |             }                                                    │
-└───────────┴──────┴────────────────┴──────────────────────────────────────────────────────────────────────┘"
+"┌───────────┬──────┬────────────────┬───────────────────────────────────────────┐
+│ Operation │ Name │ File           │ Errors                                    │
+├───────────┼──────┼────────────────┼───────────────────────────────────────────┤
+│           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>. │
+│           │      │                │                                           │
+│           │      │                │ nuxt.config.ts:3:11                       │
+│           │      │                │ 2 |             id                        │
+│           │      │                │ 3 |                                       │
+│           │      │                │   |           ^                           │
+└───────────┴──────┴────────────────┴───────────────────────────────────────────┘"
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `

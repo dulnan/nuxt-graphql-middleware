@@ -15,6 +15,7 @@ describe('generate', () => {
   test('Generates templates correctly for auto imported documents', async () => {
     const result = await generate(
       {
+        graphqlEndpoint: '',
         documents: [],
         autoImportPatterns: [
           './pages/**/*.graphql',
@@ -55,6 +56,7 @@ describe('generate', () => {
     expect(
       await generate(
         {
+          graphqlEndpoint: '',
           documents: [
             `
             query one {
@@ -82,6 +84,7 @@ describe('generate', () => {
     }
     await generate(
       {
+        graphqlEndpoint: '',
         documents: [
           `fragment user on User {
             id
@@ -114,6 +117,7 @@ describe('generate', () => {
     }
     await generate(
       {
+        graphqlEndpoint: '',
         documents: [
           `fragment user on User {
             id
