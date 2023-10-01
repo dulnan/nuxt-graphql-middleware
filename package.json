@@ -35,7 +35,9 @@
     "cypress:open": "cypress open --e2e",
     "test": "vitest",
     "test:ci": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write ."
   },
   "dependencies": {
     "@graphql-codegen/cli": "^5.0.0",

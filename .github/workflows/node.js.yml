@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [ "main", "feature/nuxt3-rewrite" ]
+    branches: ['main', 'feature/nuxt3-rewrite']
   pull_request:
-    branches: [ "main", "feature/nuxt3-rewrite" ]
+    branches: ['main', 'feature/nuxt3-rewrite']
 
 jobs:
   build:
