@@ -3,6 +3,7 @@ import {
   PluginFunction,
   oldVisit,
 } from '@graphql-codegen/plugin-helpers'
+import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import { concatAST, parse, visit, print, Kind } from 'graphql'
 import type {
   OperationDefinitionNode,
@@ -21,7 +22,7 @@ export interface NamedOperationsObjectPluginConfig {}
 function cleanGraphqlDocument(
   graphqlContent: string,
   operationName: string,
-): string {
+): DocumentNode {
   const document = parse(graphqlContent)
 
   let selectedOperation: OperationDefinitionNode | null = null
@@ -68,7 +69,7 @@ function cleanGraphqlDocument(
   }
 
   // Construct the cleaned GraphQL document
-  const cleanedDocument: DocumentNode = {
+  return {
     kind: Kind.DOCUMENT,
     definitions: [
       selectedOperation,
@@ -77,15 +78,13 @@ function cleanGraphqlDocument(
       ),
     ],
   }
-
-  return print(cleanedDocument)
 }
 
 export const plugin: PluginFunction<
   NamedOperationsObjectPluginConfig,
   string
 > = (
-  _schema: GraphQLSchema,
+  schema: GraphQLSchema,
   documents: Types.DocumentFile[],
   _config: NamedOperationsObjectPluginConfig,
 ) => {
@@ -95,6 +94,7 @@ export const plugin: PluginFunction<
     query: {} as Record<string, string>,
     mutation: {} as Record<string, string>,
   }
+  let hasErrors = false
 
   oldVisit(allAst, {
     enter: {
@@ -104,14 +104,26 @@ export const plugin: PluginFunction<
           node.loc?.source &&
           (node.operation === 'query' || node.operation === 'mutation')
         ) {
-          operations[node.operation][node.name.value] = cleanGraphqlDocument(
+          const cleaned = cleanGraphqlDocument(
             node.loc.source.body,
             node.name.value,
           )
+          const errors = validateGraphQlDocuments(schema, [cleaned])
+          if (errors.length) {
+            console.log(node.name.value + ': ' + node.operation)
+            hasErrors = true
+            errors.forEach((v) => console.log(v))
+          } else {
+            operations[node.operation][node.name.value] = print(cleaned)
+          }
         }
       },
     },
   })
+
+  if (hasErrors) {
+    throw new Error('Failed to generate documents.')
+  }
 
   return `const documents = ${JSON.stringify(operations, null, 2)};
 export { documents };`
