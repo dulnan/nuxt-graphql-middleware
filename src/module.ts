@@ -9,9 +9,9 @@ import {
   addServerHandler,
   createResolver,
   addTemplate,
-  addImportsDir,
   updateTemplates,
   addPlugin,
+  addImports,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
@@ -332,7 +332,7 @@ export default defineNuxtModule<ModuleOptions>({
       }
     }
 
-    generateHandler(true)
+    await generateHandler(true)
 
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
       serverApiPrefix: options.serverApiPrefix!,
@@ -343,10 +343,20 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     if (options.includeComposables) {
-      // Add composables.
-      addImportsDir(moduleResolver('runtime/composables'))
+      addImports({
+        from: moduleResolver('./runtime/composables/useGraphqlQuery'),
+        name: 'useGraphqlQuery',
+      })
+      addImports({
+        from: moduleResolver('./runtime/composables/useGraphqlMutation'),
+        name: 'useGraphqlMutation',
+      })
+      addImports({
+        from: moduleResolver('./runtime/composables/useGraphqlState'),
+        name: 'useGraphqlState',
+      })
       nuxt.options.alias['#graphql-composable'] = moduleResolver(
-        'runtime/composables',
+        'runtime/composables/server',
       )
     }
 
