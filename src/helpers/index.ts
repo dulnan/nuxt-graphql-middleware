@@ -282,8 +282,9 @@ export function validateDocuments(
   documents: GraphqlMiddlewareDocument[],
   srcDir: string,
 ): GraphqlMiddlewareDocument[] {
+  const validated: GraphqlMiddlewareDocument[] = []
   for (let i = 0; i < documents.length; i++) {
-    const document = documents[i]
+    const document = { ...documents[i] }
     if (document.filename) {
       document.relativePath = document.filename.replace(srcDir + '/', '')
     }
@@ -317,9 +318,11 @@ export function validateDocuments(
     document.id = [document.operation, document.name, document.filename]
       .filter(Boolean)
       .join('_')
+
+    validated.push(document)
   }
 
-  return documents
+  return validated
 }
 
 /**

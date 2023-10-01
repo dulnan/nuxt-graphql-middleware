@@ -1,0 +1,30 @@
+#import "~/pages/user/user.fragment.graphql"
+
+query queryOne {
+  one: users {
+    ...user
+  }
+}
+
+query queryTwo {
+  two: users {
+    ...user
+  }
+}
+
+query queryThree {
+  three: users {
+    ...user
+  }
+}
+
+fragment foobarQuery on Query {
+  foobar: users {
+    id
+    ...foobarUser
+  }
+}
+
+fragment foobarUser on User {
+  firstName
+}

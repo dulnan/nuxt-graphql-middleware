@@ -1,9 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
-import {
-  useGraphqlQuery,
-  useGraphqlMutation,
-  useGraphqlState,
-} from './../../../src/runtime/composables'
+import { useGraphqlState } from './../../../src/runtime/composables/useGraphqlState'
+import { useGraphqlMutation } from './../../../src/runtime/composables/useGraphqlMutation'
+import { useGraphqlQuery } from './../../../src/runtime/composables/useGraphqlQuery'
 
 const useNuxtApp = function () {
   return {
@@ -26,6 +24,18 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http//localhost/graphql',
+        },
+      }
+    },
+  }
+})
+
+vi.mock('#app', () => {
+  return {
+    useNuxtApp: () => {
+      return {
+        $graphqlState: {
+          fetchOptions: {},
         },
       }
     },
