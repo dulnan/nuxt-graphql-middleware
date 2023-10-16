@@ -424,7 +424,8 @@ export async function generate(
     (v) => !v.operation,
   )
 
-  validated.forEach((v) => {
+  for (let i = 0; i < validated.length; i++) {
+    const v = validated[i]
     if (v.isValid) {
       try {
         const node = parse(v.content)
@@ -463,9 +464,18 @@ export async function generate(
       } catch (e) {
         // Parsing errors should have been caught already. Log error.
         logger.error(e)
+        extracted.push(v)
+        break
       }
+    } else {
+      // Push the first invalid document to the array and then break from the loop.
+      // That way we can make sure that only the first occurence of an error
+      // (e.g. in a fragment) is logged, instead of potentially logging the
+      // error dozends of times.
+      extracted.push(v)
+      break
     }
-  })
+  }
 
   const templates = await generateTemplates(
     extracted.filter((v) => v.isValid).map((v) => v.content),
@@ -473,7 +483,8 @@ export async function generate(
     options,
   )
 
-  const hasErrors = extracted.some((v) => !v.isValid)
+  const hasErrors =
+    extracted.some((v) => !v.isValid) || validated.some((v) => !v.isValid)
   if (hasErrors || logEverything) {
     const table = new Table({
       head: ['Operation', 'Name', 'File', 'Errors'].map((v) => chalk.white(v)),

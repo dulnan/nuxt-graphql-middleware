@@ -361,6 +361,13 @@ exports[`generate > Renders a table with information about all documents with er
 │           │      │                │ 2 |             id                        │
 │           │      │                │ 3 |                                       │
 │           │      │                │   |           ^                           │
+├───────────┼──────┼────────────────┼───────────────────────────────────────────┤
+│           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>. │
+│           │      │                │                                           │
+│           │      │                │ nuxt.config.ts:3:11                       │
+│           │      │                │ 2 |             id                        │
+│           │      │                │ 3 |                                       │
+│           │      │                │   |           ^                           │
 └───────────┴──────┴────────────────┴───────────────────────────────────────────┘"
 `;
 
