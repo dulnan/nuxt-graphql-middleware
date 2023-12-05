@@ -256,6 +256,7 @@ export function buildDocuments(
               filename: v.filename,
             }
           } catch (e) {
+            logger.error(e)
             logger.error(
               'Failed to inline fragments for document: ' + v.filename,
             )
