@@ -509,7 +509,7 @@ export async function generate(
       }
     })
 
-    logger.log(table.toString())
+    logger.log("GraphQL code generation table:\n" + table.toString());
   }
 
   process.stdout.write('\n')
