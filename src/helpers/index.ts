@@ -19,8 +19,8 @@ import type {
 import { parse, Source, print, visit, Kind } from 'graphql'
 import { falsy } from '../runtime/helpers'
 import { generateSchema, generateTemplates } from './../codegen'
-import { GraphqlMiddlewareDocument } from './../types'
-import { ModuleOptions } from './../module'
+import { type GraphqlMiddlewareDocument } from './../types'
+import { type ModuleOptions } from './../module'
 
 export const logger = useLogger('nuxt-graphql-middleware')
 
@@ -509,7 +509,7 @@ export async function generate(
       }
     })
 
-    logger.log("GraphQL code generation table:\n" + table.toString());
+    logger.log('GraphQL code generation table:\n' + table.toString())
   }
 
   process.stdout.write('\n')

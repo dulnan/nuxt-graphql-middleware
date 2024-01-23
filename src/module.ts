@@ -1,9 +1,9 @@
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
-import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
+import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import { resolve } from 'pathe'
 import { defu } from 'defu'
-import { BirpcGroup } from 'birpc'
+import { type BirpcGroup } from 'birpc'
 import {
   defineNuxtModule,
   addServerHandler,
@@ -14,7 +14,7 @@ import {
   addImports,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
-import { TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
+import { type TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
 import { setupDevToolsUI } from './devtools'
@@ -28,9 +28,9 @@ import {
   fileExists,
   outputDocuments,
 } from './helpers'
-import { CodegenResult } from './codegen'
-import { ClientFunctions, ServerFunctions } from './rpc-types'
-import { GraphqlMiddlewareDocument } from './types'
+import { type CodegenResult } from './codegen'
+import { type ClientFunctions, type ServerFunctions } from './rpc-types'
+import { type GraphqlMiddlewareDocument } from './types'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 export interface ModuleOptions {

@@ -18,6 +18,47 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     "filename": "query.fetchOptions.graphql",
   },
   {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+
+
+query queryOne {
+  one: users {
+    ...user
+  }
+}
+
+query queryTwo {
+  two: users {
+    ...user
+  }
+}
+
+#query queryThree {
+#  three: users {
+#    ...user
+#  }
+#}
+
+fragment foobarQuery on Query {
+  foobar: users {
+    id
+    ...foobarUser
+  }
+}
+
+fragment foobarUser on User {
+  firstName
+}",
+    "filename": "multipleQueries.graphql",
+  },
+  {
     "content": "mutation deleteUser($id: Int!) {
   deleteUser(id: $id)
 }",
@@ -52,8 +93,80 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   email
   description
   dateOfBirth
+}
+
+
+query foobar {
+  users {
+    ...user
+  }
+}",
+    "filename": "test.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+
+
+mutation addUser($user: UserData!) {
+  createUser(user: $user) {
+    ...user
+  }
+}",
+    "filename": "mutation.addUser.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+
+
+query userById($id: ID!) {
+  userById(id: $id) {
+    ...user
+  }
+}",
+    "filename": "query.user.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
 }",
     "filename": "user.fragment.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+
+
+query users {
+  users {
+    ...user
+  }
+}",
+    "filename": "userList.graphql",
   },
 ]
 `;

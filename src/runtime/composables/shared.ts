@@ -19,8 +19,8 @@ export type GetQueryArgs<
 > = M[T][0] extends null
   ? [T]
   : M[T][1] extends false
-  ? [T, M[T][0]]
-  : [T, M[T][0]?]
+    ? [T, M[T][0]]
+    : [T, M[T][0]?]
 
 // Determine the argument signature for the mutation method.
 export type GetMutationArgs<
@@ -29,8 +29,8 @@ export type GetMutationArgs<
 > = M[T][0] extends null
   ? [T]
   : M[T][1] extends false
-  ? [T, M[T][0]]
-  : [T, M[T][0]?]
+    ? [T, M[T][0]]
+    : [T, M[T][0]?]
 
 // Type for the query or mutation responses.
 export type GraphqlResponse<T> = {

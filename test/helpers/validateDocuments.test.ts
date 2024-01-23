@@ -1,6 +1,21 @@
-import { describe, expect, test } from 'vitest'
+import path from 'path'
+import { describe, expect, test, vi } from 'vitest'
 import { loadSchema } from '@graphql-tools/load'
 import { validateDocuments } from '../../src/helpers'
+
+// Inside vitest, the resolveAlias function does not know about the '~' alias of nuxt.
+vi.mock('@nuxt/kit', async () => {
+  const kit: any = await vi.importActual('@nuxt/kit')
+
+  return {
+    ...kit,
+    resolveAlias: (v: string) => {
+      return kit.resolveAlias(v, {
+        '~': path.resolve(__dirname, './../../playground'),
+      })
+    },
+  }
+})
 
 describe('validateDocuments', () => {
   test('Validates documents', async () => {

@@ -4,6 +4,20 @@ import { describe, expect, test, vi } from 'vitest'
 import stripAnsi from 'strip-ansi'
 import { generate, logger } from '../../src/helpers'
 
+// Inside vitest, the resolveAlias function does not know about the '~' alias of nuxt.
+vi.mock('@nuxt/kit', async () => {
+  const kit: any = await vi.importActual('@nuxt/kit')
+
+  return {
+    ...kit,
+    resolveAlias: (v: string) => {
+      return kit.resolveAlias(v, {
+        '~': path.resolve(__dirname, './../../playground'),
+      })
+    },
+  }
+})
+
 describe('generate', () => {
   const srcDir = path.resolve(__dirname, './../../playground')
   const resolver = createResolver(srcDir).resolve
@@ -29,7 +43,7 @@ describe('generate', () => {
       srcDir,
     )
     expect(result.hasErrors).toBeFalsy()
-    expect(result.documents).toHaveLength(7)
+    expect(result.documents).toHaveLength(13)
     expect(result.templates).toHaveLength(3)
 
     const possibleTemplates = [

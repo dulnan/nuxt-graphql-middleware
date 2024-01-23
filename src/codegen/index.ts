@@ -1,13 +1,13 @@
 import { generate, executeCodegen } from '@graphql-codegen/cli'
-import { Types } from '@graphql-codegen/plugin-helpers'
-import { SchemaASTConfig } from '@graphql-codegen/schema-ast'
+import { type Types } from '@graphql-codegen/plugin-helpers'
+import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import * as PluginTypescript from '@graphql-codegen/typescript'
 import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 import * as PluginNuxtGraphqlMiddleware from './plugin'
 import * as PluginNuxtGraphqlMiddlewareDocuments from './pluginDocuments'
 import { GraphqlMiddlewareTemplate } from './../runtime/settings'
-import { ModuleOptions } from './../module'
+import { type ModuleOptions } from './../module'
 
 /**
  * Loads the correct plugin for graphql-codegen.

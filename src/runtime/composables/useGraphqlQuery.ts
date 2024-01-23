@@ -1,8 +1,8 @@
 import {
-  GraphqlMiddlewareQueryName,
-  GetQueryArgs,
-  QueryObjectArgs,
-  GetQueryResult,
+  type GraphqlMiddlewareQueryName,
+  type GetQueryArgs,
+  type QueryObjectArgs,
+  type GetQueryResult,
 } from './shared'
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'

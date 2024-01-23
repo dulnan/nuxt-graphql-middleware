@@ -1,4 +1,4 @@
-import { GraphqlMiddlewareServerOptions } from './../../types'
+import { type GraphqlMiddlewareServerOptions } from './../../types'
 
 export function defineGraphqlServerOptions(
   options: GraphqlMiddlewareServerOptions,

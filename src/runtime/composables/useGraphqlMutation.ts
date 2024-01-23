@@ -1,8 +1,8 @@
 import {
-  GraphqlMiddlewareMutationName,
-  GetMutationArgs,
-  MutationObjectArgs,
-  GetMutationResult,
+  type GraphqlMiddlewareMutationName,
+  type GetMutationArgs,
+  type MutationObjectArgs,
+  type GetMutationResult,
 } from './shared'
 import { performRequest } from './nuxtApp'
 import type { GraphqlMiddlewareMutation } from '#build/nuxt-graphql-middleware'
