@@ -256,6 +256,7 @@ export function buildDocuments(
               filename: v.filename,
             }
           } catch (e) {
+            logger.error(e)
             logger.error(
               'Failed to inline fragments for document: ' + v.filename,
             )
@@ -508,7 +509,7 @@ export async function generate(
       }
     })
 
-    logger.log(table.toString())
+    logger.log("GraphQL code generation table:\n" + table.toString());
   }
 
   process.stdout.write('\n')
