@@ -1,15 +1,15 @@
 import type { FetchOptions } from 'ofetch'
 import {
-  GraphqlResponse,
+  type GraphqlResponse,
   getEndpoint,
-  GraphqlMiddlewareQueryName,
-  GetQueryArgs,
-  QueryObjectArgs,
-  GetQueryResult,
-  GraphqlMiddlewareMutationName,
-  GetMutationArgs,
-  MutationObjectArgs,
-  GetMutationResult,
+  type GraphqlMiddlewareQueryName,
+  type GetQueryArgs,
+  type QueryObjectArgs,
+  type GetQueryResult,
+  type GraphqlMiddlewareMutationName,
+  type GetMutationArgs,
+  type MutationObjectArgs,
+  type GetMutationResult,
 } from './shared'
 import { buildRequestParams } from './../helpers'
 import type {

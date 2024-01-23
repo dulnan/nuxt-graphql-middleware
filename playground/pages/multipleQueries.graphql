@@ -12,11 +12,11 @@ query queryTwo {
   }
 }
 
-query queryThree {
-  three: users {
-    ...user
-  }
-}
+#query queryThree {
+#  three: users {
+#    ...user
+#  }
+#}
 
 fragment foobarQuery on Query {
   foobar: users {

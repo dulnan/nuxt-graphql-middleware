@@ -1,4 +1,4 @@
-import { QueryObject } from 'ufo'
+import { type QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
 import { createError } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'

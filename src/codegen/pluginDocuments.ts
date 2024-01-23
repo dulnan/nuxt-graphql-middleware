@@ -1,6 +1,6 @@
 import {
-  Types,
-  PluginFunction,
+  type Types,
+  type PluginFunction,
   oldVisit,
 } from '@graphql-codegen/plugin-helpers'
 import { concatAST } from 'graphql'

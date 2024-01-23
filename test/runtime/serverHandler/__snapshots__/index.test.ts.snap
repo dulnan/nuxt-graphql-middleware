@@ -10,7 +10,7 @@ exports[`defineEventHandler > Should correctly handle variables. 1`] = `
       "operationName": "foobar",
       "query": "Query",
       "variables": {
-        "variables": "{\\"variable\\":\\"one\\"}",
+        "variables": "{"variable":"one"}",
       },
     },
     "method": "POST",

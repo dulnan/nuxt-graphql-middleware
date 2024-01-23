@@ -1,4 +1,4 @@
-import { GraphqlMiddlewareDocument } from './types'
+import { type GraphqlMiddlewareDocument } from './types'
 
 // rpc-types.ts
 export interface ServerFunctions {

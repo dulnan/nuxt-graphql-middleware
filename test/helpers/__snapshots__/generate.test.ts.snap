@@ -3,15 +3,21 @@
 exports[`generate > Generates templates correctly for auto imported documents 1`] = `
 {
   "content": "const documents = {
-  \\"query\\": {
-    \\"simulateEndpointDown\\": \\"query simulateEndpointDown {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
-    \\"fetchOptions\\": \\"query fetchOptions {\\\\n  testFetchOptions {\\\\n    headerClient\\\\n    headerServer\\\\n  }\\\\n}\\",
-    \\"getError\\": \\"query getError {\\\\n  getError\\\\n}\\"
+  "query": {
+    "simulateEndpointDown": "query simulateEndpointDown {\\n  testFetchOptions {\\n    headerClient\\n    headerServer\\n  }\\n}",
+    "fetchOptions": "query fetchOptions {\\n  testFetchOptions {\\n    headerClient\\n    headerServer\\n  }\\n}",
+    "users": "query users {\\n  users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "getError": "query getError {\\n  getError\\n}",
+    "userById": "query userById($id: ID!) {\\n  userById(id: $id) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "foobar": "query foobar {\\n  users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "queryTwo": "query queryTwo {\\n  two: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "queryOne": "query queryOne {\\n  one: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}"
   },
-  \\"mutation\\": {
-    \\"initState\\": \\"mutation initState {\\\\n  initState\\\\n}\\",
-    \\"triggerError\\": \\"mutation triggerError {\\\\n  triggerError\\\\n}\\",
-    \\"deleteUser\\": \\"mutation deleteUser($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+  "mutation": {
+    "initState": "mutation initState {\\n  initState\\n}",
+    "addUser": "mutation addUser($user: UserData!) {\\n  createUser(user: $user) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "triggerError": "mutation triggerError {\\n  triggerError\\n}",
+    "deleteUser": "mutation deleteUser($id: Int!) {\\n  deleteUser(id: $id)\\n}"
   }
 };
 export { documents };",
@@ -105,15 +111,49 @@ export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __t
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
 
+export type UsersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null }> };
+
 export type GetErrorQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetErrorQuery = { __typename?: 'Query', getError?: boolean | null };
 
+export type UserByIdQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type UserByIdQuery = { __typename?: 'Query', userById?: { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null } | null };
+
 export type InitStateMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type InitStateMutation = { __typename?: 'Mutation', initState: boolean };
+
+export type AddUserMutationVariables = Exact<{
+  user: UserData;
+}>;
+
+
+export type AddUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null } };
+
+export type FoobarQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type FoobarQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null }> };
+
+export type QueryTwoQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type QueryTwoQuery = { __typename?: 'Query', two: Array<{ __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null }> };
+
+export type QueryOneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type QueryOneQuery = { __typename?: 'Query', one: Array<{ __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null }> };
 
 export type TriggerErrorMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -137,8 +177,16 @@ exports[`generate > Generates templates correctly for auto imported documents 3`
   "content": "import {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
+  UsersQuery,
   GetErrorQuery,
+  UserByIdQuery,
+  UserByIdQueryVariables,
+  FoobarQuery,
+  QueryTwoQuery,
+  QueryOneQuery,
   InitStateMutation,
+  AddUserMutation,
+  AddUserMutationVariables,
   TriggerErrorMutation,
   DeleteUserMutation,
   DeleteUserMutationVariables
@@ -153,11 +201,17 @@ declare module '#build/nuxt-graphql-middleware' {
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
     fetchOptions: [null, true, FetchOptionsQuery],
-    getError: [null, true, GetErrorQuery]
+    users: [null, true, UsersQuery],
+    getError: [null, true, GetErrorQuery],
+    userById: [UserByIdQueryVariables, false, UserByIdQuery],
+    foobar: [null, true, FoobarQuery],
+    queryTwo: [null, true, QueryTwoQuery],
+    queryOne: [null, true, QueryOneQuery]
   }
 
   export type GraphqlMiddlewareMutation = {
     initState: [null, true, InitStateMutation],
+    addUser: [AddUserMutationVariables, false, AddUserMutation],
     triggerError: [null, true, TriggerErrorMutation],
     deleteUser: [DeleteUserMutationVariables, false, DeleteUserMutation]
   }
@@ -169,8 +223,14 @@ declare module 'nitropack' {
   interface InternalApi {
     'undefined/query/simulateEndpointDown': GraphqlMiddlewareResponse<Awaited<SimulateEndpointDownQuery>>
     'undefined/query/fetchOptions': GraphqlMiddlewareResponse<Awaited<FetchOptionsQuery>>
+    'undefined/query/users': GraphqlMiddlewareResponse<Awaited<UsersQuery>>
     'undefined/query/getError': GraphqlMiddlewareResponse<Awaited<GetErrorQuery>>
+    'undefined/query/userById': GraphqlMiddlewareResponse<Awaited<UserByIdQuery>>
+    'undefined/query/foobar': GraphqlMiddlewareResponse<Awaited<FoobarQuery>>
+    'undefined/query/queryTwo': GraphqlMiddlewareResponse<Awaited<QueryTwoQuery>>
+    'undefined/query/queryOne': GraphqlMiddlewareResponse<Awaited<QueryOneQuery>>
     'undefined/mutation/initState': GraphqlMiddlewareResponse<Awaited<InitStateMutation>>
+    'undefined/mutation/addUser': GraphqlMiddlewareResponse<Awaited<AddUserMutation>>
     'undefined/mutation/triggerError': GraphqlMiddlewareResponse<Awaited<TriggerErrorMutation>>
     'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
   }
@@ -215,11 +275,11 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
   "templates": [
     {
       "content": "const documents = {
-  \\"query\\": {
-    \\"one\\": \\"query one {\\\\n  users {\\\\n    id\\\\n  }\\\\n}\\"
+  "query": {
+    "one": "query one {\\n  users {\\n    id\\n  }\\n}"
   },
-  \\"mutation\\": {
-    \\"two\\": \\"mutation two($id: Int!) {\\\\n  deleteUser(id: $id)\\\\n}\\"
+  "mutation": {
+    "two": "mutation two($id: Int!) {\\n  deleteUser(id: $id)\\n}"
   }
 };
 export { documents };",
@@ -352,7 +412,8 @@ declare module 'nitropack' {
 `;
 
 exports[`generate > Renders a table with information about all documents with errors. 1`] = `
-"┌───────────┬──────┬────────────────┬───────────────────────────────────────────┐
+"GraphQL code generation table:
+┌───────────┬──────┬────────────────┬───────────────────────────────────────────┐
 │ Operation │ Name │ File           │ Errors                                    │
 ├───────────┼──────┼────────────────┼───────────────────────────────────────────┤
 │           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>. │
@@ -372,7 +433,8 @@ exports[`generate > Renders a table with information about all documents with er
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `
-"┌───────────┬────────────────┬────────────────┬────────┐
+"GraphQL code generation table:
+┌───────────┬────────────────┬────────────────┬────────┐
 │ Operation │ Name           │ File           │ Errors │
 ├───────────┼────────────────┼────────────────┼────────┤
 │           │ nuxt.config.ts │ nuxt.config.ts │        │

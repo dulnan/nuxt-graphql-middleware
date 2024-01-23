@@ -78,7 +78,7 @@ describe('pluginLoader', () => {
     expect(() => {
       pluginLoader('@graphql-codegen/this-does-not-exist')
     }).toThrowErrorMatchingInlineSnapshot(
-      '"graphql-codegen plugin not found: @graphql-codegen/this-does-not-exist"',
+      '[Error: graphql-codegen plugin not found: @graphql-codegen/this-does-not-exist]',
     )
   })
 })

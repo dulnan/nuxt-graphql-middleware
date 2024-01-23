@@ -1,6 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 import { useGraphqlState } from './useGraphqlState'
-import { GraphqlResponse, getEndpoint } from './shared'
+import { type GraphqlResponse, getEndpoint } from './shared'
 
 export function performRequest(
   operation: string,

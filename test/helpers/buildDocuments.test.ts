@@ -1,7 +1,21 @@
 import path from 'path'
-import { describe, expect, test } from 'vitest'
-import { createResolver } from '@nuxt/kit'
+import { describe, expect, test, vi } from 'vitest'
+import { createResolver, resolveAlias } from '@nuxt/kit'
 import { buildDocuments } from '../../src/helpers'
+
+// Inside vitest, the resolveAlias function does not know about the '~' alias of nuxt.
+vi.mock('@nuxt/kit', async () => {
+  const kit: any = await vi.importActual('@nuxt/kit')
+
+  return {
+    ...kit,
+    resolveAlias: (v: string) => {
+      return kit.resolveAlias(v, {
+        '~': path.resolve(__dirname, './../../playground'),
+      })
+    },
+  }
+})
 
 describe('buildDocuments', () => {
   const srcDir = path.resolve(__dirname, './../../playground')

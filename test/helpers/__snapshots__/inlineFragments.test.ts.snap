@@ -2,7 +2,7 @@
 
 exports[`inlineFragments > Inlines fragments 1`] = `
 "
-    #import \\"~/pages/user/user.fragment.graphql\\"
+    #import "~/pages/user/user.fragment.graphql"
 
     query userById($id: ID!) {
       userById(id: $id) {

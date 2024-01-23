@@ -18,12 +18,12 @@ type User {
 
 exports[`generateTemplates > Generates the correct delarations. > graphql-documents.mjs 1`] = `
 "const documents = {
-  \\"query\\": {
-    \\"translate\\": \\"\\\\n  query translate($text: String!) {\\\\n    translate(text: $text)\\\\n  }\\\\n  \\",
-    \\"getText\\": \\"query getText {\\\\n    getText\\\\n  }\\"
+  "query": {
+    "translate": "\\n  query translate($text: String!) {\\n    translate(text: $text)\\n  }\\n  ",
+    "getText": "query getText {\\n    getText\\n  }"
   },
-  \\"mutation\\": {
-    \\"login\\": \\"\\\\n  fragment user on User {\\\\n    name\\\\n    email\\\\n  }\\\\n  mutation login($user: String!, $password: String!) {\\\\n    login(user: $user, password: $password) {\\\\n      ...user\\\\n    }\\\\n  }\\\\n  \\"
+  "mutation": {
+    "login": "\\n  fragment user on User {\\n    name\\n    email\\n  }\\n  mutation login($user: String!, $password: String!) {\\n    login(user: $user, password: $password) {\\n      ...user\\n    }\\n  }\\n  "
   }
 };
 export { documents };"

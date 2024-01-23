@@ -1,5 +1,5 @@
 import { defineEventHandler, getQuery, readBody } from 'h3'
-import { GraphqlMiddlewareRuntimeConfig } from '../../types'
+import { type GraphqlMiddlewareRuntimeConfig } from '../../types'
 import {
   queryParamToVariables,
   getEndpoint,
