@@ -23,7 +23,7 @@ if (state && !state.foobar) {
 
 const foobarValue = useState('stateTest', () => '')
 
-if (process.server) {
+if (import.meta.server) {
   foobarValue.value = state.foobar
 }
 </script>
