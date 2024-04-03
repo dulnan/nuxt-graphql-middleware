@@ -27,7 +27,7 @@ Expose GraphQL queries and mutations as fully typed API routes.
 ## Install
 
 ```bash
-npm install --save nuxt-graphql-middleware
+npx nuxi@latest module add nuxt-graphql-middleware
 ```
 
 Minimal configuration needed:
