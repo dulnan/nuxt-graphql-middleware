@@ -5,7 +5,7 @@
 Install the module using your preferred package manager.
 
 ```sh
-npm install --save nuxt-graphql-middleware
+npx nuxi@latest module add nuxt-graphql-middleware
 ```
 
 ## Step 2: Configure
