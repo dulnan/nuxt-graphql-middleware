@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
-import { resolve } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { defu } from 'defu'
 import { type BirpcGroup } from 'birpc'
 import {
@@ -474,6 +474,7 @@ declare module '#graphql-documents' {
       })
       nuxt.hook('nitro:build:before', (nitro) => {
         nuxt.hook('builder:watch', async (_event, path) => {
+          path = relative(nuxt.options.srcDir, resolve(nuxt.options.srcDir, path))
           // We only care about GraphQL files.
           if (!path.match(/\.(gql|graphql)$/)) {
             return
