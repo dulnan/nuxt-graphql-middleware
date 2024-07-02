@@ -21,6 +21,7 @@ interface CodeResult {
   code: string
   nitroCode: string
   imports: string[]
+  resultTypes: string[]
 }
 
 function getCodeResult(
@@ -29,6 +30,7 @@ function getCodeResult(
   serverApiPrefix: string,
 ): CodeResult {
   const imports: string[] = []
+  const resultTypes: string[] = []
   let code = ''
   let nitroCode = ''
   const names = Object.keys(operations)
@@ -38,6 +40,7 @@ function getCodeResult(
 
     names.forEach((name) => {
       const nameResult = pascalCase(name + typeName)
+      resultTypes.push(nameResult)
       imports.push(nameResult)
       const nameVariables = pascalCase(name + typeName + 'Variables')
       const { hasVariables, variablesOptional } = operations[name]
@@ -51,7 +54,9 @@ function getCodeResult(
         }, ${nameResult}]`,
       )
       nitroLines.push(
-        `    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': GraphqlMiddlewareResponse<Awaited<${nameResult}>>`,
+        `    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': {
+      'default': GraphqlResponse<${nameResult}>
+    }`,
       )
     })
 
@@ -61,7 +66,7 @@ ${lines.join(',\n')}
     nitroCode += `${nitroLines.join('\n')}`
   }
 
-  return { code, imports, nitroCode }
+  return { code, imports, nitroCode, resultTypes }
 }
 
 export const plugin: PluginFunction<PluginConfig, string> = (
@@ -102,6 +107,7 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   let code = ''
   let nitroCode = ''
   const imports: string[] = []
+  const resultTypes: string[] = []
 
   const resultQuery = getCodeResult(
     operations.query,
@@ -111,6 +117,7 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   code += resultQuery.code
   nitroCode += resultQuery.nitroCode
   imports.push(...resultQuery.imports)
+  resultTypes.push(...resultQuery.resultTypes)
 
   const resultMutation = getCodeResult(
     operations.mutation,
@@ -120,21 +127,20 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   code += '\n' + resultMutation.code
   nitroCode += '\n' + resultMutation.nitroCode
   imports.push(...resultMutation.imports)
+  resultTypes.push(...resultMutation.resultTypes)
 
-  return `import type {
+  return `
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type {
   ${imports.join(',\n  ')}
 } from './graphql-operations'\n
 
-type GraphqlMiddlewareResponse<T> = {
-  data: T
-}
-
 declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareResponseUnion = ${resultTypes.join(' | ')}
 ${code}
 }
 
 declare module 'nitropack' {
-  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
 ${nitroCode}
   }

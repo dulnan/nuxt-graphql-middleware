@@ -1,9 +1,13 @@
 import { getHeader } from 'h3'
 import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
 
-export default defineGraphqlServerOptions<{
-  __customProperty?: string[]
-}>({
+type Cacheability = {
+  cacheTags: string[]
+  maxAge: number
+}
+
+// Passing our custom properties on the GraphQL response as a generic.
+export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
   graphqlEndpoint(event, operation, operationName) {
     if (operationName === 'simulateEndpointDown') {
       return 'http://invalid/graphql'
@@ -34,11 +38,18 @@ export default defineGraphqlServerOptions<{
       event.node.res.setHeader('set-cookie', setCookie)
     }
 
+    if (!graphqlResponse._data?.data) {
+      throw createError({ statusCode: 500 })
+    }
+
     // Return the GraphQL response as is.
     return {
-      data: graphqlResponse._data?.data || null,
-      errors: graphqlResponse._data?.errors || [],
-      __customProperty: ['one', 'two'],
+      data: graphqlResponse._data.data,
+      errors: graphqlResponse._data.errors,
+      __cacheability: {
+        cacheTags: [],
+        maxAge: 7200,
+      },
     }
   },
 })

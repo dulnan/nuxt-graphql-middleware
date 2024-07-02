@@ -99,7 +99,9 @@ export type GetTextQuery = { __typename?: 'Query', getText?: string | null };
 `;
 
 exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-middleware.d.ts 1`] = `
-"import type {
+"
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type {
   TranslateQuery,
   TranslateQueryVariables,
   GetTextQuery,
@@ -108,11 +110,8 @@ exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-m
 } from './graphql-operations'
 
 
-type GraphqlMiddlewareResponse<T> = {
-  data: T
-}
-
 declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareResponseUnion = TranslateQuery | GetTextQuery | LoginMutation
   export type GraphqlMiddlewareQuery = {
     translate: [TranslateQueryVariables, false, TranslateQuery],
     getText: [null, true, GetTextQuery]
@@ -125,11 +124,16 @@ declare module '#build/nuxt-graphql-middleware' {
 }
 
 declare module 'nitropack' {
-  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
-    '/api/graphql_middleware/query/translate': GraphqlMiddlewareResponse<Awaited<TranslateQuery>>
-    '/api/graphql_middleware/query/getText': GraphqlMiddlewareResponse<Awaited<GetTextQuery>>
-    '/api/graphql_middleware/mutation/login': GraphqlMiddlewareResponse<Awaited<LoginMutation>>
+    '/api/graphql_middleware/query/translate': {
+      'default': GraphqlResponse<TranslateQuery>
+    }
+    '/api/graphql_middleware/query/getText': {
+      'default': GraphqlResponse<GetTextQuery>
+    }
+    '/api/graphql_middleware/mutation/login': {
+      'default': GraphqlResponse<LoginMutation>
+    }
   }
 }
 "

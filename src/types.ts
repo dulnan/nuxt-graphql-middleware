@@ -1,7 +1,14 @@
 import type { H3Event } from 'h3'
-import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
+import type {
+  FetchOptions,
+  FetchResponse,
+  FetchError,
+  FetchContext,
+} from 'ofetch'
 import type { GraphQLError } from 'graphql'
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
@@ -15,9 +22,9 @@ export type GraphqlMiddlewareServerFetchOptionsMethod = (
   operationName?: string,
 ) => FetchOptions | Promise<FetchOptions>
 
-export type GraphqlMiddlewareOnServerResponseMethod<T> = (
+export type GraphqlMiddlewareOnServerResponseMethod<ServerReponse, T> = (
   event: H3Event,
-  response: FetchResponse<T>,
+  response: FetchResponse<ServerReponse>,
   operation?: string,
   operationName?: string,
 ) => T | Promise<T>
@@ -64,8 +71,9 @@ export type GraphqlMiddlewareDoRequestMethod<T> = (
  * Configuration options during runtime.
  */
 export type GraphqlMiddlewareServerOptions<
-  T extends {} = {},
-  R = GraphqlServerResponse<any> & T,
+  Additions extends {} = {},
+  CustomResponse = GraphqlServerResponse<GraphqlMiddlewareResponseUnion> &
+    Additions,
 > = {
   /**
    * Custom callback to return the GraphQL endpoint per request.
@@ -137,7 +145,10 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<R>
+  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<
+    GraphqlServerResponse<GraphqlMiddlewareResponseUnion>,
+    CustomResponse
+  >
 
   /**
    * Handle a fetch error from the GraphQL request.
@@ -207,11 +218,15 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<R>
+  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<CustomResponse>
 }
 
 export interface GraphqlMiddlewareState {
-  fetchOptions: FetchOptions
+  fetchOptions: Omit<FetchOptions<'json'>, 'onResponse'> & {
+    onResponse?: (
+      context: FetchContext<GraphqlResponse<GraphqlMiddlewareResponseUnion>>,
+    ) => void | Promise<void>
+  }
 }
 
 export type GraphqlMiddlewareDocument = {

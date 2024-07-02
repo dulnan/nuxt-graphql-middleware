@@ -24,5 +24,9 @@ export default defineNuxtPlugin(() => {
       }
       options.params.t = Date.now()
     },
+
+    async onResponse(ctx) {
+      const data = ctx.response?._data?.data
+    },
   }
 })

@@ -175,7 +175,9 @@ export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean
 
 exports[`generate > Generates templates correctly for auto imported documents 3`] = `
 {
-  "content": "import type {
+  "content": "
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
   UsersQuery,
@@ -194,11 +196,8 @@ exports[`generate > Generates templates correctly for auto imported documents 3`
 } from './graphql-operations'
 
 
-type GraphqlMiddlewareResponse<T> = {
-  data: T
-}
-
 declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
     fetchOptions: [null, true, FetchOptionsQuery],
@@ -220,20 +219,43 @@ declare module '#build/nuxt-graphql-middleware' {
 }
 
 declare module 'nitropack' {
-  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
-    'undefined/query/simulateEndpointDown': GraphqlMiddlewareResponse<Awaited<SimulateEndpointDownQuery>>
-    'undefined/query/fetchOptions': GraphqlMiddlewareResponse<Awaited<FetchOptionsQuery>>
-    'undefined/query/users': GraphqlMiddlewareResponse<Awaited<UsersQuery>>
-    'undefined/query/getError': GraphqlMiddlewareResponse<Awaited<GetErrorQuery>>
-    'undefined/query/userById': GraphqlMiddlewareResponse<Awaited<UserByIdQuery>>
-    'undefined/query/foobar': GraphqlMiddlewareResponse<Awaited<FoobarQuery>>
-    'undefined/query/queryTwo': GraphqlMiddlewareResponse<Awaited<QueryTwoQuery>>
-    'undefined/query/queryOne': GraphqlMiddlewareResponse<Awaited<QueryOneQuery>>
-    'undefined/mutation/initState': GraphqlMiddlewareResponse<Awaited<InitStateMutation>>
-    'undefined/mutation/addUser': GraphqlMiddlewareResponse<Awaited<AddUserMutation>>
-    'undefined/mutation/triggerError': GraphqlMiddlewareResponse<Awaited<TriggerErrorMutation>>
-    'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
+    'undefined/query/simulateEndpointDown': {
+      'default': GraphqlResponse<SimulateEndpointDownQuery>
+    }
+    'undefined/query/fetchOptions': {
+      'default': GraphqlResponse<FetchOptionsQuery>
+    }
+    'undefined/query/users': {
+      'default': GraphqlResponse<UsersQuery>
+    }
+    'undefined/query/getError': {
+      'default': GraphqlResponse<GetErrorQuery>
+    }
+    'undefined/query/userById': {
+      'default': GraphqlResponse<UserByIdQuery>
+    }
+    'undefined/query/foobar': {
+      'default': GraphqlResponse<FoobarQuery>
+    }
+    'undefined/query/queryTwo': {
+      'default': GraphqlResponse<QueryTwoQuery>
+    }
+    'undefined/query/queryOne': {
+      'default': GraphqlResponse<QueryOneQuery>
+    }
+    'undefined/mutation/initState': {
+      'default': GraphqlResponse<InitStateMutation>
+    }
+    'undefined/mutation/addUser': {
+      'default': GraphqlResponse<AddUserMutation>
+    }
+    'undefined/mutation/triggerError': {
+      'default': GraphqlResponse<TriggerErrorMutation>
+    }
+    'undefined/mutation/deleteUser': {
+      'default': GraphqlResponse<DeleteUserMutation>
+    }
   }
 }
 ",
@@ -348,16 +370,15 @@ export type DepthOneQueryFragment = { __typename?: 'Query', one: Array<{ __typen
 
 exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 3`] = `
 {
-  "content": "import type {
+  "content": "
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type {
   HighDepthOneQuery
 } from './graphql-operations'
 
 
-type GraphqlMiddlewareResponse<T> = {
-  data: T
-}
-
 declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareResponseUnion = HighDepthOneQuery
   export type GraphqlMiddlewareQuery = {
     highDepthOne: [null, true, HighDepthOneQuery]
   }
@@ -366,9 +387,10 @@ declare module '#build/nuxt-graphql-middleware' {
 }
 
 declare module 'nitropack' {
-  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
-    'undefined/query/highDepthOne': GraphqlMiddlewareResponse<Awaited<HighDepthOneQuery>>
+    'undefined/query/highDepthOne': {
+      'default': GraphqlResponse<HighDepthOneQuery>
+    }
 
   }
 }
@@ -512,18 +534,17 @@ export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User
       "hooks": {},
     },
     {
-      "content": "import type {
+      "content": "
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type {
   OneQuery,
   TwoMutation,
   TwoMutationVariables
 } from './graphql-operations'
 
 
-type GraphqlMiddlewareResponse<T> = {
-  data: T
-}
-
 declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareResponseUnion = OneQuery | TwoMutation
   export type GraphqlMiddlewareQuery = {
     one: [null, true, OneQuery]
   }
@@ -535,10 +556,13 @@ declare module '#build/nuxt-graphql-middleware' {
 }
 
 declare module 'nitropack' {
-  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
   interface InternalApi {
-    'undefined/query/one': GraphqlMiddlewareResponse<Awaited<OneQuery>>
-    'undefined/mutation/two': GraphqlMiddlewareResponse<Awaited<TwoMutation>>
+    'undefined/query/one': {
+      'default': GraphqlResponse<OneQuery>
+    }
+    'undefined/mutation/two': {
+      'default': GraphqlResponse<TwoMutation>
+    }
   }
 }
 ",

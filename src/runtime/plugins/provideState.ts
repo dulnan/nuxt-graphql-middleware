@@ -4,9 +4,16 @@ import { type GraphqlMiddlewareState } from './../../types'
 /**
  * Create and provide the state singleton for the composables.
  */
-export default defineNuxtPlugin((app) => {
-  const state: GraphqlMiddlewareState = {
-    fetchOptions: {},
-  }
-  app.provide('graphqlState', state)
+export default defineNuxtPlugin({
+  name: 'nuxt-graphql-middleware-provide-state',
+  setup() {
+    const graphqlState: GraphqlMiddlewareState = {
+      fetchOptions: {},
+    }
+    return {
+      provide: {
+        graphqlState,
+      },
+    }
+  },
 })

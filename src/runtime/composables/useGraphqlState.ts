@@ -8,7 +8,7 @@ export const useGraphqlState = function (
   try {
     const app = providedApp || useNuxtApp()
     if (app.$graphqlState) {
-      return app.$graphqlState as GraphqlMiddlewareState
+      return app.$graphqlState
     }
   } catch (_e) {}
   return null
