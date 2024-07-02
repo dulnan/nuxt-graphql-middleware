@@ -32,6 +32,11 @@ jobs:
         env:
           PORT: 4000
 
+      - name: Run module-builder
+        run: |
+          npm run dev:prepare
+          npm run prepack
+
       - name: Run vitest
         run: |
           npm ci
