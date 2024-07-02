@@ -37,6 +37,10 @@ jobs:
           npm run dev:prepare
           npm run prepack
 
+      - name: Typecheck
+        run: |
+          npm run typecheck
+
       - name: Run vitest
         run: |
           npm ci
