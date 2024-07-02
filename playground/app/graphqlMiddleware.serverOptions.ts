@@ -47,7 +47,7 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
       data: graphqlResponse._data.data,
       errors: graphqlResponse._data.errors,
       __cacheability: {
-        cacheTags: [],
+        cacheTags: ['one', 'two'],
         maxAge: 7200,
       },
     }

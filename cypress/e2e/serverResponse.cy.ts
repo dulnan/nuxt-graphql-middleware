@@ -19,9 +19,10 @@ describe('GraphQL server response', () => {
 
   it('should pass a custom data property in the response', () => {
     cy.request('/api/graphql_middleware/query/users').then((response) => {
-      expect(response.body).to.have.property('__customProperty')
-      expect(response.body.__customProperty).to.contain('one')
-      expect(response.body.__customProperty).to.contain('two')
+      expect(response.body).to.have.property('__cacheability')
+      expect(response.body.__cacheability.cacheTags).to.contain('one')
+      expect(response.body.__cacheability.cacheTags).to.contain('two')
+      expect(response.body.__cacheability.maxAge).to.equal(7200)
     })
   })
 })
