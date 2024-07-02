@@ -1,4 +1,5 @@
 import { useGraphqlQuery } from '#graphql-composable'
+import { defineEventHandler } from 'h3'
 
 /**
  * Custom server route that performs a GraphQL query and returns the mapped

@@ -50,6 +50,7 @@ export default defineConfig({
         text: 'Features',
         items: [
           { text: 'Composables', link: '/features/composables' },
+          { text: 'Caching', link: '/features/caching' },
           { text: 'Auto Import', link: '/features/auto-import' },
           { text: 'Fragments', link: '/features/fragments' },
           { text: 'TypeScript', link: '/features/typescript' },

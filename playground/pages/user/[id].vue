@@ -32,6 +32,9 @@ const { data: user } = await useAsyncGraphqlQuery('userById', variables, {
   transform: function (v) {
     return v.data.userById
   },
+  graphqlCaching: {
+    client: true,
+  },
 })
 
 const title = computed(() => {

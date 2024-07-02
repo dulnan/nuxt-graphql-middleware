@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
+import type { GraphqlResponse } from './runtime/composables/shared'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
@@ -14,12 +15,12 @@ export type GraphqlMiddlewareServerFetchOptionsMethod = (
   operationName?: string,
 ) => FetchOptions | Promise<FetchOptions>
 
-export type GraphqlMiddlewareOnServerResponseMethod = (
+export type GraphqlMiddlewareOnServerResponseMethod<T> = (
   event: H3Event,
-  response: FetchResponse<any>,
+  response: FetchResponse<T>,
   operation?: string,
   operationName?: string,
-) => any | Promise<any>
+) => T | Promise<T>
 
 export type GraphqlMiddlewareOnServerErrorMethod = (
   event: H3Event,
@@ -62,9 +63,11 @@ export type GraphqlMiddlewareDoRequestMethod = (
 /**
  * Configuration options during runtime.
  */
-export type GraphqlMiddlewareServerOptions = {
+export type GraphqlMiddlewareServerOptions<T = GraphqlResponse<any>> = {
   /**
    * Custom callback to return the GraphQL endpoint per request.
+   *
+   * The method is only called if no `doGraphqlRequest` method is implemented.
    *
    * @default undefined
    *
@@ -80,6 +83,8 @@ export type GraphqlMiddlewareServerOptions = {
 
   /**
    * Provide the options for the ofetch request to the GraphQL server.
+   *
+   * The method is only called if no `doGraphqlRequest` method is implemented.
    *
    * @default undefined
    *
@@ -101,6 +106,8 @@ export type GraphqlMiddlewareServerOptions = {
 
   /**
    * Handle the response from the GraphQL server.
+   *
+   * The method is only called if no `doGraphqlRequest` method is implemented.
    *
    * You can alter the response, add additional properties to the data, get
    * and set headers, etc.
@@ -127,10 +134,12 @@ export type GraphqlMiddlewareServerOptions = {
    * }
    * ```
    */
-  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod
+  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<T>
 
   /**
    * Handle a fetch error from the GraphQL request.
+   *
+   * The method is only called if no `doGraphqlRequest` method is implemented.
    *
    * Note that errors are only thrown for responses that are not status
    * 200-299. See https://github.com/unjs/ofetch#%EF%B8%8F-handling-errors for
@@ -163,6 +172,8 @@ export type GraphqlMiddlewareServerOptions = {
    *
    * This can be used if onServerError, onServerResponse, serverFetchOptions
    * and graphqlEndpoint are not enough to meet your requirements.
+   *
+   * When this method is implemented, all other methods are not called.
    *
    * The method will be called in the /api/graphql server route and should
    * perform the GraphQL request and return the response.

@@ -29,10 +29,17 @@ const graphqlMiddleware: ModuleOptions = {
       },
     },
   },
+
+  clientCache: {
+    enabled: true,
+  },
 }
 
 export default defineNuxtConfig({
   modules: [graphqlMiddlewareModule, '@nuxt/devtools'],
   graphqlMiddleware,
   ssr: true,
+  imports: {
+    autoImport: true,
+  },
 } as any)

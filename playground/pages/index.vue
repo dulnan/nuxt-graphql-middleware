@@ -50,11 +50,24 @@
 <script setup lang="ts">
 import { useGraphqlMutation } from '#imports'
 
-const { data: users } = await useAsyncGraphqlQuery('users', null, {
+const app = useNuxtApp()
+
+const { data: users, refresh } = await useAsyncGraphqlQuery('users', null, {
   transform: (v) => v.data.users,
+  graphqlCaching: {
+    client: true,
+  },
 })
 
-function deleteUser(id: number) {
-  useGraphqlMutation('deleteUser', { id })
+function purgeCache() {
+  if (app.$graphqlCache) {
+    app.$graphqlCache.purge()
+  }
+}
+
+async function deleteUser(id: number) {
+  await useGraphqlMutation('deleteUser', { id })
+  purgeCache()
+  await refresh()
 }
 </script>

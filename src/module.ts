@@ -188,6 +188,14 @@ export interface ModuleOptions {
    * Enable Nuxt DevTools integration.
    */
   devtools?: boolean
+
+  /**
+   * Client caching configuration.
+   */
+  clientCache?: {
+    enabled?: boolean
+    maxSize?: number
+  }
 }
 
 // Nuxt needs this.
@@ -338,6 +346,11 @@ export default defineNuxtModule<ModuleOptions>({
       serverApiPrefix: options.serverApiPrefix!,
     }
 
+    nuxt.options.appConfig.graphqlMiddleware = {
+      clientCacheEnabled: !!options.clientCache?.enabled,
+      clientCacheMaxSize: options.clientCache?.maxSize || 100,
+    }
+
     nuxt.options.runtimeConfig.graphqlMiddleware = {
       graphqlEndpoint: options.graphqlEndpoint || '',
     }
@@ -478,7 +491,10 @@ declare module '#graphql-documents' {
       })
       nuxt.hook('nitro:build:before', (nitro) => {
         nuxt.hook('builder:watch', async (_event, path) => {
-          path = relative(nuxt.options.srcDir, resolve(nuxt.options.srcDir, path))
+          path = relative(
+            nuxt.options.srcDir,
+            resolve(nuxt.options.srcDir, path),
+          )
           // We only care about GraphQL files.
           if (!path.match(/\.(gql|graphql)$/)) {
             return
@@ -502,3 +518,12 @@ declare module '#graphql-documents' {
     }
   },
 })
+
+declare module 'nuxt/schema' {
+  interface AppConfig {
+    graphqlMiddleware: {
+      clientCacheEnabled: boolean
+      clientCacheMaxSize: number
+    }
+  }
+}

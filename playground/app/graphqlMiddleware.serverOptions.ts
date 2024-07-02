@@ -1,7 +1,12 @@
 import { getHeader } from 'h3'
 import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
+import type { GraphqlResponse } from '../../src/runtime/composables/shared'
 
-export default defineGraphqlServerOptions({
+type GraphqlResponseWithCustomProperty = GraphqlResponse<any> & {
+  __customProperty?: string[]
+}
+
+export default defineGraphqlServerOptions<GraphqlResponseWithCustomProperty>({
   graphqlEndpoint(event, operation, operationName) {
     if (operationName === 'simulateEndpointDown') {
       return 'http://invalid/graphql'
@@ -34,7 +39,8 @@ export default defineGraphqlServerOptions({
 
     // Return the GraphQL response as is.
     return {
-      ...graphqlResponse._data,
+      data: graphqlResponse._data?.data || null,
+      errors: graphqlResponse._data?.errors || [],
       __customProperty: ['one', 'two'],
     }
   },
