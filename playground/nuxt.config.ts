@@ -13,6 +13,7 @@ const graphqlMiddleware: ModuleOptions = {
     './layouts/**/*.graphql',
     './server/**/*.graphql',
   ],
+  autoInlineFragments: true,
   documents: [
     `
     query usersFromConfig {

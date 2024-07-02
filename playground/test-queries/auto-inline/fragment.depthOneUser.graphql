@@ -1,0 +1,6 @@
+fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}

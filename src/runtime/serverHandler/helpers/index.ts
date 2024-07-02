@@ -7,6 +7,7 @@ import type {
   GraphqlMiddlewareServerOptions,
 } from './../../../types'
 import { GraphqlMiddlewareOperation } from './../../settings'
+import { type Documents } from '#graphql-documents'
 
 // Get the variables from query parameters.
 //
@@ -87,7 +88,7 @@ export function validateRequest(
   method?: string,
   operation?: GraphqlMiddlewareOperation,
   name?: string,
-  documents?: Record<string, Record<string, string>>,
+  documents?: Documents,
 ): void {
   if (method !== 'POST' && method !== 'GET') {
     throwError('Method not allowed.', 405)
@@ -118,7 +119,7 @@ export function validateRequest(
     throwError('Failed to load GraphQL documents', 500)
   }
 
-  if (!documents[operation][name]) {
+  if (!(documents as any)[operation][name]) {
     throwError(`Operation "${operation}" with name "${name}" not found.`)
   }
 }

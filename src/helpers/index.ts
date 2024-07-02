@@ -61,104 +61,6 @@ export function inlineFragments(source: string, resolver: any): string {
   })
 }
 
-function validateDeprecated(options: any) {
-  const deprecatedKeys = [
-    'graphqlEndpoint',
-    'serverFetchOptions',
-    'onServerResponse',
-    'onServerError',
-  ]
-
-  deprecatedKeys.forEach((key) => {
-    if (typeof options[key] === 'function') {
-      logger.error(
-        `Providing a function for "${key}" via nuxt.config.ts has been removed. Please move the configuration to ~/app/graphqlMiddleware.serverOptions.ts.`,
-      )
-
-      if (key === 'graphqlEndpoint') {
-        logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
-import { getHeader } from 'h3'
-import acceptLanguageParser from 'accept-language-parser';
-
-export default defineGraphqlServerOptions({
-  graphqlEndpoint(event, operation, operationName) {
-    // Get accepted languages.
-    const acceptLanguage = getHeader('accept-language')
-    const languages = acceptLanguageParser.parse(acceptLanguage);
-
-    // Use first match or fallback to English.
-    const language = languages[0]?.code || 'en'
-    return \`https://api.example.com/\${language}/graphql\`
-  }
-})`)
-      }
-
-      if (key === 'serverFetchOptions') {
-        logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
-import { getHeader } from 'h3'
-
-// Pass the cookie from the client request to the GraphQL request.
-export default defineGraphqlServerOptions({
-  serverFetchOptions(event, operation, operationName) {
-    return {
-      headers: {
-        Cookie: getHeader(event, 'cookie')
-      }
-    }
-  }
-})`)
-      }
-
-      if (key === 'onServerResponse') {
-        logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
-import type { H3Event } from 'h3'
-import type { FetchResponse } from 'ofetch'
-
-export default defineGraphqlServerOptions({
-  onServerResponse(event, graphqlResponse) {
-    // Set a static header.
-    event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
-
-    // Pass the set-cookie header from the GraphQL response to the client.
-    const setCookie = graphqlResponse.headers.get('set-cookie')
-    if (setCookie) {
-      event.node.res.setHeader('set-cookie', setCookie)
-    }
-
-    // Add additional properties to the response.
-    graphqlResponse._data.__customProperty = ['My', 'values']
-
-    // Return the GraphQL response.
-    return graphqlResponse._data
-  }
-})`)
-      }
-
-      if (key === 'onServerError') {
-        logger.info(`
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
-import type { H3Event } from 'h3'
-import type { FetchError } from 'ofetch'
-
-export default defineGraphqlServerOptions({
-  onServerError( event, error, operation, operationName) {
-    event.setHeader('cache-control', 'no-cache')
-    return {
-      data: {},
-      errors: [error.message]
-    }
-  }
-})`)
-      }
-
-      throw new TypeError('Invalid configuration for graphqlMiddleware.' + key)
-    }
-  })
-}
-
 /**
  * Validate the module options.
  */
@@ -166,8 +68,6 @@ export function validateOptions(options: Partial<ModuleOptions>) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
   }
-
-  validateDeprecated(options)
 }
 
 /**
@@ -230,24 +130,65 @@ export async function autoImportDocuments(
   )
 }
 
-export function buildDocuments(
+function inlineNestedFragments(
+  document: string,
+  fragmentMap: Record<string, string>,
+): string {
+  const parsed = parse(document)
+  let fragmentsToInline: Set<string> = new Set()
+
+  // Collect all fragment spreads in the document
+  visit(parsed, {
+    FragmentSpread(node) {
+      fragmentsToInline.add(node.name.value)
+    },
+  })
+
+  // Inline fragments recursively
+  fragmentsToInline.forEach((fragmentName) => {
+    const fragment = fragmentMap[fragmentName]
+    if (fragment) {
+      document += '\n' + fragment
+      const nestedFragmentNames = new Set<string>()
+      visit(parse(fragment), {
+        FragmentSpread(node) {
+          nestedFragmentNames.add(node.name.value)
+        },
+      })
+      nestedFragmentNames.forEach((nestedFragmentName) => {
+        if (!fragmentsToInline.has(nestedFragmentName)) {
+          fragmentsToInline.add(nestedFragmentName)
+          const nestedFragment = fragmentMap[nestedFragmentName]
+          if (nestedFragment) {
+            document += '\n' + nestedFragment
+          }
+        }
+      })
+    }
+  })
+
+  return document
+}
+
+export async function buildDocuments(
   providedDocuments: string[] = [],
   autoImportPatterns: string[],
   resolver: Resolver['resolve'],
+  autoInlineFragments: boolean,
 ): Promise<GraphqlMiddlewareDocument[]> {
-  return autoImportDocuments(autoImportPatterns, resolver)
-    .then((importedDocuments) => {
-      return [
-        ...importedDocuments,
-        ...providedDocuments.map((content) => {
-          return {
-            content,
-            filename: 'nuxt.config.ts',
-          }
-        }),
-      ].filter((v) => v.content)
-    })
+  const documents = await autoImportDocuments(autoImportPatterns, resolver)
+    .then((importedDocuments) => [
+      ...importedDocuments,
+      ...providedDocuments.map((content) => ({
+        content,
+        filename: 'nuxt.config.ts',
+      })),
+    ])
     .then((documents) => {
+      // If auto inlining is enabled, we can skip.
+      if (autoInlineFragments) {
+        return documents
+      }
       return documents
         .map((v) => {
           try {
@@ -265,6 +206,26 @@ export function buildDocuments(
         })
         .filter(falsy)
     })
+
+  if (!autoInlineFragments) {
+    return documents
+  }
+
+  const fragmentMap: Record<string, string> = {}
+  documents.forEach((doc) => {
+    const parsed = parse(doc.content)
+    visit(parsed, {
+      FragmentDefinition(node) {
+        fragmentMap[node.name.value] = print(node)
+      },
+    })
+  })
+
+  documents.forEach((doc) => {
+    doc.content = inlineNestedFragments(doc.content, fragmentMap)
+  })
+
+  return documents
 }
 
 export function parseDocument(
@@ -311,7 +272,6 @@ export function validateDocuments(
         document.name = document.relativePath
       }
 
-      // document.name = node
       document.isValid = document.errors.length === 0
     } catch (e) {
       document.errors = [e as GraphQLError]
@@ -324,9 +284,6 @@ export function validateDocuments(
 
     validated.push(document)
 
-    // Exit from loop when an error was detected, because it might be a
-    // fragment which is used in multiple documents and would show all of
-    // them as invalid.
     if (!document.isValid) {
       break
     }
@@ -349,7 +306,6 @@ function cleanGraphqlDocument(
   const fragments: { [key: string]: FragmentDefinitionNode } = {}
   const usedFragments: Set<string> = new Set()
 
-  // Find the desired operation and gather all fragment definitions
   visit(document, {
     OperationDefinition(node) {
       if (node.name?.value === operationName) {
@@ -365,14 +321,12 @@ function cleanGraphqlDocument(
     throw new Error(`Operation named "${operationName}" not found`)
   }
 
-  // Find fragments used by the selected operation
   visit(selectedOperation, {
     FragmentSpread(node) {
       usedFragments.add(node.name.value)
     },
   })
 
-  // If a fragment uses another fragment, we need to add it to the usedFragments set
   let hasNewFragments = true
   while (hasNewFragments) {
     hasNewFragments = false
@@ -388,7 +342,6 @@ function cleanGraphqlDocument(
     }
   }
 
-  // Construct the cleaned GraphQL document
   return {
     kind: Kind.DOCUMENT,
     definitions: [
@@ -417,6 +370,7 @@ export async function generate(
     options.documents,
     options.autoImportPatterns as string[],
     resolver,
+    !!options.autoInlineFragments,
   )
 
   const validated = validateDocuments(schema, documents, srcDir)
@@ -463,16 +417,11 @@ export async function generate(
           },
         })
       } catch (e) {
-        // Parsing errors should have been caught already. Log error.
         logger.error(e)
         extracted.push(v)
         break
       }
     } else {
-      // Push the first invalid document to the array and then break from the loop.
-      // That way we can make sure that only the first occurence of an error
-      // (e.g. in a fragment) is logged, instead of potentially logging the
-      // error dozends of times.
       extracted.push(v)
       break
     }
@@ -539,7 +488,6 @@ export const fileExists = (
   if (!path) {
     return null
   } else if (existsSync(path)) {
-    // If path already contains/forces the extension
     return path
   }
 

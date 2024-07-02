@@ -22,6 +22,7 @@ type User {
   description: String
   email: String!
   firstName: String!
+  friends: [User]
   id: Int!
   lastName: String!
 }

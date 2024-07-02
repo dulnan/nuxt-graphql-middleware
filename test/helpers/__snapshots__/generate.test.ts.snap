@@ -87,6 +87,7 @@ export type User = {
   description?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   firstName: Scalars['String']['output'];
+  friends?: Maybe<Array<Maybe<User>>>;
   id: Scalars['Int']['output'];
   lastName: Scalars['String']['output'];
 };
@@ -174,7 +175,7 @@ export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean
 
 exports[`generate > Generates templates correctly for auto imported documents 3`] = `
 {
-  "content": "import {
+  "content": "import type {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
   UsersQuery,
@@ -233,6 +234,142 @@ declare module 'nitropack' {
     'undefined/mutation/addUser': GraphqlMiddlewareResponse<Awaited<AddUserMutation>>
     'undefined/mutation/triggerError': GraphqlMiddlewareResponse<Awaited<TriggerErrorMutation>>
     'undefined/mutation/deleteUser': GraphqlMiddlewareResponse<Awaited<DeleteUserMutation>>
+  }
+}
+",
+  "filename": "nuxt-graphql-middleware.d.ts",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 1`] = `
+{
+  "content": "const documents = {
+  "query": {
+    "highDepthOne": "query highDepthOne {\\n  ...depthOneQuery\\n  one: users {\\n    ...depthOneUser\\n  }\\n}\\n\\nfragment depthOneQuery on Query {\\n  one: users {\\n    ...depthOneUser\\n  }\\n}\\n\\nfragment depthOneUser on User {\\n  firstName\\n  friends {\\n    ...depthTwoUser\\n  }\\n}\\n\\nfragment depthTwoUser on User {\\n  firstName\\n}"
+  },
+  "mutation": {}
+};
+export { documents };",
+  "filename": "graphql-documents.mjs",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 2`] = `
+{
+  "content": "export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+/** All built-in and custom scalars, mapped to their actual values */
+export type Scalars = {
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createUser: User;
+  deleteUser?: Maybe<Scalars['Boolean']['output']>;
+  initState: Scalars['Boolean']['output'];
+  triggerError?: Maybe<Scalars['Boolean']['output']>;
+};
+
+
+export type MutationCreateUserArgs = {
+  user: UserData;
+};
+
+
+export type MutationDeleteUserArgs = {
+  id: Scalars['Int']['input'];
+};
+
+export type Query = {
+  __typename?: 'Query';
+  getError?: Maybe<Scalars['Boolean']['output']>;
+  testFetchOptions?: Maybe<TestFetchOptions>;
+  userById?: Maybe<User>;
+  users: Array<User>;
+};
+
+
+export type QueryUserByIdArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type TestFetchOptions = {
+  __typename?: 'TestFetchOptions';
+  headerClient?: Maybe<Scalars['String']['output']>;
+  headerServer?: Maybe<Scalars['String']['output']>;
+};
+
+export type User = {
+  __typename?: 'User';
+  dateOfBirth?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  firstName: Scalars['String']['output'];
+  friends?: Maybe<Array<Maybe<User>>>;
+  id: Scalars['Int']['output'];
+  lastName: Scalars['String']['output'];
+};
+
+export type UserData = {
+  dateOfBirth?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+};
+
+export type DepthOneUserFragment = { __typename?: 'User', firstName: string, friends?: Array<{ __typename?: 'User', firstName: string } | null> | null };
+
+export type DepthTwoUserFragment = { __typename?: 'User', firstName: string };
+
+export type HighDepthOneQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HighDepthOneQuery = { __typename?: 'Query', one: Array<{ __typename?: 'User', firstName: string, friends?: Array<{ __typename?: 'User', firstName: string } | null> | null }> };
+
+export type DepthOneQueryFragment = { __typename?: 'Query', one: Array<{ __typename?: 'User', firstName: string, friends?: Array<{ __typename?: 'User', firstName: string } | null> | null }> };
+",
+  "filename": "graphql-operations.d.ts",
+  "hooks": {},
+}
+`;
+
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 3`] = `
+{
+  "content": "import type {
+  HighDepthOneQuery
+} from './graphql-operations'
+
+
+type GraphqlMiddlewareResponse<T> = {
+  data: T
+}
+
+declare module '#build/nuxt-graphql-middleware' {
+  export type GraphqlMiddlewareQuery = {
+    highDepthOne: [null, true, HighDepthOneQuery]
+  }
+
+
+}
+
+declare module 'nitropack' {
+  type Awaited<T> = T extends PromiseLike<infer U> ? Awaited<U> : T
+  interface InternalApi {
+    'undefined/query/highDepthOne': GraphqlMiddlewareResponse<Awaited<HighDepthOneQuery>>
+
   }
 }
 ",
@@ -346,6 +483,7 @@ export type User = {
   description?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   firstName: Scalars['String']['output'];
+  friends?: Maybe<Array<Maybe<User>>>;
   id: Scalars['Int']['output'];
   lastName: Scalars['String']['output'];
 };
@@ -374,7 +512,7 @@ export type OneQuery = { __typename?: 'Query', users: Array<{ __typename?: 'User
       "hooks": {},
     },
     {
-      "content": "import {
+      "content": "import type {
   OneQuery,
   TwoMutation,
   TwoMutationVariables

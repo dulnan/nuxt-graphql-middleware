@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { vi, describe, expect, test } from 'vitest'
 import { GraphqlMiddlewareOperation } from './../../../../src/runtime/settings'
 import {
   queryParamToVariables,
@@ -6,6 +6,19 @@ import {
   validateRequest,
   getFetchOptions,
 } from './../../../../src/runtime/serverHandler/helpers'
+
+vi.mock('#graphql-documents', () => {
+  return {
+    documents: {
+      query: {
+        foobar: 'Query',
+      },
+      mutation: {
+        barfoo: 'Mutation',
+      },
+    },
+  }
+})
 
 describe('queryParamToVariables', () => {
   test('returns the JSON stringified variables if they exist', () => {

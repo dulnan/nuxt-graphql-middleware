@@ -1,0 +1,5 @@
+fragment depthOneQuery on Query {
+  one: users {
+    ...depthOneUser
+  }
+}

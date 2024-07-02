@@ -1,0 +1,6 @@
+query highDepthOne {
+  ...depthOneQuery
+  one: users {
+    ...depthOneUser
+  }
+}

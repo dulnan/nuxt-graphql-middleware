@@ -25,6 +25,7 @@ const typeDefs = `#graphql
     email: String!
     description: String
     dateOfBirth: String
+    friends: [User]
   }
 
   input UserData {
@@ -76,6 +77,11 @@ const resolvers = {
           code: 'WRONG_DATA',
         },
       })
+    },
+  },
+  User: {
+    friends: () => {
+      return []
     },
   },
   Mutation: {

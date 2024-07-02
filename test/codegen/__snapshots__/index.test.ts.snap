@@ -99,7 +99,7 @@ export type GetTextQuery = { __typename?: 'Query', getText?: string | null };
 `;
 
 exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-middleware.d.ts 1`] = `
-"import {
+"import type {
   TranslateQuery,
   TranslateQueryVariables,
   GetTextQuery,

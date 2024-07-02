@@ -121,7 +121,7 @@ export const plugin: PluginFunction<PluginConfig, string> = (
   nitroCode += '\n' + resultMutation.nitroCode
   imports.push(...resultMutation.imports)
 
-  return `import {
+  return `import type {
   ${imports.join(',\n  ')}
 } from './graphql-operations'\n
 

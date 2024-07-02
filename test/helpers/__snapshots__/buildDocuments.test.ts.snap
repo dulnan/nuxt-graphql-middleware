@@ -168,6 +168,38 @@ query users {
 }",
     "filename": "userList.graphql",
   },
+  {
+    "content": "fragment depthOneQuery on Query {
+  one: users {
+    ...depthOneUser
+  }
+}",
+    "filename": "fragment.depthOne.graphql",
+  },
+  {
+    "content": "fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}",
+    "filename": "fragment.depthOneUser.graphql",
+  },
+  {
+    "content": "fragment depthTwoUser on User {
+  firstName
+}",
+    "filename": "fragment.depthTwoUser.graphql",
+  },
+  {
+    "content": "query highDepthOne {
+  ...depthOneQuery
+  one: users {
+    ...depthOneUser
+  }
+}",
+    "filename": "query.highDepthFragments.graphql",
+  },
 ]
 `;
 

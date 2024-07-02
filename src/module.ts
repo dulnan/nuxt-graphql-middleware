@@ -56,6 +56,16 @@ export interface ModuleOptions {
   autoImportPatterns?: string[]
 
   /**
+   * Automatically inline fragments.
+   *
+   * By default, fragments have to imported using the non-standard "#import"
+   * syntax.
+   *
+   * When enabling this feature, the module will automatically inline fragments by name.
+   */
+  autoInlineFragments?: boolean
+
+  /**
    * Additional raw documents to include.
    *
    * Useful if for example you need to generate queries during build time.
@@ -408,18 +418,18 @@ export default defineNuxtModule<ModuleOptions>({
       filename: 'graphql-documents.d.ts',
       getContents: () => {
         return `
-import {
-  GraphqlMiddlerwareQuery,
+import type {
+  GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
 
 declare module '#graphql-documents' {
   type Documents = {
-    query: GraphqlMiddlerwareQuery
-    mutation: GraphqlMiddlerwareMutation
+    query: GraphqlMiddlewareQuery
+    mutation: GraphqlMiddlewareMutation
   }
   const documents: Documents
-  export { documents }
+  export { documents, Documents }
 }
 `
       },
@@ -484,7 +494,7 @@ declare module '#graphql-documents' {
     })
 
     // Watch for file changes in dev mode.
-    if (nuxt.options.dev) {
+    if (nuxt.options.dev || nuxt.options._prepare) {
       addServerHandler({
         handler: moduleResolver('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',

@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   validateRequest(method, operation, operationName, documents)
 
   // The GraphQL query document as a string.
-  const operationDocument: string = documents[operation][operationName]
+  const operationDocument: string = (documents as any)[operation][operationName]
 
   // Get the query variables or mutation input.
   const variables =

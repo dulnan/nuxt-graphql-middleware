@@ -66,6 +66,36 @@ describe('generate', () => {
     expect(c).toMatchSnapshot()
   })
 
+  test('Generates templates correctly for auto imported documents using autoInlineFragments', async () => {
+    const result = await generate(
+      {
+        graphqlEndpoint: '',
+        documents: [],
+        autoImportPatterns: ['./test-queries/auto-inline/**/*.graphql'],
+        autoInlineFragments: true,
+      },
+      schemaPath,
+      resolver,
+      srcDir,
+    )
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.documents).toHaveLength(4)
+    expect(result.templates).toHaveLength(3)
+
+    const a = result.templates.find(
+      (t) => t.filename === 'graphql-documents.mjs',
+    )
+    const b = result.templates.find(
+      (t) => t.filename === 'graphql-operations.d.ts',
+    )
+    const c = result.templates.find(
+      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+    )
+    expect(a).toMatchSnapshot()
+    expect(b).toMatchSnapshot()
+    expect(c).toMatchSnapshot()
+  })
+
   test('Generates templates correctly for provided documents', async () => {
     expect(
       await generate(
