@@ -32,6 +32,10 @@ jobs:
         env:
           PORT: 4000
 
+      - name: Install dependencies
+        run: |
+          npm ci
+
       - name: Run module-builder
         run: |
           npm run dev:prepare
@@ -47,7 +51,6 @@ jobs:
 
       - name: Run vitest
         run: |
-          npm ci
           npm run dev:build
           npm run test:ci
 
