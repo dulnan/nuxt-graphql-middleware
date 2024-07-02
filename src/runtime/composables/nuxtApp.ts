@@ -19,6 +19,12 @@ export function performRequest(
   const state = useGraphqlState()
   const app = useNuxtApp()
 
+  if (!state) {
+    console.error(
+      `A GraphQL composable for ${operation} "${operationName}" was called before the "nuxt-graphql-middleware-provide-state" plugin could provide the state, which might lead to unexpected behaviour. Make sure that custom plugins that perform GraphQL requests are executed after "nuxt-graphql-middleware-provide-state" by setting it as a dependency via "dependsOn".`,
+    )
+  }
+
   // The cache key.
   const key = `${operation}:${operationName}:${hash(options.params)}`
 

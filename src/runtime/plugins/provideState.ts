@@ -6,6 +6,9 @@ import { type GraphqlMiddlewareState } from './../../types'
  */
 export default defineNuxtPlugin({
   name: 'nuxt-graphql-middleware-provide-state',
+  // We can set a very low order to make sure this plugin runs as early as
+  // possible.
+  order: -9999,
   setup() {
     const graphqlState: GraphqlMiddlewareState = {
       fetchOptions: {},
