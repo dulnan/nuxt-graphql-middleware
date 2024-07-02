@@ -9,7 +9,7 @@ import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
 import type { AsyncData, AsyncDataOptions } from 'nuxt/app'
-import { useAsyncData } from '#imports'
+import { useAsyncData, useAppConfig } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type { GraphqlResponseError } from '#graphql-middleware/types'
@@ -66,6 +66,7 @@ export function useAsyncGraphqlQuery<
   const fetchOptions = asyncDataOptions.fetchOptions
   const key = `graphql:${name}:${hash(unref(variables))}`
 
+  const config = useAppConfig()
   const app = useNuxtApp()
 
   // If the variables are reactive, watch them.
@@ -85,11 +86,17 @@ export function useAsyncGraphqlQuery<
     !asyncDataOptions.getCachedData
   ) {
     asyncDataOptions.getCachedData = function (key) {
+      // When the app is not hydrating and the client cache is disabled, return.
+      // This is identical to the default behaviour of useAsyncData, where the
+      // payload data is only used during hydration.
+      if (!app.isHydrating && !config.graphqlMiddleware.clientCacheEnabled) {
+        return
+      }
+
+      // Try to return data from payload.
       return app.payload.data[key]
     }
   }
-
-  const cacheOptions = asyncDataOptions.graphqlCaching
 
   return useAsyncData(
     key,
@@ -102,7 +109,7 @@ export function useAsyncGraphqlQuery<
           params: buildRequestParams(unref(variables)),
           ...fetchOptions,
         },
-        cacheOptions,
+        asyncDataOptions.graphqlCaching,
       ) as any,
     asyncDataOptions,
   ) as any
