@@ -3,6 +3,8 @@ import { oldVisit } from '@graphql-codegen/plugin-helpers'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { Resolver } from '@nuxt/kit'
+import { inlineImportsWithLineToImports } from './fragment-import'
+
 // @ts-ignore
 import fragmentImport from '@graphql-fragment-import/lib/inline-imports.js'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
@@ -51,14 +53,14 @@ export const defaultOptions: ModuleOptions = {
  * Import and inline fragments in GraphQL documents.
  */
 export function inlineFragments(source: string, resolver: any): string {
-  return fragmentImport(source, {
+  return inlineImportsWithLineToImports(source, {
     resolveImport(identifier: string) {
       return resolver(identifier)
     },
     resolveOptions: {
       basedir: './',
     },
-  })
+  }).inlineImports
 }
 
 function validateDeprecated(options: any) {
