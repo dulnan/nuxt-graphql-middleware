@@ -27,6 +27,7 @@ export class GraphqlMiddlewareCache {
       // If we've reached the limit of our cache, remove the oldest entry.
       const oldestKey = this.keys.shift()
       if (oldestKey !== undefined) {
+        // eslint-disable-next-line
         delete this.cache[oldestKey]
       }
     }

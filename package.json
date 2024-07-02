@@ -46,6 +46,8 @@
     "docs:serve": "vitepress serve docs --port 5000",
     "cypress": "cypress run --e2e",
     "cypress:open": "cypress open --e2e",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
     "test": "vitest",
     "test:debug": "vitest --inspect --no-file-parallelism",
     "test:ci": "vitest run",

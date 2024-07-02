@@ -10,6 +10,8 @@ export const useGraphqlState = function (
     if (app.$graphqlState) {
       return app.$graphqlState
     }
-  } catch (_e) {}
+  } catch (_e) {
+    // Noop.
+  }
   return null
 }

@@ -209,7 +209,7 @@ export interface ModuleOptions {
 }
 
 // Nuxt needs this.
-export type ModuleHooks = {}
+export interface ModuleHooks {}
 
 const RPC_NAMESPACE = 'nuxt-graphql-middleware'
 

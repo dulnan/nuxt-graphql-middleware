@@ -14,7 +14,7 @@ export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
   operation?: string,
   operationName?: string,
-) => string | Promise<string> | void
+) => string | Promise<string> | undefined
 
 export type GraphqlMiddlewareServerFetchOptionsMethod = (
   event?: H3Event,
@@ -71,7 +71,7 @@ export type GraphqlMiddlewareDoRequestMethod<T> = (
  * Configuration options during runtime.
  */
 export type GraphqlMiddlewareServerOptions<
-  Additions extends {} = {},
+  Additions extends object = object,
   CustomResponse = GraphqlServerResponse<GraphqlMiddlewareResponseUnion> &
     Additions,
 > = {

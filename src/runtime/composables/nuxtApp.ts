@@ -10,13 +10,13 @@ type RequestCacheOptions = {
   client?: boolean
 }
 
-export function performRequest(
+export function performRequest<T>(
   operation: string,
   operationName: string,
   method: 'get' | 'post',
   options: FetchOptions,
   cacheOptions?: RequestCacheOptions,
-): Promise<GraphqlResponse<any>> {
+): Promise<GraphqlResponse<T>> {
   const state = useGraphqlState()
   const app = useNuxtApp()
 
@@ -44,7 +44,7 @@ export function performRequest(
         )
       }
 
-      const cached = app.$graphqlCache.get<Promise<GraphqlResponse<any>>>(key)
+      const cached = app.$graphqlCache.get<Promise<GraphqlResponse<T>>>(key)
 
       if (cached) {
         return cached
@@ -52,7 +52,7 @@ export function performRequest(
     }
   }
 
-  const promise = $fetch<GraphqlResponse<any>>(
+  const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     {
       ...(state && state.fetchOptions ? state.fetchOptions : {}),

@@ -49,7 +49,7 @@ export function useAsyncGraphqlQuery<
   // Arguments are optional, so the method signature makes it optional.
   ...args: VarsOptional extends true
     ? [
-        (undefined | null | {} | VarType | Ref<VarType>)?,
+        (undefined | null | Record<string, never> | VarType | Ref<VarType>)?,
         AsyncGraphqlQueryOptions<ResponseType, DefaultT, Keys, F>?,
       ]
     : [
@@ -98,10 +98,10 @@ export function useAsyncGraphqlQuery<
     }
   }
 
-  return useAsyncData(
+  return useAsyncData<GraphqlResponse<DefaultT>>(
     key,
     () =>
-      performRequest(
+      performRequest<DefaultT>(
         'query',
         name,
         'get',
@@ -110,7 +110,7 @@ export function useAsyncGraphqlQuery<
           ...fetchOptions,
         },
         asyncDataOptions.graphqlCaching,
-      ) as any,
-    asyncDataOptions,
-  ) as any
+      ),
+    asyncDataOptions as any,
+  ) as AsyncData<PickFrom<DefaultT, Keys>, GraphqlResponseError[] | null>
 }

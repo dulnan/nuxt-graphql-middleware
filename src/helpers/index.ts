@@ -134,7 +134,7 @@ function inlineNestedFragments(
   fragmentMap: Record<string, string>,
 ): string {
   const parsed = parse(document)
-  let fragmentsToInline: Set<string> = new Set()
+  const fragmentsToInline: Set<string> = new Set()
 
   // Collect all fragment spreads in the document
   visit(parsed, {
@@ -265,9 +265,6 @@ export function validateDocuments(
         document.name = operation.name?.value
         document.operation = operation.operation
       } else {
-        const fragment = node.definitions.find(
-          (v) => v.kind === 'FragmentDefinition',
-        ) as FragmentDefinitionNode
         document.name = document.relativePath
       }
 

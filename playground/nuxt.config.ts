@@ -37,7 +37,7 @@ const graphqlMiddleware: ModuleOptions = {
 }
 
 export default defineNuxtConfig({
-  modules: [graphqlMiddlewareModule, '@nuxt/devtools'],
+  modules: [graphqlMiddlewareModule, '@nuxt/devtools', '@nuxt/eslint'],
   graphqlMiddleware,
   ssr: true,
   imports: {

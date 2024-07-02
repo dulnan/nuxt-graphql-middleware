@@ -25,17 +25,24 @@ interface LineWithInlinedImports {
   filename?: string
 }
 
-function *linesWithInlinedImportsOf(
+function* linesWithInlinedImportsOf(
   fileContents: string,
   inlineImportsOptions: InlineImportsOptions,
   visited: Set<string>,
 ): Generator<LineWithInlinedImports> {
-  const { resolveOptions = {}, resolveImport, fs: nodeFs = fs, throwIfImportNotFound } = inlineImportsOptions
+  const {
+    resolveOptions = {},
+    resolveImport,
+    fs: nodeFs = fs,
+    throwIfImportNotFound,
+  } = inlineImportsOptions
 
   const { basedir } = resolveOptions
 
   if (typeof basedir !== 'string') {
-    throw new TypeError('inlineImports requires options.resolverOptions.basedir be set')
+    throw new TypeError(
+      'inlineImports requires options.resolverOptions.basedir be set',
+    )
   }
 
   if (!resolveImport) {
@@ -69,7 +76,9 @@ function *linesWithInlinedImportsOf(
 
       const fragmentSource = nodeFs.readFileSync(filename, 'utf8')
 
-      const line = inlineImportsWithLineToImports(fragmentSource, {
+      const line = inlineImportsWithLineToImports(
+        fragmentSource,
+        {
           resolveImport,
           resolveOptions: {
             basedir: dirname(filename),
@@ -95,9 +104,16 @@ export function inlineImportsWithLineToImports(
   visited = new Set<string>(),
 ) {
   const inlineImportsResult = []
-  const lineToImports = new Map<number, { filename: string | undefined; line: string }>()
+  const lineToImports = new Map<
+    number,
+    { filename: string | undefined; line: string }
+  >()
 
-  for (const { line, match, lineNumber, filename } of linesWithInlinedImportsOf(fileContents, options, visited)) {
+  for (const { line, match, lineNumber, filename } of linesWithInlinedImportsOf(
+    fileContents,
+    options,
+    visited,
+  )) {
     inlineImportsResult.push(line)
 
     // We're only interested in the inlined import lines, ignore any non-matching lines
@@ -116,4 +132,5 @@ export const inlineImports = (
   fileContents: string,
   options: InlineImportsOptions,
   visited = new Set<string>(),
-) => inlineImportsWithLineToImports(fileContents, options, visited).inlineImports
+) =>
+  inlineImportsWithLineToImports(fileContents, options, visited).inlineImports

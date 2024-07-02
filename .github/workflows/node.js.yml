@@ -41,6 +41,10 @@ jobs:
         run: |
           npm run typecheck
 
+      - name: ESLint
+        run: |
+          npm run lint
+
       - name: Run vitest
         run: |
           npm ci

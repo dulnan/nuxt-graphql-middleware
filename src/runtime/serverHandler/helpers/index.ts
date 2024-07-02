@@ -21,7 +21,9 @@ export function queryParamToVariables(query: QueryObject) {
     if (query.__variables && typeof query.__variables === 'string') {
       return JSON.parse(query.__variables)
     }
-  } catch (_e) {}
+  } catch (_e) {
+    // Noop.
+  }
 
   return query
 }

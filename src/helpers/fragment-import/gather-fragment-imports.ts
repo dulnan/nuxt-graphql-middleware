@@ -1,4 +1,4 @@
-import {  dirname  } from 'pathe'
+import { dirname } from 'pathe'
 import type { InlineImportsOptions } from './inline-imports'
 import { inlineImportsWithLineToImports } from './inline-imports'
 
@@ -34,8 +34,16 @@ interface GatherFragmentImportsOptions extends InlineImportsOptions {
  * }
  *
  */
-export function gatherFragmentImports(gatherFragmentImportsOptions: GatherFragmentImportsOptions): Map<number, Map<string, object>> {
-  const { source, sourceLocation, resolveImport, fragmentParserGenerator, throwIfImportNotFound } = gatherFragmentImportsOptions
+export function gatherFragmentImports(
+  gatherFragmentImportsOptions: GatherFragmentImportsOptions,
+): Map<number, Map<string, object>> {
+  const {
+    source,
+    sourceLocation,
+    resolveImport,
+    fragmentParserGenerator,
+    throwIfImportNotFound,
+  } = gatherFragmentImportsOptions
 
   /**
    * {
@@ -55,8 +63,12 @@ export function gatherFragmentImports(gatherFragmentImportsOptions: GatherFragme
     throwIfImportNotFound,
   }).lineToImports
 
-  for (const [lineNumber, { filename, line: source }] of importLinesToInlinedSource) {
-    const fragmentDefinitionsBucket = lineToFragmentDefinitions.get(lineNumber) || new Map()
+  for (const [
+    lineNumber,
+    { filename, line: source },
+  ] of importLinesToInlinedSource) {
+    const fragmentDefinitionsBucket =
+      lineToFragmentDefinitions.get(lineNumber) || new Map()
     for (const fragment of fragmentParserGenerator(source)) {
       // Augment the FragmentDefinition by adding the resolved file path inside .loc.filename
       fragment.loc.filename = filename
