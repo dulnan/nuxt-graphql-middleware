@@ -48,19 +48,13 @@
 </template>
 
 <script setup lang="ts">
-import { useAsyncData } from 'nuxt/app'
+import { useGraphqlMutation } from '#imports'
 
-const { data: users, refresh } = await useAsyncData('users', () =>
-  useGraphqlQuery('users')
-    .then((v) => {
-      return v.data.users
-    })
-    .catch((e) => {
-      console.log(e)
-    }),
-)
+const { data: users } = await useAsyncGraphqlQuery('users', null, {
+  transform: (v) => v.data.users,
+})
 
 function deleteUser(id: number) {
-  useGraphqlMutation('deleteUser', { id }).then(() => refresh())
+  useGraphqlMutation('deleteUser', { id })
 }
 </script>

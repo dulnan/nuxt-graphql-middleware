@@ -16,18 +16,22 @@
 </template>
 
 <script setup lang="ts">
+import type { UserByIdQueryVariables } from '#build/graphql-operations'
 import { computed } from 'vue'
 
 const route = useRoute()
-const id = route.params.id
 
-const { data: user } = await useAsyncData(id.toString(), () => {
-  if (!id || typeof id !== 'string') {
-    throw createError({ statusCode: 404, message: 'User not found' })
+const variables = computed<UserByIdQueryVariables>(() => {
+  const id = route.params.id.toString()
+  return {
+    id,
   }
-  return useGraphqlQuery('userById', { id }).then((v) => {
+})
+
+const { data: user } = await useAsyncGraphqlQuery('userById', variables, {
+  transform: function (v) {
     return v.data.userById
-  })
+  },
 })
 
 const title = computed(() => {

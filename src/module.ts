@@ -355,6 +355,10 @@ export default defineNuxtModule<ModuleOptions>({
         from: moduleResolver('./runtime/composables/useGraphqlState'),
         name: 'useGraphqlState',
       })
+      addImports({
+        from: moduleResolver('./runtime/composables/useAsyncGraphqlQuery'),
+        name: 'useAsyncGraphqlQuery',
+      })
       nuxt.options.alias['#graphql-composable'] = moduleResolver(
         'runtime/composables/server',
       )

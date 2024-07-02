@@ -2,7 +2,8 @@
 
 # Nuxt GraphQL Middleware
 
-Expose GraphQL queries and mutations as fully typed API routes.
+Keep your GraphQL server private: Expose GraphQL queries and mutations as fully
+typed API routes.
 
 **[Documentation](https://nuxt-graphql-middleware.dulnan.net)** –
 **[npm](https://www.npmjs.com/package/nuxt-graphql-middleware)** –
@@ -60,6 +61,13 @@ Your query is now available via the useGraphqlQuery() composable:
 ```typescript
 const { data } = await useGraphqlQuery('films')
 console.log(data.allFilms.films)
+```
+
+Or using the convenience wrapper for useAsyncData:
+
+```typescript
+const { data } = await useAsyncGraphqlQuery('films')
+console.log(data.value.allFilms.films)
 ```
 
 Alternatively you can also call

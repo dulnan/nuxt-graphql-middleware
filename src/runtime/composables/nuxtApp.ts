@@ -7,7 +7,7 @@ export function performRequest(
   operationName: string,
   method: 'get' | 'post',
   options: FetchOptions,
-) {
+): Promise<GraphqlResponse<any>> {
   const state = useGraphqlState()
   return $fetch<GraphqlResponse<any>>(getEndpoint(operation, operationName), {
     ...(state && state.fetchOptions ? state.fetchOptions : {}),

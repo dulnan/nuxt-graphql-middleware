@@ -13,7 +13,7 @@ export default defineNuxtPlugin(() => {
   state.fetchOptions = {
     onRequest({ request, options }) {
       // Log request
-      console.log('[fetch request]', request, options)
+      console.log('[fetch request]', request)
 
       // Add `?t=1640125211170` to query params
       if (!options.params) {
