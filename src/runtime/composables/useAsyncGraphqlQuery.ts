@@ -8,11 +8,11 @@ import { type Ref, isRef, unref } from 'vue'
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
-import type { AsyncData, AsyncDataOptions } from 'nuxt/app'
-import { useAsyncData, useAppConfig } from '#imports'
+import { useAsyncData, useAppConfig, useNuxtApp } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type { GraphqlResponseError } from '#graphql-middleware/types'
+import type { AsyncData, AsyncDataOptions } from '#app'
 
 type AsyncGraphqlQueryOptions<
   ResponseType,

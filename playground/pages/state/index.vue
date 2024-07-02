@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFetch } from 'nuxt/app'
+import { useGraphqlState, useState } from '#imports'
 
 const state = useGraphqlState() as any
 

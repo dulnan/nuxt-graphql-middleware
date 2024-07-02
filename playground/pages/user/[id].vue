@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import type { UserByIdQueryVariables } from '#build/graphql-operations'
 import { computed } from 'vue'
+import { useRoute, useAsyncGraphqlQuery } from '#imports'
 
 const route = useRoute()
 

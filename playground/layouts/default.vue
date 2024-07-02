@@ -47,6 +47,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useGraphqlMutation } from '#imports'
+
 function initState() {
   return useGraphqlMutation('initState')
 }

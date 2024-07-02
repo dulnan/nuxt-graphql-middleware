@@ -1,5 +1,6 @@
 import { getHeader } from 'h3'
 import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
+import { createError } from '#imports'
 
 type Cacheability = {
   cacheTags: string[]

@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { useGraphqlMutation } from '#imports'
+import { useGraphqlMutation, useNuxtApp, useAsyncGraphqlQuery } from '#imports'
 
 const app = useNuxtApp()
 

@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFetch } from 'nuxt/app'
+import { useFetch } from '#imports'
 
 const { data: emails } = await useFetch('/api/server-route')
 </script>

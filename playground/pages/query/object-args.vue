@@ -10,6 +10,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useGraphqlQuery } from '#imports'
+
 const one = await useGraphqlQuery('userById', { id: '5' })
 const two = await useGraphqlQuery({ name: 'userById', variables: { id: '5' } })
 </script>

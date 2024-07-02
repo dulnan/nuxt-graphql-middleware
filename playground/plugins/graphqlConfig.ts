@@ -1,5 +1,4 @@
-import { defineNuxtPlugin } from 'nuxt/app'
-import { useGraphqlState } from '../.nuxt/imports'
+import { useGraphqlState, defineNuxtPlugin } from '#imports'
 
 /**
  * This is only called when performing a query or mutation from within the nuxt

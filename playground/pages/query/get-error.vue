@@ -11,6 +11,7 @@
 </template>
 
 <script lang="ts" setup>
+import { useGraphqlQuery } from '#imports'
 const { data, errors } = await useGraphqlQuery('getError')
 
 console.log(errors)

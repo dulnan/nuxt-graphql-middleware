@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAsyncData, useGraphqlQuery, useFetch } from '#imports'
+
 const { data: fetchOptions } = await useAsyncData('fetchOptions', () => {
   return useGraphqlQuery('fetchOptions').then((v) => {
     return v.data.testFetchOptions

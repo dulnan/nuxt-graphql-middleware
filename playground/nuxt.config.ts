@@ -41,6 +41,6 @@ export default defineNuxtConfig({
   graphqlMiddleware,
   ssr: true,
   imports: {
-    autoImport: true,
+    autoImport: false,
   },
 } as any)

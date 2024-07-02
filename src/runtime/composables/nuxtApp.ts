@@ -4,6 +4,7 @@ import { getEndpoint } from './shared'
 import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import { useNuxtApp, useAppConfig } from '#imports'
 
 type RequestCacheOptions = {
   client?: boolean

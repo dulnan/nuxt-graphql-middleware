@@ -5,6 +5,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useAsyncData, useGraphqlQuery } from '#imports'
+
 const result = await useAsyncData(async () => {
   // @ts-ignore
   return await useGraphqlQuery('invalidquery')
