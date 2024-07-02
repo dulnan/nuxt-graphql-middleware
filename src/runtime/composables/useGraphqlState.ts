@@ -1,5 +1,5 @@
 import { useNuxtApp } from '#imports'
-import { type NuxtApp } from '#app'
+import type { NuxtApp } from '#app'
 import { type GraphqlMiddlewareState } from './../../types'
 
 export const useGraphqlState = function (

@@ -27,11 +27,6 @@ vi.mock('#imports', () => {
         },
       }
     },
-  }
-})
-
-vi.mock('#app', () => {
-  return {
     useNuxtApp: () => {
       return {
         $graphqlState: {
