@@ -1,7 +1,5 @@
 import {
   type GraphqlMiddlewareQueryName,
-  type GraphqlResponse,
-  type GraphqlResponseError,
   type KeysOf,
   type PickFrom,
 } from './shared'
@@ -13,6 +11,8 @@ import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
 import type { AsyncData, AsyncDataOptions } from 'nuxt/app'
 import { useAsyncData } from '#imports'
 import { hash } from 'ohash'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlResponseError } from '#graphql-middleware/types'
 
 type AsyncGraphqlQueryOptions<
   ResponseType,

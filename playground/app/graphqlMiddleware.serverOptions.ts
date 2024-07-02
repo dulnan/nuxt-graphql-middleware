@@ -1,12 +1,9 @@
 import { getHeader } from 'h3'
 import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
-import type { GraphqlResponse } from '../../src/runtime/composables/shared'
 
-type GraphqlResponseWithCustomProperty = GraphqlResponse<any> & {
+export default defineGraphqlServerOptions<{
   __customProperty?: string[]
-}
-
-export default defineGraphqlServerOptions<GraphqlResponseWithCustomProperty>({
+}>({
   graphqlEndpoint(event, operation, operationName) {
     if (operationName === 'simulateEndpointDown') {
       return 'http://invalid/graphql'

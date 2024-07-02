@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
-import type { GraphqlResponse } from './runtime/composables/shared'
+import type { GraphqlServerResponse } from '#graphql-middleware/types'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
   event?: H3Event,
@@ -56,14 +56,17 @@ export type GraphqlMiddlewareDoRequestMethodContext = {
   variables: Record<string, any>
 }
 
-export type GraphqlMiddlewareDoRequestMethod = (
+export type GraphqlMiddlewareDoRequestMethod<T> = (
   context: GraphqlMiddlewareDoRequestMethodContext,
-) => Promise<{ data: any; errors?: any[] }>
+) => Promise<T>
 
 /**
  * Configuration options during runtime.
  */
-export type GraphqlMiddlewareServerOptions<T = GraphqlResponse<any>> = {
+export type GraphqlMiddlewareServerOptions<
+  T extends {} = {},
+  R = GraphqlServerResponse<any> & T,
+> = {
   /**
    * Custom callback to return the GraphQL endpoint per request.
    *
@@ -134,7 +137,7 @@ export type GraphqlMiddlewareServerOptions<T = GraphqlResponse<any>> = {
    * }
    * ```
    */
-  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<T>
+  onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<R>
 
   /**
    * Handle a fetch error from the GraphQL request.
@@ -204,7 +207,7 @@ export type GraphqlMiddlewareServerOptions<T = GraphqlResponse<any>> = {
    * }
    * ```
    */
-  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod
+  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<R>
 }
 
 export interface GraphqlMiddlewareState {

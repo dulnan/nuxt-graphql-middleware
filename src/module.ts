@@ -450,19 +450,27 @@ declare module '#graphql-documents' {
 
       const maybeUserFile = fileExists(resolvedPath, extensions)
 
-      if (maybeUserFile) {
-        return addTemplate({
-          filename: resolvedFilename,
-          write: true,
-          getContents: () => `export { default } from '${resolvedPath}'`,
-        })
-      }
+      const moduleTypesPath = moduleResolver('./types')
 
-      // Else provide `undefined` fallback
+      const serverOptionsLine = maybeUserFile
+        ? `import serverOptions from '${resolvedPath}'`
+        : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
+
       return addTemplate({
         filename: resolvedFilename,
         write: true,
-        getContents: () => 'export default {}',
+        getContents: () => `
+import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
+${serverOptionsLine}
+import type { GraphqlServerResponse } from '#graphql-middleware/types'
+
+type GraphqlResponseAdditions =
+  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R> ? R : {}
+
+export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
+
+export { serverOptions }
+`,
       })
     })()
 
@@ -472,6 +480,9 @@ declare module '#graphql-documents' {
     nuxt.options.nitro.externals.inline.push(template.dst)
     nuxt.options.alias['#graphql-middleware-server-options-build'] =
       template.dst
+
+    nuxt.options.alias['#graphql-middleware/types'] =
+      moduleResolver('./runtime/types')
 
     // Add the server API handler.
     addServerHandler({

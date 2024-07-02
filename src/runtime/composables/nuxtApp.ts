@@ -1,8 +1,9 @@
 import type { FetchOptions } from 'ofetch'
 import { useGraphqlState } from './useGraphqlState'
-import { type GraphqlResponse, getEndpoint } from './shared'
+import { getEndpoint } from './shared'
 import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
 type RequestCacheOptions = {
   client?: boolean

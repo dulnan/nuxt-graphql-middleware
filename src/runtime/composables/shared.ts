@@ -1,6 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 import { useRuntimeConfig } from '#imports'
-
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
@@ -31,23 +31,6 @@ export type GetMutationArgs<
   : M[T][1] extends false
     ? [T, M[T][0]]
     : [T, M[T][0]?]
-
-export type GraphqlResponseErrorLocation = {
-  line: number
-  column: number
-}
-
-export type GraphqlResponseError = {
-  message: string
-  locations: GraphqlResponseErrorLocation[]
-  path: string[]
-}
-
-// Type for the query or mutation responses.
-export type GraphqlResponse<T> = {
-  data: T
-  errors: GraphqlResponseError[]
-}
 
 // Determine the query result.
 export type GetQueryResult<

@@ -1,6 +1,6 @@
 import type { FetchOptions } from 'ofetch'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import {
-  type GraphqlResponse,
   getEndpoint,
   type GraphqlMiddlewareQueryName,
   type GetQueryArgs,
