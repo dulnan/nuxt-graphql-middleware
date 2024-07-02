@@ -4,9 +4,6 @@ import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { Resolver } from '@nuxt/kit'
 import { inlineImportsWithLineToImports } from './fragment-import'
-
-// @ts-ignore
-import fragmentImport from '@graphql-fragment-import/lib/inline-imports.js'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import { loadSchema } from '@graphql-tools/load'
 import Table from 'cli-table'
