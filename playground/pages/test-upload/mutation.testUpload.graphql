@@ -1,6 +1,3 @@
-mutation testUpload($id: String!, $file: Upload!) {
-  uploadFile(id: $id, file: $file) {
-    id
-    filename
-  }
+mutation testUpload($file: Upload!) {
+  uploadFile(file: $file)
 }

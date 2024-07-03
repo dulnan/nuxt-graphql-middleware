@@ -1,23 +1,17 @@
 <template>
-  <div>
+  <form @submit.prevent="upload">
     <h1>Test File Uploads</h1>
-    <input type="file" @change="onChange" />
-    <button @click.prevent="upload">UPLOAD</button>
+    <input type="file" id="file-single" name="file" />
+    <input type="submit" id="file-single-upload" value="Upload" />
     <hr />
-
-    <h1>Test Multiple File Uploads</h1>
-    <input type="file" @change="onChangeMultiple" multiple />
-    <button @click.prevent="uploadMultiple">UPLOAD MULTIPLE</button>
-    <hr />
-  </div>
+    <div id="upload-success">{{ isSuccess }}</div>
+  </form>
 </template>
 
 <script lang="ts" setup>
 import { ref, useGraphqlUploadMutation } from '#imports'
 
-const file = ref<File | null>(null)
-
-const files = ref<File[]>([])
+const isSuccess = ref(false)
 
 function onChange(e: Event) {
   if (e.target instanceof HTMLInputElement && e.target.files) {
@@ -26,27 +20,17 @@ function onChange(e: Event) {
   }
 }
 
-async function upload() {
-  const data = await useGraphqlUploadMutation('testUpload', {
-    id: 'test',
-    file: file.value,
-  })
-}
-
-function onChangeMultiple(e: Event) {
-  if (e.target instanceof HTMLInputElement && e.target.files) {
-    files.value = [...e.target.files]
+async function upload(e: SubmitEvent) {
+  if (!(e.target instanceof HTMLFormElement)) {
+    return
   }
-}
+  const formData = new FormData(e.target)
+  const file = formData.get('file')
 
-async function uploadMultiple() {
-  const data = await useGraphqlUploadMutation('testFormSubmit', {
-    elements: files.value.map((file) => {
-      return {
-        name: file.name,
-        file: file,
-      }
-    }),
+  const data = await useGraphqlUploadMutation('testUpload', {
+    file,
   })
+
+  isSuccess.value = data.data.uploadFile
 }
 </script>

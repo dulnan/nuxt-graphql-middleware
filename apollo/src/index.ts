@@ -6,9 +6,11 @@ import http from 'http'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs'
-import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs'
+import GraphQLUpload, { FileUpload } from 'graphql-upload/GraphQLUpload.mjs'
 import { GraphQLError } from 'graphql'
 import data from './data.json' assert { type: 'json' }
+import type { Readable } from 'stream'
+import { v4 as uuidv4 } from 'uuid'
 
 const BASIC_LOGGING: any = {
   requestDidStart(requestContext) {
@@ -31,10 +33,28 @@ const BASIC_LOGGING: any = {
   },
 }
 
+type UploadedFile = {
+  id: string
+  name: string
+  content: string
+}
+
+type FormSubmissionDocument = {
+  name: string
+  file: UploadedFile
+}
+
+type FormSubmission = {
+  id: string
+  firstName: string
+  lastName: string
+  documents: FormSubmissionDocument[]
+}
+
 let users = []
 let idIncrement = 0
-let files = []
-let formSubmissions = []
+let files: UploadedFile[] = []
+let formSubmissions: FormSubmission[] = []
 
 function initState() {
   users = [...data]
@@ -80,6 +100,25 @@ const typeDefs = `#graphql
     userById(id: ID!): User
     testFetchOptions: TestFetchOptions
     getError: Boolean
+    getSubmissions: [FormSubmission]
+  }
+
+  type UploadedFile {
+    id: String!
+    name: String!
+    content: String!
+  }
+
+  type FormSubmissionDocument {
+    name: String
+    file: UploadedFile!
+  }
+
+  type FormSubmission {
+    id: String!
+    firstName: String
+    lastName: String
+    documents: [FormSubmissionDocument]
   }
 
   type Mutation {
@@ -87,25 +126,38 @@ const typeDefs = `#graphql
     deleteUser(id: Int!): Boolean
     initState: Boolean!
     triggerError: Boolean
-    uploadFile(id: String!, file: Upload!): File!
-    submitForm(elements: [FormElement]): Boolean!
+    uploadFile(file: Upload): Boolean!
+    submitForm(input: FormSubmissionInput!): Boolean!
   }
 
-  input FormElement {
+  input FormSubmissionDocumentsInput {
     name: String
     file: Upload!
   }
 
-  type File {
-    id: String!
-    filename: String!
+  input FormSubmissionInput {
+    firstName: String
+    lastName: String
+    documents: [FormSubmissionDocumentsInput]
   }
 `
+
+function streamToString(stream: Readable): Promise<string> {
+  const chunks = []
+  return new Promise((resolve, reject) => {
+    stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)))
+    stream.on('error', (err) => reject(err))
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+  })
+}
 
 const resolvers = {
   Query: {
     users: () => {
       return users
+    },
+    getSubmissions: () => {
+      return formSubmissions
     },
     userById: (_: any, args: any) => {
       const id = parseInt(args.id)
@@ -153,26 +205,43 @@ const resolvers = {
       })
     },
 
-    uploadFile: async (_, { id, file }) => {
+    uploadFile: async (_, { file }) => {
       const { filename, createReadStream } = await file
       console.log(`Uploading ${filename}...`)
       const stream = createReadStream()
-      // Promisify the stream and store the file, then…
-      const newImage = { id, filename }
-      files.push(newImage)
-      return newImage
+      const content = await streamToString(stream)
+      files.push({ id: uuidv4(), name: filename, content })
+      return true
     },
 
-    submitForm: async (_, { elements }) => {
-      for (let i = 0; i < elements.length; i++) {
-        const element = elements[i]
-        const file = element.file
+    submitForm: async (_, { input }) => {
+      const firstName = input.firstName
+      const lastName = input.lastName
+      const documents: FormSubmissionDocument[] = []
+
+      for (let i = 0; i < input.documents.length; i++) {
+        const doc = input.documents[i]
+        const file: FileUpload = doc.file
+        const name = doc.name
         const { filename, createReadStream } = await file
-        console.log(`Uploading ${filename}...`)
         const stream = createReadStream()
-        // Promisify the stream and store the file, then…
-        formSubmissions.push({ name: element.name })
+        const content = await streamToString(stream)
+
+        documents.push({
+          name,
+          file: {
+            id: uuidv4(),
+            name: filename,
+            content,
+          },
+        })
       }
+      formSubmissions.push({
+        id: uuidv4(),
+        firstName,
+        lastName,
+        documents,
+      })
 
       return true
     },

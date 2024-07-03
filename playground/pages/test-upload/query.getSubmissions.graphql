@@ -1,0 +1,19 @@
+query getSubmissions {
+  getSubmissions {
+    ...formSubmission
+  }
+}
+
+fragment formSubmission on FormSubmission {
+  id
+  firstName
+  lastName
+  documents {
+    name
+    file {
+      name
+      id
+      content
+    }
+  }
+}

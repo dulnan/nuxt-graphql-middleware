@@ -3,27 +3,41 @@ Indicates exactly one field must be supplied and this field must not be `null`.
 """
 directive @oneOf on INPUT_OBJECT
 
-type File {
-  filename: String!
+type FormSubmission {
+  documents: [FormSubmissionDocument]
+  firstName: String
   id: String!
+  lastName: String
 }
 
-input FormElement {
+type FormSubmissionDocument {
+  file: UploadedFile!
+  name: String
+}
+
+input FormSubmissionDocumentsInput {
   file: Upload!
   name: String
+}
+
+input FormSubmissionInput {
+  documents: [FormSubmissionDocumentsInput]
+  firstName: String
+  lastName: String
 }
 
 type Mutation {
   createUser(user: UserData!): User!
   deleteUser(id: Int!): Boolean
   initState: Boolean!
-  submitForm(elements: [FormElement]): Boolean!
+  submitForm(input: FormSubmissionInput!): Boolean!
   triggerError: Boolean
-  uploadFile(file: Upload!, id: String!): File!
+  uploadFile(file: Upload!): Boolean!
 }
 
 type Query {
   getError: Boolean
+  getSubmissions: [FormSubmission]
   testFetchOptions: TestFetchOptions
   userById(id: ID!): User
   users: [User!]!
@@ -36,6 +50,12 @@ type TestFetchOptions {
 
 """The `Upload` scalar type represents a file upload."""
 scalar Upload
+
+type UploadedFile {
+  content: String!
+  id: String!
+  name: String!
+}
 
 type User {
   dateOfBirth: String
