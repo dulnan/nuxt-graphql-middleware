@@ -7,15 +7,19 @@ import {
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
 /**
  * Performs a GraphQL query.
  */
-export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
+export function useGraphqlQuery<
+  T extends GraphqlMiddlewareQueryName,
+  R extends GetQueryResult<T, GraphqlMiddlewareQuery>,
+>(
   ...args:
     | GetQueryArgs<T, GraphqlMiddlewareQuery>
     | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
-): Promise<GetQueryResult<T, GraphqlMiddlewareQuery>> {
+): Promise<GraphqlResponse<R>> {
   const [name, variables, fetchOptions = {}, graphqlCaching = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1], args[2]?.fetchOptions, args[2]?.graphqlCaching]
@@ -26,7 +30,7 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
           args[0].graphqlCaching,
         ]
 
-  return performRequest(
+  return performRequest<R>(
     'query',
     name,
     'get',
@@ -35,5 +39,5 @@ export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
       ...fetchOptions,
     },
     graphqlCaching,
-  ) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
+  )
 }

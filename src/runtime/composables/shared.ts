@@ -42,13 +42,13 @@ export type GetMutationArgs<
 export type GetQueryResult<
   T extends GraphqlMiddlewareQueryName,
   M extends GraphqlMiddlewareQuery,
-> = M[T] extends undefined ? undefined : GraphqlResponse<M[T][2]>
+> = M[T] extends undefined ? undefined : M[T][2]
 
 // Determine the query result.
 export type GetMutationResult<
   T extends GraphqlMiddlewareMutationName,
   M extends GraphqlMiddlewareMutation,
-> = M[T] extends undefined ? undefined : GraphqlResponse<M[T][2]>
+> = M[T] extends undefined ? undefined : M[T][2]
 
 export function getEndpoint(operation: string, operationName: string): string {
   const config = useRuntimeConfig()

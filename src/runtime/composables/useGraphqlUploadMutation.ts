@@ -7,6 +7,7 @@ import {
 } from './shared'
 import type { GraphqlMiddlewareMutation } from '#build/nuxt-graphql-middleware'
 import { useGraphqlState } from '#imports'
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
 /**
  * Builds the form data.
@@ -56,11 +57,12 @@ function createFormData(variables: Record<string, any>): FormData {
  */
 export function useGraphqlUploadMutation<
   T extends GraphqlMiddlewareMutationName,
+  R extends GetMutationResult<T, GraphqlMiddlewareMutation>,
 >(
   ...args:
     | GetMutationArgs<T, GraphqlMiddlewareMutation>
     | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
-): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
+): Promise<GraphqlResponse<R>> {
   const [name, variables, fetchOptions = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1]]
@@ -76,15 +78,12 @@ export function useGraphqlUploadMutation<
 
   const formData = createFormData(variables)
 
-  return $fetch<GetMutationResult<T, GraphqlMiddlewareMutation>>(
-    getEndpoint('upload', name),
-    {
-      ...(state && state.fetchOptions ? state.fetchOptions : {}),
-      ...(fetchOptions || {}),
-      method: 'POST',
-      body: formData,
-    },
-  ).then((v) => {
+  return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {
+    ...(state && state.fetchOptions ? state.fetchOptions : {}),
+    ...(fetchOptions || {}),
+    method: 'POST',
+    body: formData,
+  }).then((v) => {
     return {
       ...v,
       data: v?.data,

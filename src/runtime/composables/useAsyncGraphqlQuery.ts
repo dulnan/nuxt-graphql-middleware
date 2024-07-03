@@ -11,11 +11,8 @@ import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
 import { useAsyncData, useAppConfig, useNuxtApp } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
-import type {
-  GraphqlResponseError,
-  RequestCacheOptions,
-} from '#graphql-middleware/types'
-import type { AsyncData, AsyncDataOptions } from '#app'
+import type { RequestCacheOptions } from '#graphql-middleware/types'
+import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
 
 type AsyncGraphqlQueryOptions<
   ResponseType,
@@ -61,7 +58,10 @@ export function useAsyncGraphqlQuery<
           | AsyncGraphqlQueryOptions<ResponseType, DefaultT, Keys, F>
         )?,
       ]
-): AsyncData<PickFrom<DefaultT, Keys>, GraphqlResponseError[] | null> {
+): AsyncData<
+  PickFrom<DefaultT, KeysOf<DefaultT>> | null,
+  NuxtError<unknown> | null
+> {
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
   const fetchOptions = asyncDataOptions.fetchOptions
@@ -100,10 +100,10 @@ export function useAsyncGraphqlQuery<
     }
   }
 
-  return useAsyncData<GraphqlResponse<DefaultT>>(
+  return useAsyncData<GraphqlResponse<ResponseType>, unknown, DefaultT>(
     key,
     () =>
-      performRequest<DefaultT>(
+      performRequest<ResponseType>(
         'query',
         name,
         'get',
@@ -114,5 +114,5 @@ export function useAsyncGraphqlQuery<
         asyncDataOptions.graphqlCaching,
       ),
     asyncDataOptions as any,
-  ) as AsyncData<PickFrom<DefaultT, Keys>, GraphqlResponseError[] | null>
+  )
 }

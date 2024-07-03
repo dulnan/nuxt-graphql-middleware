@@ -17,13 +17,13 @@ import type {
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
 
-function performRequest(
+function performRequest<T>(
   operation: string,
   operationName: string,
   method: 'get' | 'post',
   options: FetchOptions,
-) {
-  return $fetch<GraphqlResponse<any>>(getEndpoint(operation, operationName), {
+): Promise<GraphqlResponse<T>> {
+  return $fetch<GraphqlResponse<T>>(getEndpoint(operation, operationName), {
     ...options,
     method,
   }).then((v) => {
@@ -37,37 +37,43 @@ function performRequest(
 /**
  * Performs a GraphQL query.
  */
-export function useGraphqlQuery<T extends GraphqlMiddlewareQueryName>(
+export function useGraphqlQuery<
+  T extends GraphqlMiddlewareQueryName,
+  R extends GetQueryResult<T, GraphqlMiddlewareQuery>,
+>(
   ...args:
     | GetQueryArgs<T, GraphqlMiddlewareQuery>
     | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
-): Promise<GetQueryResult<T, GraphqlMiddlewareQuery>> {
+): Promise<GraphqlResponse<R>> {
   const [name, variables, fetchOptions = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1]]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
-  return performRequest('query', name, 'get', {
+  return performRequest<R>('query', name, 'get', {
     params: buildRequestParams(variables),
     ...fetchOptions,
-  }) as Promise<GetQueryResult<T, GraphqlMiddlewareQuery>>
+  })
 }
 
 /**
  * Performs a GraphQL mutation.
  */
-export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
+export function useGraphqlMutation<
+  T extends GraphqlMiddlewareMutationName,
+  R extends GetMutationResult<T, GraphqlMiddlewareMutation>,
+>(
   ...args:
     | GetMutationArgs<T, GraphqlMiddlewareMutation>
     | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
-): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
+): Promise<GraphqlResponse<R>> {
   const [name, body, fetchOptions = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1]]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
-  return performRequest('mutation', name, 'post', {
+  return performRequest<R>('mutation', name, 'post', {
     body,
     ...fetchOptions,
-  }) as Promise<GetMutationResult<T, GraphqlMiddlewareMutation>>
+  })
 }
