@@ -1,13 +1,7 @@
 import type { H3Event } from 'h3'
-import type {
-  FetchOptions,
-  FetchResponse,
-  FetchError,
-  FetchContext,
-} from 'ofetch'
+import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
 
 export type GraphqlMiddlewareGraphqlEndpointMethod = (
@@ -219,14 +213,6 @@ export type GraphqlMiddlewareServerOptions<
    * ```
    */
   doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<CustomResponse>
-}
-
-export interface GraphqlMiddlewareState {
-  fetchOptions: Omit<FetchOptions<'json'>, 'onResponse'> & {
-    onResponse?: (
-      context: FetchContext<GraphqlResponse<GraphqlMiddlewareResponseUnion>>,
-    ) => void | Promise<void>
-  }
 }
 
 export type GraphqlMiddlewareDocument = {

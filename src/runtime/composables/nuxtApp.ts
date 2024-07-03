@@ -61,6 +61,7 @@ export function performRequest<T>(
     },
   ).then((v) => {
     return {
+      ...v,
       data: v.data,
       errors: v.errors || [],
     }

@@ -470,11 +470,14 @@ declare module '#graphql-documents' {
 import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
 ${serverOptionsLine}
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
+import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
 
 type GraphqlResponseAdditions =
   typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R> ? R : {}
 
 export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
+
+export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>
 
 export { serverOptions }
 `,
