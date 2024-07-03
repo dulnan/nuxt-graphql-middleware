@@ -1,0 +1,3 @@
+query getCurrentTime {
+  time: getCurrentTime
+}

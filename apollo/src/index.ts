@@ -99,8 +99,10 @@ const typeDefs = `#graphql
     users: [User!]!
     userById(id: ID!): User
     testFetchOptions: TestFetchOptions
+    getRequestHeader(name: String!): String
     getError: Boolean
     getSubmissions: [FormSubmission]
+    getCurrentTime: String
   }
 
   type UploadedFile {
@@ -156,6 +158,9 @@ const resolvers = {
     users: () => {
       return users
     },
+    getCurrentTime: () => {
+      return new Date()
+    },
     getSubmissions: () => {
       return formSubmissions
     },
@@ -168,6 +173,13 @@ const resolvers = {
         headerClient: context.headerClient,
         headerServer: context.headerServer,
       }
+    },
+    getRequestHeader: (_parent: any, args: any, context: any) => {
+      console.log('*'.repeat(50))
+      console.log(args)
+      console.log(context.headers)
+      console.log('*'.repeat(50))
+      return context.headers[args.name]
     },
     getError: () => {
       throw new GraphQLError('Something is wrong with your data.', {
@@ -298,7 +310,11 @@ app.use(
             code: 'UNAUTHENTICATED',
           },
         })
-      return Promise.resolve({ headerClient, headerServer })
+      return Promise.resolve({
+        headerClient,
+        headerServer,
+        headers: req.headers,
+      })
     },
   }),
 )
