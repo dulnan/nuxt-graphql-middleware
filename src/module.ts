@@ -234,7 +234,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Will throw an error if the options are not valid.
     validateOptions(options)
 
-    const moduleResolver = createResolver(import.meta.url).resolve
+    const moduleResolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(
@@ -254,7 +254,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | null = null
     if (options.devtools) {
-      const clientPath = moduleResolver('./client')
+      const clientPath = moduleResolver.resolve('./client')
       setupDevToolsUI(nuxt, clientPath)
       // Hack needed because in a playground environment the call
       // onDevToolsInitialized is needed, but when the module is actually
@@ -367,22 +367,26 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (options.includeComposables) {
       addImports({
-        from: moduleResolver('./runtime/composables/useGraphqlQuery'),
+        from: moduleResolver.resolve('./runtime/composables/useGraphqlQuery'),
         name: 'useGraphqlQuery',
       })
       addImports({
-        from: moduleResolver('./runtime/composables/useGraphqlMutation'),
+        from: moduleResolver.resolve(
+          './runtime/composables/useGraphqlMutation',
+        ),
         name: 'useGraphqlMutation',
       })
       addImports({
-        from: moduleResolver('./runtime/composables/useGraphqlState'),
+        from: moduleResolver.resolve('./runtime/composables/useGraphqlState'),
         name: 'useGraphqlState',
       })
       addImports({
-        from: moduleResolver('./runtime/composables/useAsyncGraphqlQuery'),
+        from: moduleResolver.resolve(
+          './runtime/composables/useAsyncGraphqlQuery',
+        ),
         name: 'useAsyncGraphqlQuery',
       })
-      nuxt.options.alias['#graphql-composable'] = moduleResolver(
+      nuxt.options.alias['#graphql-composable'] = moduleResolver.resolve(
         'runtime/composables/server',
       )
     }
@@ -450,10 +454,13 @@ declare module '#graphql-documents' {
 
       const maybeUserFile = fileExists(resolvedPath, extensions)
 
-      const moduleTypesPath = moduleResolver('./types')
+      const moduleTypesPath = relative(
+        nuxt.options.buildDir,
+        moduleResolver.resolve('./types'),
+      )
 
       const serverOptionsLine = maybeUserFile
-        ? `import serverOptions from '${resolvedPath}'`
+        ? `import serverOptions from './../app/graphqlMiddleware.serverOptions'`
         : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
 
       return addTemplate({
@@ -482,15 +489,15 @@ export { serverOptions }
       template.dst
 
     nuxt.options.alias['#graphql-middleware/types'] =
-      moduleResolver('./runtime/types')
+      moduleResolver.resolve('./runtime/types')
 
     // Add the server API handler.
     addServerHandler({
-      handler: moduleResolver('./runtime/serverHandler/index'),
+      handler: moduleResolver.resolve('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
     })
 
-    addPlugin(moduleResolver('./runtime/plugins/provideState'), {
+    addPlugin(moduleResolver.resolve('./runtime/plugins/provideState'), {
       append: false,
     })
 
@@ -499,7 +506,7 @@ export { serverOptions }
       nitroConfig.externals = defu(
         typeof nitroConfig.externals === 'object' ? nitroConfig.externals : {},
         {
-          inline: [moduleResolver('./runtime')],
+          inline: [moduleResolver.resolve('./runtime')],
         },
       )
     })
@@ -507,7 +514,7 @@ export { serverOptions }
     // Watch for file changes in dev mode.
     if (nuxt.options.dev || nuxt.options._prepare) {
       addServerHandler({
-        handler: moduleResolver('./runtime/serverHandler/debug'),
+        handler: moduleResolver.resolve('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
       })
       nuxt.hook('nitro:build:before', (nitro) => {
