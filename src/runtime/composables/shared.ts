@@ -1,6 +1,5 @@
 import type { FetchOptions } from 'ofetch'
 import { useRuntimeConfig } from '#imports'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
