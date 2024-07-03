@@ -69,32 +69,33 @@ export function useAsyncGraphqlQuery<
   const config = useAppConfig()
   const app = useNuxtApp()
 
-  // If the variables are reactive, watch them.
-  if (variables && isRef(variables)) {
-    if (!asyncDataOptions.watch) {
-      asyncDataOptions.watch = []
-    }
-
-    asyncDataOptions.watch.push(variables)
-  }
-
-  // On the client side, if client caching is requested, we can directly return
-  // data from the payload if possible.
-  if (
-    import.meta.client &&
-    asyncDataOptions.graphqlCaching?.client &&
-    !asyncDataOptions.getCachedData
-  ) {
-    asyncDataOptions.getCachedData = function (key) {
-      // When the app is not hydrating and the client cache is disabled, return.
-      // This is identical to the default behaviour of useAsyncData, where the
-      // payload data is only used during hydration.
-      if (!app.isHydrating && !config.graphqlMiddleware.clientCacheEnabled) {
-        return
+  if (import.meta.client) {
+    // If the variables are reactive, watch them cient side.
+    if (variables && isRef(variables)) {
+      if (!asyncDataOptions.watch) {
+        asyncDataOptions.watch = []
       }
 
-      // Try to return data from payload.
-      return app.payload.data[key]
+      asyncDataOptions.watch.push(variables)
+    }
+
+    // On the client side, if client caching is requested, we can directly return
+    // data from the payload if possible.
+    if (
+      asyncDataOptions.graphqlCaching?.client &&
+      !asyncDataOptions.getCachedData
+    ) {
+      asyncDataOptions.getCachedData = function (key) {
+        // When the app is not hydrating and the client cache is disabled, return.
+        // This is identical to the default behaviour of useAsyncData, where the
+        // payload data is only used during hydration.
+        if (!app.isHydrating && !config.graphqlMiddleware.clientCacheEnabled) {
+          return
+        }
+
+        // Try to return data from payload.
+        return app.payload.data[key]
+      }
     }
   }
 

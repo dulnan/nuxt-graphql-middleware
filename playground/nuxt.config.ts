@@ -34,6 +34,8 @@ const graphqlMiddleware: ModuleOptions = {
   clientCache: {
     enabled: true,
   },
+
+  enableFileUploads: true,
 }
 
 export default defineNuxtConfig({

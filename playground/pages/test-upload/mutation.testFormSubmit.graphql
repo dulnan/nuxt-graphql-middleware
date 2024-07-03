@@ -1,0 +1,3 @@
+mutation testFormSubmit($elements: [FormElement]) {
+  submitForm(elements: $elements)
+}

@@ -55,6 +55,25 @@ export type GraphqlMiddlewareDoRequestMethodContext = {
    * Variables for the operation.
    */
   variables: Record<string, any>
+
+  /**
+   * For file uploads (which are done using FormData), this contains the full
+   * form data with these keys:
+   *
+   * - operations: string
+   *   A JSON string of an object with "query", "variables" and "operationName" properties.
+   *   Example:
+   *   operations='{ "query": "mutation ($id: String!, $file: Upload!) { uploadFile(id: $id, file: $file) { id filename } }", "variables": { "file": null, "id": "1" } }'
+   * - map: string
+   *   A JSON string of an object whose keys are strings starting at '0' and the values being an array with a single string:
+   *   Example:
+   *   map='{ "0": ["variables.file"] }'
+   * - [number]
+   *   For every file there is a FormData entry with a name that matches the key in `map`.
+   *   Example:
+   *   0=[Binary File]
+   */
+  formData?: FormData
 }
 
 export type GraphqlMiddlewareDoRequestMethod<T> = (

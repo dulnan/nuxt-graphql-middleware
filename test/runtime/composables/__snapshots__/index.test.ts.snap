@@ -3,55 +3,103 @@
 exports[`useGraphqlMutation > Performs a mutation 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/mutation/foobar",
   "errors": [],
+  "options": {
+    "body": undefined,
+    "method": "post",
+  },
 }
 `;
 
 exports[`useGraphqlMutation > Performs a mutation with variables 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/mutation/foobar",
   "errors": [],
+  "options": {
+    "body": {
+      "user": "foobar",
+    },
+    "method": "post",
+  },
 }
 `;
 
 exports[`useGraphqlMutation > Throws an error for invalid mutation names. 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/mutation/undefined",
   "errors": [],
+  "options": {
+    "body": undefined,
+    "method": "post",
+  },
 }
 `;
 
 exports[`useGraphqlQuery > Performs a query 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
+  "options": {
+    "method": "get",
+    "params": {},
+  },
 }
 `;
 
 exports[`useGraphqlQuery > Performs a query with non-string variables 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
+  "options": {
+    "method": "get",
+    "params": {
+      "__variables": "{"numeric":123}",
+    },
+  },
 }
 `;
 
 exports[`useGraphqlQuery > Performs a query with string variables 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
+  "options": {
+    "method": "get",
+    "params": {
+      "stringVar": "foobar",
+    },
+  },
 }
 `;
 
 exports[`useGraphqlQuery > Performs a query with string variables 2`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
+  "options": {
+    "method": "get",
+    "params": {
+      "stringVar": "foobar",
+    },
+  },
 }
 `;
 
 exports[`useGraphqlQuery > Throws an error for invalid query names. 1`] = `
 {
   "data": undefined,
+  "endpoint": "/nuxt-graphql-middleware/query/undefined",
   "errors": [],
+  "options": {
+    "method": "get",
+    "params": {},
+  },
 }
 `;

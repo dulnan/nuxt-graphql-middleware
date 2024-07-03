@@ -14,6 +14,8 @@ exports[`generate > Generates templates correctly for auto imported documents 1`
     "queryOne": "query queryOne {\\n  one: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}"
   },
   "mutation": {
+    "testFormSubmit": "mutation testFormSubmit($elements: [FormElement]) {\\n  submitForm(elements: $elements)\\n}",
+    "testUpload": "mutation testUpload($id: String!, $file: Upload!) {\\n  uploadFile(id: $id, file: $file) {\\n    id\\n    filename\\n  }\\n}",
     "initState": "mutation initState {\\n  initState\\n}",
     "addUser": "mutation addUser($user: UserData!) {\\n  createUser(user: $user) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
     "triggerError": "mutation triggerError {\\n  triggerError\\n}",
@@ -42,6 +44,19 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** The \`Upload\` scalar type represents a file upload. */
+  Upload: { input: any; output: any; }
+};
+
+export type File = {
+  __typename?: 'File';
+  filename: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+};
+
+export type FormElement = {
+  file: Scalars['Upload']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -49,7 +64,9 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']['output']>;
   initState: Scalars['Boolean']['output'];
+  submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
+  uploadFile: File;
 };
 
 
@@ -60,6 +77,17 @@ export type MutationCreateUserArgs = {
 
 export type MutationDeleteUserArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationSubmitFormArgs = {
+  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+};
+
+
+export type MutationUploadFileArgs = {
+  file: Scalars['Upload']['input'];
+  id: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -100,6 +128,13 @@ export type UserData = {
   lastName: Scalars['String']['input'];
 };
 
+export type TestFormSubmitMutationVariables = Exact<{
+  elements?: InputMaybe<Array<InputMaybe<FormElement>> | InputMaybe<FormElement>>;
+}>;
+
+
+export type TestFormSubmitMutation = { __typename?: 'Mutation', submitForm: boolean };
+
 export type SimulateEndpointDownQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -111,6 +146,14 @@ export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
+
+export type TestUploadMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+  file: Scalars['Upload']['input'];
+}>;
+
+
+export type TestUploadMutation = { __typename?: 'Mutation', uploadFile: { __typename?: 'File', id: string, filename: string } };
 
 export type UsersQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -187,6 +230,10 @@ import type {
   FoobarQuery,
   QueryTwoQuery,
   QueryOneQuery,
+  TestFormSubmitMutation,
+  TestFormSubmitMutationVariables,
+  TestUploadMutation,
+  TestUploadMutationVariables,
   InitStateMutation,
   AddUserMutation,
   AddUserMutationVariables,
@@ -197,7 +244,7 @@ import type {
 
 
 declare module '#build/nuxt-graphql-middleware' {
-  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
+  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | TestFormSubmitMutation | TestUploadMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
     fetchOptions: [null, true, FetchOptionsQuery],
@@ -210,6 +257,8 @@ declare module '#build/nuxt-graphql-middleware' {
   }
 
   export type GraphqlMiddlewareMutation = {
+    testFormSubmit: [TestFormSubmitMutationVariables, false, TestFormSubmitMutation],
+    testUpload: [TestUploadMutationVariables, false, TestUploadMutation],
     initState: [null, true, InitStateMutation],
     addUser: [AddUserMutationVariables, false, AddUserMutation],
     triggerError: [null, true, TriggerErrorMutation],
@@ -243,6 +292,12 @@ declare module 'nitropack' {
     }
     'undefined/query/queryOne': {
       'default': GraphqlResponse<QueryOneQuery>
+    }
+    'undefined/mutation/testFormSubmit': {
+      'default': GraphqlResponse<TestFormSubmitMutation>
+    }
+    'undefined/mutation/testUpload': {
+      'default': GraphqlResponse<TestUploadMutation>
     }
     'undefined/mutation/initState': {
       'default': GraphqlResponse<InitStateMutation>
@@ -294,6 +349,19 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** The \`Upload\` scalar type represents a file upload. */
+  Upload: { input: any; output: any; }
+};
+
+export type File = {
+  __typename?: 'File';
+  filename: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+};
+
+export type FormElement = {
+  file: Scalars['Upload']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -301,7 +369,9 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']['output']>;
   initState: Scalars['Boolean']['output'];
+  submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
+  uploadFile: File;
 };
 
 
@@ -312,6 +382,17 @@ export type MutationCreateUserArgs = {
 
 export type MutationDeleteUserArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationSubmitFormArgs = {
+  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+};
+
+
+export type MutationUploadFileArgs = {
+  file: Scalars['Upload']['input'];
+  id: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -460,6 +541,19 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** The \`Upload\` scalar type represents a file upload. */
+  Upload: { input: any; output: any; }
+};
+
+export type File = {
+  __typename?: 'File';
+  filename: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+};
+
+export type FormElement = {
+  file: Scalars['Upload']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -467,7 +561,9 @@ export type Mutation = {
   createUser: User;
   deleteUser?: Maybe<Scalars['Boolean']['output']>;
   initState: Scalars['Boolean']['output'];
+  submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
+  uploadFile: File;
 };
 
 
@@ -478,6 +574,17 @@ export type MutationCreateUserArgs = {
 
 export type MutationDeleteUserArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationSubmitFormArgs = {
+  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+};
+
+
+export type MutationUploadFileArgs = {
+  file: Scalars['Upload']['input'];
+  id: Scalars['String']['input'];
 };
 
 export type Query = {

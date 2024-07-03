@@ -1,5 +1,5 @@
 import { defineNuxtPlugin } from '#imports'
-import { type GraphqlMiddlewareState } from './../../types'
+import { type GraphqlMiddlewareState } from '#graphql-middleware/types'
 
 /**
  * Create and provide the state singleton for the composables.

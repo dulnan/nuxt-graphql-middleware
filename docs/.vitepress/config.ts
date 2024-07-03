@@ -49,13 +49,31 @@ export default defineConfig({
       {
         text: 'Features',
         items: [
-          { text: 'Composables', link: '/features/composables' },
           { text: 'Caching', link: '/features/caching' },
           { text: 'Auto Import', link: '/features/auto-import' },
           { text: 'Fragments', link: '/features/fragments' },
           { text: 'TypeScript', link: '/features/typescript' },
           { text: 'Debug', link: '/features/debug' },
           { text: 'Server Routes', link: '/features/server-route' },
+        ],
+      },
+      {
+        text: 'Composables',
+        items: [
+          { text: 'useGraphqlQuery', link: '/composables/useGraphqlQuery' },
+          {
+            text: 'useAsyncGraphqlQuery',
+            link: '/composables/useAsyncGraphqlQuery',
+          },
+          {
+            text: 'useGraphqlMutation',
+            link: '/composables/useGraphqlMutation',
+          },
+          {
+            text: 'useGraphqlUploadMutation',
+            link: '/composables/useGraphqlUploadMutation',
+          },
+          { text: 'useGraphqlState', link: '/composables/useGraphqlState' },
         ],
       },
       {

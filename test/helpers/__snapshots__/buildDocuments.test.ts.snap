@@ -86,6 +86,21 @@ fragment foobarUser on User {
     "filename": "query.simulateEndpointDown.graphql",
   },
   {
+    "content": "mutation testFormSubmit($elements: [FormElement]) {
+  submitForm(elements: $elements)
+}",
+    "filename": "mutation.testFormSubmit.graphql",
+  },
+  {
+    "content": "mutation testUpload($id: String!, $file: Upload!) {
+  uploadFile(id: $id, file: $file) {
+    id
+    filename
+  }
+}",
+    "filename": "mutation.testUpload.graphql",
+  },
+  {
     "content": "fragment user on User {
   id
   firstName

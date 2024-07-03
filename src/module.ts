@@ -98,6 +98,15 @@ export interface ModuleOptions {
   includeComposables?: boolean
 
   /**
+   * Enable support for uploading files via GraphQL.
+   *
+   * When enabled, an additional `useGraphqlUploadMutation` composable is
+   * included, in addition to a new server endpoint that handles multi part
+   * file uploads for GraphQL mutations.
+   */
+  enableFileUploads?: boolean
+
+  /**
    * Enable detailled debugging messages.
    *
    * @default false
@@ -208,7 +217,6 @@ export interface ModuleOptions {
   }
 }
 
-// Nuxt needs this.
 export interface ModuleHooks {}
 
 const RPC_NAMESPACE = 'nuxt-graphql-middleware'
@@ -376,6 +384,7 @@ export default defineNuxtModule<ModuleOptions>({
         ),
         name: 'useGraphqlMutation',
       })
+
       addImports({
         from: moduleResolver.resolve('./runtime/composables/useGraphqlState'),
         name: 'useGraphqlState',
@@ -389,6 +398,15 @@ export default defineNuxtModule<ModuleOptions>({
       nuxt.options.alias['#graphql-composable'] = moduleResolver.resolve(
         'runtime/composables/server',
       )
+
+      if (options.enableFileUploads) {
+        addImports({
+          from: moduleResolver.resolve(
+            './runtime/composables/useGraphqlUploadMutation',
+          ),
+          name: 'useGraphqlUploadMutation',
+        })
+      }
     }
 
     // Add the templates to nuxt and provide a callback to load the file contents.
@@ -499,6 +517,13 @@ export { serverOptions }
       handler: moduleResolver.resolve('./runtime/serverHandler/index'),
       route: options.serverApiPrefix + '/:operation/:name',
     })
+
+    if (options.enableFileUploads) {
+      addServerHandler({
+        handler: moduleResolver.resolve('./runtime/serverHandler/upload'),
+        route: options.serverApiPrefix + '/upload/:name',
+      })
+    }
 
     addPlugin(moduleResolver.resolve('./runtime/plugins/provideState'), {
       append: false,

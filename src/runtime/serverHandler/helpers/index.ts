@@ -76,7 +76,7 @@ export function getFetchOptions(
   return {}
 }
 
-function throwError(statusMessage: string, statusCode = 400): never {
+export function throwError(statusMessage: string, statusCode = 400): never {
   throw createError({
     statusCode,
     statusMessage,
@@ -88,7 +88,7 @@ function throwError(statusMessage: string, statusCode = 400): never {
  */
 export function validateRequest(
   method?: string,
-  operation?: GraphqlMiddlewareOperation,
+  operation?: GraphqlMiddlewareOperation | string,
   name?: string,
   documents?: Documents,
 ): void {

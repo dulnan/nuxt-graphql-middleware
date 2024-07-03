@@ -1,8 +1,25 @@
+"""
+Indicates exactly one field must be supplied and this field must not be `null`.
+"""
+directive @oneOf on INPUT_OBJECT
+
+type File {
+  filename: String!
+  id: String!
+}
+
+input FormElement {
+  file: Upload!
+  name: String
+}
+
 type Mutation {
   createUser(user: UserData!): User!
   deleteUser(id: Int!): Boolean
   initState: Boolean!
+  submitForm(elements: [FormElement]): Boolean!
   triggerError: Boolean
+  uploadFile(file: Upload!, id: String!): File!
 }
 
 type Query {
@@ -16,6 +33,9 @@ type TestFetchOptions {
   headerClient: String
   headerServer: String
 }
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 type User {
   dateOfBirth: String

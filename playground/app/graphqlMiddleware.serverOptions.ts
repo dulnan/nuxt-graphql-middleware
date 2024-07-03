@@ -15,10 +15,11 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
     }
   },
 
-  serverFetchOptions: function (event) {
-    const headers: HeadersInit = {
+  serverFetchOptions: function (event, _operation, operationName) {
+    const headers: Record<string, any> = {
       'x-nuxt-header-server': 'Value from server',
       authentication: 'server-token',
+      'x-apollo-operation-name': operationName,
     }
     if (event) {
       const headerValue = getHeader(event, 'x-nuxt-header-client')

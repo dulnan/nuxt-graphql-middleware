@@ -1,0 +1,6 @@
+schema: './playground/schema.graphql'
+documents:
+  - './playground/pages/**/*.graphql'
+  - './playground/components/**/*.graphql'
+  - './playground/composables/**/*.graphql'
+  - './playground/plugins/**/*.graphql'
