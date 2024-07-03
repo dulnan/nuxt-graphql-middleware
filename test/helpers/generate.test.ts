@@ -43,7 +43,7 @@ describe('generate', () => {
       srcDir,
     )
     expect(result.hasErrors).toBeFalsy()
-    expect(result.documents).toHaveLength(15)
+    expect(result.documents).toHaveLength(18)
     expect(result.templates).toHaveLength(3)
 
     const possibleTemplates = [

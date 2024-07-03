@@ -13,14 +13,7 @@ import { ref, useGraphqlUploadMutation } from '#imports'
 
 const isSuccess = ref(false)
 
-function onChange(e: Event) {
-  if (e.target instanceof HTMLInputElement && e.target.files) {
-    const files = [...e.target.files]
-    file.value = files[0] || null
-  }
-}
-
-async function upload(e: SubmitEvent) {
+async function upload(e: Event) {
   if (!(e.target instanceof HTMLFormElement)) {
     return
   }

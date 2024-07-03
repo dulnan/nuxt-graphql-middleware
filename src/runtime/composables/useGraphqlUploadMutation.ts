@@ -91,8 +91,4 @@ export function useGraphqlUploadMutation<
       errors: v?.errors || [],
     }
   })
-
-  const entries = [...formData.entries()]
-
-  console.log(entries)
 }

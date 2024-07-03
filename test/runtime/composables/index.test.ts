@@ -34,6 +34,11 @@ vi.mock('#imports', () => {
         },
       }
     },
+    useAppConfig: () => {
+      return {
+        graphqlMiddleware: {},
+      }
+    },
   }
 })
 

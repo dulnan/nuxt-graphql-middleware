@@ -5,11 +5,17 @@ import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
+import type { RequestCacheOptions } from '#graphql-middleware/types'
 
 // Possible query names.
 export type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
 // Possible mutation names.
 export type GraphqlMiddlewareMutationName = keyof GraphqlMiddlewareMutation
+
+export type GraphqlComposableOptions = {
+  fetchOptions?: FetchOptions
+  graphqlCaching?: RequestCacheOptions
+}
 
 // Determine the argument signature for the query method.
 // Variables are either not required at all, required or optional.
@@ -17,20 +23,20 @@ export type GetQueryArgs<
   T extends GraphqlMiddlewareQueryName,
   M extends GraphqlMiddlewareQuery,
 > = M[T][0] extends null
-  ? [T]
+  ? [T, (null | undefined)?, GraphqlComposableOptions?]
   : M[T][1] extends false
-    ? [T, M[T][0]]
-    : [T, M[T][0]?]
+    ? [T, M[T][0], GraphqlComposableOptions?]
+    : [T, M[T][0]?, GraphqlComposableOptions?]
 
 // Determine the argument signature for the mutation method.
 export type GetMutationArgs<
   T extends GraphqlMiddlewareMutationName,
   M extends GraphqlMiddlewareMutation,
 > = M[T][0] extends null
-  ? [T]
+  ? [T, (null | undefined)?, GraphqlComposableOptions?]
   : M[T][1] extends false
-    ? [T, M[T][0]]
-    : [T, M[T][0]?]
+    ? [T, M[T][0], GraphqlComposableOptions?]
+    : [T, M[T][0]?, GraphqlComposableOptions?]
 
 // Determine the query result.
 export type GetQueryResult<
@@ -56,12 +62,14 @@ export type QueryObjectArgs<
   ? {
       name: T
       fetchOptions?: FetchOptions
+      graphqlCaching?: RequestCacheOptions
       variables?: null
     }
   : {
       name: T
       variables: M[T][0]
       fetchOptions?: FetchOptions
+      graphqlCaching?: RequestCacheOptions
     }
 
 export type MutationObjectArgs<

@@ -17,7 +17,7 @@ export function useGraphqlMutation<T extends GraphqlMiddlewareMutationName>(
 ): Promise<GetMutationResult<T, GraphqlMiddlewareMutation>> {
   const [name, body, fetchOptions = {}] =
     typeof args[0] === 'string'
-      ? [args[0], args[1]]
+      ? [args[0], args[1], args[2]?.fetchOptions]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
   return performRequest('mutation', name, 'post', {

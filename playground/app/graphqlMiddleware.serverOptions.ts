@@ -26,6 +26,14 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
       if (headerValue) {
         headers['x-nuxt-header-client'] = headerValue
       }
+      const headerValueFromComposable = getHeader(
+        event,
+        'x-nuxt-header-client-from-composable',
+      )
+      if (headerValueFromComposable) {
+        headers['x-nuxt-header-client-from-composable'] =
+          headerValueFromComposable
+      }
     }
     return { headers }
   },

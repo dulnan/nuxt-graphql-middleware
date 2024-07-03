@@ -32,11 +32,13 @@ type Mutation {
   initState: Boolean!
   submitForm(input: FormSubmissionInput!): Boolean!
   triggerError: Boolean
-  uploadFile(file: Upload!): Boolean!
+  uploadFile(file: Upload): Boolean!
 }
 
 type Query {
+  getCurrentTime: String
   getError: Boolean
+  getRequestHeader(name: String!): String
   getSubmissions: [FormSubmission]
   testFetchOptions: TestFetchOptions
   userById(id: ID!): User

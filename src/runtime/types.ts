@@ -26,3 +26,7 @@ export interface GraphqlMiddlewareState {
     ) => void | Promise<void>
   }
 }
+
+export type RequestCacheOptions = {
+  client?: boolean
+}

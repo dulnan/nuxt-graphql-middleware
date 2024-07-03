@@ -1,0 +1,6 @@
+query fetchOptionsComposable {
+  headerValueFromComposable: getRequestHeader(
+    name: "x-nuxt-header-client-from-composable"
+  )
+  headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
+}

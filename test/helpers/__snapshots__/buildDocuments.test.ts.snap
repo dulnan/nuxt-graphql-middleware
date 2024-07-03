@@ -9,6 +9,12 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     "filename": "mutation.initState.graphql",
   },
   {
+    "content": "query getCurrentTime {
+  time: getCurrentTime
+}",
+    "filename": "query.getCurrentTime.graphql",
+  },
+  {
     "content": "query fetchOptions {
   testFetchOptions {
     headerClient
@@ -16,6 +22,15 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   }
 }",
     "filename": "query.fetchOptions.graphql",
+  },
+  {
+    "content": "query fetchOptionsComposable {
+  headerValueFromComposable: getRequestHeader(
+    name: "x-nuxt-header-client-from-composable"
+  )
+  headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
+}",
+    "filename": "query.fetchOptionsComposable.graphql",
   },
   {
     "content": "fragment user on User {
@@ -86,19 +101,38 @@ fragment foobarUser on User {
     "filename": "query.simulateEndpointDown.graphql",
   },
   {
-    "content": "mutation testFormSubmit($elements: [FormElement]) {
-  submitForm(elements: $elements)
+    "content": "mutation testFormSubmit($input: FormSubmissionInput!) {
+  submitForm(input: $input)
 }",
     "filename": "mutation.testFormSubmit.graphql",
   },
   {
-    "content": "mutation testUpload($id: String!, $file: Upload!) {
-  uploadFile(id: $id, file: $file) {
-    id
-    filename
-  }
+    "content": "mutation testUpload($file: Upload!) {
+  uploadFile(file: $file)
 }",
     "filename": "mutation.testUpload.graphql",
+  },
+  {
+    "content": "query getSubmissions {
+  getSubmissions {
+    ...formSubmission
+  }
+}
+
+fragment formSubmission on FormSubmission {
+  id
+  firstName
+  lastName
+  documents {
+    name
+    file {
+      name
+      id
+      content
+    }
+  }
+}",
+    "filename": "query.getSubmissions.graphql",
   },
   {
     "content": "fragment user on User {

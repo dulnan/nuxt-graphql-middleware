@@ -5,10 +5,7 @@ import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import { useNuxtApp, useAppConfig } from '#imports'
-
-type RequestCacheOptions = {
-  client?: boolean
-}
+import type { RequestCacheOptions } from '#graphql-middleware/types'
 
 export function performRequest<T>(
   operation: string,

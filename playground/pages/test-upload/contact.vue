@@ -38,7 +38,7 @@
           <td class="lastName">{{ submission.lastName }}</td>
           <td class="documents">
             <ul>
-              <li v-for="doc in submission.documents">
+              <li v-for="doc in submission.documents" :key="doc?.file.id">
                 <h3 class="docName">{{ doc?.name }}</h3>
                 <p>{{ doc?.file.id }}</p>
                 <p class="fileName">{{ doc?.file.name }}</p>
@@ -69,7 +69,7 @@ const lastName = ref('')
 
 const isSuccess = ref(false)
 
-async function onSubmit(e: SubmitEvent) {
+async function onSubmit(e: Event) {
   if (!(e.target instanceof HTMLFormElement)) {
     return
   }

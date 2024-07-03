@@ -21,9 +21,13 @@ export default defineNuxtPlugin({
         if (!options.params) {
           options.params = {}
         }
-        options.headers = {
-          'x-nuxt-header-client': 'The header value from the client',
+        if (!options.headers) {
+          options.headers = {}
         }
+
+        // @ts-ignore
+        options.headers['x-nuxt-header-client'] =
+          'The header value from the client'
         options.params.t = Date.now()
       },
 

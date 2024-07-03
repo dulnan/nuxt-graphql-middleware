@@ -9,13 +9,16 @@ exports[`generate > Generates templates correctly for auto imported documents 1`
     "users": "query users {\\n  users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
     "getError": "query getError {\\n  getError\\n}",
     "userById": "query userById($id: ID!) {\\n  userById(id: $id) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "fetchOptionsComposable": "query fetchOptionsComposable {\\n  headerValueFromComposable: getRequestHeader(\\n    name: \\"x-nuxt-header-client-from-composable\\"\\n  )\\n  headerValueFromPlugin: getRequestHeader(name: \\"x-nuxt-header-client\\")\\n}",
+    "getSubmissions": "query getSubmissions {\\n  getSubmissions {\\n    ...formSubmission\\n  }\\n}\\n\\nfragment formSubmission on FormSubmission {\\n  id\\n  firstName\\n  lastName\\n  documents {\\n    name\\n    file {\\n      name\\n      id\\n      content\\n    }\\n  }\\n}",
     "foobar": "query foobar {\\n  users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
     "queryTwo": "query queryTwo {\\n  two: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
-    "queryOne": "query queryOne {\\n  one: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}"
+    "queryOne": "query queryOne {\\n  one: users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
+    "getCurrentTime": "query getCurrentTime {\\n  time: getCurrentTime\\n}"
   },
   "mutation": {
-    "testFormSubmit": "mutation testFormSubmit($elements: [FormElement]) {\\n  submitForm(elements: $elements)\\n}",
-    "testUpload": "mutation testUpload($id: String!, $file: Upload!) {\\n  uploadFile(id: $id, file: $file) {\\n    id\\n    filename\\n  }\\n}",
+    "testUpload": "mutation testUpload($file: Upload!) {\\n  uploadFile(file: $file)\\n}",
+    "testFormSubmit": "mutation testFormSubmit($input: FormSubmissionInput!) {\\n  submitForm(input: $input)\\n}",
     "initState": "mutation initState {\\n  initState\\n}",
     "addUser": "mutation addUser($user: UserData!) {\\n  createUser(user: $user) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
     "triggerError": "mutation triggerError {\\n  triggerError\\n}",
@@ -48,15 +51,29 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
-export type File = {
-  __typename?: 'File';
-  filename: Scalars['String']['output'];
+export type FormSubmission = {
+  __typename?: 'FormSubmission';
+  documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
+  firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  lastName?: Maybe<Scalars['String']['output']>;
 };
 
-export type FormElement = {
+export type FormSubmissionDocument = {
+  __typename?: 'FormSubmissionDocument';
+  file: UploadedFile;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+export type FormSubmissionDocumentsInput = {
   file: Scalars['Upload']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type FormSubmissionInput = {
+  documents?: InputMaybe<Array<InputMaybe<FormSubmissionDocumentsInput>>>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -66,7 +83,7 @@ export type Mutation = {
   initState: Scalars['Boolean']['output'];
   submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
-  uploadFile: File;
+  uploadFile: Scalars['Boolean']['output'];
 };
 
 
@@ -81,21 +98,28 @@ export type MutationDeleteUserArgs = {
 
 
 export type MutationSubmitFormArgs = {
-  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+  input: FormSubmissionInput;
 };
 
 
 export type MutationUploadFileArgs = {
-  file: Scalars['Upload']['input'];
-  id: Scalars['String']['input'];
+  file?: InputMaybe<Scalars['Upload']['input']>;
 };
 
 export type Query = {
   __typename?: 'Query';
+  getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
+  getRequestHeader?: Maybe<Scalars['String']['output']>;
+  getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
+};
+
+
+export type QueryGetRequestHeaderArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -107,6 +131,13 @@ export type TestFetchOptions = {
   __typename?: 'TestFetchOptions';
   headerClient?: Maybe<Scalars['String']['output']>;
   headerServer?: Maybe<Scalars['String']['output']>;
+};
+
+export type UploadedFile = {
+  __typename?: 'UploadedFile';
+  content: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type User = {
@@ -128,17 +159,24 @@ export type UserData = {
   lastName: Scalars['String']['input'];
 };
 
-export type TestFormSubmitMutationVariables = Exact<{
-  elements?: InputMaybe<Array<InputMaybe<FormElement>> | InputMaybe<FormElement>>;
+export type TestUploadMutationVariables = Exact<{
+  file: Scalars['Upload']['input'];
 }>;
 
 
-export type TestFormSubmitMutation = { __typename?: 'Mutation', submitForm: boolean };
+export type TestUploadMutation = { __typename?: 'Mutation', uploadFile: boolean };
 
 export type SimulateEndpointDownQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SimulateEndpointDownQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
+
+export type TestFormSubmitMutationVariables = Exact<{
+  input: FormSubmissionInput;
+}>;
+
+
+export type TestFormSubmitMutation = { __typename?: 'Mutation', submitForm: boolean };
 
 export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -146,14 +184,6 @@ export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
-
-export type TestUploadMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-  file: Scalars['Upload']['input'];
-}>;
-
-
-export type TestUploadMutation = { __typename?: 'Mutation', uploadFile: { __typename?: 'File', id: string, filename: string } };
 
 export type UsersQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -176,6 +206,18 @@ export type InitStateMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type InitStateMutation = { __typename?: 'Mutation', initState: boolean };
+
+export type FetchOptionsComposableQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type FetchOptionsComposableQuery = { __typename?: 'Query', headerValueFromComposable?: string | null, headerValueFromPlugin?: string | null };
+
+export type GetSubmissionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetSubmissionsQuery = { __typename?: 'Query', getSubmissions?: Array<{ __typename?: 'FormSubmission', id: string, firstName?: string | null, lastName?: string | null, documents?: Array<{ __typename?: 'FormSubmissionDocument', name?: string | null, file: { __typename?: 'UploadedFile', name: string, id: string, content: string } } | null> | null } | null> | null };
+
+export type FormSubmissionFragment = { __typename?: 'FormSubmission', id: string, firstName?: string | null, lastName?: string | null, documents?: Array<{ __typename?: 'FormSubmissionDocument', name?: string | null, file: { __typename?: 'UploadedFile', name: string, id: string, content: string } } | null> | null };
 
 export type AddUserMutationVariables = Exact<{
   user: UserData;
@@ -204,6 +246,11 @@ export type TriggerErrorMutationVariables = Exact<{ [key: string]: never; }>;
 
 export type TriggerErrorMutation = { __typename?: 'Mutation', triggerError?: boolean | null };
 
+export type GetCurrentTimeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCurrentTimeQuery = { __typename?: 'Query', time?: string | null };
+
 export type DeleteUserMutationVariables = Exact<{
   id: Scalars['Int']['input'];
 }>;
@@ -227,13 +274,16 @@ import type {
   GetErrorQuery,
   UserByIdQuery,
   UserByIdQueryVariables,
+  FetchOptionsComposableQuery,
+  GetSubmissionsQuery,
   FoobarQuery,
   QueryTwoQuery,
   QueryOneQuery,
-  TestFormSubmitMutation,
-  TestFormSubmitMutationVariables,
+  GetCurrentTimeQuery,
   TestUploadMutation,
   TestUploadMutationVariables,
+  TestFormSubmitMutation,
+  TestFormSubmitMutationVariables,
   InitStateMutation,
   AddUserMutation,
   AddUserMutationVariables,
@@ -244,21 +294,24 @@ import type {
 
 
 declare module '#build/nuxt-graphql-middleware' {
-  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | TestFormSubmitMutation | TestUploadMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
+  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FetchOptionsComposableQuery | GetSubmissionsQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | GetCurrentTimeQuery | TestUploadMutation | TestFormSubmitMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
     fetchOptions: [null, true, FetchOptionsQuery],
     users: [null, true, UsersQuery],
     getError: [null, true, GetErrorQuery],
     userById: [UserByIdQueryVariables, false, UserByIdQuery],
+    fetchOptionsComposable: [null, true, FetchOptionsComposableQuery],
+    getSubmissions: [null, true, GetSubmissionsQuery],
     foobar: [null, true, FoobarQuery],
     queryTwo: [null, true, QueryTwoQuery],
-    queryOne: [null, true, QueryOneQuery]
+    queryOne: [null, true, QueryOneQuery],
+    getCurrentTime: [null, true, GetCurrentTimeQuery]
   }
 
   export type GraphqlMiddlewareMutation = {
-    testFormSubmit: [TestFormSubmitMutationVariables, false, TestFormSubmitMutation],
     testUpload: [TestUploadMutationVariables, false, TestUploadMutation],
+    testFormSubmit: [TestFormSubmitMutationVariables, false, TestFormSubmitMutation],
     initState: [null, true, InitStateMutation],
     addUser: [AddUserMutationVariables, false, AddUserMutation],
     triggerError: [null, true, TriggerErrorMutation],
@@ -284,6 +337,12 @@ declare module 'nitropack' {
     'undefined/query/userById': {
       'default': GraphqlResponse<UserByIdQuery>
     }
+    'undefined/query/fetchOptionsComposable': {
+      'default': GraphqlResponse<FetchOptionsComposableQuery>
+    }
+    'undefined/query/getSubmissions': {
+      'default': GraphqlResponse<GetSubmissionsQuery>
+    }
     'undefined/query/foobar': {
       'default': GraphqlResponse<FoobarQuery>
     }
@@ -293,11 +352,14 @@ declare module 'nitropack' {
     'undefined/query/queryOne': {
       'default': GraphqlResponse<QueryOneQuery>
     }
-    'undefined/mutation/testFormSubmit': {
-      'default': GraphqlResponse<TestFormSubmitMutation>
+    'undefined/query/getCurrentTime': {
+      'default': GraphqlResponse<GetCurrentTimeQuery>
     }
     'undefined/mutation/testUpload': {
       'default': GraphqlResponse<TestUploadMutation>
+    }
+    'undefined/mutation/testFormSubmit': {
+      'default': GraphqlResponse<TestFormSubmitMutation>
     }
     'undefined/mutation/initState': {
       'default': GraphqlResponse<InitStateMutation>
@@ -353,15 +415,29 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
-export type File = {
-  __typename?: 'File';
-  filename: Scalars['String']['output'];
+export type FormSubmission = {
+  __typename?: 'FormSubmission';
+  documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
+  firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  lastName?: Maybe<Scalars['String']['output']>;
 };
 
-export type FormElement = {
+export type FormSubmissionDocument = {
+  __typename?: 'FormSubmissionDocument';
+  file: UploadedFile;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+export type FormSubmissionDocumentsInput = {
   file: Scalars['Upload']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type FormSubmissionInput = {
+  documents?: InputMaybe<Array<InputMaybe<FormSubmissionDocumentsInput>>>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -371,7 +447,7 @@ export type Mutation = {
   initState: Scalars['Boolean']['output'];
   submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
-  uploadFile: File;
+  uploadFile: Scalars['Boolean']['output'];
 };
 
 
@@ -386,21 +462,28 @@ export type MutationDeleteUserArgs = {
 
 
 export type MutationSubmitFormArgs = {
-  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+  input: FormSubmissionInput;
 };
 
 
 export type MutationUploadFileArgs = {
-  file: Scalars['Upload']['input'];
-  id: Scalars['String']['input'];
+  file?: InputMaybe<Scalars['Upload']['input']>;
 };
 
 export type Query = {
   __typename?: 'Query';
+  getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
+  getRequestHeader?: Maybe<Scalars['String']['output']>;
+  getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
+};
+
+
+export type QueryGetRequestHeaderArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -412,6 +495,13 @@ export type TestFetchOptions = {
   __typename?: 'TestFetchOptions';
   headerClient?: Maybe<Scalars['String']['output']>;
   headerServer?: Maybe<Scalars['String']['output']>;
+};
+
+export type UploadedFile = {
+  __typename?: 'UploadedFile';
+  content: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type User = {
@@ -545,15 +635,29 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
-export type File = {
-  __typename?: 'File';
-  filename: Scalars['String']['output'];
+export type FormSubmission = {
+  __typename?: 'FormSubmission';
+  documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
+  firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  lastName?: Maybe<Scalars['String']['output']>;
 };
 
-export type FormElement = {
+export type FormSubmissionDocument = {
+  __typename?: 'FormSubmissionDocument';
+  file: UploadedFile;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+export type FormSubmissionDocumentsInput = {
   file: Scalars['Upload']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type FormSubmissionInput = {
+  documents?: InputMaybe<Array<InputMaybe<FormSubmissionDocumentsInput>>>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
@@ -563,7 +667,7 @@ export type Mutation = {
   initState: Scalars['Boolean']['output'];
   submitForm: Scalars['Boolean']['output'];
   triggerError?: Maybe<Scalars['Boolean']['output']>;
-  uploadFile: File;
+  uploadFile: Scalars['Boolean']['output'];
 };
 
 
@@ -578,21 +682,28 @@ export type MutationDeleteUserArgs = {
 
 
 export type MutationSubmitFormArgs = {
-  elements?: InputMaybe<Array<InputMaybe<FormElement>>>;
+  input: FormSubmissionInput;
 };
 
 
 export type MutationUploadFileArgs = {
-  file: Scalars['Upload']['input'];
-  id: Scalars['String']['input'];
+  file?: InputMaybe<Scalars['Upload']['input']>;
 };
 
 export type Query = {
   __typename?: 'Query';
+  getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
+  getRequestHeader?: Maybe<Scalars['String']['output']>;
+  getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
+};
+
+
+export type QueryGetRequestHeaderArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -604,6 +715,13 @@ export type TestFetchOptions = {
   __typename?: 'TestFetchOptions';
   headerClient?: Maybe<Scalars['String']['output']>;
   headerServer?: Maybe<Scalars['String']['output']>;
+};
+
+export type UploadedFile = {
+  __typename?: 'UploadedFile';
+  content: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type User = {
