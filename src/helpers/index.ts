@@ -20,6 +20,7 @@ import { falsy } from '../runtime/helpers'
 import { generateSchema, generateTemplates } from './../codegen'
 import { type GraphqlMiddlewareDocument } from './../types'
 import { type ModuleOptions } from './../module'
+import { logDocuments } from './reporter'
 
 export const logger = useLogger('nuxt-graphql-middleware')
 
@@ -432,30 +433,9 @@ export async function generate(
   const hasErrors =
     extracted.some((v) => !v.isValid) || validated.some((v) => !v.isValid)
   if (hasErrors || logEverything) {
-    const table = new Table({
-      head: ['Operation', 'Name', 'File', 'Errors'].map((v) => chalk.white(v)),
-    })
-
-    extracted.forEach((document) => {
-      if (logEverything || !document.isValid) {
-        table.push(
-          [
-            document.operation || '',
-            document.name || '',
-            document.relativePath || '',
-            document.errors?.join('\n\n') || '',
-          ].map((v) => {
-            if (document.isValid) {
-              return v
-            }
-            return chalk.red(v)
-          }),
-        )
-      }
-    })
-
-    logger.log('GraphQL code generation table:\n' + table.toString())
+    logDocuments(logger, extracted, logEverything)
   }
+
 
   process.stdout.write('\n')
   logger.restoreStd()
