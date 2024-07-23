@@ -433,7 +433,6 @@ export async function generate(
     logDocuments(logger, extracted, logEverything)
   }
 
-
   process.stdout.write('\n')
   logger.restoreStd()
 

@@ -26,7 +26,8 @@ export function logDocuments(
   documents: GraphqlMiddlewareDocument[],
   logEverything: boolean,
 ) {
-  const { longestOperation, longestName, longestPath } = getMaxLengths(documents)
+  const { longestOperation, longestName, longestPath } =
+    getMaxLengths(documents)
   logger.log(colors.green('GraphQL Document Validation'))
 
   for (const { operation, name, relativePath, isValid, errors } of documents) {
