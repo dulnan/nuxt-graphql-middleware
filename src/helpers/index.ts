@@ -6,8 +6,6 @@ import type { Resolver } from '@nuxt/kit'
 import { inlineImportsWithLineToImports } from './fragment-import'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import { loadSchema } from '@graphql-tools/load'
-import Table from 'cli-table'
-import chalk from 'chalk'
 import type {
   GraphQLSchema,
   GraphQLError,
@@ -429,7 +427,6 @@ export async function generate(
     schemaPath,
     options,
   )
-
   const hasErrors =
     extracted.some((v) => !v.isValid) || validated.some((v) => !v.isValid)
   if (hasErrors || logEverything) {

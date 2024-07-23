@@ -1,7 +1,6 @@
 import type { GraphqlMiddlewareDocument } from '../types'
 import colors from 'picocolors'
-import { useLogger } from '@nuxt/kit'
-
+import type { useLogger } from '@nuxt/kit'
 
 function getMaxLengths(documents: GraphqlMiddlewareDocument[]) {
   let longestOperation = 0
@@ -22,9 +21,12 @@ function getMaxLengths(documents: GraphqlMiddlewareDocument[]) {
   return { longestOperation, longestName, longestPath }
 }
 
-export function logDocuments(logger: ReturnType<typeof useLogger>, documents: GraphqlMiddlewareDocument[], logEverything: boolean) {
+export function logDocuments(
+  logger: ReturnType<typeof useLogger>,
+  documents: GraphqlMiddlewareDocument[],
+  logEverything: boolean,
+) {
   const { longestOperation, longestName, longestPath } = getMaxLengths(documents)
-
   logger.log(colors.green('GraphQL Document Validation'))
 
   for (const { operation, name, relativePath, isValid, errors } of documents) {
@@ -50,4 +52,3 @@ export function logDocuments(logger: ReturnType<typeof useLogger>, documents: Gr
     logger.success('GraphQL document validation completed successfully.')
   }
 }
-
