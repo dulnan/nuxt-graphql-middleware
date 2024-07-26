@@ -814,6 +814,4 @@ nuxt.config.ts:3:11
   |           ^"
 `;
 
-exports[`generate > Renders a table with information about all documents. 1`] = `
-"GraphQL Document Validation          nuxt.config.ts  nuxt.config.ts  ✓query     one             nuxt.config.ts  ✓mutation  two             nuxt.config.ts  ✓"
-`;
+exports[`generate > Renders a table with information about all documents. 1`] = `"GraphQL Document Validation          nuxt.config.ts  nuxt.config.ts  ✓query     one             nuxt.config.ts  ✓mutation  two             nuxt.config.ts  ✓"`;
