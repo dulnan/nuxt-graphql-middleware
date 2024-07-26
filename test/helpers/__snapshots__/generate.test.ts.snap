@@ -804,13 +804,13 @@ Syntax Error: Expected Name, found <EOF>.
 
 nuxt.config.ts:3:11
 2 |             id
-3 |
+3 |           
   |           ^    nuxt.config.ts  x
 Syntax Error: Expected Name, found <EOF>.
 
 nuxt.config.ts:3:11
 2 |             id
-3 |
+3 |           
   |           ^"
 `;
 
