@@ -801,11 +801,13 @@ declare module 'nitropack' {
 exports[`generate > Renders a table with information about all documents with errors. 1`] = `
 "GraphQL Document Validation    nuxt.config.ts  x
 Syntax Error: Expected Name, found <EOF>.
+
 nuxt.config.ts:3:11
 2 |             id
 3 |
   |           ^    nuxt.config.ts  x
 Syntax Error: Expected Name, found <EOF>.
+
 nuxt.config.ts:3:11
 2 |             id
 3 |
