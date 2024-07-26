@@ -799,35 +799,19 @@ declare module 'nitropack' {
 `;
 
 exports[`generate > Renders a table with information about all documents with errors. 1`] = `
-"GraphQL code generation table:
-┌───────────┬──────┬────────────────┬───────────────────────────────────────────┐
-│ Operation │ Name │ File           │ Errors                                    │
-├───────────┼──────┼────────────────┼───────────────────────────────────────────┤
-│           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>. │
-│           │      │                │                                           │
-│           │      │                │ nuxt.config.ts:3:11                       │
-│           │      │                │ 2 |             id                        │
-│           │      │                │ 3 |                                       │
-│           │      │                │   |           ^                           │
-├───────────┼──────┼────────────────┼───────────────────────────────────────────┤
-│           │      │ nuxt.config.ts │ Syntax Error: Expected Name, found <EOF>. │
-│           │      │                │                                           │
-│           │      │                │ nuxt.config.ts:3:11                       │
-│           │      │                │ 2 |             id                        │
-│           │      │                │ 3 |                                       │
-│           │      │                │   |           ^                           │
-└───────────┴──────┴────────────────┴───────────────────────────────────────────┘"
+"GraphQL Document Validation    nuxt.config.ts  x
+Syntax Error: Expected Name, found <EOF>.
+nuxt.config.ts:3:11
+2 |             id
+3 |
+  |           ^    nuxt.config.ts  x
+Syntax Error: Expected Name, found <EOF>.
+nuxt.config.ts:3:11
+2 |             id
+3 |
+  |           ^"
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `
-"GraphQL code generation table:
-┌───────────┬────────────────┬────────────────┬────────┐
-│ Operation │ Name           │ File           │ Errors │
-├───────────┼────────────────┼────────────────┼────────┤
-│           │ nuxt.config.ts │ nuxt.config.ts │        │
-├───────────┼────────────────┼────────────────┼────────┤
-│ query     │ one            │ nuxt.config.ts │        │
-├───────────┼────────────────┼────────────────┼────────┤
-│ mutation  │ two            │ nuxt.config.ts │        │
-└───────────┴────────────────┴────────────────┴────────┘"
+"GraphQL Document Validation          nuxt.config.ts  nuxt.config.ts  ✓query     one             nuxt.config.ts  ✓mutation  two             nuxt.config.ts  ✓"
 `;
