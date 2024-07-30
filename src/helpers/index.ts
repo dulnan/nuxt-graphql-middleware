@@ -41,7 +41,6 @@ export const defaultOptions: ModuleOptions = {
   debug: false,
   includeComposables: true,
   documents: [],
-  autoImportPatterns: [],
   devtools: true,
 }
 

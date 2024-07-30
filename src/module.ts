@@ -235,6 +235,8 @@ export default defineNuxtModule<ModuleOptions>({
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
     // Add sane default for the autoImportPatterns option.
+    // We don't want to add them to the default options, because defu would
+    // merge the array with the array provided by the user.
     if (!passedOptions.autoImportPatterns) {
       options.autoImportPatterns = ['**/*.{gql,graphql}', '!node_modules']
     }

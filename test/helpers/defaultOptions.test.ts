@@ -1,9 +1,9 @@
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { defaultOptions } from '../../src/helpers'
 
 describe('defaultOptions', () => {
   test('Provides sane defaults', () => {
-    expect(defaultOptions.autoImportPatterns).toEqual([])
+    expect(defaultOptions.autoImportPatterns).toBeUndefined()
 
     expect(defaultOptions.downloadSchema).toEqual(true)
     expect(defaultOptions.schemaPath).toEqual('./schema.graphql')

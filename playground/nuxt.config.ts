@@ -7,12 +7,6 @@ const graphqlMiddleware: ModuleOptions = {
   downloadSchema: IS_DEV,
   codegenConfig: {},
   outputDocuments: true,
-  autoImportPatterns: [
-    './pages/**/*.graphql',
-    './components/**/*.graphql',
-    './layouts/**/*.graphql',
-    './server/**/*.graphql',
-  ],
   autoInlineFragments: true,
   documents: [
     `
