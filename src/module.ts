@@ -577,7 +577,7 @@ export { serverOptions }
   },
 })
 
-declare module 'nuxt/schema' {
+declare module '@nuxt/schema' {
   interface AppConfig {
     graphqlMiddleware: {
       clientCacheEnabled: boolean
