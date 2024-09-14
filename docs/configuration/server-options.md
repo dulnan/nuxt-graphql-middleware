@@ -2,15 +2,15 @@
 
 All dynamic configuration that deals with the server-side requests made to the
 GraphQL server is located in a special runtime file located at
-`~/app/graphqlMiddleware.serverOptions.ts`. This file is bundled together with
-the nitro build in the .output folder.
+`~/server/graphqlMiddleware.serverOptions.ts`. This file is bundled together
+with the nitro build in the .output folder.
 
 Create a file called `graphqlMiddleware.serverOptions.ts` (or js/mjs) inside the
 `app` folder in your Nuxt root.
 
 ::: code-group
 
-```typescript [~/app/graphqlMiddleware.serverOptions.ts]
+```typescript [~/server/graphqlMiddleware.serverOptions.ts]
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 
 export default defineGraphqlServerOptions({

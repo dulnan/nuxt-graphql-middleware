@@ -117,7 +117,7 @@ export interface ModuleOptions {
    * The URL of the GraphQL server.
    *
    * For the runtime execution you can provide a method that determines the endpoint
-   * during runtime. See the app/graphqlMiddleware.serverOptions.ts documentation
+   * during runtime. See the server/graphqlMiddleware.serverOptions.ts documentation
    * for more information.
    */
   graphqlEndpoint: string
@@ -465,7 +465,7 @@ declare module '#graphql-documents' {
     // Creates the template with runtime server configuration used by the
     // GraphQL server handler.
     const extensions = ['js', 'mjs', 'ts']
-    const resolvedPath = '~/app/graphqlMiddleware.serverOptions'
+    const resolvedPath = '~/server/graphqlMiddleware.serverOptions'
       .replace(/^(~~|@@)/, nuxt.options.rootDir)
       .replace(/^(~|@)/, nuxt.options.srcDir)
     // nuxt.options.build.transpile.push(resolvedPath)
@@ -480,7 +480,7 @@ declare module '#graphql-documents' {
       )
 
       const serverOptionsLine = maybeUserFile
-        ? `import serverOptions from './../app/graphqlMiddleware.serverOptions'`
+        ? `import serverOptions from './../server/graphqlMiddleware.serverOptions'`
         : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
 
       return addTemplate({
