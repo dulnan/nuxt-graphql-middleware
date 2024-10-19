@@ -31,10 +31,11 @@ describe('generate', () => {
       {
         graphqlEndpoint: '',
         documents: [],
+        autoInlineFragments: true,
         autoImportPatterns: [
-          './pages/**/*.graphql',
-          './components/**/*.graphql',
-          './layouts/**/*.graphql',
+          './app/pages/**/*.graphql',
+          './app/components/**/*.graphql',
+          './app/layouts/**/*.graphql',
           './server/**/*.graphql',
         ],
       },
@@ -42,15 +43,10 @@ describe('generate', () => {
       resolver,
       srcDir,
     )
+    expect(result.documents.filter((v) => v.errors?.length)).toEqual([])
     expect(result.hasErrors).toBeFalsy()
     expect(result.documents).toHaveLength(18)
     expect(result.templates).toHaveLength(3)
-
-    const possibleTemplates = [
-      'graphql-documents.mjs',
-      'graphql-operations.d.ts',
-      'nuxt-graphql-middleware.d.ts',
-    ]
 
     const a = result.templates.find(
       (t) => t.filename === 'graphql-documents.mjs',
@@ -71,7 +67,7 @@ describe('generate', () => {
       {
         graphqlEndpoint: '',
         documents: [],
-        autoImportPatterns: ['./test-queries/auto-inline/**/*.graphql'],
+        autoImportPatterns: ['./app/test-queries/auto-inline/**/*.graphql'],
         autoInlineFragments: true,
       },
       schemaPath,
