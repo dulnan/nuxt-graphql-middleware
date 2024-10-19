@@ -235,6 +235,22 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
+    const isModuleBuild =
+      process.env.MODULE_BUILD === 'true' && nuxt.options._prepare
+
+    // When running dev:prepare during module development we have to "fake"
+    // options to use the playground.
+    if (isModuleBuild) {
+      options.graphqlEndpoint = 'http://localhost'
+      options.downloadSchema = false
+      options.schemaPath = '~~/playground/schema.graphql'
+      options.autoInlineFragments = true
+      options.autoImportPatterns = [
+        '~~/playground/**/*.{gql,graphql}',
+        '!node_modules',
+      ]
+    }
+
     // Add sane default for the autoImportPatterns option.
     // We don't want to add them to the default options, because defu would
     // merge the array with the array provided by the user.
@@ -243,24 +259,20 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Will throw an error if the options are not valid.
-    validateOptions(options)
-
-    const schemaPathOptions: Pick<
-      ModuleOptions,
-      'schemaPath' | 'downloadSchema' | 'graphqlEndpoint'
-    > = {
-      schemaPath: options
-        .schemaPath!.replace(/^(~~|@@)/, nuxt.options.rootDir)
-        .replace(/^(~|@)/, nuxt.options.srcDir),
-      downloadSchema: options.downloadSchema,
-      graphqlEndpoint: options.graphqlEndpoint,
+    if (!nuxt.options._prepare) {
+      validateOptions(options)
     }
+
+    const schemaPathReplaced = options
+      .schemaPath!.replace(/^(~~|@@)/, nuxt.options.rootDir)
+      .replace(/^(~|@)/, nuxt.options.srcDir)
 
     const moduleResolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(
-      schemaPathOptions,
+      schemaPathReplaced,
+      options,
       srcResolver,
       options.downloadSchema,
     )
@@ -365,7 +377,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         prompt.then(async ({ accept }) => {
           if (accept) {
-            await getSchemaPath(schemaPathOptions, srcResolver, true)
+            await getSchemaPath(schemaPathReplaced, options, srcResolver, true)
             await generateHandler()
           }
         })

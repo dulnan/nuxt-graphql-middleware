@@ -71,15 +71,12 @@ export function validateOptions(options: Partial<ModuleOptions>) {
  * Get the path to the GraphQL schema.
  */
 export async function getSchemaPath(
-  options: Pick<
-    ModuleOptions,
-    'schemaPath' | 'downloadSchema' | 'graphqlEndpoint'
-  >,
+  schemaPath: string,
+  options: ModuleOptions,
   resolver: Resolver['resolve'],
   writeToDisk = false,
 ): Promise<string> {
-  const dest = resolver(options.schemaPath!)
-  console.log({ dest })
+  const dest = resolver(schemaPath)
   if (!options.downloadSchema) {
     const fileExists = await fsp
       .access(dest)
