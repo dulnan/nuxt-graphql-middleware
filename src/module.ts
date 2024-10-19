@@ -243,7 +243,7 @@ export default defineNuxtModule<ModuleOptions>({
     if (isModuleBuild) {
       options.graphqlEndpoint = 'http://localhost'
       options.downloadSchema = false
-      options.schemaPath = '~~/playground/schema.graphql'
+      options.schemaPath = '~~/schema.graphql'
       options.autoInlineFragments = true
       options.autoImportPatterns = [
         '~~/playground/**/*.{gql,graphql}',

@@ -9,7 +9,7 @@
 <script setup lang="ts">
 import { useAsyncGraphqlQuery } from '#imports'
 
-const { data: users } = await useAsyncGraphqlQuery('users', null, {
+const { data: users } = await useAsyncGraphqlQuery('usersLayer', null, {
   transform: (v) => v.data.users,
   graphqlCaching: {
     client: true,

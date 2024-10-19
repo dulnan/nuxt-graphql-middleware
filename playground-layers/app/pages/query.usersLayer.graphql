@@ -1,0 +1,7 @@
+#import '~/components/User/fragment.userLayer.graphql'
+
+query usersLayer {
+  users {
+    ...userLayer
+  }
+}
