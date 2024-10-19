@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from '#imports'
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import MiniSearch from 'minisearch'
 

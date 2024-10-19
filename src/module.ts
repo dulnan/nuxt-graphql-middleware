@@ -228,7 +228,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '>=3.1.0',
+      nuxt: '>=3.13.0',
     },
   },
   defaults: defaultOptions,
@@ -268,12 +268,12 @@ export default defineNuxtModule<ModuleOptions>({
       .replace(/^(~|@)/, nuxt.options.srcDir)
 
     const moduleResolver = createResolver(import.meta.url)
-    const srcDir = nuxt.options.srcDir
-    const srcResolver = createResolver(srcDir).resolve
+    const rootDir = nuxt.options.rootDir
+    const rootResolver = createResolver(rootDir).resolve
     const schemaPath = await getSchemaPath(
       schemaPathReplaced,
       options,
-      srcResolver,
+      rootResolver,
       options.downloadSchema,
     )
 
@@ -331,8 +331,8 @@ export default defineNuxtModule<ModuleOptions>({
         const { templates, hasErrors, documents } = await generate(
           options,
           schemaPath,
-          srcResolver,
-          srcDir,
+          rootResolver,
+          rootDir,
           isFirst,
         )
         ctx.templates = templates
@@ -377,7 +377,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         prompt.then(async ({ accept }) => {
           if (accept) {
-            await getSchemaPath(schemaPathReplaced, options, srcResolver, true)
+            await getSchemaPath(schemaPathReplaced, options, rootResolver, true)
             await generateHandler()
           }
         })
@@ -512,7 +512,7 @@ declare module '#graphql-documents' {
     }
 
     const resolvedPathRelative = resolvedPath
-      ? relative(nuxt.options.buildDir, srcResolver(resolvedPath))
+      ? relative(nuxt.options.buildDir, rootResolver(resolvedPath))
       : null
 
     const serverOptionsLine = resolvedPathRelative

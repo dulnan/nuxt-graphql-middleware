@@ -228,9 +228,9 @@ export async function buildDocuments(
 
 export function parseDocument(
   document: GraphqlMiddlewareDocument,
-  srcDir: string,
+  rootDir: string,
 ): DocumentNode {
-  let name = document.filename ? document.filename.replace(srcDir, '') : ''
+  let name = document.filename ? document.filename.replace(rootDir, '') : ''
   if (name.charAt(0) === '/') {
     name = name.slice(1)
   }
@@ -241,17 +241,17 @@ export function parseDocument(
 export function validateDocuments(
   schema: GraphQLSchema,
   documents: GraphqlMiddlewareDocument[],
-  srcDir: string,
+  rootDir: string,
 ): GraphqlMiddlewareDocument[] {
   const validated: GraphqlMiddlewareDocument[] = []
 
   for (let i = 0; i < documents.length; i++) {
-    const document = { ...documents[i] }
+    const document: GraphqlMiddlewareDocument = { ...documents[i]! }
     if (document.filename) {
-      document.relativePath = document.filename.replace(srcDir + '/', '')
+      document.relativePath = document.filename.replace(rootDir + '/', '')
     }
     try {
-      const node = parseDocument(document, srcDir)
+      const node = parseDocument(document, rootDir)
       document.content = print(node)
       document.errors = validateGraphQlDocuments(schema, [
         node,
@@ -326,7 +326,7 @@ function cleanGraphqlDocument(
   while (hasNewFragments) {
     hasNewFragments = false
     for (const fragmentName of usedFragments) {
-      visit(fragments[fragmentName], {
+      visit(fragments[fragmentName]!, {
         FragmentSpread(node) {
           if (!usedFragments.has(node.name.value)) {
             usedFragments.add(node.name.value)
@@ -342,7 +342,7 @@ function cleanGraphqlDocument(
     definitions: [
       selectedOperation,
       ...Array.from(usedFragments).map(
-        (fragmentName) => fragments[fragmentName],
+        (fragmentName) => fragments[fragmentName]!,
       ),
     ],
   }
@@ -355,7 +355,7 @@ export async function generate(
   options: ModuleOptions,
   schemaPath: string,
   resolver: Resolver['resolve'],
-  srcDir: string,
+  rootDir: string,
   logEverything = false,
 ) {
   const schemaContent = await fsp.readFile(schemaPath).then((v) => v.toString())
@@ -368,7 +368,7 @@ export async function generate(
     !!options.autoInlineFragments,
   )
 
-  const validated = validateDocuments(schema, documents, srcDir)
+  const validated = validateDocuments(schema, documents, rootDir)
 
   const extracted: GraphqlMiddlewareDocument[] = validated.filter(
     (v) => !v.operation,
@@ -376,6 +376,9 @@ export async function generate(
 
   for (let i = 0; i < validated.length; i++) {
     const v = validated[i]
+    if (!v) {
+      continue
+    }
     if (v.isValid) {
       try {
         const node = parse(v.content)

@@ -43,7 +43,7 @@ function getCodeResult(
       resultTypes.push(nameResult)
       imports.push(nameResult)
       const nameVariables = pascalCase(name + typeName + 'Variables')
-      const { hasVariables, variablesOptional } = operations[name]
+      const { hasVariables, variablesOptional } = operations[name]!
       if (hasVariables) {
         imports.push(nameVariables)
       }

@@ -23,7 +23,7 @@ import { useRoute, useAsyncGraphqlQuery } from '#imports'
 const route = useRoute()
 
 const variables = computed<UserByIdQueryVariables>(() => {
-  const id = route.params.id.toString()
+  const id = (route.params.id || '').toString()
   return {
     id,
   }
