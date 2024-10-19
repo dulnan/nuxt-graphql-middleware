@@ -1,7 +1,7 @@
 import path from 'path'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { getSchemaPath } from '../../src/helpers'
-const schemaPath = path.resolve(__dirname, './../../playground/schema.graphql')
+const schemaPath = path.resolve(__dirname, './../../schema.graphql')
 
 vi.mock('./../../src/codegen/index', async () => {
   const codegen: any = await vi.importActual('./../../src/codegen/index')

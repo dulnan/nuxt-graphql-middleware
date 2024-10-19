@@ -107,6 +107,7 @@ export async function autoImportDocuments(
   if (!patterns.length) {
     return Promise.resolve([])
   }
+  console.log({ patterns })
   const files = (
     await resolveFiles(srcResolver(), patterns, {
       followSymbolicLinks: false,
@@ -189,6 +190,10 @@ export async function buildDocuments(
       }
       return documents
         .map((v) => {
+          // Ignore empty files.
+          if (!v.content.trim()) {
+            return null
+          }
           try {
             return {
               content: inlineFragments(v.content, resolveAlias),
@@ -203,6 +208,10 @@ export async function buildDocuments(
           return null
         })
         .filter(falsy)
+    })
+    .then((docs) => {
+      // Ignore empty files.
+      return docs.filter((v) => v.content.trim())
     })
 
   if (!autoInlineFragments) {

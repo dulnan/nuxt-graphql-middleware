@@ -49,6 +49,10 @@ jobs:
         run: |
           npm run lint
 
+      - name: Build layers playground
+        run: |
+          npm run dev:layers:build
+
       - name: Run vitest
         run: |
           npm run dev:build
