@@ -5,8 +5,9 @@ GraphQL server is located in a special runtime file located at
 `~/server/graphqlMiddleware.serverOptions.ts`. This file is bundled together
 with the nitro build in the .output folder.
 
-Create a file called `graphqlMiddleware.serverOptions.ts` (or js/mjs) inside the
-`app` folder in your Nuxt root.
+Create a file called `graphqlMiddleware.serverOptions.ts` inside the `serverDir`
+of your Nuxt project. If you didn't specifically override this in your Nuxt
+config this will be `./server`.
 
 ::: code-group
 

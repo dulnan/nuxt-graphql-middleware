@@ -458,7 +458,7 @@ export async function generate(
 
 export const fileExists = (
   path?: string,
-  extensions = ['js', 'ts'],
+  extensions = ['js', 'ts', 'mjs'],
 ): string | null => {
   if (!path) {
     return null
