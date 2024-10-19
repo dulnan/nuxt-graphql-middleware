@@ -31,6 +31,7 @@ import {
 import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { type GraphqlMiddlewareDocument } from './types'
+import { falsy } from './runtime/helpers'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 export interface ModuleOptions {
@@ -244,11 +245,22 @@ export default defineNuxtModule<ModuleOptions>({
     // Will throw an error if the options are not valid.
     validateOptions(options)
 
+    const schemaPathOptions: Pick<
+      ModuleOptions,
+      'schemaPath' | 'downloadSchema' | 'graphqlEndpoint'
+    > = {
+      schemaPath: options
+        .schemaPath!.replace(/^(~~|@@)/, nuxt.options.rootDir)
+        .replace(/^(~|@)/, nuxt.options.srcDir),
+      downloadSchema: options.downloadSchema,
+      graphqlEndpoint: options.graphqlEndpoint,
+    }
+
     const moduleResolver = createResolver(import.meta.url)
     const srcDir = nuxt.options.srcDir
     const srcResolver = createResolver(srcDir).resolve
     const schemaPath = await getSchemaPath(
-      options,
+      schemaPathOptions,
       srcResolver,
       options.downloadSchema,
     )
@@ -353,7 +365,7 @@ export default defineNuxtModule<ModuleOptions>({
 
         prompt.then(async ({ accept }) => {
           if (accept) {
-            await getSchemaPath(options, srcResolver, true)
+            await getSchemaPath(schemaPathOptions, srcResolver, true)
             await generateHandler()
           }
         })
@@ -464,31 +476,57 @@ declare module '#graphql-documents' {
     //
     // Creates the template with runtime server configuration used by the
     // GraphQL server handler.
-    const extensions = ['js', 'mjs', 'ts']
-    const resolvedPath = '~/server/graphqlMiddleware.serverOptions'
-      .replace(/^(~~|@@)/, nuxt.options.rootDir)
-      .replace(/^(~|@)/, nuxt.options.srcDir)
-    // nuxt.options.build.transpile.push(resolvedPath)
-    const template = (() => {
-      const resolvedFilename = `graphqlMiddleware.serverOptions.ts`
+    const candidates: string[] = [
+      '~/graphqlMiddleware.serverOptions',
+      '~~/graphqlMiddleware.serverOptions',
+      '~/app/graphqlMiddleware.serverOptions',
+    ]
+      .map((aliasPath) => {
+        return aliasPath
+          .replace(/^(~~|@@)/, nuxt.options.rootDir)
+          .replace(/^(~|@)/, nuxt.options.srcDir)
+      })
+      .map((fullPath) => fileExists(fullPath))
+      .filter(falsy)
+    const resolvedPath = candidates[0] as string | undefined
 
-      const maybeUserFile = fileExists(resolvedPath, extensions)
+    const moduleTypesPath = relative(
+      nuxt.options.buildDir,
+      moduleResolver.resolve('./types'),
+    )
 
-      const moduleTypesPath = relative(
-        nuxt.options.buildDir,
-        moduleResolver.resolve('./types'),
-      )
+    if (!resolvedPath) {
+      logger.info('No graphqlMiddleware.serverOptions file found.')
+    }
 
-      const serverOptionsLine = maybeUserFile
-        ? `import serverOptions from './../server/graphqlMiddleware.serverOptions'`
-        : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
+    const resolvedPathRelative = resolvedPath
+      ? relative(nuxt.options.buildDir, srcResolver(resolvedPath))
+      : null
 
-      return addTemplate({
-        filename: resolvedFilename,
-        write: true,
-        getContents: () => `
-import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
+    const serverOptionsLine = resolvedPathRelative
+      ? `import serverOptions from '${resolvedPathRelative}'`
+      : `const serverOptions = {}`
+
+    const template = addTemplate({
+      filename: 'graphqlMiddleware.serverOptions.mjs',
+      write: true,
+      getContents: () => `
 ${serverOptionsLine}
+
+export { serverOptions }
+`,
+    })
+
+    const serverOptionsLineTypes = resolvedPathRelative
+      ? `import serverOptions from '${resolvedPathRelative}'`
+      : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
+
+    addTemplate({
+      filename: 'graphqlMiddleware.serverOptions.d.ts',
+      write: true,
+      getContents: () => `
+import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
+${serverOptionsLineTypes}
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
 import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
 
@@ -501,8 +539,7 @@ export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnio
 
 export { serverOptions }
 `,
-      })
-    })()
+    })
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =

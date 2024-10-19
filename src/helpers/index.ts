@@ -35,7 +35,7 @@ export const defaultOptions: ModuleOptions = {
     },
   },
   downloadSchema: true,
-  schemaPath: './schema.graphql',
+  schemaPath: '~~/schema.graphql',
   serverApiPrefix: '/api/graphql_middleware',
   graphqlEndpoint: '',
   debug: false,
@@ -71,11 +71,15 @@ export function validateOptions(options: Partial<ModuleOptions>) {
  * Get the path to the GraphQL schema.
  */
 export async function getSchemaPath(
-  options: ModuleOptions,
+  options: Pick<
+    ModuleOptions,
+    'schemaPath' | 'downloadSchema' | 'graphqlEndpoint'
+  >,
   resolver: Resolver['resolve'],
   writeToDisk = false,
 ): Promise<string> {
   const dest = resolver(options.schemaPath!)
+  console.log({ dest })
   if (!options.downloadSchema) {
     const fileExists = await fsp
       .access(dest)
