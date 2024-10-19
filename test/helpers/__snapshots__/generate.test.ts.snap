@@ -51,6 +51,11 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type DataForLayer = {
+  __typename?: 'DataForLayer';
+  text?: Maybe<Scalars['String']['output']>;
+};
+
 export type FormSubmission = {
   __typename?: 'FormSubmission';
   documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
@@ -108,6 +113,7 @@ export type MutationUploadFileArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  dataForLayer?: Maybe<DataForLayer>;
   getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;
@@ -415,6 +421,11 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type DataForLayer = {
+  __typename?: 'DataForLayer';
+  text?: Maybe<Scalars['String']['output']>;
+};
+
 export type FormSubmission = {
   __typename?: 'FormSubmission';
   documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
@@ -472,6 +483,7 @@ export type MutationUploadFileArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  dataForLayer?: Maybe<DataForLayer>;
   getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;
@@ -635,6 +647,11 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type DataForLayer = {
+  __typename?: 'DataForLayer';
+  text?: Maybe<Scalars['String']['output']>;
+};
+
 export type FormSubmission = {
   __typename?: 'FormSubmission';
   documents?: Maybe<Array<Maybe<FormSubmissionDocument>>>;
@@ -692,6 +709,7 @@ export type MutationUploadFileArgs = {
 
 export type Query = {
   __typename?: 'Query';
+  dataForLayer?: Maybe<DataForLayer>;
   getCurrentTime?: Maybe<Scalars['String']['output']>;
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;

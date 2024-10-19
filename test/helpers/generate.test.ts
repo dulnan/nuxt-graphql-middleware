@@ -21,10 +21,7 @@ vi.mock('@nuxt/kit', async () => {
 describe('generate', () => {
   const srcDir = path.resolve(__dirname, './../../playground')
   const resolver = createResolver(srcDir).resolve
-  const schemaPath = path.resolve(
-    __dirname,
-    './../../playground/schema.graphql',
-  )
+  const schemaPath = path.resolve(__dirname, './../../schema.graphql')
 
   test('Generates templates correctly for auto imported documents', async () => {
     const result = await generate(
