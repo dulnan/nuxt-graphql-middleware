@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
