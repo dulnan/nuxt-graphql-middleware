@@ -6,7 +6,7 @@ describe('defaultOptions', () => {
     expect(defaultOptions.autoImportPatterns).toBeUndefined()
 
     expect(defaultOptions.downloadSchema).toEqual(true)
-    expect(defaultOptions.schemaPath).toEqual('./schema.graphql')
+    expect(defaultOptions.schemaPath).toEqual('~~/schema.graphql')
     expect(defaultOptions.serverApiPrefix).toEqual('/api/graphql_middleware')
     expect(
       defaultOptions.graphqlEndpoint,

@@ -120,8 +120,7 @@ export default defineEventHandler(async (event) => {
   return $fetch
     .raw(endpoint, {
       ...fetchOptions,
-      // @todo: Remove any once https://github.com/unjs/nitro/pull/883 is released.
-      method: 'POST' as any,
+      method: 'POST',
       body: formData,
     })
     .then((response) => {

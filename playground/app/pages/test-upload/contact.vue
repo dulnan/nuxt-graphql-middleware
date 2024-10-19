@@ -54,7 +54,7 @@
 
 <script lang="ts" setup>
 import { ref, useGraphqlUploadMutation, useAsyncGraphqlQuery } from '#imports'
-import { falsy } from '../../../src/runtime/helpers'
+import { falsy } from '../../../../src/runtime/helpers'
 
 const { data: submissions, refresh } = await useAsyncGraphqlQuery(
   'getSubmissions',

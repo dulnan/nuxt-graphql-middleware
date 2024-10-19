@@ -31,7 +31,7 @@ export default defineNuxtConfig({
 ## For query/mutation requests at runtime
 
 Define a `serverFetchOptions` callback in
-`~/app/graphqlMiddleware.serverOptions.ts`. This method is called before a
+`~/server/graphqlMiddleware.serverOptions.ts`. This method is called before a
 GraphQL request is made.
 
 ```typescript

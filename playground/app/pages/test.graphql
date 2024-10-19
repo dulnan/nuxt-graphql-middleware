@@ -1,0 +1,7 @@
+#import "~/app/pages/user/user.fragment.graphql"
+
+query foobar {
+  users {
+    ...user
+  }
+}

@@ -120,7 +120,7 @@ export default defineNuxtConfig({
 })
 ```
 
-## Full ~/app/graphqlMiddleware.serverOptions.ts example
+## Full ~/server/graphqlMiddleware.serverOptions.ts example
 
 ```typescript
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'

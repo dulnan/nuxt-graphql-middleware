@@ -114,5 +114,8 @@ export function useAsyncGraphqlQuery<
         asyncDataOptions.graphqlCaching,
       ),
     asyncDataOptions as any,
-  )
+  ) as AsyncData<
+    PickFrom<DefaultT, KeysOf<DefaultT>> | null,
+    NuxtError<unknown> | null
+  >
 }
