@@ -33,9 +33,10 @@
   "scripts": {
     "prepack": "nuxt-module-build build && npm run client:build",
     "dev": "nuxi dev playground --trace-warnings",
+    "dev:layers": "nuxi dev playground-layers --trace-warnings",
     "debug": "nuxi dev playground --inspect",
     "dev:build": "nuxi build playground",
-    "dev:prepare": "MODULE_BUILD=true nuxt-module-build build --stub && MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground",
+    "dev:prepare": "MODULE_BUILD=true nuxt-module-build build --stub && MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground && nuxi prepare playground-layers",
     "dev:start": "node ./playground/.output/server/index.mjs",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",

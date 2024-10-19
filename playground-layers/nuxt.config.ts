@@ -5,19 +5,10 @@ const IS_DEV = process.env.NODE_ENV === 'development'
 const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
   downloadSchema: IS_DEV,
-  schemaPath: './../schema.graphql',
   codegenConfig: {},
-  outputDocuments: true,
-  autoInlineFragments: true,
-  documents: [
-    `
-    query usersFromConfig {
-      users {
-        id
-      }
-    }
-    `,
-  ],
+  outputDocuments: false,
+  schemaPath: './../schema.graphql',
+  autoInlineFragments: false,
   codegenSchemaConfig: {
     urlSchemaOptions: {
       headers: {
@@ -30,13 +21,15 @@ const graphqlMiddleware: ModuleOptions = {
     enabled: true,
   },
 
-  enableFileUploads: true,
+  enableFileUploads: false,
 }
 
 export default defineNuxtConfig({
-  modules: [graphqlMiddlewareModule as any, '@nuxt/devtools', '@nuxt/eslint'],
+  modules: [graphqlMiddlewareModule as any],
   graphqlMiddleware,
   ssr: true,
+
+  extends: ['./layers/test-layer'],
 
   imports: {
     autoImport: false,

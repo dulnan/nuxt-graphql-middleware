@@ -1,0 +1,7 @@
+#import '#test-layer/components/fragment.layerData.graphql'
+
+query layerData {
+  dataForLayer {
+    ...dataForLayer
+  }
+}

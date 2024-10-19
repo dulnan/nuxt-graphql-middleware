@@ -95,6 +95,10 @@ const typeDefs = `#graphql
     headerServer: String
   }
 
+type DataForLayer {
+text: String
+}
+
   type Query {
     users: [User!]!
     userById(id: ID!): User
@@ -103,6 +107,7 @@ const typeDefs = `#graphql
     getError: Boolean
     getSubmissions: [FormSubmission]
     getCurrentTime: String
+    dataForLayer: DataForLayer
   }
 
   type UploadedFile {
@@ -160,6 +165,9 @@ const resolvers = {
     },
     getCurrentTime: () => {
       return new Date()
+    },
+    dataForLayer: () => {
+      return { text: 'This is data for the layer page.' }
     },
     getSubmissions: () => {
       return formSubmissions

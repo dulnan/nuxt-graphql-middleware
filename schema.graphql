@@ -1,3 +1,7 @@
+type DataForLayer {
+  text: String
+}
+
 type FormSubmission {
   documents: [FormSubmissionDocument]
   firstName: String
@@ -31,6 +35,7 @@ type Mutation {
 }
 
 type Query {
+  dataForLayer: DataForLayer
   getCurrentTime: String
   getError: Boolean
   getRequestHeader(name: String!): String
