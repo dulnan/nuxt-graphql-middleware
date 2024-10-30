@@ -107,7 +107,6 @@ export async function autoImportDocuments(
   if (!patterns.length) {
     return Promise.resolve([])
   }
-  console.log({ patterns })
   const files = (
     await resolveFiles(srcResolver(), patterns, {
       followSymbolicLinks: false,
