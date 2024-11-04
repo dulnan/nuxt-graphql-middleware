@@ -88,6 +88,10 @@ export default defineConfig({
             link: '/configuration/server-options',
           },
           {
+            text: 'Client Options',
+            link: '/configuration/client-options',
+          },
+          {
             text: 'Full Example',
             link: '/configuration/full-example',
           },
