@@ -1,0 +1,5 @@
+query testClientOptions($path: String!) {
+  testClientOptions(path: $path) {
+    language
+  }
+}

@@ -40,9 +40,15 @@ type Query {
   getError: Boolean
   getRequestHeader(name: String!): String
   getSubmissions: [FormSubmission]
+  testClientOptions(path: String!): TestClientOptions
   testFetchOptions: TestFetchOptions
   userById(id: ID!): User
   users: [User!]!
+}
+
+type TestClientOptions {
+  language: String
+  languageFromPath: String
 }
 
 type TestFetchOptions {

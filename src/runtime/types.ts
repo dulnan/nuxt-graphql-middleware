@@ -31,8 +31,36 @@ export type RequestCacheOptions = {
   client?: boolean
 }
 
-type ContextType = { [key: string]: string | null | undefined }
+export type ContextType = { [key: string]: string | null | undefined }
 
-export type BaseGraphqlClientOptions<T extends ContextType = ContextType> = {
+export type GraphqlClientOptions<T extends ContextType = ContextType> = {
+  /**
+   * Build the client context for this request.
+   *
+   * The method should return an object whose properties and values are strings.
+   * This object will be encoded as a query param when making the request to
+   * the GraphQL middleware. Each property is prefixed in the request to
+   * prevent collisions with query variables.
+   *
+   * On the server, the context is reassembled and passed to methods in custom
+   * server options such as getEndpoint or serverFetchOptions.
+   *
+   * One use case would be to pass some state of the Nuxt app to your server
+   * options such as the current language.
+   *
+   * @example
+   * Define a context.
+   *
+   * ```typescript
+   * export default defineGraphqlClientOptions({
+   *   getContext() {
+   *     const language = useCurrentLanguage()
+   *     return {
+   *       language: language.value,
+   *     }
+   *   },
+   * })
+   * ```
+   */
   getContext?: () => T
 }

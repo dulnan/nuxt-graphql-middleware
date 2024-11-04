@@ -610,19 +610,18 @@ export { clientOptions }`
       write: true,
       getContents: () => {
         if (clientOptionsImport) {
-          return `import { BaseGraphqlClientOptions } from '#graphql-middleware/types'
+          return `import { GraphqlClientOptions } from '#graphql-middleware/types'
 ${clientOptionsImport}
-type GetContextType<T extends BaseGraphqlClientOptions> = T['getContext'] extends () => infer R ? R : never
 
-export type GraphqlClientContext = GetContextType<typeof clientOptions>
+export type GraphqlClientContext = typeof clientOptions extends GraphqlClientOptions<infer R> ? R : {}
 
 export { clientOptions }`
         }
 
-        return `import { BaseGraphqlClientOptions } from '#graphql-middleware/types'
-export const clientOptions: BaseGraphqlClientOptions
+        return `import { GraphqlClientOptions } from '#graphql-middleware/types'
+export const clientOptions: GraphqlClientOptions
 
-export type GraphqlClientContext = BaseGraphqlClientOptions
+export type GraphqlClientContext = {}
 `
       },
     })

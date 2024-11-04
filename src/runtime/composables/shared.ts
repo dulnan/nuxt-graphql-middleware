@@ -5,6 +5,7 @@ import type {
   GraphqlMiddlewareMutation,
 } from '#build/nuxt-graphql-middleware'
 import type { RequestCacheOptions } from '#graphql-middleware/types'
+import { CLIENT_CONTEXT_PREFIX } from '../settings'
 
 // Possible query names.
 export type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
@@ -107,7 +108,7 @@ export function encodeContext(
   return Object.entries(context).reduce<Record<string, string>>(
     (acc, [key, value]) => {
       if (typeof value === 'string') {
-        acc['__gqlc_' + key] = value
+        acc[CLIENT_CONTEXT_PREFIX + key] = value
       }
       return acc
     },

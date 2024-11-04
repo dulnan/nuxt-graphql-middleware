@@ -7,6 +7,7 @@ import {
   validateRequest,
   onServerResponse,
   onServerError,
+  extractRequestContext,
 } from './helpers'
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
@@ -31,10 +32,13 @@ export default defineEventHandler(async (event) => {
   // The GraphQL query document as a string.
   const operationDocument: string = (documents as any)[operation][operationName]
 
+  const queryParams = getQuery(event)
+  const context = extractRequestContext(queryParams)
+
   // Get the query variables or mutation input.
   const variables =
     operation === GraphqlMiddlewareOperation.Query
-      ? queryParamToVariables(getQuery(event) as any)
+      ? queryParamToVariables(queryParams)
       : await readBody(event)
 
   // If a custom request method is provided run it.
@@ -45,6 +49,7 @@ export default defineEventHandler(async (event) => {
       operationName,
       operationDocument,
       variables,
+      context,
     })
   }
 
@@ -59,6 +64,7 @@ export default defineEventHandler(async (event) => {
     event,
     operation,
     operationName,
+    context,
   )
 
   // Get the fetch options for this request.
@@ -67,6 +73,7 @@ export default defineEventHandler(async (event) => {
     event,
     operation,
     operationName,
+    context,
   )
 
   return $fetch
@@ -87,6 +94,7 @@ export default defineEventHandler(async (event) => {
         response,
         operation,
         operationName,
+        context,
       )
     })
     .catch((error) => {
@@ -96,6 +104,7 @@ export default defineEventHandler(async (event) => {
         error,
         operation,
         operationName,
+        context,
       )
     })
 })

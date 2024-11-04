@@ -117,7 +117,7 @@ export function useAsyncGraphqlQuery<
             ...buildRequestParams(unref(variables)),
             ...clientContext,
           },
-          ...fetchOptions,
+          ...(fetchOptions as any),
         },
         asyncDataOptions.graphqlCaching,
       )

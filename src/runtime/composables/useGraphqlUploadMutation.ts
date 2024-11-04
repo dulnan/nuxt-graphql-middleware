@@ -85,7 +85,7 @@ export function useGraphqlUploadMutation<
     : {}
 
   return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {
-    ...(state && state.fetchOptions ? state.fetchOptions : {}),
+    ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
     ...(fetchOptions || {}),
     params: {
       ...clientContext,

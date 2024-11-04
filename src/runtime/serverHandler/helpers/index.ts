@@ -3,10 +3,14 @@ import type { H3Event } from 'h3'
 import { createError } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type {
+  GraphqlMiddlewareRequestContext,
   GraphqlMiddlewareRuntimeConfig,
   GraphqlMiddlewareServerOptions,
 } from './../../../types'
-import { GraphqlMiddlewareOperation } from './../../settings'
+import {
+  CLIENT_CONTEXT_PREFIX,
+  GraphqlMiddlewareOperation,
+} from './../../settings'
 import { type Documents } from '#graphql-documents'
 
 // Get the variables from query parameters.
@@ -29,14 +33,38 @@ export function queryParamToVariables(query: QueryObject) {
 }
 
 /**
+ * Extract the client context from the query params.
+ */
+export function extractRequestContext(
+  query: QueryObject,
+): GraphqlMiddlewareRequestContext<any> {
+  const client: Record<string, string> = {}
+
+  for (const property in query) {
+    if (property.startsWith(CLIENT_CONTEXT_PREFIX)) {
+      const value = query[property]
+      if (typeof value === 'string') {
+        const key = property.replace(CLIENT_CONTEXT_PREFIX, '')
+        client[key] = value
+      }
+    }
+  }
+
+  return {
+    client,
+  }
+}
+
+/**
  * Get the URL of the GraphQL endpoint.
  */
 export function getEndpoint(
   config: GraphqlMiddlewareRuntimeConfig,
-  serverOptions: GraphqlMiddlewareServerOptions,
+  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
+  context: GraphqlMiddlewareRequestContext<any>,
 ): string | Promise<string> {
   // Check if a custom graphqlEndpoint method exists.
   if (serverOptions.graphqlEndpoint) {
@@ -44,6 +72,7 @@ export function getEndpoint(
       event,
       operation,
       operationName,
+      context,
     )
 
     // Only return if the method returned somethind. This way we fall back to
@@ -62,14 +91,20 @@ export function getEndpoint(
  * Get the options for the $fetch request to the GraphQL server.
  */
 export function getFetchOptions(
-  serverOptions: GraphqlMiddlewareServerOptions,
+  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   operation: GraphqlMiddlewareOperation,
   operationName: string,
+  context: GraphqlMiddlewareRequestContext<any>,
 ): FetchOptions | Promise<FetchOptions> {
   if (serverOptions.serverFetchOptions) {
     return (
-      serverOptions.serverFetchOptions(event, operation, operationName) || {}
+      serverOptions.serverFetchOptions(
+        event,
+        operation,
+        operationName,
+        context,
+      ) || {}
     )
   }
 
@@ -130,11 +165,12 @@ export function validateRequest(
  * Handle GraphQL server response.
  */
 export function onServerResponse(
-  serverOptions: GraphqlMiddlewareServerOptions,
+  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   response: FetchResponse<any>,
-  operation?: string,
-  operationName?: string,
+  operation: string,
+  operationName: string,
+  context: GraphqlMiddlewareRequestContext<any>,
 ) {
   if (serverOptions.onServerResponse) {
     return serverOptions.onServerResponse(
@@ -142,6 +178,7 @@ export function onServerResponse(
       response,
       operation,
       operationName,
+      context,
     )
   }
 
@@ -152,14 +189,21 @@ export function onServerResponse(
  * Handle GraphQL server errors.
  */
 export function onServerError(
-  serverOptions: GraphqlMiddlewareServerOptions,
+  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   error: FetchError,
-  operation?: string,
-  operationName?: string,
+  operation: string,
+  operationName: string,
+  context: GraphqlMiddlewareRequestContext<any>,
 ) {
   if (serverOptions.onServerError) {
-    return serverOptions.onServerError(event, error, operation, operationName)
+    return serverOptions.onServerError(
+      event,
+      error,
+      operation,
+      operationName,
+      context,
+    )
   }
   const message = error && 'message' in error ? error.message : ''
   throw createError({

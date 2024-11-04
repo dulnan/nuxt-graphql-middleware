@@ -52,7 +52,7 @@ export function performRequest<T>(
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     {
-      ...(state && state.fetchOptions ? state.fetchOptions : {}),
+      ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
       ...options,
       method,
     },
