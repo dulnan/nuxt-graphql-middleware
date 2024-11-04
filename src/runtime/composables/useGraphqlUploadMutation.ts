@@ -80,8 +80,8 @@ export function useGraphqlUploadMutation<
 
   const formData = createFormData(variables)
 
-  const clientContext = clientOptions.getContext
-    ? encodeContext(clientOptions.getContext())
+  const clientContext = clientOptions.buildClientContext
+    ? encodeContext(clientOptions.buildClientContext())
     : {}
 
   return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {

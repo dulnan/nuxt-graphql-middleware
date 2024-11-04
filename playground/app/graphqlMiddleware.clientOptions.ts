@@ -4,7 +4,7 @@ import { useCurrentLanguage } from '#imports'
 export default defineGraphqlClientOptions<{
   language: string
 }>({
-  getContext() {
+  buildClientContext() {
     const language = useCurrentLanguage()
 
     return {

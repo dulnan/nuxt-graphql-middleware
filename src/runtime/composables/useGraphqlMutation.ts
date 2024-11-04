@@ -26,8 +26,8 @@ export function useGraphqlMutation<
       ? [args[0], args[1], args[2]?.fetchOptions]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
-  const clientContext = clientOptions.getContext
-    ? encodeContext(clientOptions.getContext())
+  const clientContext = clientOptions.buildClientContext
+    ? encodeContext(clientOptions.buildClientContext())
     : {}
 
   return performRequest<R>('mutation', name, 'post', {

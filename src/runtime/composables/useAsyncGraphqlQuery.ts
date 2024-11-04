@@ -105,8 +105,8 @@ export function useAsyncGraphqlQuery<
   return useAsyncData<GraphqlResponse<ResponseType>, unknown, DefaultT>(
     key,
     () => {
-      const clientContext = clientOptions.getContext
-        ? encodeContext(clientOptions.getContext())
+      const clientContext = clientOptions.buildClientContext
+        ? encodeContext(clientOptions.buildClientContext())
         : {}
       return performRequest<ResponseType>(
         'query',

@@ -39,8 +39,8 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    *
    * The method should return an object whose properties and values are strings.
    * This object will be encoded as a query param when making the request to
-   * the GraphQL middleware. Each property is prefixed in the request to
-   * prevent collisions with query variables.
+   * the GraphQL middleware. Each property name is prefixed when converted to a
+   * query param to prevent collisions.
    *
    * On the server, the context is reassembled and passed to methods in custom
    * server options such as getEndpoint or serverFetchOptions.
@@ -53,7 +53,8 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    *
    * ```typescript
    * export default defineGraphqlClientOptions({
-   *   getContext() {
+   *   buildClientContext() {
+   *     // Pass the current language as context.
    *     const language = useCurrentLanguage()
    *     return {
    *       language: language.value,
@@ -61,6 +62,22 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    *   },
    * })
    * ```
+   *
+   * Now when a GraphQL query is made with useGraphqlQuery the request URL will
+   * look like this:
+   * `/api/graphql_middleware/myQuery?queryVariable=foo&__gqlc_language=en`
+   *                                                   ^ your context
+   *
+   * Then in your serverOptions file, you can then access the context:
+   *
+   * ```typescript
+   * export default defineGraphqlServerOptions({
+   *   graphqlEndpoint(event, operation, operationName, context) {
+   *     const language = context?.client?.language || 'en'
+   *     return `http://backend_server/${language}/graphql`
+   *    },
+   * })
+   * ```
    */
-  getContext?: () => T
+  buildClientContext?: () => T
 }

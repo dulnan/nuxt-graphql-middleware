@@ -32,8 +32,8 @@ export function useGraphqlQuery<
           args[0].graphqlCaching,
         ]
 
-  const clientContext = clientOptions.getContext
-    ? encodeContext(clientOptions.getContext())
+  const clientContext = clientOptions.buildClientContext
+    ? encodeContext(clientOptions.buildClientContext())
     : {}
 
   return performRequest<R>(
