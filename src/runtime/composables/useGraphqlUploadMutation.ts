@@ -4,8 +4,10 @@ import {
   type MutationObjectArgs,
   type GetMutationResult,
   getEndpoint,
+  encodeContext,
 } from './shared'
 import type { GraphqlMiddlewareMutation } from '#build/nuxt-graphql-middleware'
+import { clientOptions } from '#graphql-middleware-client-options'
 import { useGraphqlState } from '#imports'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
@@ -78,9 +80,16 @@ export function useGraphqlUploadMutation<
 
   const formData = createFormData(variables)
 
+  const clientContext = clientOptions.getContext
+    ? encodeContext(clientOptions.getContext())
+    : {}
+
   return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {
     ...(state && state.fetchOptions ? state.fetchOptions : {}),
     ...(fetchOptions || {}),
+    params: {
+      ...clientContext,
+    },
     method: 'POST',
     body: formData,
   }).then((v) => {

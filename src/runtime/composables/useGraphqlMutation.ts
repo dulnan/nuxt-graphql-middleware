@@ -3,8 +3,10 @@ import {
   type GetMutationArgs,
   type MutationObjectArgs,
   type GetMutationResult,
+  encodeContext,
 } from './shared'
 import { performRequest } from './nuxtApp'
+import { clientOptions } from '#graphql-middleware-client-options'
 import type { GraphqlMiddlewareMutation } from '#build/nuxt-graphql-middleware'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
@@ -24,8 +26,15 @@ export function useGraphqlMutation<
       ? [args[0], args[1], args[2]?.fetchOptions]
       : [args[0].name, args[0].variables, args[0].fetchOptions]
 
+  const clientContext = clientOptions.getContext
+    ? encodeContext(clientOptions.getContext())
+    : {}
+
   return performRequest<R>('mutation', name, 'post', {
     body,
+    params: {
+      ...clientContext,
+    },
     ...fetchOptions,
   })
 }

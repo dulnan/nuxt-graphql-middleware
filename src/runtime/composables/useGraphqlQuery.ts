@@ -3,9 +3,11 @@ import {
   type GetQueryArgs,
   type QueryObjectArgs,
   type GetQueryResult,
+  encodeContext,
 } from './shared'
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
+import { clientOptions } from '#graphql-middleware-client-options'
 import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
@@ -30,12 +32,19 @@ export function useGraphqlQuery<
           args[0].graphqlCaching,
         ]
 
+  const clientContext = clientOptions.getContext
+    ? encodeContext(clientOptions.getContext())
+    : {}
+
   return performRequest<R>(
     'query',
     name,
     'get',
     {
-      params: buildRequestParams(variables),
+      params: {
+        ...buildRequestParams(variables),
+        ...clientContext,
+      },
       ...fetchOptions,
     },
     graphqlCaching,

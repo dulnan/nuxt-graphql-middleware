@@ -275,6 +275,7 @@ export default defineNuxtModule<ModuleOptions>({
     const moduleResolver = createResolver(import.meta.url)
     const serverResolver = createResolver(nuxt.options.serverDir)
     const srcResolver = createResolver(nuxt.options.srcDir)
+    const appResolver = createResolver(nuxt.options.dir.app)
     const rootDir = nuxt.options.rootDir
     const rootResolver = createResolver(rootDir)
     const schemaPath = await getSchemaPath(
@@ -576,6 +577,58 @@ export { serverOptions }
 `
       },
     })
+
+    const getClientOptionsImport = () => {
+      const clientOptionsPath = appResolver.resolve(
+        'graphqlMiddleware.clientOptions',
+      )
+
+      if (fileExists(clientOptionsPath)) {
+        const pathRelative = relative(nuxt.options.buildDir, clientOptionsPath)
+        return `import clientOptions from '${pathRelative}'`
+      }
+    }
+
+    const clientOptionsImport = getClientOptionsImport()
+
+    const clientOptionsTemplate = addTemplate({
+      filename: 'graphqlMiddleware.clientOptions.mjs',
+      write: true,
+      getContents: () => {
+        // clientOptions file exists.
+        if (clientOptionsImport) {
+          return `${clientOptionsImport}
+export { clientOptions }`
+        }
+
+        return `export const clientOptions = {}`
+      },
+    })
+
+    addTemplate({
+      filename: 'graphqlMiddleware.clientOptions.d.ts',
+      write: true,
+      getContents: () => {
+        if (clientOptionsImport) {
+          return `import { BaseGraphqlClientOptions } from '#graphql-middleware/types'
+${clientOptionsImport}
+type GetContextType<T extends BaseGraphqlClientOptions> = T['getContext'] extends () => infer R ? R : never
+
+export type GraphqlClientContext = GetContextType<typeof clientOptions>
+
+export { clientOptions }`
+        }
+
+        return `import { BaseGraphqlClientOptions } from '#graphql-middleware/types'
+export const clientOptions: BaseGraphqlClientOptions
+
+export type GraphqlClientContext = BaseGraphqlClientOptions
+`
+      },
+    })
+
+    nuxt.options.alias['#graphql-middleware-client-options'] =
+      clientOptionsTemplate.dst
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =

@@ -30,3 +30,9 @@ export interface GraphqlMiddlewareState {
 export type RequestCacheOptions = {
   client?: boolean
 }
+
+type ContextType = { [key: string]: string | null | undefined }
+
+export type BaseGraphqlClientOptions<T extends ContextType = ContextType> = {
+  getContext?: () => T
+}

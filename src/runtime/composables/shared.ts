@@ -100,3 +100,17 @@ export type PickFrom<T, K extends Array<string>> =
 export type KeysOf<T> = Array<
   T extends T ? (keyof T extends string ? keyof T : never) : never
 >
+
+export function encodeContext(
+  context: Record<string, string | null | undefined>,
+) {
+  return Object.entries(context).reduce<Record<string, string>>(
+    (acc, [key, value]) => {
+      if (typeof value === 'string') {
+        acc['__gqlc_' + key] = value
+      }
+      return acc
+    },
+    {},
+  )
+}

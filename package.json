@@ -22,6 +22,10 @@
     "./dist/runtime/serverOptions": {
       "import": "./dist/runtime/serverOptions/index.js",
       "types": "./dist/runtime/serverOptions/index.d.ts"
+    },
+    "./dist/runtime/clientOptions": {
+      "import": "./dist/runtime/clientOptions/index.js",
+      "types": "./dist/runtime/clientOptions/index.d.ts"
     }
   },
   "main": "./dist/module.cjs",
