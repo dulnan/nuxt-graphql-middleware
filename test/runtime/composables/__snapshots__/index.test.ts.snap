@@ -8,6 +8,7 @@ exports[`useGraphqlMutation > Performs a mutation 1`] = `
   "options": {
     "body": undefined,
     "method": "post",
+    "params": {},
   },
 }
 `;
@@ -22,6 +23,7 @@ exports[`useGraphqlMutation > Performs a mutation with variables 1`] = `
       "user": "foobar",
     },
     "method": "post",
+    "params": {},
   },
 }
 `;
@@ -34,6 +36,7 @@ exports[`useGraphqlMutation > Throws an error for invalid mutation names. 1`] = 
   "options": {
     "body": undefined,
     "method": "post",
+    "params": {},
   },
 }
 `;

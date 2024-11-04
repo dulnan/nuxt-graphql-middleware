@@ -6,6 +6,7 @@ exports[`generate > Generates templates correctly for auto imported documents 1`
   "query": {
     "simulateEndpointDown": "query simulateEndpointDown {\\n  testFetchOptions {\\n    headerClient\\n    headerServer\\n  }\\n}",
     "fetchOptions": "query fetchOptions {\\n  testFetchOptions {\\n    headerClient\\n    headerServer\\n  }\\n}",
+    "testClientOptions": "query testClientOptions($path: String!) {\\n  testClientOptions(path: $path) {\\n    language\\n  }\\n}",
     "users": "query users {\\n  users {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
     "getError": "query getError {\\n  getError\\n}",
     "userById": "query userById($id: ID!) {\\n  userById(id: $id) {\\n    ...user\\n  }\\n}\\n\\nfragment user on User {\\n  id\\n  firstName\\n  lastName\\n  email\\n  description\\n  dateOfBirth\\n}",
@@ -118,6 +119,7 @@ export type Query = {
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;
   getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
+  testClientOptions?: Maybe<TestClientOptions>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -129,8 +131,19 @@ export type QueryGetRequestHeaderArgs = {
 };
 
 
+export type QueryTestClientOptionsArgs = {
+  path: Scalars['String']['input'];
+};
+
+
 export type QueryUserByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type TestClientOptions = {
+  __typename?: 'TestClientOptions';
+  language?: Maybe<Scalars['String']['output']>;
+  languageFromPath?: Maybe<Scalars['String']['output']>;
 };
 
 export type TestFetchOptions = {
@@ -190,6 +203,13 @@ export type FetchOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 export type FetchOptionsQuery = { __typename?: 'Query', testFetchOptions?: { __typename?: 'TestFetchOptions', headerClient?: string | null, headerServer?: string | null } | null };
 
 export type UserFragment = { __typename?: 'User', id: number, firstName: string, lastName: string, email: string, description?: string | null, dateOfBirth?: string | null };
+
+export type TestClientOptionsQueryVariables = Exact<{
+  path: Scalars['String']['input'];
+}>;
+
+
+export type TestClientOptionsQuery = { __typename?: 'Query', testClientOptions?: { __typename?: 'TestClientOptions', language?: string | null } | null };
 
 export type UsersQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -276,6 +296,8 @@ import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
   SimulateEndpointDownQuery,
   FetchOptionsQuery,
+  TestClientOptionsQuery,
+  TestClientOptionsQueryVariables,
   UsersQuery,
   GetErrorQuery,
   UserByIdQuery,
@@ -300,10 +322,11 @@ import type {
 
 
 declare module '#build/nuxt-graphql-middleware' {
-  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FetchOptionsComposableQuery | GetSubmissionsQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | GetCurrentTimeQuery | TestUploadMutation | TestFormSubmitMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
+  export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | TestClientOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FetchOptionsComposableQuery | GetSubmissionsQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | GetCurrentTimeQuery | TestUploadMutation | TestFormSubmitMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
     fetchOptions: [null, true, FetchOptionsQuery],
+    testClientOptions: [TestClientOptionsQueryVariables, false, TestClientOptionsQuery],
     users: [null, true, UsersQuery],
     getError: [null, true, GetErrorQuery],
     userById: [UserByIdQueryVariables, false, UserByIdQuery],
@@ -333,6 +356,9 @@ declare module 'nitropack' {
     }
     'undefined/query/fetchOptions': {
       'default': GraphqlResponse<FetchOptionsQuery>
+    }
+    'undefined/query/testClientOptions': {
+      'default': GraphqlResponse<TestClientOptionsQuery>
     }
     'undefined/query/users': {
       'default': GraphqlResponse<UsersQuery>
@@ -488,6 +514,7 @@ export type Query = {
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;
   getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
+  testClientOptions?: Maybe<TestClientOptions>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -499,8 +526,19 @@ export type QueryGetRequestHeaderArgs = {
 };
 
 
+export type QueryTestClientOptionsArgs = {
+  path: Scalars['String']['input'];
+};
+
+
 export type QueryUserByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type TestClientOptions = {
+  __typename?: 'TestClientOptions';
+  language?: Maybe<Scalars['String']['output']>;
+  languageFromPath?: Maybe<Scalars['String']['output']>;
 };
 
 export type TestFetchOptions = {
@@ -714,6 +752,7 @@ export type Query = {
   getError?: Maybe<Scalars['Boolean']['output']>;
   getRequestHeader?: Maybe<Scalars['String']['output']>;
   getSubmissions?: Maybe<Array<Maybe<FormSubmission>>>;
+  testClientOptions?: Maybe<TestClientOptions>;
   testFetchOptions?: Maybe<TestFetchOptions>;
   userById?: Maybe<User>;
   users: Array<User>;
@@ -725,8 +764,19 @@ export type QueryGetRequestHeaderArgs = {
 };
 
 
+export type QueryTestClientOptionsArgs = {
+  path: Scalars['String']['input'];
+};
+
+
 export type QueryUserByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type TestClientOptions = {
+  __typename?: 'TestClientOptions';
+  language?: Maybe<Scalars['String']['output']>;
+  languageFromPath?: Maybe<Scalars['String']['output']>;
 };
 
 export type TestFetchOptions = {

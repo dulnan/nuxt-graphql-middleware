@@ -42,6 +42,12 @@ vi.mock('#imports', () => {
   }
 })
 
+vi.mock('#graphql-middleware-client-options', () => {
+  return {
+    clientOptions: {},
+  }
+})
+
 const fetchMock = (endpoint: string, options: any) => {
   return Promise.resolve({
     data: undefined,

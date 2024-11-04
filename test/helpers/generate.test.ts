@@ -42,7 +42,7 @@ describe('generate', () => {
     )
     expect(result.documents.filter((v) => v.errors?.length)).toEqual([])
     expect(result.hasErrors).toBeFalsy()
-    expect(result.documents).toHaveLength(18)
+    expect(result.documents).toHaveLength(19)
     expect(result.templates).toHaveLength(3)
 
     const a = result.templates.find(

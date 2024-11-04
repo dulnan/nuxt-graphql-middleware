@@ -27,9 +27,10 @@ export default defineNuxtPlugin({
           options.headers = new Headers()
         }
 
-        // @ts-ignore
-        options.headers['x-nuxt-header-client'] =
-          'The header value from the client'
+        options.headers.set(
+          'x-nuxt-header-client',
+          'The header value from the client',
+        )
         options.params.t = Date.now()
         options.params.lang_from_plugin = language.value
       },
