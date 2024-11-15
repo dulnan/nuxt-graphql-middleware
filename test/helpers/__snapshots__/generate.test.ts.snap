@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generate > Generates templates correctly for auto imported documents 1`] = `
+exports[`generate > Generates templates correctly for auto imported documents > graphql-documents.mjs 1`] = `
 {
   "content": "const documents = {
   "query": {
@@ -32,7 +32,7 @@ export { documents };",
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents 2`] = `
+exports[`generate > Generates templates correctly for auto imported documents > graphql-operations.d.ts 1`] = `
 {
   "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -289,7 +289,7 @@ export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser?: boolean
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents 3`] = `
+exports[`generate > Generates templates correctly for auto imported documents > nuxt-graphql-middleware/generated-types.d.ts 1`] = `
 {
   "content": "
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
@@ -318,10 +318,10 @@ import type {
   TriggerErrorMutation,
   DeleteUserMutation,
   DeleteUserMutationVariables
-} from './graphql-operations'
+} from './../graphql-operations'
 
 
-declare module '#build/nuxt-graphql-middleware' {
+declare module '#nuxt-graphql-middleware/generated-types' {
   export type GraphqlMiddlewareResponseUnion = SimulateEndpointDownQuery | FetchOptionsQuery | TestClientOptionsQuery | UsersQuery | GetErrorQuery | UserByIdQuery | FetchOptionsComposableQuery | GetSubmissionsQuery | FoobarQuery | QueryTwoQuery | QueryOneQuery | GetCurrentTimeQuery | TestUploadMutation | TestFormSubmitMutation | InitStateMutation | AddUserMutation | TriggerErrorMutation | DeleteUserMutation
   export type GraphqlMiddlewareQuery = {
     simulateEndpointDown: [null, true, SimulateEndpointDownQuery],
@@ -408,12 +408,12 @@ declare module 'nitropack' {
   }
 }
 ",
-  "filename": "nuxt-graphql-middleware.d.ts",
+  "filename": "nuxt-graphql-middleware/generated-types.d.ts",
   "hooks": {},
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 1`] = `
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > graphql-documents.mjs 1`] = `
 {
   "content": "const documents = {
   "query": {
@@ -427,7 +427,7 @@ export { documents };",
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 2`] = `
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > graphql-operations.d.ts 1`] = `
 {
   "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -589,16 +589,16 @@ export type DepthOneQueryFragment = { __typename?: 'Query', one: Array<{ __typen
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments 3`] = `
+exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > nuxt-graphql-middleware/generated-types.d.ts 1`] = `
 {
   "content": "
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
   HighDepthOneQuery
-} from './graphql-operations'
+} from './../graphql-operations'
 
 
-declare module '#build/nuxt-graphql-middleware' {
+declare module '#nuxt-graphql-middleware/generated-types' {
   export type GraphqlMiddlewareResponseUnion = HighDepthOneQuery
   export type GraphqlMiddlewareQuery = {
     highDepthOne: [null, true, HighDepthOneQuery]
@@ -616,7 +616,7 @@ declare module 'nitropack' {
   }
 }
 ",
-  "filename": "nuxt-graphql-middleware.d.ts",
+  "filename": "nuxt-graphql-middleware/generated-types.d.ts",
   "hooks": {},
 }
 `;
@@ -833,10 +833,10 @@ import type {
   OneQuery,
   TwoMutation,
   TwoMutationVariables
-} from './graphql-operations'
+} from './../graphql-operations'
 
 
-declare module '#build/nuxt-graphql-middleware' {
+declare module '#nuxt-graphql-middleware/generated-types' {
   export type GraphqlMiddlewareResponseUnion = OneQuery | TwoMutation
   export type GraphqlMiddlewareQuery = {
     one: [null, true, OneQuery]
@@ -859,7 +859,7 @@ declare module 'nitropack' {
   }
 }
 ",
-      "filename": "nuxt-graphql-middleware.d.ts",
+      "filename": "nuxt-graphql-middleware/generated-types.d.ts",
       "hooks": {},
     },
   ],

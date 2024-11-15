@@ -98,7 +98,7 @@ export type GetTextQuery = { __typename?: 'Query', getText?: string | null };
 "
 `;
 
-exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-middleware.d.ts 1`] = `
+exports[`generateTemplates > Generates the correct delarations. > nuxt-graphql-middleware/generated-types.d.ts 1`] = `
 "
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
@@ -107,10 +107,10 @@ import type {
   GetTextQuery,
   LoginMutation,
   LoginMutationVariables
-} from './graphql-operations'
+} from './../graphql-operations'
 
 
-declare module '#build/nuxt-graphql-middleware' {
+declare module '#nuxt-graphql-middleware/generated-types' {
   export type GraphqlMiddlewareResponseUnion = TranslateQuery | GetTextQuery | LoginMutation
   export type GraphqlMiddlewareQuery = {
     translate: [TranslateQueryVariables, false, TranslateQuery],

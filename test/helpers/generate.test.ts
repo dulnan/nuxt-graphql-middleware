@@ -52,11 +52,19 @@ describe('generate', () => {
       (t) => t.filename === 'graphql-operations.d.ts',
     )
     const c = result.templates.find(
-      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+      (t) => t.filename === 'nuxt-graphql-middleware/generated-types.d.ts',
     )
-    expect(a).toMatchSnapshot()
-    expect(b).toMatchSnapshot()
-    expect(c).toMatchSnapshot()
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.templates.map((v) => v.filename)).toMatchInlineSnapshot(`
+      [
+        "graphql-documents.mjs",
+        "graphql-operations.d.ts",
+        "nuxt-graphql-middleware/generated-types.d.ts",
+      ]
+    `)
+    expect(a).toMatchSnapshot(a?.filename)
+    expect(b).toMatchSnapshot(b?.filename)
+    expect(c).toMatchSnapshot(c?.filename)
   })
 
   test('Generates templates correctly for auto imported documents using autoInlineFragments', async () => {
@@ -82,11 +90,19 @@ describe('generate', () => {
       (t) => t.filename === 'graphql-operations.d.ts',
     )
     const c = result.templates.find(
-      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+      (t) => t.filename === 'nuxt-graphql-middleware/generated-types.d.ts',
     )
-    expect(a).toMatchSnapshot()
-    expect(b).toMatchSnapshot()
-    expect(c).toMatchSnapshot()
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.templates.map((v) => v.filename)).toMatchInlineSnapshot(`
+      [
+        "graphql-documents.mjs",
+        "graphql-operations.d.ts",
+        "nuxt-graphql-middleware/generated-types.d.ts",
+      ]
+    `)
+    expect(a).toMatchSnapshot(a?.filename)
+    expect(b).toMatchSnapshot(b?.filename)
+    expect(c).toMatchSnapshot(c?.filename)
   })
 
   test('Generates templates correctly for provided documents', async () => {
