@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { useGraphqlState } from './../../../src/runtime/composables/useGraphqlState'
 import { useGraphqlMutation } from './../../../src/runtime/composables/useGraphqlMutation'
 import { useGraphqlQuery } from './../../../src/runtime/composables/useGraphqlQuery'
+import { useGraphqlUploadMutation } from './../../../src/runtime/composables/useGraphqlUploadMutation'
 
 const useNuxtApp = function () {
   return {
@@ -37,6 +38,11 @@ vi.mock('#imports', () => {
     useAppConfig: () => {
       return {
         graphqlMiddleware: {},
+      }
+    },
+    useGraphqlState: () => {
+      return {
+        fetchOptions: {},
       }
     },
   }
@@ -83,6 +89,39 @@ describe('useGraphqlQuery', () => {
     const result = await useGraphqlQuery(123).catch((e) => e)
     expect(result).toMatchSnapshot()
   })
+
+  test('takes options into account', async () => {
+    expect(
+      await useGraphqlQuery(
+        'foobar',
+        { stringVar: 'foobar' },
+        {
+          fetchOptions: {
+            params: {
+              customParam: 'yes',
+            },
+          },
+          clientContext: {
+            language: 'fr',
+          },
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/foobar",
+        "errors": [],
+        "options": {
+          "method": "get",
+          "params": {
+            "__gqlc_language": "fr",
+            "customParam": "yes",
+            "stringVar": "foobar",
+          },
+        },
+      }
+    `)
+  })
 })
 
 describe('useGraphqlMutation', () => {
@@ -99,6 +138,83 @@ describe('useGraphqlMutation', () => {
   test('Throws an error for invalid mutation names.', async () => {
     const result = await useGraphqlMutation(123).catch((e) => e)
     expect(result).toMatchSnapshot()
+  })
+
+  test('takes options into account', async () => {
+    const result = await useGraphqlMutation(
+      'foobar',
+      { stringVar: 'foobar' },
+      {
+        fetchOptions: {
+          params: {
+            customParam: 'yes',
+          },
+        },
+        clientContext: {
+          language: 'fr',
+        },
+      },
+    )
+    expect(result.options.body).toMatchInlineSnapshot(`
+      {
+        "stringVar": "foobar",
+      }
+    `)
+    expect(result.options.params).toMatchInlineSnapshot(`
+      {
+        "__gqlc_language": "fr",
+        "customParam": "yes",
+      }
+    `)
+  })
+})
+
+describe('useGraphqlUploadMutation', () => {
+  test('takes options into account', async () => {
+    const result = await useGraphqlUploadMutation(
+      'foobar',
+      { stringVar: 'foobar' },
+      {
+        fetchOptions: {
+          params: {
+            customParam: 'yes',
+          },
+        },
+        clientContext: {
+          language: 'fr',
+        },
+      },
+    )
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/upload/foobar",
+        "errors": [],
+        "options": {
+          "body": FormData {
+            Symbol(state): [
+              {
+                "name": "operations",
+                "value": "{}",
+              },
+              {
+                "name": "variables",
+                "value": "{"stringVar":"foobar"}",
+              },
+              {
+                "name": "map",
+                "value": "{}",
+              },
+            ],
+          },
+          "method": "POST",
+          "params": {
+            "__gqlc_language": "fr",
+            "customParam": "yes",
+          },
+        },
+      }
+    `)
   })
 })
 

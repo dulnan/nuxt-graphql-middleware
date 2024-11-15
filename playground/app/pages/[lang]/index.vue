@@ -9,6 +9,11 @@
         <span id="response-language">{{ responseLanguage }}</span>
       </p>
 
+      <p>
+        Current language via server route:
+        <span id="server-route-language">{{ serverRouteLanguage }}</span>
+      </p>
+
       <ul>
         <li v-for="lang in languages" :key="lang">
           <NuxtLink
@@ -27,7 +32,12 @@
 </template>
 
 <script lang="ts" setup>
-import { useAsyncGraphqlQuery, useCurrentLanguage, useRoute } from '#imports'
+import {
+  useAsyncGraphqlQuery,
+  useCurrentLanguage,
+  useFetch,
+  useRoute,
+} from '#imports'
 
 const language = useCurrentLanguage()
 const route = useRoute()
@@ -45,4 +55,10 @@ const { data: responseLanguage } = await useAsyncGraphqlQuery(
     },
   },
 )
+
+const { data: serverRouteLanguage } = await useFetch('/api/client-options', {
+  params: {
+    language: language.value,
+  },
+})
 </script>

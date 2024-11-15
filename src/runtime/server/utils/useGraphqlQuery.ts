@@ -32,10 +32,11 @@ export function useGraphqlQuery<
         ]
 
   return performRequest<R>('query', name, 'get', {
+    ...fetchOptions,
     params: {
+      ...(fetchOptions.params || {}),
       ...buildRequestParams(variables),
       ...encodeContext(clientContext),
     },
-    ...fetchOptions,
   })
 }

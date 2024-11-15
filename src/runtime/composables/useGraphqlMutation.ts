@@ -32,19 +32,18 @@ export function useGraphqlMutation<
         ]
 
   const globalClientContext = clientOptions.buildClientContext
-    ? encodeContext(clientOptions.buildClientContext())
+    ? clientOptions.buildClientContext()
     : {}
 
-  const clientContext = {
-    ...globalClientContext,
-    ...overrideClientContext,
-  }
-
   return performRequest<R>('mutation', name, 'post', {
+    ...fetchOptions,
     body,
     params: {
-      ...clientContext,
+      ...(fetchOptions.params || {}),
+      ...encodeContext({
+        ...globalClientContext,
+        ...overrideClientContext,
+      }),
     },
-    ...fetchOptions,
   })
 }
