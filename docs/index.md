@@ -7,6 +7,8 @@ titleTemplate:
 hero:
   name: Nuxt GraphQL Middleware
   text: A GraphQL client for Nuxt
+  image:
+    src: /illustration.png
   tagline:
     Expose GraphQL queries and mutations as fully typed API endpoints. Hide your
     GraphQL server from public access and prevent bundling large queries.
