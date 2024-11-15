@@ -7,7 +7,7 @@ export enum GraphqlMiddlewareTemplate {
   /**
    * Signature for the GraphQL composable arguments and return types.
    */
-  ComposableContext = 'nuxt-graphql-middleware.d.ts',
+  ComposableContext = 'nuxt-graphql-middleware/generated-types.d.ts',
 
   /**
    * Exports a single opject containing the compiled queries and mutations.

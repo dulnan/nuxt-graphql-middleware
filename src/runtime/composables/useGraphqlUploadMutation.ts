@@ -6,7 +6,7 @@ import {
   getEndpoint,
   encodeContext,
 } from './shared'
-import type { GraphqlMiddlewareMutation } from '#build/nuxt-graphql-middleware'
+import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'
 import { clientOptions } from '#graphql-middleware-client-options'
 import { useGraphqlState } from '#imports'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
@@ -65,10 +65,15 @@ export function useGraphqlUploadMutation<
     | GetMutationArgs<T, GraphqlMiddlewareMutation>
     | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
 ): Promise<GraphqlResponse<R>> {
-  const [name, variables, fetchOptions = {}] =
+  const [name, variables, fetchOptions = {}, overrideClientContext = {}] =
     typeof args[0] === 'string'
-      ? [args[0], args[1]]
-      : [args[0].name, args[0].variables, args[0].fetchOptions]
+      ? [args[0], args[1], args[2]?.fetchOptions, args[2]?.clientContext]
+      : [
+          args[0].name,
+          args[0].variables,
+          args[0].fetchOptions,
+          args[0].clientContext,
+        ]
 
   if (!variables) {
     throw new Error(
@@ -80,10 +85,14 @@ export function useGraphqlUploadMutation<
 
   const formData = createFormData(variables)
 
-  const clientContext = clientOptions.buildClientContext
+  const globalClientContext = clientOptions.buildClientContext
     ? encodeContext(clientOptions.buildClientContext())
     : {}
 
+  const clientContext = {
+    ...globalClientContext,
+    ...overrideClientContext,
+  }
   return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {
     ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
     ...(fetchOptions || {}),

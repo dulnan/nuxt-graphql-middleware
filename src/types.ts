@@ -5,7 +5,7 @@ import type {
   ContextType,
   GraphqlServerResponse,
 } from '#graphql-middleware/types'
-import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
+import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
 
 export type GraphqlMiddlewareRequestContext<
   C extends ContextType = ContextType,

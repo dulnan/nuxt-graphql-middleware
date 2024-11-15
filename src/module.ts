@@ -13,6 +13,7 @@ import {
   addPlugin,
   addImports,
   resolveAlias,
+  addServerImports,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { type TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
@@ -434,9 +435,6 @@ export default defineNuxtModule<ModuleOptions>({
         ),
         name: 'useAsyncGraphqlQuery',
       })
-      nuxt.options.alias['#graphql-composable'] = moduleResolver.resolve(
-        'runtime/composables/server',
-      )
 
       if (options.enableFileUploads) {
         addImports({
@@ -447,6 +445,19 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
+
+    addServerImports([
+      {
+        from: moduleResolver.resolve('./runtime/server/utils/index.ts'),
+        name: 'useGraphqlQuery',
+        as: 'useGraphqlQuery',
+      },
+      {
+        from: moduleResolver.resolve('./runtime/server/utils/index.ts'),
+        name: 'useGraphqlMutation',
+        as: 'useGraphqlMutation',
+      },
+    ])
 
     // Add the templates to nuxt and provide a callback to load the file contents.
     Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
@@ -471,6 +482,11 @@ export default defineNuxtModule<ModuleOptions>({
         result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
       ) {
         nuxt.options.alias['#graphql-operations'] = result.dst
+      } else if (
+        result.dst.includes(GraphqlMiddlewareTemplate.ComposableContext)
+      ) {
+        nuxt.options.alias['#nuxt-graphql-middleware/generated-types'] =
+          result.dst
       }
     })
 
@@ -482,7 +498,7 @@ export default defineNuxtModule<ModuleOptions>({
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
-} from '#build/nuxt-graphql-middleware'
+} from '#nuxt-graphql-middleware/generated-types'
 
 declare module '#graphql-documents' {
   type Documents = {
@@ -564,10 +580,10 @@ export { serverOptions }
 import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
 ${serverOptionsLineTypes}
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
-import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
+import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
 
 type GraphqlResponseAdditions =
-  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R> ? R : {}
+  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
 
 export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
 

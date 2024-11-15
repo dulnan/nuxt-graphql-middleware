@@ -8,7 +8,7 @@ import {
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#graphql-middleware-client-options'
-import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
+import type { GraphqlMiddlewareQuery } from '#nuxt-graphql-middleware/generated-types'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 
 /**
@@ -22,19 +22,37 @@ export function useGraphqlQuery<
     | GetQueryArgs<T, GraphqlMiddlewareQuery>
     | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
 ): Promise<GraphqlResponse<R>> {
-  const [name, variables, fetchOptions = {}, graphqlCaching = {}] =
+  const [
+    name,
+    variables,
+    fetchOptions = {},
+    graphqlCaching = {},
+    overrideClientContext = {},
+  ] =
     typeof args[0] === 'string'
-      ? [args[0], args[1], args[2]?.fetchOptions, args[2]?.graphqlCaching]
+      ? [
+          args[0],
+          args[1],
+          args[2]?.fetchOptions,
+          args[2]?.graphqlCaching,
+          args[2]?.clientContext,
+        ]
       : [
           args[0].name,
           args[0].variables,
           args[0].fetchOptions,
           args[0].graphqlCaching,
+          args[0].clientContext,
         ]
 
-  const clientContext = clientOptions.buildClientContext
+  const globalClientContext = clientOptions.buildClientContext
     ? encodeContext(clientOptions.buildClientContext())
     : {}
+
+  const clientContext = {
+    ...globalClientContext,
+    ...overrideClientContext,
+  }
 
   return performRequest<R>(
     'query',

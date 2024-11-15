@@ -133,9 +133,9 @@ export const plugin: PluginFunction<PluginConfig, string> = (
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import type {
   ${imports.join(',\n  ')}
-} from './graphql-operations'\n
+} from './../graphql-operations'\n
 
-declare module '#build/nuxt-graphql-middleware' {
+declare module '#nuxt-graphql-middleware/generated-types' {
   export type GraphqlMiddlewareResponseUnion = ${resultTypes.join(' | ')}
 ${code}
 }

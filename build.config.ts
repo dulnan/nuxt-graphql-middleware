@@ -18,7 +18,7 @@ export default defineBuildConfig({
     '@polka/url',
     'mrmime',
     '#graphql-middleware/types',
-    '#build/nuxt-graphql-middleware',
+    '#nuxt-graphql-middleware/generated-types',
     '#graphql-middleware-server-options-build',
   ],
 })
