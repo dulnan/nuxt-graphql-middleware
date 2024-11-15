@@ -3,7 +3,7 @@ import {
   type KeysOf,
   type PickFrom,
   encodeContext,
-} from './shared'
+} from './../helpers/composables'
 import type { FetchOptions } from 'ofetch'
 import { type Ref, isRef, unref } from 'vue'
 import { buildRequestParams } from './../helpers'

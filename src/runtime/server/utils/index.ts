@@ -11,7 +11,7 @@ import {
   type MutationObjectArgs,
   type GetMutationResult,
   encodeContext,
-} from './../../composables/shared'
+} from './../../helpers/composables'
 import { buildRequestParams } from './../../helpers'
 import type {
   GraphqlMiddlewareQuery,

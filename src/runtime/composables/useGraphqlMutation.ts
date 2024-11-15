@@ -4,7 +4,7 @@ import {
   type MutationObjectArgs,
   type GetMutationResult,
   encodeContext,
-} from './shared'
+} from './../helpers/composables'
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#graphql-middleware-client-options'
 import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'

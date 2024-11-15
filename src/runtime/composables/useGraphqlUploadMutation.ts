@@ -5,7 +5,7 @@ import {
   type GetMutationResult,
   getEndpoint,
   encodeContext,
-} from './shared'
+} from './../helpers/composables'
 import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'
 import { clientOptions } from '#graphql-middleware-client-options'
 import { useGraphqlState } from '#imports'
