@@ -1,6 +1,6 @@
 # useGraphqlUploadMutation
 
-This composable is only available when setting `enabledFileUploads` to `true` in
+This composable is only available when setting `enableFileUploads` to `true` in
 the module's configuration. It allows to upload files inside a mutation. The
 implementation follows the
 [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec),
