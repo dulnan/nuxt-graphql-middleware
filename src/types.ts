@@ -10,7 +10,7 @@ import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/ge
 export type GraphqlMiddlewareRequestContext<
   C extends ContextType = ContextType,
 > = {
-  client?: C
+  client?: Partial<C>
 }
 
 export type GraphqlMiddlewareGraphqlEndpointMethod<C extends ContextType> = (
