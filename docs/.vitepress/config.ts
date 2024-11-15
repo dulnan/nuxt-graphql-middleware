@@ -77,6 +77,16 @@ export default defineConfig({
         ],
       },
       {
+        text: 'Server Utils',
+        items: [
+          { text: 'useGraphqlQuery', link: '/server-utils/useGraphqlQuery' },
+          {
+            text: 'useGraphqlMutation',
+            link: '/server-utils/useGraphqlMutation',
+          },
+        ],
+      },
+      {
         text: 'Configuration',
         items: [
           {
