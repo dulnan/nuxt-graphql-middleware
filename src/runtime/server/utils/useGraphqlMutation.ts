@@ -31,8 +31,11 @@ export function useGraphqlMutation<
         ]
 
   return performRequest<R>('mutation', name, 'post', {
-    body,
-    params: encodeContext(clientContext),
     ...fetchOptions,
+    body,
+    params: {
+      ...encodeContext(clientContext),
+      ...(fetchOptions.params || {}),
+    },
   })
 }

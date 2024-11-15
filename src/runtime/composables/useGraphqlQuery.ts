@@ -46,24 +46,23 @@ export function useGraphqlQuery<
         ]
 
   const globalClientContext = clientOptions.buildClientContext
-    ? encodeContext(clientOptions.buildClientContext())
+    ? clientOptions.buildClientContext()
     : {}
-
-  const clientContext = {
-    ...globalClientContext,
-    ...overrideClientContext,
-  }
 
   return performRequest<R>(
     'query',
     name,
     'get',
     {
-      params: {
-        ...buildRequestParams(variables),
-        ...clientContext,
-      },
       ...fetchOptions,
+      params: {
+        ...(fetchOptions.params || {}),
+        ...buildRequestParams(variables),
+        ...encodeContext({
+          ...globalClientContext,
+          ...overrideClientContext,
+        }),
+      },
     },
     graphqlCaching,
   )

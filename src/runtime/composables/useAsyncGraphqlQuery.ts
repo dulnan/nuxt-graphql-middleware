@@ -110,23 +110,23 @@ export function useAsyncGraphqlQuery<
     key,
     () => {
       const globalClientContext = clientOptions.buildClientContext
-        ? encodeContext(clientOptions.buildClientContext())
+        ? clientOptions.buildClientContext()
         : {}
 
-      const clientContext = {
-        ...globalClientContext,
-        ...(asyncDataOptions.clientContext || {}),
-      }
       return performRequest<ResponseType>(
         'query',
         name,
         'get',
         {
-          params: {
-            ...buildRequestParams(unref(variables)),
-            ...clientContext,
-          },
           ...(fetchOptions as any),
+          params: {
+            ...(fetchOptions?.params || {}),
+            ...buildRequestParams(unref(variables)),
+            ...encodeContext({
+              ...globalClientContext,
+              ...(asyncDataOptions.clientContext || {}),
+            }),
+          },
         },
         asyncDataOptions.graphqlCaching,
       )
