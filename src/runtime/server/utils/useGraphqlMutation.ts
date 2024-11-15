@@ -1,14 +1,13 @@
+import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import {
   type GraphqlMiddlewareMutationName,
   type GetMutationArgs,
   type MutationObjectArgs,
   type GetMutationResult,
   encodeContext,
-} from './../helpers/composables'
-import { performRequest } from './nuxtApp'
-import { clientOptions } from '#graphql-middleware-client-options'
+} from './../../helpers/composables'
 import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import { performRequest } from '.'
 
 /**
  * Performs a GraphQL mutation.
@@ -21,7 +20,7 @@ export function useGraphqlMutation<
     | GetMutationArgs<T, GraphqlMiddlewareMutation>
     | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
 ): Promise<GraphqlResponse<R>> {
-  const [name, body, fetchOptions = {}, overrideClientContext = {}] =
+  const [name, body, fetchOptions = {}, clientContext = {}] =
     typeof args[0] === 'string'
       ? [args[0], args[1], args[2]?.fetchOptions, args[2]?.clientContext]
       : [
@@ -31,20 +30,9 @@ export function useGraphqlMutation<
           args[0].clientContext,
         ]
 
-  const globalClientContext = clientOptions.buildClientContext
-    ? encodeContext(clientOptions.buildClientContext())
-    : {}
-
-  const clientContext = {
-    ...globalClientContext,
-    ...overrideClientContext,
-  }
-
   return performRequest<R>('mutation', name, 'post', {
     body,
-    params: {
-      ...clientContext,
-    },
+    params: encodeContext(clientContext),
     ...fetchOptions,
   })
 }

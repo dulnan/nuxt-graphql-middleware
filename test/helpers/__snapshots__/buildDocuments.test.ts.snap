@@ -9,6 +9,14 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     "filename": "mutation.initState.graphql",
   },
   {
+    "content": "query testClientOptions($path: String!) {
+  testClientOptions(path: $path) {
+    language
+  }
+}",
+    "filename": "query.testClientOptions.graphql",
+  },
+  {
     "content": "query getCurrentTime {
   time: getCurrentTime
 }",

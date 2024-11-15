@@ -1,6 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 import { useGraphqlState } from './useGraphqlState'
-import { getEndpoint } from './shared'
+import { getEndpoint } from './../helpers/composables'
 import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
@@ -52,7 +52,7 @@ export function performRequest<T>(
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     {
-      ...(state && state.fetchOptions ? state.fetchOptions : {}),
+      ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
       ...options,
       method,
     },

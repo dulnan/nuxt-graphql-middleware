@@ -1,6 +1,7 @@
 import {
   defineEventHandler,
   readMultipartFormData,
+  getQuery,
   type MultiPartData,
 } from 'h3'
 import type { FetchError } from 'ofetch'
@@ -12,6 +13,7 @@ import {
   onServerResponse,
   onServerError,
   throwError,
+  extractRequestContext,
 } from './helpers'
 import { GraphqlMiddlewareOperation } from './../settings'
 import { documents } from '#graphql-documents'
@@ -84,6 +86,9 @@ export default defineEventHandler(async (event) => {
     formData.append(file.name, blob, file.filename)
   }
 
+  const queryParams = getQuery(event)
+  const context = extractRequestContext(queryParams)
+
   // If a custom request method is provided run it.
   if (serverOptions.doGraphqlRequest) {
     return serverOptions.doGraphqlRequest({
@@ -93,6 +98,7 @@ export default defineEventHandler(async (event) => {
       operationDocument,
       variables,
       formData,
+      context,
     })
   }
 
@@ -107,6 +113,7 @@ export default defineEventHandler(async (event) => {
     event,
     operation,
     operationName,
+    context,
   )
 
   // Get the fetch options for this request.
@@ -115,6 +122,7 @@ export default defineEventHandler(async (event) => {
     event,
     operation,
     operationName,
+    context,
   )
 
   return $fetch
@@ -130,6 +138,7 @@ export default defineEventHandler(async (event) => {
         response,
         operation,
         operationName,
+        context,
       )
     })
     .catch((error: FetchError) => {
@@ -139,6 +148,7 @@ export default defineEventHandler(async (event) => {
         error,
         operation,
         operationName,
+        context,
       )
     })
 })

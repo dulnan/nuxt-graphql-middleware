@@ -12,6 +12,15 @@ import data from './data.json' assert { type: 'json' }
 import type { Readable } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 
+function getLanguageFromPath(path = ''): string | undefined {
+  if (!path) {
+    return
+  }
+
+  const matches = /\/([^/]+)/.exec(path)
+  return matches?.[1]
+}
+
 const BASIC_LOGGING: any = {
   requestDidStart(requestContext) {
     console.log('request started')
@@ -95,9 +104,14 @@ const typeDefs = `#graphql
     headerServer: String
   }
 
-type DataForLayer {
-text: String
-}
+  type DataForLayer {
+    text: String
+  }
+
+  type TestClientOptions {
+    language: String
+    languageFromPath: String
+  }
 
   type Query {
     users: [User!]!
@@ -108,6 +122,7 @@ text: String
     getSubmissions: [FormSubmission]
     getCurrentTime: String
     dataForLayer: DataForLayer
+    testClientOptions(path: String!): TestClientOptions
   }
 
   type UploadedFile {
@@ -195,6 +210,13 @@ const resolvers = {
           code: 'WRONG_DATA',
         },
       })
+    },
+
+    testClientOptions: (_parent: any, args: any, context: any) => {
+      return {
+        language: context.headers['x-nuxt-client-options-language'],
+        languageFromPath: getLanguageFromPath(args.path),
+      }
     },
   },
   User: {

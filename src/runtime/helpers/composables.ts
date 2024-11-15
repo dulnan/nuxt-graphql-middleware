@@ -3,8 +3,10 @@ import { useRuntimeConfig } from '#imports'
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
-} from '#build/nuxt-graphql-middleware'
+} from '#nuxt-graphql-middleware/generated-types'
 import type { RequestCacheOptions } from '#graphql-middleware/types'
+import { CLIENT_CONTEXT_PREFIX } from '../settings'
+import type { GraphqlClientContext } from '#graphql-middleware-client-options'
 
 // Possible query names.
 export type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
@@ -14,6 +16,7 @@ export type GraphqlMiddlewareMutationName = keyof GraphqlMiddlewareMutation
 export type GraphqlComposableOptions = {
   fetchOptions?: FetchOptions
   graphqlCaching?: RequestCacheOptions
+  clientContext?: Partial<GraphqlClientContext>
 }
 
 // Determine the argument signature for the query method.
@@ -62,6 +65,7 @@ export type QueryObjectArgs<
       name: T
       fetchOptions?: FetchOptions
       graphqlCaching?: RequestCacheOptions
+      clientContext?: Partial<GraphqlClientContext>
       variables?: null
     }
   : {
@@ -69,6 +73,7 @@ export type QueryObjectArgs<
       variables: M[T][0]
       fetchOptions?: FetchOptions
       graphqlCaching?: RequestCacheOptions
+      clientContext?: Partial<GraphqlClientContext>
     }
 
 export type MutationObjectArgs<
@@ -79,11 +84,13 @@ export type MutationObjectArgs<
       name: T
       variables?: null
       fetchOptions?: FetchOptions
+      clientContext?: Partial<GraphqlClientContext>
     }
   : {
       name: T
       variables: M[T][0]
       fetchOptions?: FetchOptions
+      clientContext?: Partial<GraphqlClientContext>
     }
 
 export type PickFrom<T, K extends Array<string>> =
@@ -100,3 +107,17 @@ export type PickFrom<T, K extends Array<string>> =
 export type KeysOf<T> = Array<
   T extends T ? (keyof T extends string ? keyof T : never) : never
 >
+
+export function encodeContext(
+  context: Record<string, string | null | undefined>,
+) {
+  return Object.entries(context).reduce<Record<string, string>>(
+    (acc, [key, value]) => {
+      if (typeof value === 'string') {
+        acc[CLIENT_CONTEXT_PREFIX + key] = value
+      }
+      return acc
+    },
+    {},
+  )
+}

@@ -2,12 +2,17 @@ import {
   type GraphqlMiddlewareQueryName,
   type KeysOf,
   type PickFrom,
-} from './shared'
+  encodeContext,
+} from './../helpers/composables'
 import type { FetchOptions } from 'ofetch'
 import { type Ref, isRef, unref } from 'vue'
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
-import type { GraphqlMiddlewareQuery } from '#build/nuxt-graphql-middleware'
+import {
+  clientOptions,
+  type GraphqlClientContext,
+} from '#graphql-middleware-client-options'
+import type { GraphqlMiddlewareQuery } from '#nuxt-graphql-middleware/generated-types'
 import { useAsyncData, useAppConfig, useNuxtApp } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
@@ -22,6 +27,7 @@ type AsyncGraphqlQueryOptions<
 > = AsyncDataOptions<ResponseType, DefaultT, Keys> & {
   graphqlCaching?: RequestCacheOptions
   fetchOptions?: F
+  clientContext?: Partial<GraphqlClientContext>
 }
 
 /**
@@ -102,17 +108,29 @@ export function useAsyncGraphqlQuery<
 
   return useAsyncData<GraphqlResponse<ResponseType>, unknown, DefaultT>(
     key,
-    () =>
-      performRequest<ResponseType>(
+    () => {
+      const globalClientContext = clientOptions.buildClientContext
+        ? encodeContext(clientOptions.buildClientContext())
+        : {}
+
+      const clientContext = {
+        ...globalClientContext,
+        ...(asyncDataOptions.clientContext || {}),
+      }
+      return performRequest<ResponseType>(
         'query',
         name,
         'get',
         {
-          params: buildRequestParams(unref(variables)),
-          ...fetchOptions,
+          params: {
+            ...buildRequestParams(unref(variables)),
+            ...clientContext,
+          },
+          ...(fetchOptions as any),
         },
         asyncDataOptions.graphqlCaching,
-      ),
+      )
+    },
     asyncDataOptions as any,
   ) as AsyncData<
     PickFrom<DefaultT, KeysOf<DefaultT>> | null,

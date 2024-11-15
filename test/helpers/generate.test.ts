@@ -42,7 +42,7 @@ describe('generate', () => {
     )
     expect(result.documents.filter((v) => v.errors?.length)).toEqual([])
     expect(result.hasErrors).toBeFalsy()
-    expect(result.documents).toHaveLength(18)
+    expect(result.documents).toHaveLength(19)
     expect(result.templates).toHaveLength(3)
 
     const a = result.templates.find(
@@ -52,11 +52,19 @@ describe('generate', () => {
       (t) => t.filename === 'graphql-operations.d.ts',
     )
     const c = result.templates.find(
-      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+      (t) => t.filename === 'nuxt-graphql-middleware/generated-types.d.ts',
     )
-    expect(a).toMatchSnapshot()
-    expect(b).toMatchSnapshot()
-    expect(c).toMatchSnapshot()
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.templates.map((v) => v.filename)).toMatchInlineSnapshot(`
+      [
+        "graphql-documents.mjs",
+        "graphql-operations.d.ts",
+        "nuxt-graphql-middleware/generated-types.d.ts",
+      ]
+    `)
+    expect(a).toMatchSnapshot(a?.filename)
+    expect(b).toMatchSnapshot(b?.filename)
+    expect(c).toMatchSnapshot(c?.filename)
   })
 
   test('Generates templates correctly for auto imported documents using autoInlineFragments', async () => {
@@ -82,11 +90,19 @@ describe('generate', () => {
       (t) => t.filename === 'graphql-operations.d.ts',
     )
     const c = result.templates.find(
-      (t) => t.filename === 'nuxt-graphql-middleware.d.ts',
+      (t) => t.filename === 'nuxt-graphql-middleware/generated-types.d.ts',
     )
-    expect(a).toMatchSnapshot()
-    expect(b).toMatchSnapshot()
-    expect(c).toMatchSnapshot()
+    expect(result.hasErrors).toBeFalsy()
+    expect(result.templates.map((v) => v.filename)).toMatchInlineSnapshot(`
+      [
+        "graphql-documents.mjs",
+        "graphql-operations.d.ts",
+        "nuxt-graphql-middleware/generated-types.d.ts",
+      ]
+    `)
+    expect(a).toMatchSnapshot(a?.filename)
+    expect(b).toMatchSnapshot(b?.filename)
+    expect(c).toMatchSnapshot(c?.filename)
   })
 
   test('Generates templates correctly for provided documents', async () => {

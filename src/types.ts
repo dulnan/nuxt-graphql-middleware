@@ -1,36 +1,53 @@
 import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
-import type { GraphqlServerResponse } from '#graphql-middleware/types'
-import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
+import type {
+  ContextType,
+  GraphqlServerResponse,
+} from '#graphql-middleware/types'
+import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
 
-export type GraphqlMiddlewareGraphqlEndpointMethod = (
+export type GraphqlMiddlewareRequestContext<
+  C extends ContextType = ContextType,
+> = {
+  client?: Partial<C>
+}
+
+export type GraphqlMiddlewareGraphqlEndpointMethod<C extends ContextType> = (
   event?: H3Event,
   operation?: string,
   operationName?: string,
+  context?: GraphqlMiddlewareRequestContext<C>,
 ) => string | Promise<string> | undefined
 
-export type GraphqlMiddlewareServerFetchOptionsMethod = (
+export type GraphqlMiddlewareServerFetchOptionsMethod<C extends ContextType> = (
   event?: H3Event,
   operation?: string,
   operationName?: string,
+  context?: GraphqlMiddlewareRequestContext<C>,
 ) => FetchOptions | Promise<FetchOptions>
 
-export type GraphqlMiddlewareOnServerResponseMethod<ServerReponse, T> = (
+export type GraphqlMiddlewareOnServerResponseMethod<
+  ServerReponse,
+  T,
+  C extends ContextType,
+> = (
   event: H3Event,
   response: FetchResponse<ServerReponse>,
   operation?: string,
   operationName?: string,
+  context?: GraphqlMiddlewareRequestContext<C>,
 ) => T | Promise<T>
 
-export type GraphqlMiddlewareOnServerErrorMethod = (
+export type GraphqlMiddlewareOnServerErrorMethod<C extends ContextType> = (
   event: H3Event,
   error: FetchError,
   operation?: string,
   operationName?: string,
+  context?: GraphqlMiddlewareRequestContext<C>,
 ) => any | Promise<any>
 
-export type GraphqlMiddlewareDoRequestMethodContext = {
+export type GraphqlMiddlewareDoRequestMethodContext<C extends ContextType> = {
   /**
    * The incoming request event from H3.
    */
@@ -74,10 +91,12 @@ export type GraphqlMiddlewareDoRequestMethodContext = {
    *   0=[Binary File]
    */
   formData?: FormData
+
+  context: GraphqlMiddlewareRequestContext<C>
 }
 
-export type GraphqlMiddlewareDoRequestMethod<T> = (
-  context: GraphqlMiddlewareDoRequestMethodContext,
+export type GraphqlMiddlewareDoRequestMethod<T, C extends ContextType> = (
+  context: GraphqlMiddlewareDoRequestMethodContext<C>,
 ) => Promise<T>
 
 /**
@@ -85,6 +104,7 @@ export type GraphqlMiddlewareDoRequestMethod<T> = (
  */
 export type GraphqlMiddlewareServerOptions<
   Additions extends object = object,
+  C extends ContextType = ContextType,
   CustomResponse = GraphqlServerResponse<GraphqlMiddlewareResponseUnion> &
     Additions,
 > = {
@@ -103,7 +123,7 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  graphqlEndpoint?: GraphqlMiddlewareGraphqlEndpointMethod
+  graphqlEndpoint?: GraphqlMiddlewareGraphqlEndpointMethod<C>
 
   /**
    * Provide the options for the ofetch request to the GraphQL server.
@@ -126,7 +146,7 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  serverFetchOptions?: GraphqlMiddlewareServerFetchOptionsMethod
+  serverFetchOptions?: GraphqlMiddlewareServerFetchOptionsMethod<C>
 
   /**
    * Handle the response from the GraphQL server.
@@ -160,7 +180,8 @@ export type GraphqlMiddlewareServerOptions<
    */
   onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<
     GraphqlServerResponse<GraphqlMiddlewareResponseUnion>,
-    CustomResponse
+    CustomResponse,
+    C
   >
 
   /**
@@ -192,7 +213,7 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  onServerError?: GraphqlMiddlewareOnServerErrorMethod
+  onServerError?: GraphqlMiddlewareOnServerErrorMethod<C>
 
   /**
    * Provide a custom fetch method for requests to the GraphQL server.
@@ -231,7 +252,7 @@ export type GraphqlMiddlewareServerOptions<
    * }
    * ```
    */
-  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<CustomResponse>
+  doGraphqlRequest?: GraphqlMiddlewareDoRequestMethod<CustomResponse, C>
 }
 
 export type GraphqlMiddlewareDocument = {

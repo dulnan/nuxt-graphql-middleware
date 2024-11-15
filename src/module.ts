@@ -13,6 +13,7 @@ import {
   addPlugin,
   addImports,
   resolveAlias,
+  addServerImports,
 } from '@nuxt/kit'
 import inquirer from 'inquirer'
 import { type TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
@@ -275,6 +276,7 @@ export default defineNuxtModule<ModuleOptions>({
     const moduleResolver = createResolver(import.meta.url)
     const serverResolver = createResolver(nuxt.options.serverDir)
     const srcResolver = createResolver(nuxt.options.srcDir)
+    const appResolver = createResolver(nuxt.options.dir.app)
     const rootDir = nuxt.options.rootDir
     const rootResolver = createResolver(rootDir)
     const schemaPath = await getSchemaPath(
@@ -412,39 +414,33 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     if (options.includeComposables) {
-      addImports({
-        from: moduleResolver.resolve('./runtime/composables/useGraphqlQuery'),
-        name: 'useGraphqlQuery',
-      })
-      addImports({
-        from: moduleResolver.resolve(
-          './runtime/composables/useGraphqlMutation',
-        ),
-        name: 'useGraphqlMutation',
-      })
-
-      addImports({
-        from: moduleResolver.resolve('./runtime/composables/useGraphqlState'),
-        name: 'useGraphqlState',
-      })
-      addImports({
-        from: moduleResolver.resolve(
-          './runtime/composables/useAsyncGraphqlQuery',
-        ),
-        name: 'useAsyncGraphqlQuery',
-      })
-      nuxt.options.alias['#graphql-composable'] = moduleResolver.resolve(
-        'runtime/composables/server',
-      )
+      const nuxtComposables = [
+        'useGraphqlQuery',
+        'useGraphqlMutation',
+        'useGraphqlState',
+        'useAsyncGraphqlQuery',
+      ]
 
       if (options.enableFileUploads) {
-        addImports({
-          from: moduleResolver.resolve(
-            './runtime/composables/useGraphqlUploadMutation',
-          ),
-          name: 'useGraphqlUploadMutation',
-        })
+        nuxtComposables.push('useGraphqlUploadMutation')
       }
+
+      nuxtComposables.forEach((name) => {
+        addImports({
+          from: moduleResolver.resolve('./runtime/composables/' + name),
+          name,
+        })
+      })
+
+      const serverUtils = ['useGraphqlQuery', 'useGraphqlMutation'].map(
+        (name) => {
+          return {
+            from: moduleResolver.resolve('./runtime/server/utils/' + name),
+            name,
+          }
+        },
+      )
+      addServerImports(serverUtils)
     }
 
     // Add the templates to nuxt and provide a callback to load the file contents.
@@ -470,6 +466,11 @@ export default defineNuxtModule<ModuleOptions>({
         result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
       ) {
         nuxt.options.alias['#graphql-operations'] = result.dst
+      } else if (
+        result.dst.includes(GraphqlMiddlewareTemplate.ComposableContext)
+      ) {
+        nuxt.options.alias['#nuxt-graphql-middleware/generated-types'] =
+          result.dst
       }
     })
 
@@ -481,7 +482,7 @@ export default defineNuxtModule<ModuleOptions>({
 import type {
   GraphqlMiddlewareQuery,
   GraphqlMiddlewareMutation,
-} from '#build/nuxt-graphql-middleware'
+} from '#nuxt-graphql-middleware/generated-types'
 
 declare module '#graphql-documents' {
   type Documents = {
@@ -563,10 +564,10 @@ export { serverOptions }
 import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
 ${serverOptionsLineTypes}
 import type { GraphqlServerResponse } from '#graphql-middleware/types'
-import type { GraphqlMiddlewareResponseUnion } from '#build/nuxt-graphql-middleware'
+import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
 
 type GraphqlResponseAdditions =
-  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R> ? R : {}
+  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
 
 export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
 
@@ -576,6 +577,57 @@ export { serverOptions }
 `
       },
     })
+
+    const getClientOptionsImport = () => {
+      const clientOptionsPath = appResolver.resolve(
+        'graphqlMiddleware.clientOptions',
+      )
+
+      if (fileExists(clientOptionsPath)) {
+        const pathRelative = relative(nuxt.options.buildDir, clientOptionsPath)
+        return `import clientOptions from '${pathRelative}'`
+      }
+    }
+
+    const clientOptionsImport = getClientOptionsImport()
+
+    const clientOptionsTemplate = addTemplate({
+      filename: 'graphqlMiddleware.clientOptions.mjs',
+      write: true,
+      getContents: () => {
+        // clientOptions file exists.
+        if (clientOptionsImport) {
+          return `${clientOptionsImport}
+export { clientOptions }`
+        }
+
+        return `export const clientOptions = {}`
+      },
+    })
+
+    addTemplate({
+      filename: 'graphqlMiddleware.clientOptions.d.ts',
+      write: true,
+      getContents: () => {
+        if (clientOptionsImport) {
+          return `import { GraphqlClientOptions } from '#graphql-middleware/types'
+${clientOptionsImport}
+
+export type GraphqlClientContext = typeof clientOptions extends GraphqlClientOptions<infer R> ? R : {}
+
+export { clientOptions }`
+        }
+
+        return `import { GraphqlClientOptions } from '#graphql-middleware/types'
+export const clientOptions: GraphqlClientOptions
+
+export type GraphqlClientContext = {}
+`
+      },
+    })
+
+    nuxt.options.alias['#graphql-middleware-client-options'] =
+      clientOptionsTemplate.dst
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =

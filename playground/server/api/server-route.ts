@@ -1,4 +1,4 @@
-import { useGraphqlQuery } from '#graphql-composable'
+import { useGraphqlQuery } from '#imports'
 import { defineEventHandler } from 'h3'
 
 /**
@@ -7,6 +7,11 @@ import { defineEventHandler } from 'h3'
  */
 export default defineEventHandler(async () => {
   // Return value is fully typed.
-  const { data } = await useGraphqlQuery('users')
-  return data.users.map((v) => v.email)
+  const data = await useGraphqlQuery({
+    name: 'users',
+    clientContext: {
+      language: 'de',
+    },
+  })
+  return data.data.users.map((v) => v.email)
 })
