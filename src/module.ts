@@ -414,50 +414,34 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     if (options.includeComposables) {
-      addImports({
-        from: moduleResolver.resolve('./runtime/composables/useGraphqlQuery'),
-        name: 'useGraphqlQuery',
-      })
-      addImports({
-        from: moduleResolver.resolve(
-          './runtime/composables/useGraphqlMutation',
-        ),
-        name: 'useGraphqlMutation',
-      })
-
-      addImports({
-        from: moduleResolver.resolve('./runtime/composables/useGraphqlState'),
-        name: 'useGraphqlState',
-      })
-      addImports({
-        from: moduleResolver.resolve(
-          './runtime/composables/useAsyncGraphqlQuery',
-        ),
-        name: 'useAsyncGraphqlQuery',
-      })
+      const nuxtComposables = [
+        'useGraphqlQuery',
+        'useGraphqlMutation',
+        'useGraphqlState',
+        'useAsyncGraphqlQuery',
+      ]
 
       if (options.enableFileUploads) {
-        addImports({
-          from: moduleResolver.resolve(
-            './runtime/composables/useGraphqlUploadMutation',
-          ),
-          name: 'useGraphqlUploadMutation',
-        })
+        nuxtComposables.push('useGraphqlUploadMutation')
       }
-    }
 
-    addServerImports([
-      {
-        from: moduleResolver.resolve('./runtime/server/utils/index.ts'),
-        name: 'useGraphqlQuery',
-        as: 'useGraphqlQuery',
-      },
-      {
-        from: moduleResolver.resolve('./runtime/server/utils/index.ts'),
-        name: 'useGraphqlMutation',
-        as: 'useGraphqlMutation',
-      },
-    ])
+      nuxtComposables.forEach((name) => {
+        addImports({
+          from: moduleResolver.resolve('./runtime/composables/' + name),
+          name,
+        })
+      })
+
+      const serverUtils = ['useGraphqlQuery', 'useGraphqlMutation'].map(
+        (name) => {
+          return {
+            from: moduleResolver.resolve('./runtime/server/utils/' + name),
+            name,
+          }
+        },
+      )
+      addServerImports(serverUtils)
+    }
 
     // Add the templates to nuxt and provide a callback to load the file contents.
     Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
