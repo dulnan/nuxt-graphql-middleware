@@ -202,8 +202,9 @@ export interface ModuleOptions {
   /**
    * Set to true if you want to output each compiled query and mutation in the
    * .nuxt folder.
+   * Set to a path to output to a custom path.
    */
-  outputDocuments?: boolean
+  outputDocuments?: boolean | string
 
   /**
    * Enable Nuxt DevTools integration.
@@ -350,10 +351,15 @@ export default defineNuxtModule<ModuleOptions>({
 
         // Output the generated documents if desired.
         if (options.outputDocuments) {
-          const destFolder = resolve(
-            nuxt.options.buildDir,
-            'nuxt-graphql-middleware/documents',
-          )
+          let destFolder
+          if (typeof options.outputDocuments === 'boolean') {
+            destFolder = resolve(
+              nuxt.options.buildDir,
+              'nuxt-graphql-middleware/documents',
+            )
+          } else {
+            destFolder = options.outputDocuments
+          }
 
           outputDocuments(destFolder, documents)
           if (isFirst) {
