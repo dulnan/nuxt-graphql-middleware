@@ -42,6 +42,10 @@ export default defineNuxtConfig({
     autoImport: false,
   },
 
+  typescript: {
+    typeCheck: 'build',
+  },
+
   future: {
     compatibilityVersion: 4,
   },
