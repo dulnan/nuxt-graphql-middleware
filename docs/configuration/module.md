@@ -146,11 +146,12 @@ operations types.
 
 [Check out `@graphql-codegen/typescript-operations` for all available options](https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations)
 
-## outputDocuments: boolean
+## outputDocuments: boolean | string
 
-Output the compiled documents to disk. Path is
+Output the compiled documents to disk. If boolean then path is
 $buildDir/nuxt-graphql-middleware/documents, usually
-`/.nuxt/nuxt-graphql-middleware/documents`.
+`/.nuxt/nuxt-graphql-middleware/documents` else we use `outputDocuments` as the
+path.
 
 ### default
 

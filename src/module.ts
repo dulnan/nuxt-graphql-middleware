@@ -29,6 +29,7 @@ import {
   logger,
   fileExists,
   outputDocuments,
+  getOutputDocumentsPath,
 } from './helpers'
 import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
@@ -207,8 +208,9 @@ export interface ModuleOptions {
   /**
    * Set to true if you want to output each compiled query and mutation in the
    * .nuxt folder.
+   * Set to a path to output to a custom path.
    */
-  outputDocuments?: boolean
+  outputDocuments?: boolean | string
 
   /**
    * Enable Nuxt DevTools integration.
@@ -354,17 +356,19 @@ export default defineNuxtModule<ModuleOptions>({
         rpc?.broadcast.documentsUpdated(documents)
 
         // Output the generated documents if desired.
-        if (options.outputDocuments) {
-          const destFolder = resolve(
-            nuxt.options.buildDir,
-            'nuxt-graphql-middleware/documents',
-          )
+        const outputDocumentsPath = await getOutputDocumentsPath(
+          options.outputDocuments,
+          nuxt.options.buildDir,
+          rootResolver.resolvePath,
+        )
+        if (outputDocumentsPath) {
+          outputDocuments(outputDocumentsPath, documents)
 
-          outputDocuments(destFolder, documents)
           if (isFirst) {
-            logger.info('Documents generated at ' + destFolder)
+            logger.info('Documents generated at ' + outputDocumentsPath)
           }
         }
+
         if (hasErrors) {
           throw new Error('Documents has errors.')
         }

@@ -19,8 +19,9 @@ import { generateSchema, generateTemplates } from './../codegen'
 import { type GraphqlMiddlewareDocument } from './../types'
 import { type ModuleOptions } from './../module'
 import { logDocuments } from './reporter'
+import { name } from '../../package.json'
 
-export const logger = useLogger('nuxt-graphql-middleware')
+export const logger = useLogger(name)
 
 export const defaultOptions: ModuleOptions = {
   codegenConfig: {
@@ -493,4 +494,20 @@ export async function outputDocuments(
       fsp.writeFile(filePath, v.content)
     }
   })
+}
+
+export async function getOutputDocumentsPath(
+  optionsOutputDocuments: ModuleOptions['outputDocuments'],
+  nuxtBuildDir: string,
+  resolvePath: Resolver['resolvePath'],
+): Promise<string | null> {
+  if (!optionsOutputDocuments) {
+    return null
+  }
+
+  if (typeof optionsOutputDocuments === 'boolean') {
+    return resolve(nuxtBuildDir, `${name}/documents`)
+  } else {
+    return await resolvePath(optionsOutputDocuments)
+  }
 }
