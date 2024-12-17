@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
-import { relative, resolve, parse as pathParse, join as pathJoin } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { defu } from 'defu'
 import { type BirpcGroup } from 'birpc'
 import {
@@ -35,11 +35,6 @@ import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { type GraphqlMiddlewareDocument } from './types'
 export type { GraphqlMiddlewareServerOptions } from './types'
-
-function pathWithoutExtension(fullPath: string): string {
-  const parsed = pathParse(fullPath)
-  return pathJoin(parsed.dir, parsed.name)
-}
 
 export interface ModuleOptions {
   /**
@@ -242,6 +237,10 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: defaultOptions,
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
+
+    function addAlias(name: string, aliasPath: string) {
+      nuxt.options.alias[name] = aliasPath
+    }
 
     const isModuleBuild =
       process.env.MODULE_BUILD === 'true' && nuxt.options._prepare
@@ -470,20 +469,15 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
-        nuxt.options.alias['#graphql-documents'] = pathWithoutExtension(
-          result.dst,
-        )
+        addAlias('#graphql-documents', result.dst)
       } else if (
         result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
       ) {
-        nuxt.options.alias['#graphql-operations'] = pathWithoutExtension(
-          result.dst,
-        )
+        addAlias('#graphql-operations', result.dst)
       } else if (
         result.dst.includes(GraphqlMiddlewareTemplate.ComposableContext)
       ) {
-        nuxt.options.alias['#nuxt-graphql-middleware/generated-types'] =
-          pathWithoutExtension(result.dst)
+        addAlias('#nuxt-graphql-middleware/generated-types', result.dst)
       }
     })
 
@@ -644,17 +638,16 @@ export type GraphqlClientContext = {}
       },
     })
 
-    nuxt.options.alias['#graphql-middleware-client-options'] =
-      pathWithoutExtension(clientOptionsTemplate.dst)
+    addAlias('#graphql-middleware-client-options', clientOptionsTemplate.dst)
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =
       nuxt.options.nitro.externals.inline || []
     nuxt.options.nitro.externals.inline.push(template.dst)
-    nuxt.options.alias['#graphql-middleware-server-options-build'] =
-      pathWithoutExtension(template.dst)
+    addAlias('#graphql-middleware-server-options-build', template.dst)
 
-    nuxt.options.alias['#graphql-middleware/types'] = pathWithoutExtension(
+    addAlias(
+      '#graphql-middleware/types',
       moduleResolver.resolve('./runtime/types.ts'),
     )
 
