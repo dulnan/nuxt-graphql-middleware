@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
-import { relative, resolve, parse as pathParse, join as pathJoin } from 'pathe'
+import { relative, resolve } from 'pathe'
 import { defu } from 'defu'
 import { type BirpcGroup } from 'birpc'
 import {
@@ -35,11 +35,6 @@ import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { type GraphqlMiddlewareDocument } from './types'
 export type { GraphqlMiddlewareServerOptions } from './types'
-
-function pathWithoutExtension(fullPath: string): string {
-  const parsed = pathParse(fullPath)
-  return pathJoin(parsed.dir, parsed.name)
-}
 
 export interface ModuleOptions {
   /**
@@ -244,11 +239,7 @@ export default defineNuxtModule<ModuleOptions>({
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
     function addAlias(name: string, aliasPath: string) {
-      nuxt.options.alias[name] = pathWithoutExtension(aliasPath)
-      if (!nuxt.options.nitro.alias) {
-        nuxt.options.nitro.alias = {}
-      }
-      nuxt.options.nitro.alias[name] = aliasPath
+      nuxt.options.alias[name] = aliasPath
     }
 
     const isModuleBuild =
