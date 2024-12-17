@@ -243,6 +243,14 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
+    function addAlias(name: string, aliasPath: string) {
+      nuxt.options.alias[name] = pathWithoutExtension(aliasPath)
+      if (!nuxt.options.nitro.alias) {
+        nuxt.options.nitro.alias = {}
+      }
+      nuxt.options.nitro.alias[name] = aliasPath
+    }
+
     const isModuleBuild =
       process.env.MODULE_BUILD === 'true' && nuxt.options._prepare
 
@@ -470,20 +478,15 @@ export default defineNuxtModule<ModuleOptions>({
       })
 
       if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
-        nuxt.options.alias['#graphql-documents'] = pathWithoutExtension(
-          result.dst,
-        )
+        addAlias('#graphql-documents', result.dst)
       } else if (
         result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
       ) {
-        nuxt.options.alias['#graphql-operations'] = pathWithoutExtension(
-          result.dst,
-        )
+        addAlias('#graphql-operations', result.dst)
       } else if (
         result.dst.includes(GraphqlMiddlewareTemplate.ComposableContext)
       ) {
-        nuxt.options.alias['#nuxt-graphql-middleware/generated-types'] =
-          pathWithoutExtension(result.dst)
+        addAlias('#nuxt-graphql-middleware/generated-types', result.dst)
       }
     })
 
@@ -644,17 +647,16 @@ export type GraphqlClientContext = {}
       },
     })
 
-    nuxt.options.alias['#graphql-middleware-client-options'] =
-      pathWithoutExtension(clientOptionsTemplate.dst)
+    addAlias('#graphql-middleware-client-options', clientOptionsTemplate.dst)
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =
       nuxt.options.nitro.externals.inline || []
     nuxt.options.nitro.externals.inline.push(template.dst)
-    nuxt.options.alias['#graphql-middleware-server-options-build'] =
-      pathWithoutExtension(template.dst)
+    addAlias('#graphql-middleware-server-options-build', template.dst)
 
-    nuxt.options.alias['#graphql-middleware/types'] = pathWithoutExtension(
+    addAlias(
+      '#graphql-middleware/types',
       moduleResolver.resolve('./runtime/types.ts'),
     )
 
