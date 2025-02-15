@@ -57,6 +57,9 @@ const { data: users, refresh } = await useAsyncGraphqlQuery('users', null, {
   graphqlCaching: {
     client: true,
   },
+  default: () => {
+    return []
+  },
 })
 
 function purgeCache() {

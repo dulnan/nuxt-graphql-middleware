@@ -28,6 +28,11 @@ export interface GraphqlMiddlewareState {
 }
 
 export type RequestCacheOptions = {
+  /**
+   * Allow caching on the client.
+   *
+   * Caching is only enabled when `clientCache.enabled` is set to `true` in the module options.
+   */
   client?: boolean
 }
 

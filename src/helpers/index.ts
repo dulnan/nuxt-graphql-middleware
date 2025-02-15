@@ -2,6 +2,7 @@ import { existsSync, promises as fsp } from 'node:fs'
 import { oldVisit } from '@graphql-codegen/plugin-helpers'
 import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
+import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
 import { inlineImportsWithLineToImports } from './fragment-import'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
@@ -21,7 +22,7 @@ import { type ModuleOptions } from './../module'
 import { logDocuments } from './reporter'
 import { name } from '../../package.json'
 
-export const logger = useLogger(name)
+export const logger: ConsolaInstance = useLogger(name)
 
 export const defaultOptions: ModuleOptions = {
   codegenConfig: {
