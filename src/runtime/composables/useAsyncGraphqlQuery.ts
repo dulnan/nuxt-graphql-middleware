@@ -194,14 +194,14 @@ export function useAsyncGraphqlQuery<
     }
   }
 
-  return useAsyncData(
+  return useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     key,
     () => {
       const globalClientContext = clientOptions.buildClientContext
         ? clientOptions.buildClientContext()
         : {}
 
-      return performRequest<ResT>(
+      return performRequest<any>(
         'query',
         name,
         'get',
@@ -220,11 +220,5 @@ export function useAsyncGraphqlQuery<
       )
     },
     asyncDataOptions as any,
-  ) as AsyncData<
-    PickFrom<DataT, PickKeys> | DefaultT,
-    | (NuxtErrorDataT extends Error | NuxtError
-        ? NuxtErrorDataT
-        : NuxtError<NuxtErrorDataT>)
-    | undefined
-  >
+  )
 }
