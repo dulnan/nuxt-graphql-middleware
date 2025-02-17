@@ -291,7 +291,7 @@ export default defineNuxtModule<ModuleOptions>({
       schemaPath,
     }
 
-    const collector = new Collector(context)
+    const collector = new Collector(context, options.documents)
     await collector.init()
 
     // Store the generated templates in a locally scoped object.

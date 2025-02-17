@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs'
 import { type GraphQLSchema } from 'graphql'
 import { loadSchema } from '@graphql-tools/load'
 import { resolveFiles } from '@nuxt/kit'
+import { hash } from 'ohash'
 
 export type ModuleContext = {
   patterns: string[]
@@ -12,14 +13,34 @@ export type ModuleContext = {
 class CollectedFile {
   filePath: string
   fileContents: string | null
+  readonly isFromDisk: boolean
 
   constructor(filePath: string, fileContents?: string) {
     this.filePath = filePath
     this.fileContents = fileContents || null
+
+    // If the file contents are provided directly we don't need to load
+    // anything from disk anymore afterwards.
+    this.isFromDisk = !fileContents
   }
 
   update() {
     // @todo
+  }
+
+  async getFileContents(): Promise<string> {
+    if (!this.isFromDisk) {
+      if (this.fileContents === null) {
+        throw new Error('Missing fileContents for ' + this.filePath)
+      }
+      return this.fileContents
+    }
+
+    if (!this.fileContents) {
+      this.fileContents = (await fs.readFile(this.filePath)).toString()
+    }
+
+    return this.fileContents
   }
 }
 
@@ -29,9 +50,14 @@ export class Collector {
   context: ModuleContext
   schema: GraphQLSchema | null = null
 
-  constructor(context: ModuleContext) {
+  constructor(context: ModuleContext, documents: string[] = []) {
     this.files = new Map()
     this.context = context
+
+    documents.forEach((fileContents, index) => {
+      const fileName = `nuxt.config.ts[${index}]`
+      this.files.set(fileName, new CollectedFile(fileName, fileContents))
+    })
   }
 
   private getImportPatternFiles(): Promise<string[]> {
