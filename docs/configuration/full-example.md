@@ -41,11 +41,6 @@ export default defineNuxtConfig({
     ],
 
     /**
-     * Automatically inline fragments.
-     */
-    autoInlineFragments: true,
-
-    /**
      * Only download the schema when in development mode.
      */
     downloadSchema: isDev,

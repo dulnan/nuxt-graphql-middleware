@@ -40,7 +40,6 @@ describe('generate', () => {
       {
         graphqlEndpoint: '',
         documents: [],
-        autoInlineFragments: true,
         autoImportPatterns: [
           './app/pages/**/*.graphql',
           './app/components/**/*.graphql',
@@ -79,7 +78,7 @@ describe('generate', () => {
     expect(c).toMatchSnapshot(c?.filename)
   })
 
-  test('Generates templates correctly for auto imported documents using autoInlineFragments', async () => {
+  test('Generates templates correctly for auto imported documents automatic fragment imports', async () => {
     const collector = new Collector({
       srcDir: './',
       schemaPath,
@@ -91,7 +90,6 @@ describe('generate', () => {
         graphqlEndpoint: '',
         documents: [],
         autoImportPatterns: ['./app/test-queries/auto-inline/**/*.graphql'],
-        autoInlineFragments: true,
       },
       schemaPath,
       resolver,

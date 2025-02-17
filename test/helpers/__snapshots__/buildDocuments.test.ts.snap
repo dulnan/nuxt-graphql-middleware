@@ -41,15 +41,7 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     "filename": "query.fetchOptionsComposable.graphql",
   },
   {
-    "content": "fragment user on User {
-  id
-  firstName
-  lastName
-  email
-  description
-  dateOfBirth
-}
-
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
 
 query queryOne {
   one: users {
@@ -76,6 +68,17 @@ fragment foobarQuery on Query {
   }
 }
 
+fragment foobarUser on User {
+  firstName
+}
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
 fragment foobarUser on User {
   firstName
 }",
@@ -139,60 +142,73 @@ fragment formSubmission on FormSubmission {
       content
     }
   }
+}
+fragment formSubmission on FormSubmission {
+  id
+  firstName
+  lastName
+  documents {
+    name
+    file {
+      name
+      id
+      content
+    }
+  }
 }",
     "filename": "query.getSubmissions.graphql",
   },
   {
-    "content": "fragment user on User {
-  id
-  firstName
-  lastName
-  email
-  description
-  dateOfBirth
-}
-
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
 
 query foobar {
   users {
     ...user
   }
-}",
-    "filename": "test.graphql",
-  },
-  {
-    "content": "fragment user on User {
+}
+fragment user on User {
   id
   firstName
   lastName
   email
   description
   dateOfBirth
-}
-
+}",
+    "filename": "test.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
 
 mutation addUser($user: UserData!) {
   createUser(user: $user) {
     ...user
   }
-}",
-    "filename": "mutation.addUser.graphql",
-  },
-  {
-    "content": "fragment user on User {
+}
+fragment user on User {
   id
   firstName
   lastName
   email
   description
   dateOfBirth
-}
-
+}",
+    "filename": "mutation.addUser.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
 
 query userById($id: ID!) {
   userById(id: $id) {
     ...user
   }
+}
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
 }",
     "filename": "query.user.graphql",
   },
@@ -208,20 +224,20 @@ query userById($id: ID!) {
     "filename": "user.fragment.graphql",
   },
   {
-    "content": "fragment user on User {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+query users {
+  users {
+    ...user
+  }
+}
+fragment user on User {
   id
   firstName
   lastName
   email
   description
   dateOfBirth
-}
-
-
-query users {
-  users {
-    ...user
-  }
 }",
     "filename": "userList.graphql",
   },
@@ -230,6 +246,18 @@ query users {
   one: users {
     ...depthOneUser
   }
+}
+fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}
+fragment depthTwoUser on User {
+  firstName
+}
+fragment depthTwoUser on User {
+  firstName
 }",
     "filename": "fragment.depthOne.graphql",
   },
@@ -239,6 +267,9 @@ query users {
   friends {
     ...depthTwoUser
   }
+}
+fragment depthTwoUser on User {
+  firstName
 }",
     "filename": "fragment.depthOneUser.graphql",
   },
@@ -254,6 +285,23 @@ query users {
   one: users {
     ...depthOneUser
   }
+}
+fragment depthOneQuery on Query {
+  one: users {
+    ...depthOneUser
+  }
+}
+fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}
+fragment depthTwoUser on User {
+  firstName
+}
+fragment depthTwoUser on User {
+  firstName
 }",
     "filename": "query.highDepthFragments.graphql",
   },

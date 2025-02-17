@@ -60,16 +60,6 @@ export interface ModuleOptions {
   autoImportPatterns?: string[]
 
   /**
-   * Automatically inline fragments.
-   *
-   * By default, fragments have to imported using the non-standard "#import"
-   * syntax.
-   *
-   * When enabling this feature, the module will automatically inline fragments by name.
-   */
-  autoInlineFragments?: boolean
-
-  /**
    * Additional raw documents to include.
    *
    * Useful if for example you need to generate queries during build time.
@@ -252,7 +242,6 @@ export default defineNuxtModule<ModuleOptions>({
       options.graphqlEndpoint = 'http://localhost'
       options.downloadSchema = false
       options.schemaPath = '~~/schema.graphql'
-      options.autoInlineFragments = true
       options.autoImportPatterns = [
         '~~/playground/**/*.{gql,graphql}',
         '!node_modules',
