@@ -346,7 +346,6 @@ export default defineNuxtModule<ModuleOptions>({
           collector,
           options,
           schemaPath,
-          rootResolver.resolve,
           rootDir,
           isFirst,
         )
@@ -360,6 +359,7 @@ export default defineNuxtModule<ModuleOptions>({
           nuxt.options.buildDir,
           rootResolver.resolvePath,
         )
+
         if (outputDocumentsPath) {
           outputDocuments(outputDocumentsPath, documents)
 

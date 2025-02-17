@@ -11,6 +11,7 @@ import type {
   DocumentNode,
   OperationDefinitionNode,
   FragmentDefinitionNode,
+  DefinitionNode,
 } from 'graphql'
 import { parse, Source, print, visit, Kind } from 'graphql'
 import { generateSchema, generateTemplates } from './../codegen'
@@ -120,6 +121,7 @@ function inlineNestedFragments(
   fragmentMap: Map<string, FragmentDefinitionNode>,
 ): string {
   const parsed = parse(document)
+  const definitions: DefinitionNode[] = [...parsed.definitions]
   const fragmentsToInline: Set<string> = new Set()
 
   // Collect all fragment spreads in the document
@@ -133,7 +135,7 @@ function inlineNestedFragments(
   fragmentsToInline.forEach((fragmentName) => {
     const fragment = fragmentMap.get(fragmentName)
     if (fragment) {
-      document += '\n' + print(fragment)
+      definitions.push(fragment)
       const nestedFragmentNames = new Set<string>()
       visit(fragment, {
         FragmentSpread(node) {
@@ -145,14 +147,17 @@ function inlineNestedFragments(
           fragmentsToInline.add(nestedFragmentName)
           const nestedFragment = fragmentMap.get(nestedFragmentName)
           if (nestedFragment) {
-            document += '\n' + print(nestedFragment)
+            definitions.push(nestedFragment)
           }
         }
       })
     }
   })
 
-  return document
+  return print({
+    ...parsed,
+    definitions,
+  })
 }
 
 export async function buildDocuments(
@@ -310,7 +315,6 @@ export async function generate(
   collector: Collector,
   options: ModuleOptions,
   schemaPath: string,
-  resolver: Resolver['resolve'],
   rootDir: string,
   logEverything = false,
 ) {

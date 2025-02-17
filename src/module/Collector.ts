@@ -8,6 +8,9 @@ import {
 } from 'graphql'
 import { loadSchema } from '@graphql-tools/load'
 import { resolveFiles } from '@nuxt/kit'
+import type { GraphqlMiddlewareDocument } from '../types'
+import { parseDocument } from '../helpers'
+import { validateGraphQlDocuments } from '@graphql-tools/utils'
 
 export type ModuleContext = {
   patterns: string[]
@@ -20,9 +23,11 @@ class CollectedFile {
   fileContents: string
   fileContentsInlined: string | null = null
   parsed: DocumentNode | null = null
+  inlined: DocumentNode | null = null
   fragments: Map<string, FragmentDefinitionNode>
   needsFragments: Set<string> = new Set()
   isOnDisk: boolean
+  validationState: 'valid' | 'invalid' | null = null
 
   constructor(filePath: string, fileContents: string, isOnDisk = false) {
     this.filePath = filePath
@@ -32,9 +37,22 @@ class CollectedFile {
     this.parse()
   }
 
+  setInlined(inlined: DocumentNode) {
+    this.inlined = inlined
+  }
+
+  validate(schema: GraphQLSchema) {
+    if (this.validationState === 'valid') {
+    }
+
+    if (this.parsed) {
+      const errors = validateGraphQlDocuments(schema, [this.parsed])
+    }
+
+    return []
+  }
+
   private parse() {
-    this.fragments.clear()
-    this.needsFragments.clear()
     this.parsed = parse(this.fileContents)
     visit(this.parsed, {
       FragmentDefinition: (node) => {
@@ -46,19 +64,26 @@ class CollectedFile {
     })
   }
 
+  isValid() {
+    return this.validationState === 'valid'
+  }
+
   static async fromFilePath(filePath: string): Promise<CollectedFile> {
     const content = (await fs.readFile(filePath)).toString()
     return new CollectedFile(filePath, content, true)
   }
 
   async update() {
+    this.validationState = null
+    this.fragments.clear()
+    this.needsFragments.clear()
+
     if (this.isOnDisk) {
       this.fileContents = (await fs.readFile(this.filePath)).toString()
-      this.parse()
     }
-  }
 
-  async getDocumentInlined(): Promise<string> {}
+    this.parse()
+  }
 }
 
 export class Collector {
@@ -117,10 +142,10 @@ export class Collector {
     this.addFile(filePath)
   }
 
-  handleChange(filePath: string) {
+  async handleChange(filePath: string) {
     const file = this.files.get(filePath)
     if (file) {
-      file.update()
+      await file.update()
       this.needsUpdate = true
     }
   }
@@ -141,5 +166,57 @@ export class Collector {
       toRemove.forEach((key) => this.files.delete(key))
       this.needsUpdate = true
     }
+  }
+
+  validateDocuments(rootDir: string) {
+    // const validated: GraphqlMiddlewareDocument[] = []
+    //
+    // const files = [...this.files.values()]
+    //
+    // for (let i = 0; i < files.length; i++) {
+    //   const file = files[i]
+    //   const document: GraphqlMiddlewareDocument = {
+    //     filename: file.filePath,
+    //     content: file.fileContents,
+    //   }
+    //   if (document.filename) {
+    //     document.relativePath = document.filename.replace(rootDir + '/', '')
+    //   }
+    //
+    //   try {
+    //     const node = parseDocument(document, rootDir)
+    //     document.content = print(node)
+    //     document.errors = validateGraphQlDocuments(schema, [
+    //       node,
+    //     ]) as GraphQLError[]
+    //
+    //     const operation = node.definitions.find(
+    //       (v) => v.kind === 'OperationDefinition',
+    //     ) as OperationDefinitionNode | undefined
+    //     if (operation) {
+    //       document.name = operation.name?.value
+    //       document.operation = operation.operation
+    //     } else {
+    //       document.name = document.relativePath
+    //     }
+    //
+    //     document.isValid = document.errors.length === 0
+    //   } catch (e) {
+    //     document.errors = [e as GraphQLError]
+    //     document.isValid = false
+    //   }
+    //
+    //   document.id = [document.operation, document.name, document.filename]
+    //     .filter(Boolean)
+    //     .join('_')
+    //
+    //   validated.push(document)
+    //
+    //   if (!document.isValid) {
+    //     break
+    //   }
+    // }
+    //
+    // return validated
   }
 }

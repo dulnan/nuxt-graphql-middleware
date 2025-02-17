@@ -1,5 +1,4 @@
 import path from 'path'
-import { createResolver } from '@nuxt/kit'
 import { describe, expect, test, vi } from 'vitest'
 import stripAnsi from 'strip-ansi'
 import { generate, logger } from '../../src/helpers'
@@ -21,7 +20,6 @@ vi.mock('@nuxt/kit', async () => {
 
 describe('generate', () => {
   const srcDir = path.resolve(__dirname, './../../playground')
-  const resolver = createResolver(srcDir).resolve
   const schemaPath = path.resolve(__dirname, './../../schema.graphql')
 
   test('Generates templates correctly for auto imported documents', async () => {
@@ -49,7 +47,6 @@ describe('generate', () => {
         ],
       },
       schemaPath,
-      resolver,
       srcDir,
     )
     expect(result.documents.filter((v) => v.errors?.length)).toEqual([])
@@ -94,7 +91,6 @@ describe('generate', () => {
         autoImportPatterns: ['./app/test-queries/auto-inline/**/*.graphql'],
       },
       schemaPath,
-      resolver,
       srcDir,
     )
     expect(result.hasErrors).toBeFalsy()
@@ -151,7 +147,6 @@ describe('generate', () => {
           graphqlEndpoint: '',
         },
         schemaPath,
-        resolver,
         srcDir,
       ),
     ).toMatchSnapshot()
@@ -191,7 +186,6 @@ describe('generate', () => {
         graphqlEndpoint: '',
       },
       schemaPath,
-      resolver,
       srcDir,
       true,
     )
@@ -233,7 +227,6 @@ describe('generate', () => {
         graphqlEndpoint: '',
       },
       schemaPath,
-      resolver,
       srcDir,
       true,
     )
