@@ -21,6 +21,7 @@ import { type GraphqlMiddlewareDocument } from './../types'
 import { type ModuleOptions } from './../module'
 import { logDocuments } from './reporter'
 import { name } from '../../package.json'
+import type { Collector } from '../module/Collector'
 
 export const logger: ConsolaInstance = useLogger(name)
 
@@ -362,14 +363,14 @@ function cleanGraphqlDocument(
  * Generates the TypeScript definitions and documents files.
  */
 export async function generate(
+  collector: Collector,
   options: ModuleOptions,
   schemaPath: string,
   resolver: Resolver['resolve'],
   rootDir: string,
   logEverything = false,
 ) {
-  const schemaContent = await fsp.readFile(schemaPath).then((v) => v.toString())
-  const schema = await loadSchema(schemaContent, { loaders: [] })
+  const schema = await collector.getSchema()
 
   const documents = await buildDocuments(
     options.documents,

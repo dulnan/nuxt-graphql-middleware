@@ -34,6 +34,7 @@ import {
 import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { type GraphqlMiddlewareDocument } from './types'
+import { Collector, type ModuleContext } from './module/Collector'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 export interface ModuleOptions {
@@ -295,6 +296,15 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
 
+    const context: ModuleContext = {
+      patterns: options.autoImportPatterns || [],
+      srcDir: nuxt.options.srcDir,
+      schemaPath,
+    }
+
+    const collector = new Collector(context)
+    await collector.init()
+
     // Store the generated templates in a locally scoped object.
     const ctx = {
       templates: [] as CodegenResult[],
@@ -344,6 +354,7 @@ export default defineNuxtModule<ModuleOptions>({
 
       try {
         const { templates, hasErrors, documents } = await generate(
+          collector,
           options,
           schemaPath,
           rootResolver.resolve,
@@ -684,31 +695,31 @@ export type GraphqlClientContext = {}
         handler: moduleResolver.resolve('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
       })
-      nuxt.hook('nitro:build:before', (nitro) => {
-        nuxt.hook('builder:watch', async (_event, path) => {
-          path = relative(
-            nuxt.options.srcDir,
-            resolve(nuxt.options.srcDir, path),
-          )
-          // We only care about GraphQL files.
-          if (!path.match(/\.(gql|graphql)$/)) {
-            return
-          }
-          if (schemaPath.includes(path)) {
-            return
-          }
 
-          await generateHandler()
-          await updateTemplates({
-            filter: (template) => {
-              return template.options && template.options.nuxtGraphqlMiddleware
-            },
-          })
+      nuxt.hook('builder:watch', async (event, path) => {
+        path = relative(nuxt.options.srcDir, resolve(nuxt.options.srcDir, path))
+        // We only care about GraphQL files.
+        if (!path.match(/\.(gql|graphql)$/)) {
+          return
+        }
 
-          // Workaround until https://github.com/nuxt/framework/issues/8720 is
-          // implemented.
-          await nitro.hooks.callHook('dev:reload')
-        })
+        if (schemaPath.includes(path)) {
+          return
+        }
+
+        if (event === 'add') {
+          collector.handleAdd(path)
+        } else if (event === 'change') {
+          collector.handleChange(path)
+        } else if (event === 'unlink') {
+          collector.handleUnlink(path)
+        } else if (event === 'addDir') {
+          collector.handleAddDir()
+        } else if (event === 'unlinkDir') {
+          collector.handleUnlinkDir(path)
+        }
+
+        await generateHandler()
       })
     }
   },
