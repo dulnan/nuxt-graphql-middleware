@@ -63,6 +63,7 @@ fragment foobarQuery on Query {
 fragment foobarUser on User {
   firstName
 }
+
 fragment user on User {
   id
   firstName
@@ -71,6 +72,7 @@ fragment user on User {
   description
   dateOfBirth
 }
+
 fragment foobarUser on User {
   firstName
 }",
@@ -135,6 +137,7 @@ fragment formSubmission on FormSubmission {
     }
   }
 }
+
 fragment formSubmission on FormSubmission {
   id
   firstName
@@ -156,6 +159,7 @@ fragment formSubmission on FormSubmission {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -172,6 +176,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -188,6 +193,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -215,6 +221,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -231,15 +238,18 @@ fragment user on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneUser on User {
   firstName
   friends {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -252,6 +262,7 @@ fragment depthTwoUser on User {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -270,20 +281,24 @@ fragment depthTwoUser on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneQuery on Query {
   one: users {
     ...depthOneUser
   }
 }
+
 fragment depthOneUser on User {
   firstName
   friends {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -355,6 +370,7 @@ fragment foobarQuery on Query {
 fragment foobarUser on User {
   firstName
 }
+
 fragment user on User {
   id
   firstName
@@ -363,6 +379,7 @@ fragment user on User {
   description
   dateOfBirth
 }
+
 fragment foobarUser on User {
   firstName
 }",
@@ -427,6 +444,7 @@ fragment formSubmission on FormSubmission {
     }
   }
 }
+
 fragment formSubmission on FormSubmission {
   id
   firstName
@@ -448,6 +466,7 @@ fragment formSubmission on FormSubmission {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -464,6 +483,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -480,6 +500,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -507,6 +528,7 @@ fragment user on User {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -523,15 +545,18 @@ fragment user on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneUser on User {
   firstName
   friends {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -544,6 +569,7 @@ fragment depthTwoUser on User {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -562,20 +588,24 @@ fragment depthTwoUser on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneQuery on Query {
   one: users {
     ...depthOneUser
   }
 }
+
 fragment depthOneUser on User {
   firstName
   friends {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
