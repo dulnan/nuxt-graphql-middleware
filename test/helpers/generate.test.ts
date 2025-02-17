@@ -3,6 +3,7 @@ import { createResolver } from '@nuxt/kit'
 import { describe, expect, test, vi } from 'vitest'
 import stripAnsi from 'strip-ansi'
 import { generate, logger } from '../../src/helpers'
+import { Collector } from '../../src/module/Collector'
 
 // Inside vitest, the resolveAlias function does not know about the '~' alias of nuxt.
 vi.mock('@nuxt/kit', async () => {
@@ -24,7 +25,18 @@ describe('generate', () => {
   const schemaPath = path.resolve(__dirname, './../../schema.graphql')
 
   test('Generates templates correctly for auto imported documents', async () => {
+    const collector = new Collector({
+      srcDir: './',
+      schemaPath,
+      patterns: [
+        './app/pages/**/*.graphql',
+        './app/components/**/*.graphql',
+        './app/layouts/**/*.graphql',
+        './server/**/*.graphql',
+      ],
+    })
     const result = await generate(
+      collector,
       {
         graphqlEndpoint: '',
         documents: [],
@@ -68,7 +80,13 @@ describe('generate', () => {
   })
 
   test('Generates templates correctly for auto imported documents using autoInlineFragments', async () => {
+    const collector = new Collector({
+      srcDir: './',
+      schemaPath,
+      patterns: ['./app/test-queries/auto-inline/**/*.graphql'],
+    })
     const result = await generate(
+      collector,
       {
         graphqlEndpoint: '',
         documents: [],
@@ -106,8 +124,14 @@ describe('generate', () => {
   })
 
   test('Generates templates correctly for provided documents', async () => {
+    const collector = new Collector({
+      srcDir: './',
+      schemaPath,
+      patterns: [],
+    })
     expect(
       await generate(
+        collector,
         {
           graphqlEndpoint: '',
           documents: [
@@ -135,7 +159,13 @@ describe('generate', () => {
     logger.log = (v) => {
       output += v
     }
+    const collector = new Collector({
+      srcDir: './',
+      schemaPath,
+      patterns: [],
+    })
     await generate(
+      collector,
       {
         graphqlEndpoint: '',
         documents: [
@@ -168,7 +198,13 @@ describe('generate', () => {
     logger.log = (v) => {
       output += v
     }
+    const collector = new Collector({
+      srcDir: './',
+      schemaPath,
+      patterns: [],
+    })
     await generate(
+      collector,
       {
         graphqlEndpoint: '',
         documents: [
