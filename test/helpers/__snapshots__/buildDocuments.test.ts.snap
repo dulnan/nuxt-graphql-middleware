@@ -5,8 +5,7 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   {
     "content": "mutation initState {
   initState
-}
-",
+}",
     "filename": "mutation.initState.graphql",
   },
   {
@@ -14,15 +13,13 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   testClientOptions(path: $path) {
     language
   }
-}
-",
+}",
     "filename": "query.testClientOptions.graphql",
   },
   {
     "content": "query getCurrentTime {
   time: getCurrentTime
-}
-",
+}",
     "filename": "query.getCurrentTime.graphql",
   },
   {
@@ -31,8 +28,7 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     headerClient
     headerServer
   }
-}
-",
+}",
     "filename": "query.fetchOptions.graphql",
   },
   {
@@ -41,14 +37,11 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     name: "x-nuxt-header-client-from-composable"
   )
   headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
-}
-",
+}",
     "filename": "query.fetchOptionsComposable.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query queryOne {
+    "content": "query queryOne {
   one: users {
     ...user
   }
@@ -60,12 +53,6 @@ query queryTwo {
   }
 }
 
-#query queryThree {
-#  three: users {
-#    ...user
-#  }
-#}
-
 fragment foobarQuery on Query {
   foobar: users {
     id
@@ -76,7 +63,6 @@ fragment foobarQuery on Query {
 fragment foobarUser on User {
   firstName
 }
-
 fragment user on User {
   id
   firstName
@@ -93,22 +79,19 @@ fragment foobarUser on User {
   {
     "content": "mutation deleteUser($id: Int!) {
   deleteUser(id: $id)
-}
-",
+}",
     "filename": "mutation.deleteUser.graphql",
   },
   {
     "content": "mutation triggerError {
   triggerError
-}
-",
+}",
     "filename": "mutation.triggerError.graphql",
   },
   {
     "content": "query getError {
   getError
-}
-",
+}",
     "filename": "query.getError.graphql",
   },
   {
@@ -117,22 +100,19 @@ fragment foobarUser on User {
     headerClient
     headerServer
   }
-}
-",
+}",
     "filename": "query.simulateEndpointDown.graphql",
   },
   {
     "content": "mutation testFormSubmit($input: FormSubmissionInput!) {
   submitForm(input: $input)
-}
-",
+}",
     "filename": "mutation.testFormSubmit.graphql",
   },
   {
     "content": "mutation testUpload($file: Upload!) {
   uploadFile(file: $file)
-}
-",
+}",
     "filename": "mutation.testUpload.graphql",
   },
   {
@@ -155,7 +135,6 @@ fragment formSubmission on FormSubmission {
     }
   }
 }
-
 fragment formSubmission on FormSubmission {
   id
   firstName
@@ -172,14 +151,11 @@ fragment formSubmission on FormSubmission {
     "filename": "query.getSubmissions.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query foobar {
+    "content": "query foobar {
   users {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -191,14 +167,11 @@ fragment user on User {
     "filename": "test.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-mutation addUser($user: UserData!) {
+    "content": "mutation addUser($user: UserData!) {
   createUser(user: $user) {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -210,14 +183,11 @@ fragment user on User {
     "filename": "mutation.addUser.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query userById($id: ID!) {
+    "content": "query userById($id: ID!) {
   userById(id: $id) {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -236,19 +206,15 @@ fragment user on User {
   email
   description
   dateOfBirth
-}
-",
+}",
     "filename": "user.fragment.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query users {
+    "content": "query users {
   users {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -265,7 +231,6 @@ fragment user on User {
     ...depthOneUser
   }
 }
-
 fragment depthOneUser on User {
   firstName
   friends {
@@ -287,7 +252,6 @@ fragment depthTwoUser on User {
     ...depthTwoUser
   }
 }
-
 fragment depthTwoUser on User {
   firstName
 }",
@@ -296,8 +260,7 @@ fragment depthTwoUser on User {
   {
     "content": "fragment depthTwoUser on User {
   firstName
-}
-",
+}",
     "filename": "fragment.depthTwoUser.graphql",
   },
   {
@@ -307,7 +270,6 @@ fragment depthTwoUser on User {
     ...depthOneUser
   }
 }
-
 fragment depthOneQuery on Query {
   one: users {
     ...depthOneUser
@@ -333,16 +295,9 @@ fragment depthTwoUser on User {
 exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`] = `
 [
   {
-    "content": "query foobar {
-        field
-      }",
-    "filename": "nuxt.config.ts[0]",
-  },
-  {
     "content": "mutation initState {
   initState
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/layouts/mutation.initState.graphql",
   },
   {
@@ -350,15 +305,13 @@ exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`]
   testClientOptions(path: $path) {
     language
   }
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/[lang]/query.testClientOptions.graphql",
   },
   {
     "content": "query getCurrentTime {
   time: getCurrentTime
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/caching/query.getCurrentTime.graphql",
   },
   {
@@ -367,8 +320,7 @@ exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`]
     headerClient
     headerServer
   }
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/fetch-options/query.fetchOptions.graphql",
   },
   {
@@ -377,14 +329,11 @@ exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`]
     name: "x-nuxt-header-client-from-composable"
   )
   headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/fetch-options/query.fetchOptionsComposable.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query queryOne {
+    "content": "query queryOne {
   one: users {
     ...user
   }
@@ -396,12 +345,6 @@ query queryTwo {
   }
 }
 
-#query queryThree {
-#  three: users {
-#    ...user
-#  }
-#}
-
 fragment foobarQuery on Query {
   foobar: users {
     id
@@ -412,7 +355,6 @@ fragment foobarQuery on Query {
 fragment foobarUser on User {
   firstName
 }
-
 fragment user on User {
   id
   firstName
@@ -429,22 +371,19 @@ fragment foobarUser on User {
   {
     "content": "mutation deleteUser($id: Int!) {
   deleteUser(id: $id)
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/mutation.deleteUser.graphql",
   },
   {
     "content": "mutation triggerError {
   triggerError
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/mutation/mutation.triggerError.graphql",
   },
   {
     "content": "query getError {
   getError
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/query/query.getError.graphql",
   },
   {
@@ -453,22 +392,19 @@ fragment foobarUser on User {
     headerClient
     headerServer
   }
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/query/query.simulateEndpointDown.graphql",
   },
   {
     "content": "mutation testFormSubmit($input: FormSubmissionInput!) {
   submitForm(input: $input)
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/mutation.testFormSubmit.graphql",
   },
   {
     "content": "mutation testUpload($file: Upload!) {
   uploadFile(file: $file)
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/mutation.testUpload.graphql",
   },
   {
@@ -491,7 +427,6 @@ fragment formSubmission on FormSubmission {
     }
   }
 }
-
 fragment formSubmission on FormSubmission {
   id
   firstName
@@ -508,14 +443,11 @@ fragment formSubmission on FormSubmission {
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/query.getSubmissions.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query foobar {
+    "content": "query foobar {
   users {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -527,14 +459,11 @@ fragment user on User {
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-mutation addUser($user: UserData!) {
+    "content": "mutation addUser($user: UserData!) {
   createUser(user: $user) {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -546,14 +475,11 @@ fragment user on User {
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/user/mutation.addUser.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query userById($id: ID!) {
+    "content": "query userById($id: ID!) {
   userById(id: $id) {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -572,19 +498,15 @@ fragment user on User {
   email
   description
   dateOfBirth
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/user/user.fragment.graphql",
   },
   {
-    "content": "#import "~/app/pages/user/user.fragment.graphql"
-
-query users {
+    "content": "query users {
   users {
     ...user
   }
 }
-
 fragment user on User {
   id
   firstName
@@ -601,7 +523,6 @@ fragment user on User {
     ...depthOneUser
   }
 }
-
 fragment depthOneUser on User {
   firstName
   friends {
@@ -623,7 +544,6 @@ fragment depthTwoUser on User {
     ...depthTwoUser
   }
 }
-
 fragment depthTwoUser on User {
   firstName
 }",
@@ -632,8 +552,7 @@ fragment depthTwoUser on User {
   {
     "content": "fragment depthTwoUser on User {
   firstName
-}
-",
+}",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/fragment.depthTwoUser.graphql",
   },
   {
@@ -643,7 +562,6 @@ fragment depthTwoUser on User {
     ...depthOneUser
   }
 }
-
 fragment depthOneQuery on Query {
   one: users {
     ...depthOneUser
@@ -662,6 +580,12 @@ fragment depthTwoUser on User {
   firstName
 }",
     "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/query.highDepthFragments.graphql",
+  },
+  {
+    "content": "query foobar {
+  field
+}",
+    "filename": "nuxt.config.ts[0]",
   },
 ]
 `;

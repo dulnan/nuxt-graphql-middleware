@@ -4,7 +4,6 @@ import { resolveFiles, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
-import { inlineImportsWithLineToImports } from './fragment-import'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type {
   GraphQLSchema,
@@ -20,6 +19,7 @@ import { type ModuleOptions } from './../module'
 import { logDocuments } from './reporter'
 import { name } from '../../package.json'
 import type { Collector } from '../module/Collector'
+import { falsy } from '../runtime/helpers'
 
 export const logger: ConsolaInstance = useLogger(name)
 
@@ -43,20 +43,6 @@ export const defaultOptions: ModuleOptions = {
   includeComposables: true,
   documents: [],
   devtools: true,
-}
-
-/**
- * Import and inline fragments in GraphQL documents.
- */
-export function inlineFragments(source: string, resolver: any): string {
-  return inlineImportsWithLineToImports(source, {
-    resolveImport(identifier: string) {
-      return resolver(identifier)
-    },
-    resolveOptions: {
-      basedir: './',
-    },
-  }).inlineImports
 }
 
 /**
@@ -131,7 +117,7 @@ export async function autoImportDocuments(
 
 function inlineNestedFragments(
   document: string,
-  fragmentMap: Record<string, string>,
+  fragmentMap: Map<string, FragmentDefinitionNode>,
 ): string {
   const parsed = parse(document)
   const fragmentsToInline: Set<string> = new Set()
@@ -145,11 +131,11 @@ function inlineNestedFragments(
 
   // Inline fragments recursively
   fragmentsToInline.forEach((fragmentName) => {
-    const fragment = fragmentMap[fragmentName]
+    const fragment = fragmentMap.get(fragmentName)
     if (fragment) {
-      document += '\n' + fragment
+      document += '\n' + print(fragment)
       const nestedFragmentNames = new Set<string>()
-      visit(parse(fragment), {
+      visit(fragment, {
         FragmentSpread(node) {
           nestedFragmentNames.add(node.name.value)
         },
@@ -157,9 +143,9 @@ function inlineNestedFragments(
       nestedFragmentNames.forEach((nestedFragmentName) => {
         if (!fragmentsToInline.has(nestedFragmentName)) {
           fragmentsToInline.add(nestedFragmentName)
-          const nestedFragment = fragmentMap[nestedFragmentName]
+          const nestedFragment = fragmentMap.get(nestedFragmentName)
           if (nestedFragment) {
-            document += '\n' + nestedFragment
+            document += '\n' + print(nestedFragment)
           }
         }
       })
@@ -172,30 +158,25 @@ function inlineNestedFragments(
 export async function buildDocuments(
   collector: Collector,
 ): Promise<GraphqlMiddlewareDocument[]> {
-  const documents = await Promise.all(
-    [...collector.files.values()].map((file) => {
-      return file.getFileContents().then((content) => {
-        return {
-          content,
-          filename: file.filePath,
-        }
-      })
-    }),
-  )
+  const fragmentMap: Map<string, FragmentDefinitionNode> = new Map()
+  const files = [...collector.files.values()]
 
-  const fragmentMap: Record<string, string> = {}
-  documents.forEach((doc) => {
-    const parsed = parse(doc.content)
-    visit(parsed, {
-      FragmentDefinition(node) {
-        fragmentMap[node.name.value] = print(node)
-      },
+  files.forEach((file) => {
+    ;[...file.fragments.entries()].forEach(([name, node]) => {
+      fragmentMap.set(name, node)
     })
   })
 
-  documents.forEach((doc) => {
-    doc.content = inlineNestedFragments(doc.content, fragmentMap)
-  })
+  const documents = files
+    .map((file) => {
+      if (file.parsed) {
+        return {
+          content: inlineNestedFragments(print(file.parsed), fragmentMap),
+          filename: file.filePath,
+        }
+      }
+    })
+    .filter(falsy)
 
   return documents
 }

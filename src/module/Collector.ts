@@ -1,8 +1,13 @@
 import { promises as fs } from 'node:fs'
-import { type GraphQLSchema } from 'graphql'
+import {
+  type DocumentNode,
+  type GraphQLSchema,
+  type FragmentDefinitionNode,
+  parse,
+  visit,
+} from 'graphql'
 import { loadSchema } from '@graphql-tools/load'
 import { resolveFiles } from '@nuxt/kit'
-import { hash } from 'ohash'
 
 export type ModuleContext = {
   patterns: string[]
@@ -12,36 +17,48 @@ export type ModuleContext = {
 
 class CollectedFile {
   filePath: string
-  fileContents: string | null
-  readonly isFromDisk: boolean
+  fileContents: string
+  fileContentsInlined: string | null = null
+  parsed: DocumentNode | null = null
+  fragments: Map<string, FragmentDefinitionNode>
+  needsFragments: Set<string> = new Set()
+  isOnDisk: boolean
 
-  constructor(filePath: string, fileContents?: string) {
+  constructor(filePath: string, fileContents: string, isOnDisk = false) {
     this.filePath = filePath
-    this.fileContents = fileContents || null
-
-    // If the file contents are provided directly we don't need to load
-    // anything from disk anymore afterwards.
-    this.isFromDisk = !fileContents
+    this.fileContents = fileContents
+    this.isOnDisk = isOnDisk
+    this.fragments = new Map()
+    this.parse()
   }
 
-  update() {
-    // @todo
+  private parse() {
+    this.fragments.clear()
+    this.needsFragments.clear()
+    this.parsed = parse(this.fileContents)
+    visit(this.parsed, {
+      FragmentDefinition: (node) => {
+        this.fragments.set(node.name.value, node)
+      },
+      FragmentSpread: (node) => {
+        this.needsFragments.add(node.name.value)
+      },
+    })
   }
 
-  async getFileContents(): Promise<string> {
-    if (!this.isFromDisk) {
-      if (this.fileContents === null) {
-        throw new Error('Missing fileContents for ' + this.filePath)
-      }
-      return this.fileContents
-    }
+  static async fromFilePath(filePath: string): Promise<CollectedFile> {
+    const content = (await fs.readFile(filePath)).toString()
+    return new CollectedFile(filePath, content, true)
+  }
 
-    if (!this.fileContents) {
+  async update() {
+    if (this.isOnDisk) {
       this.fileContents = (await fs.readFile(this.filePath)).toString()
+      this.parse()
     }
-
-    return this.fileContents
   }
+
+  async getDocumentInlined(): Promise<string> {}
 }
 
 export class Collector {
@@ -49,15 +66,12 @@ export class Collector {
   needsUpdate = false
   context: ModuleContext
   schema: GraphQLSchema | null = null
+  nuxtConfigDocuments: string[]
 
   constructor(context: ModuleContext, documents: string[] = []) {
     this.files = new Map()
     this.context = context
-
-    documents.forEach((fileContents, index) => {
-      const fileName = `nuxt.config.ts[${index}]`
-      this.files.set(fileName, new CollectedFile(fileName, fileContents))
-    })
+    this.nuxtConfigDocuments = documents
   }
 
   private getImportPatternFiles(): Promise<string[]> {
@@ -84,11 +98,19 @@ export class Collector {
 
   async init() {
     const files = await this.getImportPatternFiles()
-    files.forEach((file) => this.addFile(file))
+    for (const file of files) {
+      await this.addFile(file)
+    }
+
+    this.nuxtConfigDocuments.forEach((fileContents, index) => {
+      const fileName = `nuxt.config.ts[${index}]`
+      this.files.set(fileName, new CollectedFile(fileName, fileContents))
+    })
   }
 
-  addFile(filePath: string) {
-    this.files.set(filePath, new CollectedFile(filePath))
+  async addFile(filePath: string) {
+    const file = await CollectedFile.fromFilePath(filePath)
+    this.files.set(filePath, file)
   }
 
   handleAdd(filePath: string) {
