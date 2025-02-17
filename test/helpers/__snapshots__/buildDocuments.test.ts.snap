@@ -5,7 +5,8 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   {
     "content": "mutation initState {
   initState
-}",
+}
+",
     "filename": "mutation.initState.graphql",
   },
   {
@@ -13,13 +14,15 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
   testClientOptions(path: $path) {
     language
   }
-}",
+}
+",
     "filename": "query.testClientOptions.graphql",
   },
   {
     "content": "query getCurrentTime {
   time: getCurrentTime
-}",
+}
+",
     "filename": "query.getCurrentTime.graphql",
   },
   {
@@ -28,7 +31,8 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     headerClient
     headerServer
   }
-}",
+}
+",
     "filename": "query.fetchOptions.graphql",
   },
   {
@@ -37,7 +41,8 @@ exports[`buildDocuments > Reads and build the documents by pattern 1`] = `
     name: "x-nuxt-header-client-from-composable"
   )
   headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
-}",
+}
+",
     "filename": "query.fetchOptionsComposable.graphql",
   },
   {
@@ -71,6 +76,7 @@ fragment foobarQuery on Query {
 fragment foobarUser on User {
   firstName
 }
+
 fragment user on User {
   id
   firstName
@@ -87,19 +93,22 @@ fragment foobarUser on User {
   {
     "content": "mutation deleteUser($id: Int!) {
   deleteUser(id: $id)
-}",
+}
+",
     "filename": "mutation.deleteUser.graphql",
   },
   {
     "content": "mutation triggerError {
   triggerError
-}",
+}
+",
     "filename": "mutation.triggerError.graphql",
   },
   {
     "content": "query getError {
   getError
-}",
+}
+",
     "filename": "query.getError.graphql",
   },
   {
@@ -108,19 +117,22 @@ fragment foobarUser on User {
     headerClient
     headerServer
   }
-}",
+}
+",
     "filename": "query.simulateEndpointDown.graphql",
   },
   {
     "content": "mutation testFormSubmit($input: FormSubmissionInput!) {
   submitForm(input: $input)
-}",
+}
+",
     "filename": "mutation.testFormSubmit.graphql",
   },
   {
     "content": "mutation testUpload($file: Upload!) {
   uploadFile(file: $file)
-}",
+}
+",
     "filename": "mutation.testUpload.graphql",
   },
   {
@@ -143,6 +155,7 @@ fragment formSubmission on FormSubmission {
     }
   }
 }
+
 fragment formSubmission on FormSubmission {
   id
   firstName
@@ -166,6 +179,7 @@ query foobar {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -184,6 +198,7 @@ mutation addUser($user: UserData!) {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -202,6 +217,7 @@ query userById($id: ID!) {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -220,7 +236,8 @@ fragment user on User {
   email
   description
   dateOfBirth
-}",
+}
+",
     "filename": "user.fragment.graphql",
   },
   {
@@ -231,6 +248,7 @@ query users {
     ...user
   }
 }
+
 fragment user on User {
   id
   firstName
@@ -247,6 +265,7 @@ fragment user on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneUser on User {
   firstName
   friends {
@@ -268,6 +287,7 @@ fragment depthTwoUser on User {
     ...depthTwoUser
   }
 }
+
 fragment depthTwoUser on User {
   firstName
 }",
@@ -276,7 +296,8 @@ fragment depthTwoUser on User {
   {
     "content": "fragment depthTwoUser on User {
   firstName
-}",
+}
+",
     "filename": "fragment.depthTwoUser.graphql",
   },
   {
@@ -286,6 +307,7 @@ fragment depthTwoUser on User {
     ...depthOneUser
   }
 }
+
 fragment depthOneQuery on Query {
   one: users {
     ...depthOneUser
@@ -314,7 +336,332 @@ exports[`buildDocuments > Reads and builds the documents from nuxt.config.ts 1`]
     "content": "query foobar {
         field
       }",
-    "filename": "nuxt.config.ts",
+    "filename": "nuxt.config.ts[0]",
+  },
+  {
+    "content": "mutation initState {
+  initState
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/layouts/mutation.initState.graphql",
+  },
+  {
+    "content": "query testClientOptions($path: String!) {
+  testClientOptions(path: $path) {
+    language
+  }
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/[lang]/query.testClientOptions.graphql",
+  },
+  {
+    "content": "query getCurrentTime {
+  time: getCurrentTime
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/caching/query.getCurrentTime.graphql",
+  },
+  {
+    "content": "query fetchOptions {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/fetch-options/query.fetchOptions.graphql",
+  },
+  {
+    "content": "query fetchOptionsComposable {
+  headerValueFromComposable: getRequestHeader(
+    name: "x-nuxt-header-client-from-composable"
+  )
+  headerValueFromPlugin: getRequestHeader(name: "x-nuxt-header-client")
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/fetch-options/query.fetchOptionsComposable.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+query queryOne {
+  one: users {
+    ...user
+  }
+}
+
+query queryTwo {
+  two: users {
+    ...user
+  }
+}
+
+#query queryThree {
+#  three: users {
+#    ...user
+#  }
+#}
+
+fragment foobarQuery on Query {
+  foobar: users {
+    id
+    ...foobarUser
+  }
+}
+
+fragment foobarUser on User {
+  firstName
+}
+
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+fragment foobarUser on User {
+  firstName
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/multipleQueries.graphql",
+  },
+  {
+    "content": "mutation deleteUser($id: Int!) {
+  deleteUser(id: $id)
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/mutation.deleteUser.graphql",
+  },
+  {
+    "content": "mutation triggerError {
+  triggerError
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/mutation/mutation.triggerError.graphql",
+  },
+  {
+    "content": "query getError {
+  getError
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/query/query.getError.graphql",
+  },
+  {
+    "content": "query simulateEndpointDown {
+  testFetchOptions {
+    headerClient
+    headerServer
+  }
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/query/query.simulateEndpointDown.graphql",
+  },
+  {
+    "content": "mutation testFormSubmit($input: FormSubmissionInput!) {
+  submitForm(input: $input)
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/mutation.testFormSubmit.graphql",
+  },
+  {
+    "content": "mutation testUpload($file: Upload!) {
+  uploadFile(file: $file)
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/mutation.testUpload.graphql",
+  },
+  {
+    "content": "query getSubmissions {
+  getSubmissions {
+    ...formSubmission
+  }
+}
+
+fragment formSubmission on FormSubmission {
+  id
+  firstName
+  lastName
+  documents {
+    name
+    file {
+      name
+      id
+      content
+    }
+  }
+}
+
+fragment formSubmission on FormSubmission {
+  id
+  firstName
+  lastName
+  documents {
+    name
+    file {
+      name
+      id
+      content
+    }
+  }
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test-upload/query.getSubmissions.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+query foobar {
+  users {
+    ...user
+  }
+}
+
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/test.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+mutation addUser($user: UserData!) {
+  createUser(user: $user) {
+    ...user
+  }
+}
+
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/user/mutation.addUser.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+query userById($id: ID!) {
+  userById(id: $id) {
+    ...user
+  }
+}
+
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/user/query.user.graphql",
+  },
+  {
+    "content": "fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/user/user.fragment.graphql",
+  },
+  {
+    "content": "#import "~/app/pages/user/user.fragment.graphql"
+
+query users {
+  users {
+    ...user
+  }
+}
+
+fragment user on User {
+  id
+  firstName
+  lastName
+  email
+  description
+  dateOfBirth
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/pages/userList.graphql",
+  },
+  {
+    "content": "fragment depthOneQuery on Query {
+  one: users {
+    ...depthOneUser
+  }
+}
+
+fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}
+fragment depthTwoUser on User {
+  firstName
+}
+fragment depthTwoUser on User {
+  firstName
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/fragment.depthOne.graphql",
+  },
+  {
+    "content": "fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}
+
+fragment depthTwoUser on User {
+  firstName
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/fragment.depthOneUser.graphql",
+  },
+  {
+    "content": "fragment depthTwoUser on User {
+  firstName
+}
+",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/fragment.depthTwoUser.graphql",
+  },
+  {
+    "content": "query highDepthOne {
+  ...depthOneQuery
+  one: users {
+    ...depthOneUser
+  }
+}
+
+fragment depthOneQuery on Query {
+  one: users {
+    ...depthOneUser
+  }
+}
+fragment depthOneUser on User {
+  firstName
+  friends {
+    ...depthTwoUser
+  }
+}
+fragment depthTwoUser on User {
+  firstName
+}
+fragment depthTwoUser on User {
+  firstName
+}",
+    "filename": "/run/media/dulnan/Storage/development/nuxt-graphql-middleware/playground/app/test-queries/auto-inline/query.highDepthFragments.graphql",
   },
 ]
 `;

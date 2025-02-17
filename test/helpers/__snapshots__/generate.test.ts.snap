@@ -631,24 +631,24 @@ exports[`generate > Generates templates correctly for provided documents 1`] = `
   }
 }",
       "errors": [],
-      "filename": "nuxt.config.ts",
-      "id": "query_one_nuxt.config.ts",
+      "filename": "nuxt.config.ts[0]",
+      "id": "query_one_nuxt.config.ts[0]",
       "isValid": true,
       "name": "one",
       "operation": "query",
-      "relativePath": "nuxt.config.ts",
+      "relativePath": "nuxt.config.ts[0]",
     },
     {
       "content": "mutation two($id: Int!) {
   deleteUser(id: $id)
 }",
       "errors": [],
-      "filename": "nuxt.config.ts",
-      "id": "mutation_two_nuxt.config.ts",
+      "filename": "nuxt.config.ts[1]",
+      "id": "mutation_two_nuxt.config.ts[1]",
       "isValid": true,
       "name": "two",
       "operation": "mutation",
-      "relativePath": "nuxt.config.ts",
+      "relativePath": "nuxt.config.ts[1]",
     },
   ],
   "hasErrors": false,
@@ -866,4 +866,4 @@ declare module 'nitropack' {
 }
 `;
 
-exports[`generate > Renders a table with information about all documents. 1`] = `"GraphQL Document Validation          nuxt.config.ts  nuxt.config.ts  ✓query     one             nuxt.config.ts  ✓mutation  two             nuxt.config.ts  ✓"`;
+exports[`generate > Renders a table with information about all documents. 1`] = `"GraphQL Document Validation          nuxt.config.ts[0]  nuxt.config.ts[0]  ✓query     one                nuxt.config.ts[1]  ✓mutation  two                nuxt.config.ts[2]  ✓"`;

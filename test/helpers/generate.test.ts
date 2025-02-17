@@ -26,7 +26,7 @@ describe('generate', () => {
 
   test('Generates templates correctly for auto imported documents', async () => {
     const collector = new Collector({
-      srcDir: './',
+      srcDir,
       schemaPath,
       patterns: [
         './app/pages/**/*.graphql',
@@ -35,6 +35,7 @@ describe('generate', () => {
         './server/**/*.graphql',
       ],
     })
+    await collector.init()
     const result = await generate(
       collector,
       {
@@ -80,10 +81,11 @@ describe('generate', () => {
 
   test('Generates templates correctly for auto imported documents automatic fragment imports', async () => {
     const collector = new Collector({
-      srcDir: './',
+      srcDir,
       schemaPath,
       patterns: ['./app/test-queries/auto-inline/**/*.graphql'],
     })
+    await collector.init()
     const result = await generate(
       collector,
       {
@@ -122,28 +124,31 @@ describe('generate', () => {
   })
 
   test('Generates templates correctly for provided documents', async () => {
-    const collector = new Collector({
-      srcDir: './',
-      schemaPath,
-      patterns: [],
-    })
-    expect(
-      await generate(
-        collector,
-        {
-          graphqlEndpoint: '',
-          documents: [
-            `
+    const collector = new Collector(
+      {
+        srcDir,
+        schemaPath,
+        patterns: [],
+      },
+      [
+        `
             query one {
               users {
                 id
               }
             }`,
-            `
+        `
             mutation two($id: Int!) {
               deleteUser(id: $id)
             }`,
-          ],
+      ],
+    )
+    await collector.init()
+    expect(
+      await generate(
+        collector,
+        {
+          graphqlEndpoint: '',
         },
         schemaPath,
         resolver,
@@ -157,30 +162,33 @@ describe('generate', () => {
     logger.log = (v) => {
       output += v
     }
-    const collector = new Collector({
-      srcDir: './',
-      schemaPath,
-      patterns: [],
-    })
-    await generate(
-      collector,
+    const collector = new Collector(
       {
-        graphqlEndpoint: '',
-        documents: [
-          `fragment user on User {
+        srcDir,
+        schemaPath,
+        patterns: [],
+      },
+      [
+        `fragment user on User {
             id
           }`,
-          `
+        `
             query one {
               users {
                 id
               }
             }`,
-          `
+        `
             mutation two($id: Int!) {
               deleteUser(id: $id)
             }`,
-        ],
+      ],
+    )
+    await collector.init()
+    await generate(
+      collector,
+      {
+        graphqlEndpoint: '',
       },
       schemaPath,
       resolver,
@@ -196,30 +204,33 @@ describe('generate', () => {
     logger.log = (v) => {
       output += v
     }
-    const collector = new Collector({
-      srcDir: './',
-      schemaPath,
-      patterns: [],
-    })
-    await generate(
-      collector,
+    const collector = new Collector(
       {
-        graphqlEndpoint: '',
-        documents: [
-          `fragment user on User {
+        srcDir,
+        schemaPath,
+        patterns: [],
+      },
+      [
+        `fragment user on User {
             id
           `,
-          `
+        `
             syntax error one {
               users {
                 id
               }
             }`,
-          `
+        `
             mutation two($id: Int) {
               deleteUser(id: $id)
             }`,
-        ],
+      ],
+    )
+    await collector.init()
+    await generate(
+      collector,
+      {
+        graphqlEndpoint: '',
       },
       schemaPath,
       resolver,

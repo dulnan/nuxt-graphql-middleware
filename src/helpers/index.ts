@@ -1,12 +1,11 @@
 import { existsSync, promises as fsp } from 'node:fs'
 import { oldVisit } from '@graphql-codegen/plugin-helpers'
-import { resolveFiles, resolveAlias, useLogger } from '@nuxt/kit'
+import { resolveFiles, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
 import { inlineImportsWithLineToImports } from './fragment-import'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
-import { loadSchema } from '@graphql-tools/load'
 import type {
   GraphQLSchema,
   GraphQLError,
@@ -15,7 +14,6 @@ import type {
   FragmentDefinitionNode,
 } from 'graphql'
 import { parse, Source, print, visit, Kind } from 'graphql'
-import { falsy } from '../runtime/helpers'
 import { generateSchema, generateTemplates } from './../codegen'
 import { type GraphqlMiddlewareDocument } from './../types'
 import { type ModuleOptions } from './../module'
@@ -172,22 +170,18 @@ function inlineNestedFragments(
 }
 
 export async function buildDocuments(
-  providedDocuments: string[] = [],
-  autoImportPatterns: string[],
-  resolver: Resolver['resolve'],
+  collector: Collector,
 ): Promise<GraphqlMiddlewareDocument[]> {
-  const documents = await autoImportDocuments(autoImportPatterns, resolver)
-    .then((importedDocuments) => [
-      ...importedDocuments,
-      ...providedDocuments.map((content) => ({
-        content,
-        filename: 'nuxt.config.ts',
-      })),
-    ])
-    .then((docs) => {
-      // Ignore empty files.
-      return docs.filter((v) => v.content.trim())
-    })
+  const documents = await Promise.all(
+    [...collector.files.values()].map((file) => {
+      return file.getFileContents().then((content) => {
+        return {
+          content,
+          filename: file.filePath,
+        }
+      })
+    }),
+  )
 
   const fragmentMap: Record<string, string> = {}
   documents.forEach((doc) => {
@@ -341,11 +335,7 @@ export async function generate(
 ) {
   const schema = await collector.getSchema()
 
-  const documents = await buildDocuments(
-    options.documents,
-    options.autoImportPatterns as string[],
-    resolver,
-  )
+  const documents = await buildDocuments(collector)
 
   const validated = validateDocuments(schema, documents, rootDir)
 
