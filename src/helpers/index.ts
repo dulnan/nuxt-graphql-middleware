@@ -175,7 +175,6 @@ export async function buildDocuments(
   providedDocuments: string[] = [],
   autoImportPatterns: string[],
   resolver: Resolver['resolve'],
-  autoInlineFragments: boolean,
 ): Promise<GraphqlMiddlewareDocument[]> {
   const documents = await autoImportDocuments(autoImportPatterns, resolver)
     .then((importedDocuments) => [
@@ -185,40 +184,10 @@ export async function buildDocuments(
         filename: 'nuxt.config.ts',
       })),
     ])
-    .then((documents) => {
-      // If auto inlining is enabled, we can skip.
-      if (autoInlineFragments) {
-        return documents
-      }
-      return documents
-        .map((v) => {
-          // Ignore empty files.
-          if (!v.content.trim()) {
-            return null
-          }
-          try {
-            return {
-              content: inlineFragments(v.content, resolveAlias),
-              filename: v.filename,
-            }
-          } catch (e) {
-            logger.error(e)
-            logger.error(
-              'Failed to inline fragments for document: ' + v.filename,
-            )
-          }
-          return null
-        })
-        .filter(falsy)
-    })
     .then((docs) => {
       // Ignore empty files.
       return docs.filter((v) => v.content.trim())
     })
-
-  if (!autoInlineFragments) {
-    return documents
-  }
 
   const fragmentMap: Record<string, string> = {}
   documents.forEach((doc) => {
@@ -376,7 +345,6 @@ export async function generate(
     options.documents,
     options.autoImportPatterns as string[],
     resolver,
-    !!options.autoInlineFragments,
   )
 
   const validated = validateDocuments(schema, documents, rootDir)

@@ -413,7 +413,7 @@ declare module 'nitropack' {
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > graphql-documents.mjs 1`] = `
+exports[`generate > Generates templates correctly for auto imported documents automatic fragment imports > graphql-documents.mjs 1`] = `
 {
   "content": "const documents = {
   "query": {
@@ -427,7 +427,7 @@ export { documents };",
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > graphql-operations.d.ts 1`] = `
+exports[`generate > Generates templates correctly for auto imported documents automatic fragment imports > graphql-operations.d.ts 1`] = `
 {
   "content": "export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -589,7 +589,7 @@ export type DepthOneQueryFragment = { __typename?: 'Query', one: Array<{ __typen
 }
 `;
 
-exports[`generate > Generates templates correctly for auto imported documents using autoInlineFragments > nuxt-graphql-middleware/generated-types.d.ts 1`] = `
+exports[`generate > Generates templates correctly for auto imported documents automatic fragment imports > nuxt-graphql-middleware/generated-types.d.ts 1`] = `
 {
   "content": "
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
@@ -864,22 +864,6 @@ declare module 'nitropack' {
     },
   ],
 }
-`;
-
-exports[`generate > Renders a table with information about all documents with errors. 1`] = `
-"GraphQL Document Validation    nuxt.config.ts  x
-Syntax Error: Expected Name, found <EOF>.
-
-nuxt.config.ts:3:11
-2 |             id
-3 |           
-  |           ^    nuxt.config.ts  x
-Syntax Error: Expected Name, found <EOF>.
-
-nuxt.config.ts:3:11
-2 |             id
-3 |           
-  |           ^"
 `;
 
 exports[`generate > Renders a table with information about all documents. 1`] = `"GraphQL Document Validation          nuxt.config.ts  nuxt.config.ts  ✓query     one             nuxt.config.ts  ✓mutation  two             nuxt.config.ts  ✓"`;

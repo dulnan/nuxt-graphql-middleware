@@ -8,7 +8,6 @@ const graphqlMiddleware: ModuleOptions = {
   codegenConfig: {},
   outputDocuments: false,
   schemaPath: './../schema.graphql',
-  autoInlineFragments: false,
   codegenSchemaConfig: {
     urlSchemaOptions: {
       headers: {

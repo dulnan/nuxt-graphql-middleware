@@ -10,62 +10,11 @@ repository.
 
 :::
 
-## Manual import
+## Automatic Import
 
-By default, fragments have to be manually imported in every GraphQL file. This
-is done using the special `#import` syntax at the top of a file:
-
-::: code-group
-
-```graphql [pages/allFilms.query.graphql]
-#import "~/components/Film/film.fragment.graphql" // [!code highlight]
-
-query allFilms {
-  allFilms {
-    films {
-      ...film
-    }
-  }
-}
-```
-
-:::
-
-::: code-group
-
-```graphql [components/Film/film.fragment.graphql]
-fragment film on Film {
-  id
-  title
-  edited
-}
-```
-
-:::
-
-The path is always relative to your app root and is being resolved by Nuxt, e.g.
-you can also use aliases like `~`, `@` or `#custom-alias`.
-
-## Automatic import
-
-It's possible to automatically inline fragments:
-
-::: code-group
-
-```typescript [nuxt.config.ts]
-export default defineNuxtConfig({
-  modules: ['nuxt-graphql-middleware'],
-
-  graphqlMiddleware: {
-    autoInlineFragments: true, // [!code highlight]
-  },
-})
-```
-
-:::
-
-This will disable importing via `#import` and will automatically inline
-fragments:
+All fragments are imported automatically, without the need for manual import
+statements. Make sure that all your fragment files or folders are referenced in
+the `autoImportPatterns` option.
 
 ::: code-group
 
