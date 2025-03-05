@@ -61,6 +61,7 @@
 import { ref, computed } from '#imports'
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import MiniSearch from 'minisearch'
+import type { GeneratorOutputCode } from './../../src/deluxe'
 
 let miniSearch = new MiniSearch({
   fields: ['content', 'name', 'filename'],
@@ -82,7 +83,7 @@ let miniSearch = new MiniSearch({
 const RPC_NAMESPACE = 'nuxt-graphql-middleware'
 
 const selectedId = ref('')
-const documents = ref([])
+const documents = ref<GeneratorOutputCode[]>([])
 const search = ref('')
 const serverApiPrefix = ref('')
 
@@ -90,18 +91,18 @@ const selected = computed(() => {
   if (!selectedId.value) {
     return
   }
-  return documents.value.find((v) => v.id === selectedId.value)
+  return documents.value.find((v) => v.graphqlName === selectedId.value)
 })
 
 async function updateDocuments(newDocuments: any[]) {
   miniSearch.removeAll()
   documents.value = newDocuments.filter((v) => !!v.operation)
-  await miniSearch.addAll(newDocuments)
+  miniSearch.addAll(newDocuments)
 }
 
 onDevtoolsClientConnected(async (client) => {
   const rpc = client.devtools.extendClientRpc(RPC_NAMESPACE, {
-    documentsUpdated(updated) {
+    documentsUpdated(updated: GeneratorOutputCode[]) {
       updateDocuments(updated)
     },
   })

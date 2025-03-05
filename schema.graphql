@@ -36,13 +36,29 @@ type Mutation {
 
 type Query {
   dataForLayer: DataForLayer
+
+  """Get the current time."""
   getCurrentTime: String
+
+  """Produce a GraphQL error."""
   getError: Boolean
+
+  """Returns the value of a request header."""
   getRequestHeader(name: String!): String
+
+  """Get all submissions."""
   getSubmissions: [FormSubmission]
+
+  """Test the client options."""
   testClientOptions(path: String!): TestClientOptions
+
+  """Test the fetch options."""
   testFetchOptions: TestFetchOptions
+
+  """Load a user by ID."""
   userById(id: ID!): User
+
+  """Get all users."""
   users: [User!]!
 }
 
@@ -66,12 +82,25 @@ type UploadedFile {
 }
 
 type User {
+  """Date of birth as YYYY-MM-DD."""
   dateOfBirth: String
+
+  """Description."""
   description: String
+
+  """Email address."""
   email: String!
+
+  """First name of the user."""
   firstName: String!
+
+  """All their friends."""
   friends: [User]
+
+  """The ID of the user."""
   id: Int!
+
+  """Last name of the user."""
   lastName: String!
 }
 

@@ -1,7 +1,10 @@
+import { loadSchema } from '@graphql-tools/load'
+import type { ModuleContext } from './module/types'
+import type { GeneratorOptions } from './deluxe'
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
-import { relative, resolve } from 'pathe'
+import { relative } from 'pathe'
 import { defu } from 'defu'
 import { type BirpcGroup } from 'birpc'
 import {
@@ -9,14 +12,11 @@ import {
   addServerHandler,
   createResolver,
   addTemplate,
-  updateTemplates,
   addPlugin,
   addImports,
   resolveAlias,
   addServerImports,
 } from '@nuxt/kit'
-import inquirer from 'inquirer'
-import { type TypeScriptDocumentsPluginConfig } from '@graphql-codegen/typescript-operations'
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
 import { setupDevToolsUI } from './devtools'
@@ -24,17 +24,14 @@ import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import {
   validateOptions,
   getSchemaPath,
-  generate,
   defaultOptions,
   logger,
   fileExists,
-  outputDocuments,
-  getOutputDocumentsPath,
 } from './helpers'
 import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { type GraphqlMiddlewareDocument } from './types'
-import { Collector, type ModuleContext } from './module/Collector'
+import { Collector } from './module/Collector'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 export interface ModuleOptions {
@@ -143,26 +140,9 @@ export interface ModuleOptions {
   schemaPath?: string
 
   /**
-   * These options are passed to the graphql-codegen method when generating the
-   * TypeScript operations types.
-   *
-   * {@link https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations}
-   * @default
-   * ```ts
-   * const codegenConfig = {
-   *   exportFragmentSpreadSubTypes: true,
-   *   preResolveTypes: true,
-   *   skipTypeNameForRoot: true,
-   *   skipTypename: true,
-   *   useTypeImports: true,
-   *   onlyOperationTypes: true,
-   *   namingConvention: {
-   *     enumValues: 'change-case-all#upperCaseFirst',
-   *   },
-   * }
-   * ```
+   * Options for graphql-typescript-deluxe code generator.
    */
-  codegenConfig?: TypeScriptDocumentsPluginConfig
+  codegenConfig?: GeneratorOptions
 
   /**
    * Configuration for graphql-codegen when downloading the schema.
@@ -267,20 +247,23 @@ export default defineNuxtModule<ModuleOptions>({
       validateOptions(options)
     }
 
-    const schemaPathReplaced = resolveAlias(options.schemaPath!)
-
     const moduleResolver = createResolver(import.meta.url)
     const serverResolver = createResolver(nuxt.options.serverDir)
     const srcResolver = createResolver(nuxt.options.srcDir)
     const appResolver = createResolver(nuxt.options.dir.app)
     const rootDir = nuxt.options.rootDir
     const rootResolver = createResolver(rootDir)
-    const schemaPath = await getSchemaPath(
-      schemaPathReplaced,
+
+    const { schemaPath, schemaContent } = await getSchemaPath(
+      resolveAlias(options.schemaPath!),
       options,
       rootResolver.resolve,
       options.downloadSchema,
     )
+
+    const schema = await loadSchema(schemaContent, {
+      loaders: [],
+    })
 
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
@@ -289,9 +272,10 @@ export default defineNuxtModule<ModuleOptions>({
       patterns: options.autoImportPatterns || [],
       srcDir: nuxt.options.srcDir,
       schemaPath,
+      serverApiPrefix: options.serverApiPrefix!,
     }
 
-    const collector = new Collector(context, options.documents)
+    const collector = new Collector(schema, context, options.documents)
     await collector.init()
 
     // Store the generated templates in a locally scoped object.
@@ -328,85 +312,6 @@ export default defineNuxtModule<ModuleOptions>({
         })
       }
     }
-
-    let prompt:
-      | (Promise<{ accept: any }> & {
-          ui: inquirer.ui.Prompt<{ accept: any }>
-        })
-      | null = null
-    const generateHandler = async (isFirst = false) => {
-      if (prompt && prompt.ui) {
-        // @ts-ignore
-        prompt.ui.close()
-        prompt = null
-      }
-
-      try {
-        const { templates, hasErrors, documents } = await generate(
-          collector,
-          options,
-          schemaPath,
-          rootDir,
-          isFirst,
-        )
-        ctx.templates = templates
-        ctx.documents = documents
-        rpc?.broadcast.documentsUpdated(documents)
-
-        // Output the generated documents if desired.
-        const outputDocumentsPath = await getOutputDocumentsPath(
-          options.outputDocuments,
-          nuxt.options.buildDir,
-          rootResolver.resolvePath,
-        )
-
-        if (outputDocumentsPath) {
-          outputDocuments(outputDocumentsPath, documents)
-
-          if (isFirst) {
-            logger.info('Documents generated at ' + outputDocumentsPath)
-          }
-        }
-
-        if (hasErrors) {
-          throw new Error('Documents has errors.')
-        }
-      } catch (e) {
-        console.log(e)
-        logger.error('Failed to generate GraphQL files.')
-        if (isFirst) {
-          // Exit process if there are errors in the first run.
-          process.exit(1)
-        }
-        if (!options.downloadSchema) {
-          return
-        }
-        if (!nuxt.options.dev) {
-          return
-        }
-        process.stdout.write('\n')
-        logger.restoreStd()
-        prompt = inquirer.prompt({
-          type: 'confirm',
-          name: 'accept',
-          message: 'Do you want to reload the GraphQL schema?',
-        })
-
-        prompt.then(async ({ accept }) => {
-          if (accept) {
-            await getSchemaPath(
-              schemaPathReplaced,
-              options,
-              rootResolver.resolve,
-              true,
-            )
-            await generateHandler()
-          }
-        })
-      }
-    }
-
-    await generateHandler(true)
 
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
       serverApiPrefix: options.serverApiPrefix!,
@@ -451,39 +356,30 @@ export default defineNuxtModule<ModuleOptions>({
       addServerImports(serverUtils)
     }
 
-    // Add the templates to nuxt and provide a callback to load the file contents.
-    Object.values(GraphqlMiddlewareTemplate).forEach((filename) => {
-      const result = addTemplate({
-        write: true,
-        filename,
-        options: {
-          nuxtGraphqlMiddleware: true,
-        },
-        getContents: () => {
-          // This will load the contents of the files dynamically. The watcher
-          // hook updates these files if needed.
-          return (
-            ctx.templates.find((v) => v.filename === filename)?.content || ''
-          )
-        },
-      })
-
-      if (result.dst.includes(GraphqlMiddlewareTemplate.Documents)) {
-        addAlias('#graphql-documents', result.dst)
-      } else if (
-        result.dst.includes(GraphqlMiddlewareTemplate.OperationTypes)
-      ) {
-        addAlias('#graphql-operations', result.dst)
-      } else if (
-        result.dst.includes(GraphqlMiddlewareTemplate.ComposableContext)
-      ) {
-        addAlias('#nuxt-graphql-middleware/generated-types', result.dst)
-      }
+    const templateTypescript = addTemplate({
+      filename: GraphqlMiddlewareTemplate.OperationTypes,
+      write: true,
+      getContents: () => collector.getTemplateTypes(),
     })
+    addAlias('#graphql-operations', templateTypescript.dst)
+
+    const templateDocuments = addTemplate({
+      filename: GraphqlMiddlewareTemplate.Documents,
+      write: true,
+      getContents: () => collector.getTemplateOperations(),
+    })
+    addAlias('#graphql-documents', templateDocuments.dst)
+
+    const templateContext = addTemplate({
+      filename: GraphqlMiddlewareTemplate.ComposableContext,
+      write: true,
+      getContents: () => collector.getTemplateContext(),
+    })
+    addAlias('#nuxt-graphql-middleware/generated-types', templateContext.dst)
 
     addTemplate({
       write: true,
-      filename: 'graphql-documents.d.ts',
+      filename: 'nuxt-graphql-middleware/graphql-documents.d.ts',
       getContents: () => {
         return `
 import type {
@@ -492,12 +388,12 @@ import type {
 } from '#nuxt-graphql-middleware/generated-types'
 
 declare module '#graphql-documents' {
-  type Documents = {
+  type Operations = {
     query: GraphqlMiddlewareQuery
     mutation: GraphqlMiddlewareMutation
   }
-  const documents: Documents
-  export { documents, Documents }
+  const operations: Operations
+  export { operations, Operations }
 }
 `
       },
@@ -644,6 +540,7 @@ export type GraphqlClientContext = {}
     nuxt.options.nitro.externals.inline =
       nuxt.options.nitro.externals.inline || []
     nuxt.options.nitro.externals.inline.push(template.dst)
+    nuxt.options.nitro.externals.inline.push(templateDocuments.dst)
     addAlias('#graphql-middleware-server-options-build', template.dst)
 
     addAlias(
@@ -685,30 +582,17 @@ export type GraphqlClientContext = {}
         route: options.serverApiPrefix + '/debug',
       })
 
-      nuxt.hook('builder:watch', async (event, path) => {
-        path = relative(nuxt.options.srcDir, resolve(nuxt.options.srcDir, path))
+      nuxt.hook('builder:watch', async (event, pathAbsolute) => {
+        if (pathAbsolute === schemaPath) {
+          return
+        }
+
         // We only care about GraphQL files.
-        if (!path.match(/\.(gql|graphql)$/)) {
+        if (!pathAbsolute.match(/\.(gql|graphql)$/)) {
           return
         }
 
-        if (schemaPath.includes(path)) {
-          return
-        }
-
-        if (event === 'add') {
-          collector.handleAdd(path)
-        } else if (event === 'change') {
-          collector.handleChange(path)
-        } else if (event === 'unlink') {
-          collector.handleUnlink(path)
-        } else if (event === 'addDir') {
-          collector.handleAddDir()
-        } else if (event === 'unlinkDir') {
-          collector.handleUnlinkDir(path)
-        }
-
-        await generateHandler()
+        await collector.handleWatchEvent(event, pathAbsolute)
       })
     }
   },

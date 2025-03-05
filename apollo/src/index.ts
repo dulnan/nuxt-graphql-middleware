@@ -82,12 +82,39 @@ function getId() {
 const typeDefs = `#graphql
   scalar Upload
   type User {
+    """
+    The ID of the user.
+    """
     id: Int!
+
+    """
+    First name of the user.
+    """
     firstName: String!
+
+    """
+    Last name of the user.
+    """
     lastName: String!
+
+    """
+    Email address.
+    """
     email: String!
+
+    """
+    Description.
+    """
     description: String
+
+    """
+    Date of birth as YYYY-MM-DD.
+    """
     dateOfBirth: String
+
+    """
+    All their friends.
+    """
     friends: [User]
   }
 
@@ -114,14 +141,46 @@ const typeDefs = `#graphql
   }
 
   type Query {
+    """
+    Get all users.
+    """
     users: [User!]!
+
+    """
+    Load a user by ID.
+    """
     userById(id: ID!): User
+
+    """
+    Test the fetch options.
+    """
     testFetchOptions: TestFetchOptions
+
+    """
+    Returns the value of a request header.
+    """
     getRequestHeader(name: String!): String
+
+    """
+    Produce a GraphQL error.
+    """
     getError: Boolean
+
+    """
+    Get all submissions.
+    """
     getSubmissions: [FormSubmission]
+
+    """
+    Get the current time.
+    """
     getCurrentTime: String
+
     dataForLayer: DataForLayer
+
+    """
+    Test the client options.
+    """
     testClientOptions(path: String!): TestClientOptions
   }
 
