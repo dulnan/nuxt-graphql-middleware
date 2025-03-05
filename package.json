@@ -35,7 +35,8 @@
     "dist"
   ],
   "scripts": {
-    "prepack": "nuxt-module-build build && npm run client:build",
+    "prepack": "nuxt-module-build build",
+    "prepack_": "nuxt-module-build build && npm run client:build",
     "dev": "nuxi dev playground --trace-warnings",
     "dev:layers": "nuxi dev playground-layers --trace-warnings",
     "debug": "nuxi dev playground --inspect",
@@ -62,13 +63,14 @@
     "prettier:fix": "prettier --write ."
   },
   "dependencies": {
-    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/schema-ast": "^4.1.0",
-    "@graphql-codegen/typescript": "^4.0.8",
+    "@graphql-codegen/typescript": "^4.1.3",
     "@graphql-codegen/typescript-generic-sdk": "^4.0.1",
-    "@graphql-codegen/typescript-operations": "^4.2.2",
+    "@graphql-codegen/typescript-operations": "^4.4.1",
     "@graphql-tools/utils": "^10.2.2",
     "@nuxt/devtools-kit": "1.3.7",
+    "dependency-graph": "^1.0.0",
     "inquirer": "^9.3.2",
     "minisearch": "^6.3.0",
     "picocolors": "^1.0.1"

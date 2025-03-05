@@ -1,71 +1,112 @@
 import { promises as fs } from 'node:fs'
+import { basename } from 'node:path'
 import {
+  parse,
   type DocumentNode,
   type GraphQLSchema,
-  type FragmentDefinitionNode,
-  parse,
-  visit,
+  type GraphQLError,
+  Source,
+  printSourceLocation,
 } from 'graphql'
-import { loadSchema } from '@graphql-tools/load'
 import { resolveFiles } from '@nuxt/kit'
-import type { GraphqlMiddlewareDocument } from '../types'
-import { parseDocument } from '../helpers'
+import { Generator, type GeneratorOutputOperation } from '../deluxe'
+import { generateContextTemplate } from './templates/context'
+import type { ModuleContext } from './types'
+import type { WatchEvent } from 'nuxt/schema'
+import colors from 'picocolors'
+import { logger } from '../helpers'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 
-export type ModuleContext = {
-  patterns: string[]
-  srcDir: string
-  schemaPath: string
+type MaxLengths = {
+  name: number
+  path: number
+  type: number
 }
 
-class CollectedFile {
+type LogEntry = {
+  name: string
+  type: string
+  path: string
+  errors: readonly GraphQLError[]
+}
+
+function getMaxLengths(entries: LogEntry[]): MaxLengths {
+  let name = 0
+  let path = 0
+  let type = 0
+
+  for (const entry of entries) {
+    if (entry.type.length > type) {
+      type = entry.type.length
+    }
+    if (entry.name.length > name) {
+      name = entry.name.length
+    }
+    if (entry.path.length > path) {
+      path = entry.path.length
+    }
+  }
+  return { name, path, type }
+}
+
+function logAllEntries(entries: LogEntry[]) {
+  const lengths = getMaxLengths(entries)
+  let prevHadError = false
+  for (const entry of entries) {
+    const hasErrors = entry.errors.length > 0
+    const icon = hasErrors ? colors.red(' x ') : colors.green(' ✓ ')
+    const type = entry.type.padEnd(lengths.type)
+    const namePadded = colors.bold(entry.name.padEnd(lengths.name))
+    const name = hasErrors ? colors.red(namePadded) : colors.green(namePadded)
+    const path = colors.dim(entry.path.padEnd(lengths.path))
+    const parts: string[] = [icon, type, name, path]
+    if (hasErrors && !prevHadError) {
+      process.stdout.write('-'.repeat(process.stdout.columns) + '\n')
+    }
+    logger.log(parts.join(' | '))
+    if (hasErrors) {
+      const errorLines: string[] = []
+      entry.errors.forEach((error) => {
+        let output = colors.red(error.message)
+        if (error.source && error.locations) {
+          for (const location of error.locations) {
+            output +=
+              '\n\n' + colors.red(printSourceLocation(error.source, location))
+          }
+        }
+        errorLines.push(output)
+      })
+
+      logger.log(
+        errorLines
+          .join('\n')
+          .split('\n')
+          .map((v) => '    ' + v)
+          .join('\n'),
+      )
+      process.stdout.write('-'.repeat(process.stdout.columns) + '\n')
+    }
+
+    prevHadError = hasErrors
+  }
+
+  logger.restoreStd()
+}
+
+/**
+ * A single .graphql file in memory (parse-only for syntax).
+ */
+export class CollectedFile {
   filePath: string
   fileContents: string
-  fileContentsInlined: string | null = null
-  parsed: DocumentNode | null = null
-  inlined: DocumentNode | null = null
-  fragments: Map<string, FragmentDefinitionNode>
-  needsFragments: Set<string> = new Set()
   isOnDisk: boolean
-  validationState: 'valid' | 'invalid' | null = null
+  parsed: DocumentNode
 
   constructor(filePath: string, fileContents: string, isOnDisk = false) {
     this.filePath = filePath
     this.fileContents = fileContents
     this.isOnDisk = isOnDisk
-    this.fragments = new Map()
-    this.parse()
-  }
-
-  setInlined(inlined: DocumentNode) {
-    this.inlined = inlined
-  }
-
-  validate(schema: GraphQLSchema) {
-    if (this.validationState === 'valid') {
-    }
-
-    if (this.parsed) {
-      const errors = validateGraphQlDocuments(schema, [this.parsed])
-    }
-
-    return []
-  }
-
-  private parse() {
-    this.parsed = parse(this.fileContents)
-    visit(this.parsed, {
-      FragmentDefinition: (node) => {
-        this.fragments.set(node.name.value, node)
-      },
-      FragmentSpread: (node) => {
-        this.needsFragments.add(node.name.value)
-      },
-    })
-  }
-
-  isValid() {
-    return this.validationState === 'valid'
+    this.parsed = parse(fileContents)
   }
 
   static async fromFilePath(filePath: string): Promise<CollectedFile> {
@@ -73,150 +114,307 @@ class CollectedFile {
     return new CollectedFile(filePath, content, true)
   }
 
-  async update() {
-    this.validationState = null
-    this.fragments.clear()
-    this.needsFragments.clear()
-
+  /**
+   * If isOnDisk, re-read file contents from disk, then parse it (syntax only).
+   */
+  async update(): Promise<boolean> {
     if (this.isOnDisk) {
-      this.fileContents = (await fs.readFile(this.filePath)).toString()
+      const newContents = (await fs.readFile(this.filePath)).toString()
+
+      // If contents are identical, return.
+      if (newContents === this.fileContents) {
+        return false
+      }
+
+      this.fileContents = newContents
+      this.parsed = parse(newContents)
+      return true
     }
 
-    this.parse()
+    // Files not on disk never need update.
+    return false
   }
 }
 
 export class Collector {
-  files: Map<string, CollectedFile>
-  needsUpdate = false
-  context: ModuleContext
-  schema: GraphQLSchema | null = null
-  nuxtConfigDocuments: string[]
+  /**
+   * All collected files.
+   */
+  private files = new Map<string, CollectedFile>()
 
-  constructor(context: ModuleContext, documents: string[] = []) {
-    this.files = new Map()
-    this.context = context
-    this.nuxtConfigDocuments = documents
+  /**
+   * The code generator.
+   */
+  private generator: Generator
+
+  /**
+   * A map of operation name and timestamp when the operation was last validated.
+   */
+  private operationTimestamps: Map<string, number> = new Map()
+
+  /**
+   * The generated TypeScript type template output.
+   */
+  private outputTypes = ''
+
+  /**
+   * The generated oeprations file.
+   */
+  private outputOperations = ''
+
+  /**
+   * The generated context template file.
+   */
+  private outputContext = ''
+
+  /**
+   * Whether we need to rebuild the Generator state.
+   */
+  private needsRebuild = false
+
+  constructor(
+    private schema: GraphQLSchema,
+    private context: ModuleContext,
+    private nuxtConfigDocuments: string[] = [],
+  ) {
+    this.generator = new Generator(schema)
   }
 
-  private getImportPatternFiles(): Promise<string[]> {
+  private filePathToRelative(filePath: string): string {
+    return filePath.replace(this.context.srcDir, '~')
+  }
+
+  private operationToLogEntry(
+    operation: GeneratorOutputOperation,
+    errors: readonly GraphQLError[],
+  ): LogEntry {
+    return {
+      name: operation.graphqlName,
+      type: operation.operationType,
+      path: this.filePathToRelative(operation.filePath),
+      errors,
+    }
+  }
+
+  /**
+   * Executes code gen and performs validation for operations.
+   */
+  private buildState() {
+    const output = this.generator.build()
+    const operations = output.getCollectedOperations()
+    const generatedCode = output.getGeneratedCode()
+
+    this.outputOperations = output.getOperationsFile()
+    this.outputTypes = output.getEverything()
+    this.outputContext = generateContextTemplate(
+      operations,
+      this.context.serverApiPrefix,
+    )
+
+    // A map of GraphQL fragment name => fragment source.
+    const fragmentMap: Map<string, string> = new Map()
+
+    // A map of GraphQL operation name => operation source.
+    const operationSourceMap: Map<string, string> = new Map()
+
+    for (const code of generatedCode) {
+      if (code.type === 'fragment' && code.graphqlName && code.source) {
+        fragmentMap.set(code.graphqlName, code.source)
+      } else if (code.type === 'operation' && code.graphqlName && code.source) {
+        operationSourceMap.set(code.graphqlName, code.source)
+      }
+    }
+
+    let hasErrors = false
+    const logEntries: LogEntry[] = []
+    for (const operation of operations) {
+      const previousTimestamp = this.operationTimestamps.get(
+        operation.graphqlName,
+      )
+
+      // If timestamps are identical we can skip validation.
+      if (previousTimestamp === operation.timestamp) {
+        continue
+      }
+
+      // Merge all fragments the operation needs.
+      const fragments = operation.dependencies
+        .map((v) =>
+          v.type === 'fragment-name' ? fragmentMap.get(v.value) || '' : '',
+        )
+        .join('\n')
+
+      const fullOperation =
+        operationSourceMap.get(operation.graphqlName) + fragments
+      const source = new Source(fullOperation, basename(operation.filePath))
+      const document = parse(source)
+      const errors = validateGraphQlDocuments(this.schema, [document])
+
+      if (errors.length) {
+        hasErrors = true
+      } else {
+        // If valid, update the timestamp.
+        this.operationTimestamps.set(operation.graphqlName, operation.timestamp)
+      }
+
+      logEntries.push(this.operationToLogEntry(operation, errors))
+    }
+
+    logAllEntries(logEntries)
+
+    if (hasErrors) {
+      throw new Error('GraphQL errors')
+    }
+  }
+
+  /**
+   * Get all file paths that match the import patterns.
+   */
+  private async getImportPatternFiles(): Promise<string[]> {
     if (this.context.patterns.length) {
-      // Find all required files.
       return resolveFiles(this.context.srcDir, this.context.patterns, {
         followSymbolicLinks: false,
       })
     }
-
-    return Promise.resolve([])
+    return []
   }
 
-  async getSchema(): Promise<GraphQLSchema> {
-    if (!this.schema) {
-      const schemaContent = (
-        await fs.readFile(this.context.schemaPath)
-      ).toString()
-      this.schema = await loadSchema(schemaContent, { loaders: [] })
-    }
-
-    return this.schema
-  }
-
-  async init() {
+  /**
+   * Initialise the collector.
+   */
+  public async init() {
+    // Get all files that match the import patterns.
     const files = await this.getImportPatternFiles()
-    for (const file of files) {
-      await this.addFile(file)
+
+    for (const filePath of files) {
+      await this.addFile(filePath)
     }
 
-    this.nuxtConfigDocuments.forEach((fileContents, index) => {
-      const fileName = `nuxt.config.ts[${index}]`
-      this.files.set(fileName, new CollectedFile(fileName, fileContents))
+    // Add files from nuxt.config.ts.
+    this.nuxtConfigDocuments.forEach((docString, i) => {
+      const pseudoPath = `nuxt.config.ts[${i}]`
+      const file = new CollectedFile(pseudoPath, docString, false)
+      this.files.set(pseudoPath, file)
+      this.generator.add({
+        filePath: '~/nuxt.config.ts',
+        documentNode: file.parsed,
+      })
     })
+
+    this.buildState()
   }
 
-  async addFile(filePath: string) {
+  /**
+   * Add a file.
+   */
+  private async addFile(filePath: string): Promise<CollectedFile> {
     const file = await CollectedFile.fromFilePath(filePath)
     this.files.set(filePath, file)
+    this.generator.add({
+      filePath: this.filePathToRelative(filePath),
+      documentNode: file.parsed,
+    })
+    return file
   }
 
-  handleAdd(filePath: string) {
-    this.addFile(filePath)
+  private async handleAdd(filePath: string): Promise<boolean> {
+    await this.addFile(filePath)
+    return true
   }
 
-  async handleChange(filePath: string) {
+  private async handleChange(filePath: string): Promise<boolean> {
     const file = this.files.get(filePath)
-    if (file) {
-      await file.update()
-      this.needsUpdate = true
+    if (!file) {
+      return false
+    }
+
+    const needsUpdate = await file.update()
+    if (!needsUpdate) {
+      return false
+    }
+    this.generator.update({
+      filePath: this.filePathToRelative(filePath),
+      documentNode: file.parsed,
+    })
+    return true
+  }
+
+  private handleUnlink(filePath: string): boolean {
+    const file = this.files.get(filePath)
+    if (!file) {
+      return false
+    }
+    this.files.delete(filePath)
+    this.generator.remove(this.filePathToRelative(filePath))
+    return true
+  }
+
+  private handleUnlinkDir(folderPath: string): boolean {
+    let anyHasChanged = false
+    for (const filePath of [...this.files.keys()]) {
+      if (filePath.startsWith(folderPath)) {
+        const hasChanged = this.handleUnlink(filePath)
+        if (hasChanged) {
+          anyHasChanged = true
+        }
+      }
+    }
+
+    return anyHasChanged
+  }
+
+  /**
+   * Handle the watcher event for the given file path.
+   */
+  public async handleWatchEvent(event: WatchEvent, filePath: string) {
+    try {
+      let hasChanged = false
+      if (event === 'add') {
+        hasChanged = await this.handleAdd(filePath)
+      } else if (event === 'change') {
+        hasChanged = await this.handleChange(filePath)
+      } else if (event === 'unlink') {
+        hasChanged = this.handleUnlink(filePath)
+      } else if (event === 'unlinkDir') {
+        hasChanged = this.handleUnlinkDir(filePath)
+      } else if (event === 'addDir') {
+        // @TODO: Should this be handled?
+      }
+
+      if (hasChanged) {
+        this.buildState()
+      }
+    } catch (e) {
+      this.generator.resetCaches()
+      console.log(e)
     }
   }
 
-  handleUnlink(filePath: string) {
-    if (this.files.has(filePath)) {
-      this.files.delete(filePath)
-      this.needsUpdate = true
-    }
+  /**
+   * Get the TypeScript types template contents.
+   */
+  public getTemplateTypes(): string {
+    return this.outputTypes
   }
 
-  handleAddDir() {}
-
-  handleUnlinkDir(folderPath: string) {
-    const allKeys = [...this.files.keys()]
-    const toRemove = allKeys.filter((filePath) => filePath.includes(folderPath))
-    if (toRemove.length) {
-      toRemove.forEach((key) => this.files.delete(key))
-      this.needsUpdate = true
-    }
+  /**
+   * Get the context template contents.
+   */
+  public getTemplateContext(): string {
+    return this.outputContext
   }
 
-  validateDocuments(rootDir: string) {
-    // const validated: GraphqlMiddlewareDocument[] = []
-    //
-    // const files = [...this.files.values()]
-    //
-    // for (let i = 0; i < files.length; i++) {
-    //   const file = files[i]
-    //   const document: GraphqlMiddlewareDocument = {
-    //     filename: file.filePath,
-    //     content: file.fileContents,
-    //   }
-    //   if (document.filename) {
-    //     document.relativePath = document.filename.replace(rootDir + '/', '')
-    //   }
-    //
-    //   try {
-    //     const node = parseDocument(document, rootDir)
-    //     document.content = print(node)
-    //     document.errors = validateGraphQlDocuments(schema, [
-    //       node,
-    //     ]) as GraphQLError[]
-    //
-    //     const operation = node.definitions.find(
-    //       (v) => v.kind === 'OperationDefinition',
-    //     ) as OperationDefinitionNode | undefined
-    //     if (operation) {
-    //       document.name = operation.name?.value
-    //       document.operation = operation.operation
-    //     } else {
-    //       document.name = document.relativePath
-    //     }
-    //
-    //     document.isValid = document.errors.length === 0
-    //   } catch (e) {
-    //     document.errors = [e as GraphQLError]
-    //     document.isValid = false
-    //   }
-    //
-    //   document.id = [document.operation, document.name, document.filename]
-    //     .filter(Boolean)
-    //     .join('_')
-    //
-    //   validated.push(document)
-    //
-    //   if (!document.isValid) {
-    //     break
-    //   }
-    // }
-    //
-    // return validated
+  /**
+   * Get the operations template contents.
+   */
+  public getTemplateOperations(): string {
+    return this.outputOperations
+  }
+
+  /**
+   * Log results (including parse/validation errors).
+   */
+  public logDocuments(logEverything?: boolean) {
+    // @TODO
   }
 }

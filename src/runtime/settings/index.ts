@@ -12,7 +12,7 @@ export enum GraphqlMiddlewareTemplate {
   /**
    * Exports a single opject containing the compiled queries and mutations.
    */
-  Documents = 'graphql-documents.mjs',
+  Documents = 'nuxt-graphql-middleware/graphql-documents.mjs',
 }
 
 export enum GraphqlMiddlewareOperation {

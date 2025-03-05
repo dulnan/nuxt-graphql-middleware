@@ -1,12 +1,7 @@
-import { generate, executeCodegen } from '@graphql-codegen/cli'
+import { generate } from '@graphql-codegen/cli'
 import { type Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
-import * as PluginTypescript from '@graphql-codegen/typescript'
-import * as PluginTypescriptOperations from '@graphql-codegen/typescript-operations'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
-import * as PluginNuxtGraphqlMiddleware from './plugin'
-import * as PluginNuxtGraphqlMiddlewareDocuments from './pluginDocuments'
-import { GraphqlMiddlewareTemplate } from './../runtime/settings'
 import { type ModuleOptions } from './../module'
 
 /**
@@ -14,18 +9,6 @@ import { type ModuleOptions } from './../module'
  */
 export function pluginLoader(name: string): Promise<any> {
   switch (name) {
-    case '@graphql-codegen/typescript':
-      return Promise.resolve(PluginTypescript)
-
-    case '@graphql-codegen/typescript-operations':
-      return Promise.resolve(PluginTypescriptOperations)
-
-    case '@graphql-codegen/typescript-nuxt-graphql-middleware':
-      return Promise.resolve(PluginNuxtGraphqlMiddleware)
-
-    case '@graphql-codegen/typescript-nuxt-graphql-middleware-documents':
-      return Promise.resolve(PluginNuxtGraphqlMiddlewareDocuments)
-
     case '@graphql-codegen/schema-ast':
       return Promise.resolve(PluginSchemaAst)
   }
@@ -78,33 +61,4 @@ export function generateSchema(
     },
   }
   return generate(config, writeToDisk).then((v) => v[0])
-}
-
-export function generateTemplates(
-  documents: string[],
-  schemaPath: string,
-  options: ModuleOptions,
-): Promise<CodegenResult[]> {
-  return executeCodegen({
-    schema: schemaPath,
-    pluginLoader,
-    silent: true,
-    errorsOnly: true,
-    documents,
-    generates: {
-      [GraphqlMiddlewareTemplate.OperationTypes]: {
-        plugins: ['typescript', 'typescript-operations'],
-        config: options.codegenConfig,
-      },
-      [GraphqlMiddlewareTemplate.ComposableContext]: {
-        plugins: ['typescript-nuxt-graphql-middleware'],
-        config: {
-          serverApiPrefix: options.serverApiPrefix,
-        },
-      },
-      [GraphqlMiddlewareTemplate.Documents]: {
-        plugins: ['typescript-nuxt-graphql-middleware-documents'],
-      },
-    },
-  })
 }

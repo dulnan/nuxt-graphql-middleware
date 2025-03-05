@@ -1,41 +1,16 @@
 import { existsSync, promises as fsp } from 'node:fs'
-import { oldVisit } from '@graphql-codegen/plugin-helpers'
-import { resolveFiles, useLogger } from '@nuxt/kit'
+import { useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
-import { validateGraphQlDocuments } from '@graphql-tools/utils'
-import type {
-  GraphQLSchema,
-  GraphQLError,
-  DocumentNode,
-  OperationDefinitionNode,
-  FragmentDefinitionNode,
-  DefinitionNode,
-} from 'graphql'
-import { parse, Source, print, visit, Kind } from 'graphql'
-import { generateSchema, generateTemplates } from './../codegen'
+import { generateSchema } from './../codegen'
 import { type GraphqlMiddlewareDocument } from './../types'
 import { type ModuleOptions } from './../module'
-import { logDocuments } from './reporter'
 import { name } from '../../package.json'
-import type { Collector } from '../module/Collector'
-import { falsy } from '../runtime/helpers'
 
 export const logger: ConsolaInstance = useLogger(name)
 
 export const defaultOptions: ModuleOptions = {
-  codegenConfig: {
-    exportFragmentSpreadSubTypes: true,
-    preResolveTypes: true,
-    skipTypeNameForRoot: true,
-    skipTypename: true,
-    useTypeImports: true,
-    onlyOperationTypes: true,
-    namingConvention: {
-      enumValues: 'change-case-all#upperCaseFirst',
-    },
-  },
   downloadSchema: true,
   schemaPath: '~~/schema.graphql',
   serverApiPrefix: '/api/graphql_middleware',
@@ -63,7 +38,7 @@ export async function getSchemaPath(
   options: ModuleOptions,
   resolver: Resolver['resolve'],
   writeToDisk = false,
-): Promise<string> {
+): Promise<{ schemaPath: string; schemaContent: string }> {
   const dest = resolver(schemaPath)
   if (!options.downloadSchema) {
     const fileExists = await fsp
@@ -76,338 +51,14 @@ export async function getSchemaPath(
       )
       throw new Error('Missing GraphQL schema.')
     }
-    return dest
+    const schemaContent = await fsp.readFile(dest).then((v) => v.toString())
+    return { schemaPath, schemaContent }
   }
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint config.')
   }
-  await generateSchema(options, dest, writeToDisk)
-  return dest
-}
-
-/**
- * Read the GraphQL files for the given patterns.
- */
-export async function autoImportDocuments(
-  patterns: string[] = [],
-  srcResolver: Resolver['resolve'],
-): Promise<GraphqlMiddlewareDocument[]> {
-  if (!patterns.length) {
-    return Promise.resolve([])
-  }
-  const files = (
-    await resolveFiles(srcResolver(), patterns, {
-      followSymbolicLinks: false,
-    })
-  ).filter((path) => {
-    return !path.includes('schema.gql') && !path.includes('schema.graphql')
-  })
-
-  return Promise.all(
-    files.map((filename) => {
-      return fsp.readFile(filename).then((v) => {
-        const content = v.toString().trim()
-        return {
-          content,
-          filename,
-        }
-      })
-    }),
-  )
-}
-
-function inlineNestedFragments(
-  document: string,
-  fragmentMap: Map<string, FragmentDefinitionNode>,
-): string {
-  const parsed = parse(document)
-  const definitions: DefinitionNode[] = [...parsed.definitions]
-  const fragmentsToInline: Set<string> = new Set()
-
-  // Collect all fragment spreads in the document
-  visit(parsed, {
-    FragmentSpread(node) {
-      fragmentsToInline.add(node.name.value)
-    },
-  })
-
-  // Inline fragments recursively
-  fragmentsToInline.forEach((fragmentName) => {
-    const fragment = fragmentMap.get(fragmentName)
-    if (fragment) {
-      definitions.push(fragment)
-      const nestedFragmentNames = new Set<string>()
-      visit(fragment, {
-        FragmentSpread(node) {
-          nestedFragmentNames.add(node.name.value)
-        },
-      })
-      nestedFragmentNames.forEach((nestedFragmentName) => {
-        if (!fragmentsToInline.has(nestedFragmentName)) {
-          fragmentsToInline.add(nestedFragmentName)
-          const nestedFragment = fragmentMap.get(nestedFragmentName)
-          if (nestedFragment) {
-            definitions.push(nestedFragment)
-          }
-        }
-      })
-    }
-  })
-
-  return print({
-    ...parsed,
-    definitions,
-  })
-}
-
-export async function buildDocuments(
-  collector: Collector,
-): Promise<GraphqlMiddlewareDocument[]> {
-  const fragmentMap: Map<string, FragmentDefinitionNode> = new Map()
-  const files = [...collector.files.values()]
-
-  files.forEach((file) => {
-    ;[...file.fragments.entries()].forEach(([name, node]) => {
-      fragmentMap.set(name, node)
-    })
-  })
-
-  const documents = files
-    .map((file) => {
-      if (file.parsed) {
-        return {
-          content: inlineNestedFragments(print(file.parsed), fragmentMap),
-          filename: file.filePath,
-        }
-      }
-    })
-    .filter(falsy)
-
-  return documents
-}
-
-export function parseDocument(
-  document: GraphqlMiddlewareDocument,
-  rootDir: string,
-): DocumentNode {
-  let name = document.filename ? document.filename.replace(rootDir, '') : ''
-  if (name.charAt(0) === '/') {
-    name = name.slice(1)
-  }
-  const source = new Source(document.content, name)
-  return parse(source)
-}
-
-export function validateDocuments(
-  schema: GraphQLSchema,
-  documents: GraphqlMiddlewareDocument[],
-  rootDir: string,
-): GraphqlMiddlewareDocument[] {
-  const validated: GraphqlMiddlewareDocument[] = []
-
-  for (let i = 0; i < documents.length; i++) {
-    const document: GraphqlMiddlewareDocument = { ...documents[i]! }
-    if (document.filename) {
-      document.relativePath = document.filename.replace(rootDir + '/', '')
-    }
-    try {
-      const node = parseDocument(document, rootDir)
-      document.content = print(node)
-      document.errors = validateGraphQlDocuments(schema, [
-        node,
-      ]) as GraphQLError[]
-
-      const operation = node.definitions.find(
-        (v) => v.kind === 'OperationDefinition',
-      ) as OperationDefinitionNode | undefined
-      if (operation) {
-        document.name = operation.name?.value
-        document.operation = operation.operation
-      } else {
-        document.name = document.relativePath
-      }
-
-      document.isValid = document.errors.length === 0
-    } catch (e) {
-      document.errors = [e as GraphQLError]
-      document.isValid = false
-    }
-
-    document.id = [document.operation, document.name, document.filename]
-      .filter(Boolean)
-      .join('_')
-
-    validated.push(document)
-
-    if (!document.isValid) {
-      break
-    }
-  }
-
-  return validated
-}
-
-/**
- * Parses the given document body, removes all operations except the one given
- * as the second argument and removes all fragments not used by the operation.
- */
-function cleanGraphqlDocument(
-  graphqlContent: string,
-  operationName: string,
-): DocumentNode {
-  const document = parse(graphqlContent)
-
-  let selectedOperation: OperationDefinitionNode | null = null
-  const fragments: { [key: string]: FragmentDefinitionNode } = {}
-  const usedFragments: Set<string> = new Set()
-
-  visit(document, {
-    OperationDefinition(node) {
-      if (node.name?.value === operationName) {
-        selectedOperation = node
-      }
-    },
-    FragmentDefinition(node) {
-      fragments[node.name.value] = node
-    },
-  })
-
-  if (!selectedOperation) {
-    throw new Error(`Operation named "${operationName}" not found`)
-  }
-
-  visit(selectedOperation, {
-    FragmentSpread(node) {
-      usedFragments.add(node.name.value)
-    },
-  })
-
-  let hasNewFragments = true
-  while (hasNewFragments) {
-    hasNewFragments = false
-    for (const fragmentName of usedFragments) {
-      visit(fragments[fragmentName]!, {
-        FragmentSpread(node) {
-          if (!usedFragments.has(node.name.value)) {
-            usedFragments.add(node.name.value)
-            hasNewFragments = true
-          }
-        },
-      })
-    }
-  }
-
-  return {
-    kind: Kind.DOCUMENT,
-    definitions: [
-      selectedOperation,
-      ...Array.from(usedFragments).map(
-        (fragmentName) => fragments[fragmentName]!,
-      ),
-    ],
-  }
-}
-
-/**
- * Generates the TypeScript definitions and documents files.
- */
-export async function generate(
-  collector: Collector,
-  options: ModuleOptions,
-  schemaPath: string,
-  rootDir: string,
-  logEverything = false,
-) {
-  const schema = await collector.getSchema()
-
-  const documents = await buildDocuments(collector)
-
-  const validated = validateDocuments(schema, documents, rootDir)
-
-  const extracted: GraphqlMiddlewareDocument[] = validated.filter(
-    (v) => !v.operation,
-  )
-
-  for (let i = 0; i < validated.length; i++) {
-    const v = validated[i]
-    if (!v) {
-      continue
-    }
-    if (v.isValid) {
-      try {
-        const node = parse(v.content)
-        oldVisit(node, {
-          enter: {
-            OperationDefinition: (node: OperationDefinitionNode) => {
-              if (
-                node.name?.value &&
-                node.loc?.source &&
-                (node.operation === 'query' || node.operation === 'mutation')
-              ) {
-                const document = { ...v }
-                const cleaned = cleanGraphqlDocument(
-                  node.loc.source.body,
-                  node.name.value,
-                )
-                const errors = validateGraphQlDocuments(schema, [cleaned])
-                document.errors = document.errors || []
-                document.errors.push(...errors)
-                document.isValid = !document.errors.length
-                document.name = node.name.value
-                document.operation = node.operation
-                document.content = print(cleaned)
-                document.id = [
-                  document.operation,
-                  document.name,
-                  document.filename,
-                ]
-                  .filter(Boolean)
-                  .join('_')
-                extracted.push(document)
-              }
-            },
-          },
-        })
-      } catch (e) {
-        logger.error(e)
-        extracted.push(v)
-        break
-      }
-    } else {
-      extracted.push(v)
-      break
-    }
-  }
-
-  const templates = await generateTemplates(
-    extracted.filter((v) => v.isValid).map((v) => v.content),
-    schemaPath,
-    options,
-  )
-  const hasErrors =
-    extracted.some((v) => !v.isValid) || validated.some((v) => !v.isValid)
-  if (hasErrors || logEverything) {
-    logDocuments(logger, extracted, logEverything)
-  }
-
-  process.stdout.write('\n')
-  logger.restoreStd()
-
-  hasErrors
-    ? logger.error('GraphQL code generation failed with errors.')
-    : logger.success('Finished GraphQL code generation.')
-
-  return {
-    templates: templates.sort((a, b) => {
-      return a.filename.localeCompare(b.filename)
-    }),
-    hasErrors,
-    documents: extracted.sort((a, b) => {
-      const nameA = a.name || ''
-      const nameB = b.name || ''
-      return nameA.localeCompare(nameB)
-    }),
-  }
+  const result = await generateSchema(options, dest, writeToDisk)
+  return { schemaPath, schemaContent: result.content }
 }
 
 export const fileExists = (

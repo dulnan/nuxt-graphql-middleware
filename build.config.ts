@@ -9,6 +9,8 @@ export default defineBuildConfig({
     '@graphql-tools/merge',
     'chalk',
     '@graphql-codegen/plugin-helpers',
+    '@graphql-codegen/core',
+    '@graphql-tools/schema',
     'defu',
     'pathe',
     'change-case',

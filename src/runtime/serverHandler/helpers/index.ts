@@ -11,7 +11,7 @@ import {
   CLIENT_CONTEXT_PREFIX,
   GraphqlMiddlewareOperation,
 } from './../../settings'
-import { type Documents } from '#graphql-documents'
+import { type Operations } from '#graphql-documents'
 
 // Get the variables from query parameters.
 //
@@ -125,7 +125,7 @@ export function validateRequest(
   method?: string,
   operation?: GraphqlMiddlewareOperation | string,
   name?: string,
-  documents?: Documents,
+  documents?: Operations,
 ): void {
   if (method !== 'POST' && method !== 'GET') {
     throwError('Method not allowed.', 405)

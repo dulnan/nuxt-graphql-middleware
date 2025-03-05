@@ -10,7 +10,7 @@ import {
   extractRequestContext,
 } from './helpers'
 import { GraphqlMiddlewareOperation } from './../settings'
-import { documents } from '#graphql-documents'
+import { operations } from '#graphql-documents'
 import { serverOptions } from '#graphql-middleware-server-options-build'
 import { useRuntimeConfig } from '#imports'
 
@@ -27,10 +27,12 @@ export default defineEventHandler(async (event) => {
 
   // Make sure the request is valid. Will throw an error if the request is
   // invalid.
-  validateRequest(method, operation, operationName, documents)
+  validateRequest(method, operation, operationName, operations)
 
   // The GraphQL query document as a string.
-  const operationDocument: string = (documents as any)[operation][operationName]
+  const operationDocument: string = (operations as any)[operation][
+    operationName
+  ]
 
   const queryParams = getQuery(event)
   const context = extractRequestContext(queryParams)

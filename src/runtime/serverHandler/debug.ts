@@ -1,5 +1,5 @@
 import { defineEventHandler } from 'h3'
-import { documents } from '#graphql-documents'
+import { operations } from '#graphql-documents'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(() => {
@@ -11,7 +11,7 @@ export default defineEventHandler(() => {
   let body = '<h1>nuxt-graphql-middleware debug</h1>'
 
   body += '<table><tbody>'
-  Object.entries(documents).forEach(([operationType, items]) => {
+  Object.entries(operations).forEach(([operationType, items]) => {
     Object.entries(items).forEach(([operationName, operation]) => {
       body += '<tr>'
       body += `<td style="font-size: 1.5rem">${operationType}</td>`

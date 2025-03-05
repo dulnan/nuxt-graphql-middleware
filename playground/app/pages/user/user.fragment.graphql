@@ -5,4 +5,5 @@ fragment user on User {
   email
   description
   dateOfBirth
+  TEST: description
 }

@@ -1,3 +1,4 @@
 fragment depthTwoUser on User {
   firstName
+  YES_TEST_TWO: email
 }
