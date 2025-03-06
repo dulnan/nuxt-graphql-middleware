@@ -1,11 +1,11 @@
-import { IncomingMessage, ServerResponse } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import eventHandler from './../../../src/runtime/serverHandler/index'
 
 vi.mock('#graphql-documents', () => {
   return {
-    documents: {
+    operations: {
       query: {
         foobar: 'Query',
       },

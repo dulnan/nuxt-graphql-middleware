@@ -1,4 +1,5 @@
-import { existsSync, promises as fsp } from 'node:fs'
+import fs from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
@@ -41,7 +42,7 @@ export async function getSchemaPath(
 ): Promise<{ schemaPath: string; schemaContent: string }> {
   const dest = resolver(schemaPath)
   if (!options.downloadSchema) {
-    const fileExists = await fsp
+    const fileExists = await fs
       .access(dest)
       .then(() => true)
       .catch(() => false)
@@ -51,7 +52,7 @@ export async function getSchemaPath(
       )
       throw new Error('Missing GraphQL schema.')
     }
-    const schemaContent = await fsp.readFile(dest).then((v) => v.toString())
+    const schemaContent = await fs.readFile(dest).then((v) => v.toString())
     return { schemaPath, schemaContent }
   }
   if (!options.graphqlEndpoint) {
@@ -82,12 +83,12 @@ export async function outputDocuments(
   outputPath: string,
   documents: GraphqlMiddlewareDocument[],
 ) {
-  await fsp.mkdir(outputPath, { recursive: true })
+  await fs.mkdir(outputPath, { recursive: true })
   documents.forEach((v) => {
     if (v.operation && v.name) {
       const fileName = [v.operation, v.name, 'graphql'].join('.')
       const filePath = resolve(outputPath, fileName)
-      fsp.writeFile(filePath, v.content)
+      fs.writeFile(filePath, v.content)
     }
   })
 }
