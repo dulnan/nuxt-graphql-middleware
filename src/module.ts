@@ -1,3 +1,4 @@
+import type { WebSocketServer } from 'vite'
 import { loadSchema } from '@graphql-tools/load'
 import type { ModuleContext } from './module/types'
 import { fileURLToPath } from 'url'
@@ -30,7 +31,16 @@ import {
 } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
+import type { Nuxt } from 'nuxt/schema'
 export type { GraphqlMiddlewareServerOptions } from './types'
+
+function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
+  return new Promise((resolve) => {
+    nuxt.hooks.hook('vite:serverCreated', (viteServer) => {
+      resolve(viteServer.ws)
+    })
+  })
+}
 
 export interface ModuleOptions {
   /**
@@ -277,6 +287,7 @@ export default defineNuxtModule<ModuleOptions>({
       patterns: options.autoImportPatterns || [],
       srcDir: nuxt.options.srcDir,
       buildDir: srcResolver.resolve(nuxt.options.buildDir),
+      nuxtConfigPath: rootResolver.resolve('nuxt.config.ts'),
       schemaPath,
       serverApiPrefix: options.serverApiPrefix!,
       logOnlyErrors: !!options.logOnlyErrors,
@@ -579,6 +590,20 @@ export type GraphqlClientContext = {}
         route: options.serverApiPrefix + '/debug',
       })
 
+      const wsPromise = useViteWebSocket(nuxt)
+
+      function sendError(error: { message: string }) {
+        wsPromise.then((ws) => {
+          ws.send({
+            type: 'error',
+            err: {
+              message: error.message,
+              stack: '',
+            },
+          })
+        })
+      }
+
       nuxt.hook('builder:watch', async (event, pathAbsolute) => {
         if (pathAbsolute === schemaPath) {
           return
@@ -589,7 +614,14 @@ export type GraphqlClientContext = {}
           return
         }
 
-        const hasChanged = await collector.handleWatchEvent(event, pathAbsolute)
+        const { hasChanged, error } = await collector.handleWatchEvent(
+          event,
+          pathAbsolute,
+        )
+
+        if (error) {
+          sendError(error)
+        }
 
         if (hasChanged && rpc) {
           rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])

@@ -26,6 +26,8 @@ const graphqlMiddleware: ModuleOptions = {
     },
   },
 
+  logOnlyErrors: false,
+
   clientCache: {
     enabled: true,
   },

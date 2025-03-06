@@ -11,7 +11,10 @@ import {
 } from 'graphql'
 import { resolveFiles } from '@nuxt/kit'
 import {
+  FieldNotFoundError,
+  FragmentNotFoundError,
   Generator,
+  TypeNotFoundError,
   type GeneratorOptions,
   type GeneratorOutputOperation,
 } from 'graphql-typescript-deluxe'
@@ -22,6 +25,9 @@ import colors from 'picocolors'
 import { logger } from '../helpers'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { RpcItem } from '../rpc-types'
+
+const SYMBOL_CROSS = 'x'
+const SYMBOL_CHECK = '✔'
 
 type MaxLengths = {
   name: number
@@ -60,7 +66,9 @@ function logAllEntries(entries: LogEntry[]) {
   let prevHadError = false
   for (const entry of entries) {
     const hasErrors = entry.errors.length > 0
-    const icon = hasErrors ? colors.red('x') : colors.green('✔')
+    const icon = hasErrors
+      ? colors.red(SYMBOL_CROSS)
+      : colors.green(SYMBOL_CHECK)
     const type = entry.type.padEnd(lengths.type)
     const namePadded = colors.bold(entry.name.padEnd(lengths.name))
     const name = hasErrors ? colors.red(namePadded) : colors.green(namePadded)
@@ -187,13 +195,28 @@ export class Collector {
     private schema: GraphQLSchema,
     private context: ModuleContext,
     private nuxtConfigDocuments: string[] = [],
-    generatorOptions?: GeneratorOptions,
+    generatorOptions: GeneratorOptions = {},
   ) {
-    this.generator = new Generator(schema, generatorOptions)
+    const mappedOptions = { ...generatorOptions }
+    if (!mappedOptions.output) {
+      mappedOptions.output = {}
+    }
+
+    if (!mappedOptions.output.buildTypeDocFilePath) {
+      mappedOptions.output.buildTypeDocFilePath = (filePath: string) => {
+        return this.filePathToBuildRelative(filePath)
+      }
+    }
+
+    this.generator = new Generator(schema, mappedOptions)
   }
 
-  private filePathToRelative(filePath: string): string {
+  private filePathToBuildRelative(filePath: string): string {
     return './' + relative(this.context.buildDir, filePath)
+  }
+
+  private filePathToSourceRelative(filePath: string): string {
+    return './' + relative(process.cwd(), filePath)
   }
 
   private operationToLogEntry(
@@ -203,7 +226,7 @@ export class Collector {
     return {
       name: operation.graphqlName,
       type: operation.operationType,
-      path: operation.filePath,
+      path: this.filePathToSourceRelative(operation.filePath),
       errors,
     }
   }
@@ -268,7 +291,11 @@ export class Collector {
         this.operationTimestamps.set(operation.graphqlName, operation.timestamp)
       }
 
-      logEntries.push(this.operationToLogEntry(operation, errors))
+      const shouldLog = errors.length || !this.context.logOnlyErrors
+
+      if (shouldLog) {
+        logEntries.push(this.operationToLogEntry(operation, errors))
+      }
     }
 
     logAllEntries(logEntries)
@@ -304,6 +331,39 @@ export class Collector {
     }
   }
 
+  private buildErrorMessage(error: unknown) {
+    let output = ''
+    if (
+      error instanceof FieldNotFoundError ||
+      error instanceof TypeNotFoundError ||
+      error instanceof FragmentNotFoundError
+    ) {
+      const filePath = error.context?.filePath
+      const file = filePath ? this.files.get(filePath) : null
+
+      if (filePath) {
+        output += ` | ${this.filePathToSourceRelative(filePath)}\n`
+      }
+
+      output += '\n' + error.message + '\n\n'
+
+      if (file) {
+        output += file.fileContents
+      }
+    } else if (error instanceof Error) {
+      output += '\n' + error.message
+    }
+
+    return output
+  }
+
+  private logError(error: unknown) {
+    let output = `${SYMBOL_CROSS}`
+    output += this.buildErrorMessage(error)
+
+    logger.error(colors.red(output))
+  }
+
   /**
    * Get all file paths that match the import patterns.
    */
@@ -320,26 +380,33 @@ export class Collector {
    * Initialise the collector.
    */
   public async init() {
-    // Get all files that match the import patterns.
-    const files = await this.getImportPatternFiles()
+    try {
+      // Get all files that match the import patterns.
+      const files = await this.getImportPatternFiles()
 
-    for (const filePath of files) {
-      await this.addFile(filePath)
+      for (const filePath of files) {
+        await this.addFile(filePath)
+      }
+
+      const nuxtConfigDocuments = this.nuxtConfigDocuments.join('\n\n')
+
+      if (nuxtConfigDocuments.length) {
+        const filePath = this.context.nuxtConfigPath
+        const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
+        this.files.set(filePath, file)
+        this.generator.add({
+          filePath,
+          documentNode: file.parsed,
+        })
+      }
+
+      this.buildState()
+      logger.success('All GraphQL documents are valid.')
+    } catch (e) {
+      this.logError(e)
+
+      throw new Error('GraphQL document validation failed.')
     }
-
-    // Add files from nuxt.config.ts.
-    this.nuxtConfigDocuments.forEach((docString, i) => {
-      const pseudoPath = `nuxt.config.ts[${i}]`
-      const file = new CollectedFile(pseudoPath, docString, false)
-      this.files.set(pseudoPath, file)
-      this.generator.add({
-        filePath: this.filePathToRelative('nuxt.config.ts'),
-        documentNode: file.parsed,
-      })
-    })
-
-    this.buildState()
-    logger.success('All GraphQL documents are valid.')
   }
 
   /**
@@ -349,7 +416,7 @@ export class Collector {
     const file = await CollectedFile.fromFilePath(filePath)
     this.files.set(filePath, file)
     this.generator.add({
-      filePath: this.filePathToRelative(filePath),
+      filePath,
       documentNode: file.parsed,
     })
     return file
@@ -371,7 +438,7 @@ export class Collector {
       return false
     }
     this.generator.update({
-      filePath: this.filePathToRelative(filePath),
+      filePath: filePath,
       documentNode: file.parsed,
     })
     return true
@@ -383,7 +450,7 @@ export class Collector {
       return false
     }
     this.files.delete(filePath)
-    this.generator.remove(this.filePathToRelative(filePath))
+    this.generator.remove(filePath)
     return true
   }
 
@@ -407,7 +474,7 @@ export class Collector {
   public async handleWatchEvent(
     event: WatchEvent,
     filePath: string,
-  ): Promise<boolean> {
+  ): Promise<{ hasChanged: boolean; error?: { message: string } }> {
     let hasChanged = false
     try {
       if (event === 'add') {
@@ -428,15 +495,18 @@ export class Collector {
     } catch (e) {
       this.generator.resetCaches()
       logger.error('Failed to update GraphQL code.')
-      logger.error(e)
-      return false
+      this.logError(e)
+      return {
+        hasChanged: false,
+        error: { message: this.buildErrorMessage(e) },
+      }
     }
 
     if (hasChanged) {
-      logger.success('Finished GraphQL code update.')
+      logger.success('Finished GraphQL code update successfully.')
     }
 
-    return hasChanged
+    return { hasChanged }
   }
 
   /**
