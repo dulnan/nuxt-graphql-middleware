@@ -14,5 +14,18 @@ export default defineNuxtConfig({
     baseURL: '/__nuxt-graphql-middleware',
   },
 
+  devtools: {
+    enabled: false,
+  },
+
+  vite: {
+    server: {
+      hmr: {
+        // Instead of go through proxy, we directly connect real port of the client app
+        clientPort: +(process.env.PORT || 3300),
+      },
+    },
+  },
+
   compatibilityDate: '2025-03-05',
 })

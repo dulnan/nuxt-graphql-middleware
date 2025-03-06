@@ -27,6 +27,8 @@ export type CollectedFragment = {
 export type ModuleContext = {
   patterns: string[]
   srcDir: string
+  buildDir: string
   schemaPath: string
   serverApiPrefix: string
+  logOnlyErrors: boolean
 }

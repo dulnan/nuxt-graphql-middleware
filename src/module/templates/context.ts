@@ -1,4 +1,4 @@
-import type { GeneratorOutputOperation } from '~/src/deluxe'
+import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
 import { pascalCase } from 'change-case-all'
 
 type CodeResult = {
@@ -72,7 +72,7 @@ function buildOperationTypeCode(
     resultTypes.push(nameResult)
     imports.push(nameResult)
 
-    const { hasVariables, variablesOptional } = operationMetadata[name]
+    const { hasVariables, variablesOptional } = operationMetadata[name]!
     if (hasVariables) {
       imports.push(nameVariables)
     }

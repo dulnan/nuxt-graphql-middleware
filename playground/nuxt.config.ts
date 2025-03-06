@@ -8,6 +8,7 @@ const graphqlMiddleware: ModuleOptions = {
   schemaPath: './../schema.graphql',
   codegenConfig: {},
   outputDocuments: true,
+  devtools: true,
   documents: [
     `
     query usersFromConfig {
