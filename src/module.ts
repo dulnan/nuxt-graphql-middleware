@@ -1,12 +1,12 @@
 import { loadSchema } from '@graphql-tools/load'
 import type { ModuleContext } from './module/types'
-import type { GeneratorOptions } from './deluxe'
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import { relative } from 'pathe'
 import { defu } from 'defu'
 import { type BirpcGroup } from 'birpc'
+import { type GeneratorOptions } from 'graphql-typescript-deluxe'
 import {
   defineNuxtModule,
   addServerHandler,
@@ -28,9 +28,7 @@ import {
   logger,
   fileExists,
 } from './helpers'
-import { type CodegenResult } from './codegen'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
-import { type GraphqlMiddlewareDocument } from './types'
 import { Collector } from './module/Collector'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
@@ -138,6 +136,13 @@ export interface ModuleOptions {
    * @default './schema.graphql'
    */
   schemaPath?: string
+
+  /**
+   * Logs only errors.
+   *
+   * When enabled only errors are logged to the console.
+   */
+  logOnlyErrors?: boolean
 
   /**
    * Options for graphql-typescript-deluxe code generator.
@@ -271,46 +276,38 @@ export default defineNuxtModule<ModuleOptions>({
     const context: ModuleContext = {
       patterns: options.autoImportPatterns || [],
       srcDir: nuxt.options.srcDir,
+      buildDir: srcResolver.resolve(nuxt.options.buildDir),
       schemaPath,
       serverApiPrefix: options.serverApiPrefix!,
+      logOnlyErrors: !!options.logOnlyErrors,
     }
 
-    const collector = new Collector(schema, context, options.documents)
+    const collector = new Collector(
+      schema,
+      context,
+      options.documents,
+      options.codegenConfig,
+    )
     await collector.init()
 
-    // Store the generated templates in a locally scoped object.
-    const ctx = {
-      templates: [] as CodegenResult[],
-      documents: [] as GraphqlMiddlewareDocument[],
-    }
+    const isDevToolsEnabled = nuxt.options.dev && options.devtools
 
-    let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | null = null
-    if (options.devtools) {
+    let rpc: BirpcGroup<ClientFunctions, ServerFunctions> | undefined
+    if (isDevToolsEnabled) {
       const clientPath = moduleResolver.resolve('./client')
       setupDevToolsUI(nuxt, clientPath)
-      // Hack needed because in a playground environment the call
-      // onDevToolsInitialized is needed, but when the module is actually
-      // installed in a Nuxt app, this callback is never called and thus
-      // the RPC never extended.
-      const setupRpc = () => {
+
+      onDevToolsInitialized(() => {
         rpc = extendServerRpc<ClientFunctions, ServerFunctions>(RPC_NAMESPACE, {
           // register server RPC functions
           getModuleOptions() {
             return options
           },
           getDocuments() {
-            return ctx.documents
+            return [...collector.rpcItems.values()]
           },
         })
-      }
-
-      try {
-        setupRpc()
-      } catch (_e) {
-        onDevToolsInitialized(() => {
-          setupRpc()
-        })
-      }
+      })
     }
 
     nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
@@ -592,7 +589,11 @@ export type GraphqlClientContext = {}
           return
         }
 
-        await collector.handleWatchEvent(event, pathAbsolute)
+        const hasChanged = await collector.handleWatchEvent(event, pathAbsolute)
+
+        if (hasChanged && rpc) {
+          rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
+        }
       })
     }
   },

@@ -20,18 +20,17 @@
         </div>
         <div
           v-for="doc in documentsFiltered"
-          :key="doc.content"
+          :key="doc.id"
           class="relative group"
         >
           <button
             class="text-secondary hover:n-bg-hover flex select-none truncate px2 py2 font-mono text-sm w-full"
-            :class="{ 'text-red-500': !doc.isValid }"
             @click="selectedId = doc.id"
           >
             <div style="width: 6rem" class="text-left">
-              <Tag v-if="doc.operation === 'query'" green text="Query" />
+              <Tag v-if="doc.identifier === 'query'" green text="Query" />
               <Tag
-                v-else-if="doc.operation === 'mutation'"
+                v-else-if="doc.identifier === 'mutation'"
                 orange
                 text="Mutation"
               />
@@ -61,20 +60,15 @@
 import { ref, computed } from '#imports'
 import { onDevtoolsClientConnected } from '@nuxt/devtools-kit/iframe-client'
 import MiniSearch from 'minisearch'
-import type { GeneratorOutputCode } from './../../src/deluxe'
+import type {
+  ServerFunctions,
+  ClientFunctions,
+  RpcItem,
+} from './../../src/rpc-types'
 
-let miniSearch = new MiniSearch({
-  fields: ['content', 'name', 'filename'],
-  storeFields: [
-    'id',
-    'content',
-    'isValid',
-    'errors',
-    'filename',
-    'relativePath',
-    'name',
-    'operation',
-  ],
+const miniSearch = new MiniSearch({
+  fields: ['id', 'source', 'name', 'filePath', 'identifier'],
+  storeFields: ['id', 'source', 'name', 'identifier', 'filePath'],
   searchOptions: {
     fuzzy: 0.7,
   },
@@ -83,7 +77,7 @@ let miniSearch = new MiniSearch({
 const RPC_NAMESPACE = 'nuxt-graphql-middleware'
 
 const selectedId = ref('')
-const documents = ref<GeneratorOutputCode[]>([])
+const documents = ref<RpcItem[]>([])
 const search = ref('')
 const serverApiPrefix = ref('')
 
@@ -91,21 +85,25 @@ const selected = computed(() => {
   if (!selectedId.value) {
     return
   }
-  return documents.value.find((v) => v.graphqlName === selectedId.value)
+  return documents.value.find((v) => v.id === selectedId.value)
 })
 
 async function updateDocuments(newDocuments: any[]) {
   miniSearch.removeAll()
-  documents.value = newDocuments.filter((v) => !!v.operation)
+  documents.value = newDocuments
   miniSearch.addAll(newDocuments)
 }
 
 onDevtoolsClientConnected(async (client) => {
-  const rpc = client.devtools.extendClientRpc(RPC_NAMESPACE, {
-    documentsUpdated(updated: GeneratorOutputCode[]) {
-      updateDocuments(updated)
+  const rpc = client.devtools.extendClientRpc<ServerFunctions, ClientFunctions>(
+    RPC_NAMESPACE,
+    {
+      showNotification() {},
+      documentsUpdated(updated: RpcItem[]) {
+        updateDocuments(updated)
+      },
     },
-  })
+  )
 
   const newDocuments = await rpc.getDocuments()
   updateDocuments(newDocuments)
@@ -113,9 +111,9 @@ onDevtoolsClientConnected(async (client) => {
   serverApiPrefix.value = options.serverApiPrefix
 })
 
-function copyToClipboard(item: any) {
+function copyToClipboard(item: RpcItem) {
   const textArea = document.createElement('textarea')
-  textArea.value = item.content
+  textArea.value = item.source
 
   textArea.style.top = '0'
   textArea.style.left = '0'

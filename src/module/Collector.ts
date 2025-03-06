@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs'
 import { basename } from 'node:path'
+import { relative } from 'pathe'
 import {
   parse,
   type DocumentNode,
@@ -9,13 +10,18 @@ import {
   printSourceLocation,
 } from 'graphql'
 import { resolveFiles } from '@nuxt/kit'
-import { Generator, type GeneratorOutputOperation } from '../deluxe'
+import {
+  Generator,
+  type GeneratorOptions,
+  type GeneratorOutputOperation,
+} from 'graphql-typescript-deluxe'
 import { generateContextTemplate } from './templates/context'
 import type { ModuleContext } from './types'
 import type { WatchEvent } from 'nuxt/schema'
 import colors from 'picocolors'
 import { logger } from '../helpers'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
+import type { RpcItem } from '../rpc-types'
 
 type MaxLengths = {
   name: number
@@ -54,11 +60,11 @@ function logAllEntries(entries: LogEntry[]) {
   let prevHadError = false
   for (const entry of entries) {
     const hasErrors = entry.errors.length > 0
-    const icon = hasErrors ? colors.red(' x ') : colors.green(' ✓ ')
+    const icon = hasErrors ? colors.red('x') : colors.green('✔')
     const type = entry.type.padEnd(lengths.type)
     const namePadded = colors.bold(entry.name.padEnd(lengths.name))
     const name = hasErrors ? colors.red(namePadded) : colors.green(namePadded)
-    const path = colors.dim(entry.path.padEnd(lengths.path))
+    const path = colors.dim(entry.path)
     const parts: string[] = [icon, type, name, path]
     if (hasErrors && !prevHadError) {
       process.stdout.write('-'.repeat(process.stdout.columns) + '\n')
@@ -153,6 +159,11 @@ export class Collector {
   private operationTimestamps: Map<string, number> = new Map()
 
   /**
+   * The generated operations and fragments.
+   */
+  public readonly rpcItems: Map<string, RpcItem> = new Map()
+
+  /**
    * The generated TypeScript type template output.
    */
   private outputTypes = ''
@@ -176,12 +187,13 @@ export class Collector {
     private schema: GraphQLSchema,
     private context: ModuleContext,
     private nuxtConfigDocuments: string[] = [],
+    generatorOptions?: GeneratorOptions,
   ) {
-    this.generator = new Generator(schema)
+    this.generator = new Generator(schema, generatorOptions)
   }
 
   private filePathToRelative(filePath: string): string {
-    return filePath.replace(this.context.srcDir, '~')
+    return './' + relative(this.context.buildDir, filePath)
   }
 
   private operationToLogEntry(
@@ -191,7 +203,7 @@ export class Collector {
     return {
       name: operation.graphqlName,
       type: operation.operationType,
-      path: this.filePathToRelative(operation.filePath),
+      path: operation.filePath,
       errors,
     }
   }
@@ -238,10 +250,9 @@ export class Collector {
       }
 
       // Merge all fragments the operation needs.
-      const fragments = operation.dependencies
-        .map((v) =>
-          v.type === 'fragment-name' ? fragmentMap.get(v.value) || '' : '',
-        )
+      const fragments = operation
+        .getGraphQLFragmentDependencies()
+        .map((v) => fragmentMap.get(v) || '')
         .join('\n')
 
       const fullOperation =
@@ -264,6 +275,32 @@ export class Collector {
 
     if (hasErrors) {
       throw new Error('GraphQL errors')
+    }
+
+    for (const code of generatedCode) {
+      const id = `${code.identifier}_${code.graphqlName}`
+      if (
+        code.identifier === 'fragment' ||
+        code.identifier === 'mutation' ||
+        code.identifier === 'query'
+      ) {
+        if (this.rpcItems.get(id)?.timestamp === code.timestamp) {
+          continue
+        }
+
+        const fragmentDepdendencies = code
+          .getGraphQLFragmentDependencies()
+          .map((name) => fragmentMap.get(name) || '')
+          .join('\n\n')
+        this.rpcItems.set(id, {
+          id,
+          timestamp: code.timestamp,
+          source: code.source! + '\n\n' + fragmentDepdendencies,
+          name: code.graphqlName!,
+          filePath: code.filePath!,
+          identifier: code.identifier,
+        })
+      }
     }
   }
 
@@ -296,12 +333,13 @@ export class Collector {
       const file = new CollectedFile(pseudoPath, docString, false)
       this.files.set(pseudoPath, file)
       this.generator.add({
-        filePath: '~/nuxt.config.ts',
+        filePath: this.filePathToRelative('nuxt.config.ts'),
         documentNode: file.parsed,
       })
     })
 
     this.buildState()
+    logger.success('All GraphQL documents are valid.')
   }
 
   /**
@@ -366,9 +404,12 @@ export class Collector {
   /**
    * Handle the watcher event for the given file path.
    */
-  public async handleWatchEvent(event: WatchEvent, filePath: string) {
+  public async handleWatchEvent(
+    event: WatchEvent,
+    filePath: string,
+  ): Promise<boolean> {
+    let hasChanged = false
     try {
-      let hasChanged = false
       if (event === 'add') {
         hasChanged = await this.handleAdd(filePath)
       } else if (event === 'change') {
@@ -386,8 +427,16 @@ export class Collector {
       }
     } catch (e) {
       this.generator.resetCaches()
-      console.log(e)
+      logger.error('Failed to update GraphQL code.')
+      logger.error(e)
+      return false
     }
+
+    if (hasChanged) {
+      logger.success('Finished GraphQL code update.')
+    }
+
+    return hasChanged
   }
 
   /**
@@ -409,12 +458,5 @@ export class Collector {
    */
   public getTemplateOperations(): string {
     return this.outputOperations
-  }
-
-  /**
-   * Log results (including parse/validation errors).
-   */
-  public logDocuments(logEverything?: boolean) {
-    // @TODO
   }
 }
