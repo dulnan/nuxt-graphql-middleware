@@ -5,7 +5,37 @@ import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
 import { useNuxtApp, useAppConfig } from '#imports'
-import type { RequestCacheOptions } from '#graphql-middleware/types'
+import type {
+  GraphqlResponseError,
+  RequestCacheOptions,
+} from '#graphql-middleware/types'
+
+function logGraphQLErrors(
+  operation: string,
+  operationName: string,
+  errors: GraphqlResponseError[],
+): void {
+  errors.forEach((error) => {
+    console.group(
+      `Error in GraphQL response for ${operation} "${operationName}"`,
+    )
+
+    console.error(`Message: ${error.message}`)
+
+    if (error.locations && error.locations.length > 0) {
+      const formattedLocations = error.locations
+        .map((loc) => `line ${loc.line}, column ${loc.column}`)
+        .join(' | ')
+      console.error(`Locations: ${formattedLocations}`)
+    }
+
+    if (error.path) {
+      console.error(`Path: ${error.path.join(' -> ')}`)
+    }
+
+    console.groupEnd()
+  })
+}
 
 export function performRequest<T>(
   operation: string,
@@ -57,6 +87,9 @@ export function performRequest<T>(
       method,
     },
   ).then((v) => {
+    if (import.meta.dev && v.errors?.length) {
+      logGraphQLErrors(operation, operationName, v.errors)
+    }
     return {
       ...v,
       data: v.data,

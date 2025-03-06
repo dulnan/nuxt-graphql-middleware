@@ -53,4 +53,12 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2024-09-14',
+
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+      },
+    },
+  },
 })
