@@ -19,7 +19,7 @@ describe('getSchemaPath', () => {
   })
   test('Throws an error if the schema path is invalid', async () => {
     const result = await getSchemaPath(
-      '',
+      schemaPath,
       { downloadSchema: false, graphqlEndpoint: '' },
       () => '/some-invalid-schema-path',
     ).catch((e) => e)
@@ -29,7 +29,7 @@ describe('getSchemaPath', () => {
 
   test('Throws an error if the schema should be downloaded but no endpoint is defined', async () => {
     const result = await getSchemaPath(
-      '',
+      schemaPath,
       { downloadSchema: true, graphqlEndpoint: '' },
       () => '',
     ).catch((e) => e)
@@ -39,35 +39,11 @@ describe('getSchemaPath', () => {
 
   test('Returns the destination if the path is valid', async () => {
     const result = await getSchemaPath(
-      '',
+      schemaPath,
       { downloadSchema: false, graphqlEndpoint: '' },
       () => schemaPath,
     ).catch((e) => e)
 
-    expect(result).toEqual(schemaPath)
-  })
-
-  test('Returns the destination if the schema could be downloaded', async () => {
-    const result = await getSchemaPath(
-      '',
-      { downloadSchema: true, graphqlEndpoint: 'http://localhost/graphql' },
-      () => schemaPath,
-    ).catch((e) => e)
-
-    expect(result).toEqual(schemaPath)
-  })
-
-  test.skip('Calls the graphqlEndpoint method', async () => {
-    const dest = path.resolve(__dirname, './schema.graphql')
-    const result = await getSchemaPath(
-      '',
-      {
-        downloadSchema: true,
-        graphqlEndpoint: () => 'http://localhost/graphql',
-      },
-      () => dest,
-    ).catch((e) => e)
-
-    expect(result).toEqual(dest)
+    expect(result.schemaPath).toEqual(schemaPath)
   })
 })

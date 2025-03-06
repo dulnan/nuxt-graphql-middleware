@@ -1,14 +1,6 @@
-import { promises as fs } from 'node:fs'
 import { basename } from 'node:path'
 import { relative } from 'pathe'
-import {
-  parse,
-  type DocumentNode,
-  type GraphQLSchema,
-  type GraphQLError,
-  Source,
-  printSourceLocation,
-} from 'graphql'
+import { parse, type GraphQLSchema, type GraphQLError, Source } from 'graphql'
 import { resolveFiles } from '@nuxt/kit'
 import {
   FieldNotFoundError,
@@ -25,130 +17,8 @@ import colors from 'picocolors'
 import { logger } from '../helpers'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { RpcItem } from '../rpc-types'
-
-const SYMBOL_CROSS = 'x'
-const SYMBOL_CHECK = '✔'
-
-type MaxLengths = {
-  name: number
-  path: number
-  type: number
-}
-
-type LogEntry = {
-  name: string
-  type: string
-  path: string
-  errors: readonly GraphQLError[]
-}
-
-function getMaxLengths(entries: LogEntry[]): MaxLengths {
-  let name = 0
-  let path = 0
-  let type = 0
-
-  for (const entry of entries) {
-    if (entry.type.length > type) {
-      type = entry.type.length
-    }
-    if (entry.name.length > name) {
-      name = entry.name.length
-    }
-    if (entry.path.length > path) {
-      path = entry.path.length
-    }
-  }
-  return { name, path, type }
-}
-
-function logAllEntries(entries: LogEntry[]) {
-  const lengths = getMaxLengths(entries)
-  let prevHadError = false
-  for (const entry of entries) {
-    const hasErrors = entry.errors.length > 0
-    const icon = hasErrors
-      ? colors.red(SYMBOL_CROSS)
-      : colors.green(SYMBOL_CHECK)
-    const type = entry.type.padEnd(lengths.type)
-    const namePadded = colors.bold(entry.name.padEnd(lengths.name))
-    const name = hasErrors ? colors.red(namePadded) : colors.green(namePadded)
-    const path = colors.dim(entry.path)
-    const parts: string[] = [icon, type, name, path]
-    if (hasErrors && !prevHadError) {
-      process.stdout.write('-'.repeat(process.stdout.columns) + '\n')
-    }
-    logger.log(parts.join(' | '))
-    if (hasErrors) {
-      const errorLines: string[] = []
-      entry.errors.forEach((error) => {
-        let output = colors.red(error.message)
-        if (error.source && error.locations) {
-          for (const location of error.locations) {
-            output +=
-              '\n\n' + colors.red(printSourceLocation(error.source, location))
-          }
-        }
-        errorLines.push(output)
-      })
-
-      logger.log(
-        errorLines
-          .join('\n')
-          .split('\n')
-          .map((v) => '    ' + v)
-          .join('\n'),
-      )
-      process.stdout.write('-'.repeat(process.stdout.columns) + '\n')
-    }
-
-    prevHadError = hasErrors
-  }
-
-  logger.restoreStd()
-}
-
-/**
- * A single .graphql file in memory (parse-only for syntax).
- */
-export class CollectedFile {
-  filePath: string
-  fileContents: string
-  isOnDisk: boolean
-  parsed: DocumentNode
-
-  constructor(filePath: string, fileContents: string, isOnDisk = false) {
-    this.filePath = filePath
-    this.fileContents = fileContents
-    this.isOnDisk = isOnDisk
-    this.parsed = parse(fileContents)
-  }
-
-  static async fromFilePath(filePath: string): Promise<CollectedFile> {
-    const content = (await fs.readFile(filePath)).toString()
-    return new CollectedFile(filePath, content, true)
-  }
-
-  /**
-   * If isOnDisk, re-read file contents from disk, then parse it (syntax only).
-   */
-  async update(): Promise<boolean> {
-    if (this.isOnDisk) {
-      const newContents = (await fs.readFile(this.filePath)).toString()
-
-      // If contents are identical, return.
-      if (newContents === this.fileContents) {
-        return false
-      }
-
-      this.fileContents = newContents
-      this.parsed = parse(newContents)
-      return true
-    }
-
-    // Files not on disk never need update.
-    return false
-  }
-}
+import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
+import { CollectedFile } from './CollectedFile'
 
 export class Collector {
   /**
@@ -185,11 +55,6 @@ export class Collector {
    * The generated context template file.
    */
   private outputContext = ''
-
-  /**
-   * Whether we need to rebuild the Generator state.
-   */
-  private needsRebuild = false
 
   constructor(
     private schema: GraphQLSchema,
@@ -423,6 +288,10 @@ export class Collector {
   }
 
   private async handleAdd(filePath: string): Promise<boolean> {
+    const matching = await this.getImportPatternFiles()
+    if (!matching.includes(filePath)) {
+      return false
+    }
     await this.addFile(filePath)
     return true
   }

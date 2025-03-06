@@ -21,7 +21,7 @@ interface GroupedOperations {
   subscription: OperationMetadata
 }
 
-function groupOperationsByType(
+export function groupOperationsByType(
   ops: GeneratorOutputOperation[],
 ): GroupedOperations {
   const result: GroupedOperations = {
@@ -31,7 +31,6 @@ function groupOperationsByType(
   }
 
   for (const op of ops) {
-    // Put it in the right bucket
     result[op.operationType][op.graphqlName] = {
       hasVariables: op.hasVariables,
       variablesOptional: !op.needsVariables,
@@ -45,7 +44,7 @@ function groupOperationsByType(
  * For a given set of operations (e.g. "Query" or "Mutation" bucket),
  * produce the code snippet with metadata about their variables, etc.
  */
-function buildOperationTypeCode(
+export function buildOperationTypeCode(
   operationMetadata: OperationMetadata,
   typeName: string,
   serverApiPrefix: string,
@@ -136,21 +135,27 @@ export function generateContextTemplate(
     queryResult.code,
     mutationResult.code,
     subscriptionResult.code,
-  ].join('\n')
+  ]
+    .filter(Boolean)
+    .join('\n')
   const combinedNitroCode = [
     queryResult.nitroCode,
     mutationResult.nitroCode,
     subscriptionResult.nitroCode,
   ].join('\n')
 
+  const typeImports = allImports.length
+    ? `import type {
+  ${allImports.join(',\n  ')}
+} from './../graphql-operations'`
+    : ''
+
   return `
 import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
-import type {
-  ${allImports.join(',\n  ')}
-} from './../graphql-operations'
+${typeImports}
 
 declare module '#nuxt-graphql-middleware/generated-types' {
-  export type GraphqlMiddlewareResponseUnion = ${allResultTypes.join(' | ')}
+  export type GraphqlMiddlewareResponseUnion = ${allResultTypes.join(' | ') || 'never'}
 ${combinedCode}
 }
 

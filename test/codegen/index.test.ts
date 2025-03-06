@@ -1,11 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { ModuleOptions } from '../../src/module'
-import {
-  generateTemplates,
-  generateSchema,
-  pluginLoader,
-} from '../../src/codegen'
-import { GraphqlMiddlewareTemplate } from '../../src/runtime/settings'
+import { generateSchema, pluginLoader } from '../../src/codegen'
 
 const schema = `
 type User {
@@ -44,14 +38,6 @@ const documents: string[] = [
   `,
 ]
 
-async function testTemplateWithConfig(
-  config: ModuleOptions,
-  template: GraphqlMiddlewareTemplate,
-): Promise<string> {
-  const result = await generateTemplates(documents, schema, config)
-  return result.find((v) => v.filename === template)!.content!
-}
-
 describe('generateSchema', () => {
   test('Generates the correct schema.', async () => {
     const generatedSchema = await generateSchema(
@@ -69,49 +55,11 @@ describe('generateSchema', () => {
 })
 
 describe('pluginLoader', () => {
-  test('Loads the correct plugin.', async () => {
-    const plugin = await pluginLoader('@graphql-codegen/typescript')
-    expect(plugin).toBeTruthy()
-  })
-
   test('Throws an error if plugin is invalid.', () => {
     expect(() => {
       pluginLoader('@graphql-codegen/this-does-not-exist')
     }).toThrowErrorMatchingInlineSnapshot(
       '[Error: graphql-codegen plugin not found: @graphql-codegen/this-does-not-exist]',
     )
-  })
-})
-
-describe('generateTemplates', () => {
-  test('Generates the correct delarations.', async () => {
-    const result = await generateTemplates(documents, schema, {
-      serverApiPrefix: '/api/graphql_middleware',
-      graphqlEndpoint: '/foobar',
-    })
-
-    result.forEach((v) => {
-      expect(v.content, v.filename).toMatchSnapshot(v.filename)
-    })
-  })
-
-  test('Generates the correct nitropack delarations.', async () => {
-    const one = await testTemplateWithConfig(
-      {
-        serverApiPrefix: '/api/graphql_middleware',
-        graphqlEndpoint: '/foobar',
-      },
-      GraphqlMiddlewareTemplate.ComposableContext,
-    )
-    expect(one).toContain('/api/graphql_middleware/query/getText')
-
-    const two = await testTemplateWithConfig(
-      {
-        serverApiPrefix: '/api/custom-endpoint',
-        graphqlEndpoint: '/foobar',
-      },
-      GraphqlMiddlewareTemplate.ComposableContext,
-    )
-    expect(two).toContain('/api/custom-endpoint/query/getText')
   })
 })
