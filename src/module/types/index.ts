@@ -31,4 +31,5 @@ export type ModuleContext = {
   schemaPath: string
   serverApiPrefix: string
   logOnlyErrors: boolean
+  nuxtConfigPath: string
 }
