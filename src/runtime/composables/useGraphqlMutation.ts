@@ -1,25 +1,22 @@
 import {
-  type GraphqlMiddlewareMutationName,
   type GetMutationArgs,
   type MutationObjectArgs,
   type GetMutationResult,
   encodeContext,
 } from './../helpers/composables'
 import { performRequest } from './nuxtApp'
-import { clientOptions } from '#graphql-middleware-client-options'
-import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import { clientOptions } from '#nuxt-graphql-middleware/client-options'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
+import type { Mutation } from '#nuxt-graphql-middleware/operations'
 
 /**
  * Performs a GraphQL mutation.
  */
 export function useGraphqlMutation<
-  T extends GraphqlMiddlewareMutationName,
-  R extends GetMutationResult<T, GraphqlMiddlewareMutation>,
+  K extends keyof Mutation,
+  R extends GetMutationResult<K>,
 >(
-  ...args:
-    | GetMutationArgs<T, GraphqlMiddlewareMutation>
-    | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
+  ...args: GetMutationArgs<K> | [MutationObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
   const [name, body, fetchOptions = {}, overrideClientContext = {}] =
     typeof args[0] === 'string'

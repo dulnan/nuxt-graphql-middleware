@@ -3,12 +3,9 @@ import { useGraphqlState } from './useGraphqlState'
 import { getEndpoint } from './../helpers/composables'
 import { hash } from 'ohash'
 import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { useNuxtApp, useAppConfig } from '#imports'
-import type {
-  GraphqlResponseError,
-  RequestCacheOptions,
-} from '#graphql-middleware/types'
+import type { GraphqlResponseError, RequestCacheOptions } from './../types'
 
 function logGraphQLErrors(
   operation: string,

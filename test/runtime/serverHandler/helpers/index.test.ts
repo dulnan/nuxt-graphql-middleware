@@ -9,7 +9,7 @@ import {
 
 vi.mock('#graphql-documents', () => {
   return {
-    operations: {
+    documents: {
       query: {
         foobar: 'Query',
       },

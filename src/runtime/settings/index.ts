@@ -2,17 +2,32 @@ export enum GraphqlMiddlewareTemplate {
   /**
    * Contains the TS definitions for all GraphQL queries, mutations and fragments.
    */
-  OperationTypes = 'graphql-operations.ts',
+  OperationTypes = 'graphql-operations/index.d.ts',
 
   /**
-   * Signature for the GraphQL composable arguments and return types.
+   * Contains the TS definitions for all GraphQL queries, mutations and fragments.
    */
-  ComposableContext = 'nuxt-graphql-middleware/generated-types.d.ts',
+  OperationTypesAll = 'nuxt-graphql-middleware/operations.d.ts',
+
+  /**
+   * Contains the TS definitions for all GraphQL queries, mutations and fragments.
+   */
+  Enums = 'graphql-operations/enums.ts',
+
+  /**
+   * Template for the middleware response types.
+   */
+  ResponseType = 'nuxt-graphql-middleware/response.d.ts',
+
+  /**
+   * Types for the generated endpoints.
+   */
+  Nitro = 'nuxt-graphql-middleware/nitro.d.ts',
 
   /**
    * Exports a single opject containing the compiled queries and mutations.
    */
-  Documents = 'nuxt-graphql-middleware/graphql-documents.mjs',
+  Documents = 'nuxt-graphql-middleware/documents.mjs',
 }
 
 export enum GraphqlMiddlewareOperation {

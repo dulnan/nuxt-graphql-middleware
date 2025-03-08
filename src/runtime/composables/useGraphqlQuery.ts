@@ -1,5 +1,4 @@
 import {
-  type GraphqlMiddlewareQueryName,
   type GetQueryArgs,
   type QueryObjectArgs,
   type GetQueryResult,
@@ -7,20 +6,18 @@ import {
 } from './../helpers/composables'
 import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
-import { clientOptions } from '#graphql-middleware-client-options'
-import type { GraphqlMiddlewareQuery } from '#nuxt-graphql-middleware/generated-types'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import { clientOptions } from '#nuxt-graphql-middleware/client-options'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
+import type { Query } from '#nuxt-graphql-middleware/operations'
 
 /**
  * Performs a GraphQL query.
  */
 export function useGraphqlQuery<
-  T extends GraphqlMiddlewareQueryName,
-  R extends GetQueryResult<T, GraphqlMiddlewareQuery>,
+  K extends keyof Query,
+  R extends GetQueryResult<K>,
 >(
-  ...args:
-    | GetQueryArgs<T, GraphqlMiddlewareQuery>
-    | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
+  ...args: GetQueryArgs<K> | [QueryObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
   const [
     name,

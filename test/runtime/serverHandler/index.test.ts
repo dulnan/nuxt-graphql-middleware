@@ -5,7 +5,7 @@ import eventHandler from './../../../src/runtime/serverHandler/index'
 
 vi.mock('#graphql-documents', () => {
   return {
-    operations: {
+    documents: {
       query: {
         foobar: 'Query',
       },

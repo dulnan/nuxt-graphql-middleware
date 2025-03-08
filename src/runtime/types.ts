@@ -1,6 +1,8 @@
 import type { FetchOptions, FetchContext } from 'ofetch'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
-import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
+import type {
+  GraphqlMiddlewareResponseUnion,
+  GraphqlResponse,
+} from '#nuxt-graphql-middleware/response'
 
 export type GraphqlResponseErrorLocation = {
   line: number

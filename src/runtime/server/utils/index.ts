@@ -1,5 +1,5 @@
 import type { FetchOptions } from 'ofetch'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { getEndpoint } from './../../helpers/composables'
 
 export function performRequest<T>(

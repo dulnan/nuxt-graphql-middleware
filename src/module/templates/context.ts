@@ -1,168 +1,21 @@
 import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
-import { pascalCase } from 'change-case-all'
+import type { ModuleContext } from '../types'
 
-type CodeResult = {
-  code: string
-  nitroCode: string
-  imports: string[]
-  resultTypes: string[]
-}
-
-type OperationMetadata = {
-  [operationName: string]: {
-    hasVariables: boolean
-    variablesOptional: boolean
-  }
-}
-
-interface GroupedOperations {
-  query: OperationMetadata
-  mutation: OperationMetadata
-  subscription: OperationMetadata
-}
-
-export function groupOperationsByType(
-  ops: GeneratorOutputOperation[],
-): GroupedOperations {
-  const result: GroupedOperations = {
-    query: {},
-    mutation: {},
-    subscription: {},
-  }
-
-  for (const op of ops) {
-    result[op.operationType][op.graphqlName] = {
-      hasVariables: op.hasVariables,
-      variablesOptional: !op.needsVariables,
-    }
-  }
-
-  return result
-}
-
-/**
- * For a given set of operations (e.g. "Query" or "Mutation" bucket),
- * produce the code snippet with metadata about their variables, etc.
- */
-export function buildOperationTypeCode(
-  operationMetadata: OperationMetadata,
-  typeName: string,
-  serverApiPrefix: string,
-): CodeResult {
-  const imports: string[] = []
-  const resultTypes: string[] = []
-  let code = ''
-  let nitroCode = ''
-
-  const operationNames = Object.keys(operationMetadata)
-  if (operationNames.length === 0) {
-    return { code, nitroCode, imports, resultTypes }
-  }
-
-  const lines: string[] = []
-  const nitroLines: string[] = []
-
-  for (const name of operationNames) {
-    // The "PascalCase" or any naming scheme you like
-    const nameResult = pascalCase(`${name}${typeName}`)
-    const nameVariables = pascalCase(`${name}${typeName}Variables`)
-
-    // Keep track so we can import them from your `graphql-operations` file, etc.
-    resultTypes.push(nameResult)
-    imports.push(nameResult)
-
-    const { hasVariables, variablesOptional } = operationMetadata[name]!
-    if (hasVariables) {
-      imports.push(nameVariables)
-    }
-
-    const variablesType = hasVariables ? nameVariables : 'null'
-    lines.push(
-      `    ${name}: [${variablesType}, ${
-        variablesOptional ? 'true' : 'false'
-      }, ${nameResult}]`,
-    )
-
-    // If you still want to generate "nitroCode" blocks or something similar:
-    nitroLines.push(`
-    '${serverApiPrefix}/${typeName.toLowerCase()}/${name}': {
-      'default': GraphqlResponse<${nameResult}>
-    }`)
-  }
-
-  code += `  export type GraphqlMiddleware${typeName} = {\n${lines.join(',\n')}\n  }\n`
-  nitroCode += nitroLines.join('\n')
-
-  return { code, nitroCode, imports, resultTypes }
-}
-
-export function generateContextTemplate(
-  collectedOperations: GeneratorOutputOperation[],
-  serverApiPrefix: string,
+export function generateResponseTypeTemplate(
+  operations: readonly GeneratorOutputOperation[],
+  context: ModuleContext,
 ): string {
-  // Group ops by operationType
-  const grouped = groupOperationsByType(collectedOperations)
+  const allTypes = operations.map((v) => v.typeName).sort()
 
-  // Build code results for each operation kind
-  const queryResult = buildOperationTypeCode(
-    grouped.query,
-    'Query',
-    serverApiPrefix,
-  )
-  const mutationResult = buildOperationTypeCode(
-    grouped.mutation,
-    'Mutation',
-    serverApiPrefix,
-  )
-  const subscriptionResult = buildOperationTypeCode(
-    grouped.subscription,
-    'Subscription',
-    serverApiPrefix,
-  )
+  return `import type {
+  ${allTypes.join(',\n  ')}
+} from './../graphql-operations'
+import type { GraphqlResponseAdditions } from './server-options'
+import type { GraphqlServerResponse } from '${context.runtimeTypesPath}'
 
-  // Accumulate them
-  const allImports = [
-    ...queryResult.imports,
-    ...mutationResult.imports,
-    ...subscriptionResult.imports,
-  ]
-  const allResultTypes = [
-    ...queryResult.resultTypes,
-    ...mutationResult.resultTypes,
-    ...subscriptionResult.resultTypes,
-  ]
-  const combinedCode = [
-    queryResult.code,
-    mutationResult.code,
-    subscriptionResult.code,
-  ]
-    .filter(Boolean)
-    .join('\n')
-  const combinedNitroCode = [
-    queryResult.nitroCode,
-    mutationResult.nitroCode,
-    subscriptionResult.nitroCode,
-  ].join('\n')
+export type GraphqlMiddlewareResponseUnion =
+  | ${allTypes.join('\n  | ') || 'never'}
 
-  const typeImports = allImports.length
-    ? `import type {
-  ${allImports.join(',\n  ')}
-} from './../graphql-operations'`
-    : ''
-
-  return `
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
-${typeImports}
-
-declare module '#nuxt-graphql-middleware/generated-types' {
-  export type GraphqlMiddlewareResponseUnion = ${allResultTypes.join(' | ') || 'never'}
-${combinedCode}
-}
-
-declare module 'nitropack' {
-  interface InternalApi {
-${combinedNitroCode}
-  }
-}
-`
+export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
+export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>`
 }

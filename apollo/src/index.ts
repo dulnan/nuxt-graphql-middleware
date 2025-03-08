@@ -81,6 +81,11 @@ function getId() {
 
 const typeDefs = `#graphql
   scalar Upload
+  enum MeansOfContact {
+    phone
+    email
+  }
+
   type User {
     """
     The ID of the user.
@@ -116,6 +121,11 @@ const typeDefs = `#graphql
     All their friends.
     """
     friends: [User]
+
+    """
+    How the user likes to be contacted.
+    """
+    meansOfContact: MeansOfContact
   }
 
   input UserData {

@@ -1,5 +1,4 @@
 import { useGraphqlState, defineNuxtPlugin, useCurrentLanguage } from '#imports'
-import type { GraphqlResponseTyped } from '#graphql-middleware-server-options-build'
 
 /**
  * This is only called when performing a query or mutation from within the nuxt
@@ -37,7 +36,6 @@ export default defineNuxtPlugin({
       },
 
       async onResponse(ctx) {
-        const data = ctx.response?._data?.data
         console.log(ctx.response?._data?.__cacheability)
       },
     }

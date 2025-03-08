@@ -25,6 +25,11 @@ input FormSubmissionInput {
   lastName: String
 }
 
+enum MeansOfContact {
+  email
+  phone
+}
+
 type Mutation {
   createUser(user: UserData!): User!
   deleteUser(id: Int!): Boolean
@@ -102,6 +107,9 @@ type User {
 
   """Last name of the user."""
   lastName: String!
+
+  """How the user likes to be contacted."""
+  meansOfContact: MeansOfContact
 }
 
 input UserData {

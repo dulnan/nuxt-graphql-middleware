@@ -1,15 +1,14 @@
 import {
-  type GraphqlMiddlewareMutationName,
   type GetMutationArgs,
   type MutationObjectArgs,
   type GetMutationResult,
   getEndpoint,
   encodeContext,
 } from './../helpers/composables'
-import type { GraphqlMiddlewareMutation } from '#nuxt-graphql-middleware/generated-types'
-import { clientOptions } from '#graphql-middleware-client-options'
+import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import { useGraphqlState } from '#imports'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
+import type { Mutation } from '#nuxt-graphql-middleware/operations'
 
 /**
  * Builds the form data.
@@ -58,12 +57,10 @@ function createFormData(variables: Record<string, any>): FormData {
  * Performs a GraphQL upload mutation.
  */
 export function useGraphqlUploadMutation<
-  T extends GraphqlMiddlewareMutationName,
-  R extends GetMutationResult<T, GraphqlMiddlewareMutation>,
+  K extends keyof Mutation,
+  R extends GetMutationResult<K>,
 >(
-  ...args:
-    | GetMutationArgs<T, GraphqlMiddlewareMutation>
-    | [MutationObjectArgs<T, GraphqlMiddlewareMutation>]
+  ...args: GetMutationArgs<K> | [MutationObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
   const [name, variables, fetchOptions = {}, overrideClientContext = {}] =
     typeof args[0] === 'string'
