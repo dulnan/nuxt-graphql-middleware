@@ -1,5 +1,4 @@
 import type { FetchOptions } from 'ofetch'
-import { useRuntimeConfig } from '#imports'
 import type { RequestCacheOptions } from './../types'
 import { CLIENT_CONTEXT_PREFIX } from '../settings'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
@@ -41,11 +40,6 @@ export type GetMutationResult<
   K extends keyof Mutation,
   M extends Mutation[K] = Mutation[K],
 > = M['response']
-
-export function getEndpoint(operation: string, operationName: string): string {
-  const config = useRuntimeConfig()
-  return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
-}
 
 export type QueryObjectArgs<
   K extends keyof Query,

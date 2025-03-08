@@ -17,12 +17,22 @@ export enum GraphqlMiddlewareTemplate {
   /**
    * Template for the middleware response types.
    */
-  ResponseType = 'nuxt-graphql-middleware/response.d.ts',
+  ResponseTypes = 'nuxt-graphql-middleware/response.d.ts',
 
   /**
    * Types for the generated endpoints.
    */
-  Nitro = 'nuxt-graphql-middleware/nitro.d.ts',
+  NitroTypes = 'nuxt-graphql-middleware/nitro.d.ts',
+
+  /**
+   * Configuration template.
+   */
+  Helpers = 'nuxt-graphql-middleware/helpers.mjs',
+
+  /**
+   * Configuration template types.
+   */
+  HelpersTypes = 'nuxt-graphql-middleware/helpers.d.ts',
 
   /**
    * Exports a single opject containing the compiled queries and mutations.

@@ -19,5 +19,6 @@ export default defineBuildConfig({
     'totalist/sync',
     '@polka/url',
     'mrmime',
+    '#nuxt-graphql-middleware/response',
   ],
 })

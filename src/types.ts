@@ -2,7 +2,6 @@ import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
 import type { ContextType, GraphqlServerResponse } from './runtime/types'
-import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/response'
 
 export type GraphqlMiddlewareRequestContext<
   C extends ContextType = ContextType,
@@ -101,9 +100,9 @@ export type GraphqlMiddlewareDoRequestMethod<T, C extends ContextType> = (
  */
 export type GraphqlMiddlewareServerOptions<
   Additions extends object = object,
+  ResponseUnion extends object = object,
   C extends ContextType = ContextType,
-  CustomResponse = GraphqlServerResponse<GraphqlMiddlewareResponseUnion> &
-    Additions,
+  CustomResponse = GraphqlServerResponse<ResponseUnion> & Additions,
 > = {
   /**
    * Custom callback to return the GraphQL endpoint per request.
@@ -176,7 +175,7 @@ export type GraphqlMiddlewareServerOptions<
    * ```
    */
   onServerResponse?: GraphqlMiddlewareOnServerResponseMethod<
-    GraphqlServerResponse<GraphqlMiddlewareResponseUnion>,
+    GraphqlServerResponse<ResponseUnion>,
     CustomResponse,
     C
   >

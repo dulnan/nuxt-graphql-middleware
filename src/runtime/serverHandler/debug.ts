@@ -1,13 +1,8 @@
 import { defineEventHandler } from 'h3'
 import { documents } from '#nuxt-graphql-middleware/documents'
-import { useRuntimeConfig } from '#imports'
+import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 
 export default defineEventHandler(() => {
-  function getEndpoint(operation: string, operationName: string): string {
-    const config = useRuntimeConfig()
-    return `${config?.public?.['nuxt-graphql-middleware']?.serverApiPrefix}/${operation}/${operationName}`
-  }
-
   let body = '<h1>nuxt-graphql-middleware debug</h1>'
 
   body += '<table><tbody>'
