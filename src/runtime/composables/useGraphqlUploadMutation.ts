@@ -2,13 +2,13 @@ import {
   type GetMutationArgs,
   type MutationObjectArgs,
   type GetMutationResult,
-  getEndpoint,
   encodeContext,
 } from './../helpers/composables'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import { useGraphqlState } from '#imports'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { Mutation } from '#nuxt-graphql-middleware/operations'
+import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 
 /**
  * Builds the form data.

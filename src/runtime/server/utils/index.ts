@@ -1,6 +1,6 @@
 import type { FetchOptions } from 'ofetch'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
-import { getEndpoint } from './../../helpers/composables'
+import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 
 export function performRequest<T>(
   operation: string,

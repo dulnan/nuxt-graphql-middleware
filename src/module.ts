@@ -31,7 +31,7 @@ import {
 } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
-import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
+import type { Nuxt } from 'nuxt/schema'
 import { generateDocumentTypesTemplate } from './module/templates/document-types'
 import type { ModuleContext } from './module/types'
 export type { GraphqlMiddlewareServerOptions } from './types'
@@ -152,7 +152,8 @@ export interface ModuleOptions {
   /**
    * Logs only errors.
    *
-   * When enabled only errors are logged to the console.
+   * When enabled only errors are logged to the console when generating the GraphQL operations.
+   * If false, all operations are logged, including valid ones.
    */
   logOnlyErrors?: boolean
 
@@ -219,7 +220,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '>=3.13.0',
+      nuxt: '>=3.15.0',
     },
   },
   defaults: defaultOptions,
@@ -346,10 +347,6 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
-    nuxt.options.runtimeConfig.public['nuxt-graphql-middleware'] = {
-      serverApiPrefix: options.serverApiPrefix!,
-    }
-
     nuxt.options.appConfig.graphqlMiddleware = {
       clientCacheEnabled: !!options.clientCache?.enabled,
       clientCacheMaxSize: options.clientCache?.maxSize || 100,
@@ -401,8 +398,27 @@ export default defineNuxtModule<ModuleOptions>({
       getContents: () => collector.getTemplateEnums(),
     })
 
+    addTemplate({
+      filename: GraphqlMiddlewareTemplate.Helpers,
+      write: true,
+      getContents: () =>
+        `export const serverApiPrefix = '${context.serverApiPrefix}'
+export function getEndpoint(operation, operationName) {
+  return '${context.serverApiPrefix}' + '/' + operation + '/' + operationName
+}
+`,
+    })
+
     addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.Nitro,
+      filename: GraphqlMiddlewareTemplate.HelpersTypes,
+      write: true,
+      getContents: () => `export const serverApiPrefix: string;
+export function getEndpoint(operation: string, operationName: string): string
+`,
+    })
+
+    addTypeTemplate({
+      filename: GraphqlMiddlewareTemplate.NitroTypes,
       write: true,
       getContents: () => collector.getTemplateNitroTypes(),
     })
@@ -421,12 +437,12 @@ export default defineNuxtModule<ModuleOptions>({
     inlineNitroExternals(templateDocuments.dst)
 
     addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.ResponseType,
+      filename: GraphqlMiddlewareTemplate.ResponseTypes,
       write: true,
       getContents: () => collector.getTemplateResponseTypes(),
     })
 
-    addTemplate({
+    addTypeTemplate({
       write: true,
       filename: 'nuxt-graphql-middleware/documents.d.ts',
       getContents: () => generateDocumentTypesTemplate(),
@@ -620,8 +636,10 @@ export type GraphqlClientContext = {}
           sendError(error)
         }
 
-        if (hasChanged && rpc) {
-          rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
+        if (hasChanged) {
+          if (rpc) {
+            rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
+          }
         }
       })
     }
