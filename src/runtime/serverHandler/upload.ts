@@ -16,7 +16,7 @@ import {
   extractRequestContext,
 } from './helpers'
 import { GraphqlMiddlewareOperation } from './../settings'
-import { documents } from '#graphql-documents'
+import { documents } from '#nuxt-graphql-middleware/documents'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
 import { useRuntimeConfig } from '#imports'
 

@@ -1,5 +1,5 @@
 import { defineEventHandler } from 'h3'
-import { documents } from '#graphql-documents'
+import { documents } from '#nuxt-graphql-middleware/documents'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(() => {
