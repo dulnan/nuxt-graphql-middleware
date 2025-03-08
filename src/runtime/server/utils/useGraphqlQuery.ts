@@ -1,25 +1,22 @@
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import {
-  type GraphqlMiddlewareQueryName,
   type GetQueryArgs,
   type QueryObjectArgs,
   type GetQueryResult,
   encodeContext,
 } from './../../helpers/composables'
 import { buildRequestParams } from './../../helpers'
-import type { GraphqlMiddlewareQuery } from '#nuxt-graphql-middleware/generated-types'
 import { performRequest } from '.'
+import type { Query } from '#nuxt-graphql-middleware/operations'
 
 /**
  * Performs a GraphQL query.
  */
 export function useGraphqlQuery<
-  T extends GraphqlMiddlewareQueryName,
-  R extends GetQueryResult<T, GraphqlMiddlewareQuery>,
+  K extends keyof Query,
+  R extends GetQueryResult<K>,
 >(
-  ...args:
-    | GetQueryArgs<T, GraphqlMiddlewareQuery>
-    | [QueryObjectArgs<T, GraphqlMiddlewareQuery>]
+  ...args: GetQueryArgs<K> | [QueryObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
   const [name, variables, fetchOptions = {}, clientContext = {}] =
     typeof args[0] === 'string'

@@ -1,6 +1,5 @@
 import type { WebSocketServer } from 'vite'
 import { loadSchema } from '@graphql-tools/load'
-import type { ModuleContext } from './module/types'
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
@@ -17,6 +16,7 @@ import {
   addImports,
   resolveAlias,
   addServerImports,
+  addTypeTemplate,
 } from '@nuxt/kit'
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
@@ -31,7 +31,9 @@ import {
 } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
-import type { Nuxt } from 'nuxt/schema'
+import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
+import { generateDocumentTypesTemplate } from './module/templates/document-types'
+import type { ModuleContext } from './module/types'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
@@ -224,7 +226,8 @@ export default defineNuxtModule<ModuleOptions>({
   async setup(passedOptions, nuxt) {
     const options = defu({}, passedOptions, defaultOptions) as ModuleOptions
 
-    function addAlias(name: string, aliasPath: string) {
+    function addAlias(name: string, arg: string | ResolvedNuxtTemplate) {
+      const aliasPath = typeof arg === 'string' ? arg : arg.dst
       nuxt.options.alias[name] = aliasPath
     }
 
@@ -283,6 +286,10 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
 
+    const toBuildRelative = (path: string) => {
+      return relative(nuxt.options.buildDir + '/nuxt-graphql-middleware', path)
+    }
+
     const context: ModuleContext = {
       patterns: options.autoImportPatterns || [],
       srcDir: nuxt.options.srcDir,
@@ -291,6 +298,9 @@ export default defineNuxtModule<ModuleOptions>({
       schemaPath,
       serverApiPrefix: options.serverApiPrefix!,
       logOnlyErrors: !!options.logOnlyErrors,
+      runtimeTypesPath: toBuildRelative(
+        moduleResolver.resolve('./runtime/types.ts'),
+      ),
     }
 
     const collector = new Collector(
@@ -299,6 +309,8 @@ export default defineNuxtModule<ModuleOptions>({
       options.documents,
       options.codegenConfig,
     )
+
+    // Generates everything and will throw an error when there are validation errors.
     await collector.init()
 
     const isDevToolsEnabled = nuxt.options.dev && options.devtools
@@ -364,12 +376,38 @@ export default defineNuxtModule<ModuleOptions>({
       addServerImports(serverUtils)
     }
 
-    const templateTypescript = addTemplate({
-      filename: GraphqlMiddlewareTemplate.OperationTypes,
+    addAlias(
+      '#graphql-operations',
+      addTypeTemplate({
+        filename: GraphqlMiddlewareTemplate.OperationTypes,
+        write: true,
+        getContents: () => collector.getTemplateTypes(),
+      }),
+    )
+
+    addTypeTemplate({
+      filename: GraphqlMiddlewareTemplate.Nitro,
       write: true,
-      getContents: () => collector.getTemplateTypes(),
+      getContents: () => collector.getTemplateNitroTypes(),
     })
-    addAlias('#graphql-operations', templateTypescript.dst)
+
+    addAlias(
+      '#nuxt-graphql-middleware/operations',
+      addTypeTemplate({
+        filename: GraphqlMiddlewareTemplate.OperationTypesAll,
+        write: true,
+        getContents: () => collector.getTemplateOperationTypes(),
+      }),
+    )
+
+    addAlias(
+      '#graphql-operations/enums',
+      addTemplate({
+        filename: GraphqlMiddlewareTemplate.Enums,
+        write: true,
+        getContents: () => collector.getTemplateEnums(),
+      }),
+    )
 
     const templateDocuments = addTemplate({
       filename: GraphqlMiddlewareTemplate.Documents,
@@ -378,33 +416,19 @@ export default defineNuxtModule<ModuleOptions>({
     })
     addAlias('#graphql-documents', templateDocuments.dst)
 
-    const templateContext = addTemplate({
-      filename: GraphqlMiddlewareTemplate.ComposableContext,
-      write: true,
-      getContents: () => collector.getTemplateContext(),
-    })
-    addAlias('#nuxt-graphql-middleware/generated-types', templateContext.dst)
+    addAlias(
+      '#nuxt-graphql-middleware/response',
+      addTypeTemplate({
+        filename: GraphqlMiddlewareTemplate.ResponseType,
+        write: true,
+        getContents: () => collector.getTemplateResponseTypes(),
+      }),
+    )
 
     addTemplate({
       write: true,
-      filename: 'nuxt-graphql-middleware/graphql-documents.d.ts',
-      getContents: () => {
-        return `
-import type {
-  GraphqlMiddlewareQuery,
-  GraphqlMiddlewareMutation,
-} from '#nuxt-graphql-middleware/generated-types'
-
-declare module '#graphql-documents' {
-  type Operations = {
-    query: GraphqlMiddlewareQuery
-    mutation: GraphqlMiddlewareMutation
-  }
-  const operations: Operations
-  export { operations, Operations }
-}
-`
-      },
+      filename: 'nuxt-graphql-middleware/documents.d.ts',
+      getContents: () => generateDocumentTypesTemplate(),
     })
 
     const findServerOptions = () => {
@@ -438,19 +462,16 @@ declare module '#graphql-documents' {
       logger.info('No graphqlMiddleware.serverOptions file found.')
     }
 
-    const resolvedPath = findServerOptions()
+    const resolvedServerOptionsPath = findServerOptions()
 
-    const moduleTypesPath = relative(
-      nuxt.options.buildDir,
-      moduleResolver.resolve('./types'),
-    )
+    const moduleTypesPath = toBuildRelative(moduleResolver.resolve('./types'))
 
-    const resolvedPathRelative = resolvedPath
-      ? relative(nuxt.options.buildDir, resolvedPath)
+    const resolvedPathRelative = resolvedServerOptionsPath
+      ? toBuildRelative(resolvedServerOptionsPath)
       : null
 
     const template = addTemplate({
-      filename: 'graphqlMiddleware.serverOptions.mjs',
+      filename: 'nuxt-graphql-middleware/server-options.mjs',
       write: true,
       getContents: () => {
         const serverOptionsLine = resolvedPathRelative
@@ -464,7 +485,7 @@ export { serverOptions }
     })
 
     addTemplate({
-      filename: 'graphqlMiddleware.serverOptions.d.ts',
+      filename: 'nuxt-graphql-middleware/server-options.d.ts',
       write: true,
       getContents: () => {
         const serverOptionsLineTypes = resolvedPathRelative
@@ -474,18 +495,11 @@ export { serverOptions }
         return `
 import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
 ${serverOptionsLineTypes}
-import type { GraphqlServerResponse } from '${runtimeTypesPath}'
-import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
 
-type GraphqlResponseAdditions =
+export type GraphqlResponseAdditions =
   typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
 
-export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
-
-export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>
-
-export { serverOptions }
-`
+export { serverOptions }`
       },
     })
 
@@ -495,7 +509,7 @@ export { serverOptions }
       )
 
       if (fileExists(clientOptionsPath)) {
-        const pathRelative = relative(nuxt.options.buildDir, clientOptionsPath)
+        const pathRelative = toBuildRelative(clientOptionsPath)
         return `import clientOptions from '${pathRelative}'`
       }
     }
@@ -503,7 +517,7 @@ export { serverOptions }
     const clientOptionsImport = getClientOptionsImport()
 
     const clientOptionsTemplate = addTemplate({
-      filename: 'graphqlMiddleware.clientOptions.mjs',
+      filename: 'nuxt-graphql-middleware/client-options.mjs',
       write: true,
       getContents: () => {
         // clientOptions file exists.
@@ -516,17 +530,12 @@ export { clientOptions }`
       },
     })
 
-    const runtimeTypesPath = relative(
-      nuxt.options.buildDir,
-      moduleResolver.resolve('./runtime/types.ts'),
-    )
-
     addTemplate({
-      filename: 'graphqlMiddleware.clientOptions.d.ts',
+      filename: 'nuxt-graphql-middleware/client-options.d.ts',
       write: true,
       getContents: () => {
         if (clientOptionsImport) {
-          return `import type { GraphqlClientOptions } from '${runtimeTypesPath}'
+          return `import type { GraphqlClientOptions } from '${context.runtimeTypesPath}'
 ${clientOptionsImport}
 
 export type GraphqlClientContext = typeof clientOptions extends GraphqlClientOptions<infer R> ? R : {}
@@ -534,7 +543,7 @@ export type GraphqlClientContext = typeof clientOptions extends GraphqlClientOpt
 export { clientOptions }`
         }
 
-        return `import type { GraphqlClientOptions } from '${runtimeTypesPath}'
+        return `import type { GraphqlClientOptions } from '${context.runtimeTypesPath}'
 export const clientOptions: GraphqlClientOptions
 
 export type GraphqlClientContext = {}
@@ -542,19 +551,17 @@ export type GraphqlClientContext = {}
       },
     })
 
-    addAlias('#graphql-middleware-client-options', clientOptionsTemplate.dst)
+    addAlias(
+      '#nuxt-graphql-middleware/client-options',
+      clientOptionsTemplate.dst,
+    )
 
     nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
     nuxt.options.nitro.externals.inline =
       nuxt.options.nitro.externals.inline || []
     nuxt.options.nitro.externals.inline.push(template.dst)
     nuxt.options.nitro.externals.inline.push(templateDocuments.dst)
-    addAlias('#graphql-middleware-server-options-build', template.dst)
-
-    addAlias(
-      '#graphql-middleware/types',
-      moduleResolver.resolve('./runtime/types.ts'),
-    )
+    addAlias('#nuxt-graphql-middleware/server-options', template.dst)
 
     // Add the server API handler.
     addServerHandler({

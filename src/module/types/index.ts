@@ -32,4 +32,9 @@ export type ModuleContext = {
   serverApiPrefix: string
   logOnlyErrors: boolean
   nuxtConfigPath: string
+
+  /**
+   * The build-relative path to the runtime types.
+   */
+  runtimeTypesPath: string
 }

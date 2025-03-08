@@ -6,7 +6,7 @@
       </h1>
       <p>
         Current language in response:
-        <span id="response-language">{{ responseLanguage }}</span>
+        <span id="response-language">{{ withTransform }}</span>
       </p>
 
       <p>
@@ -44,17 +44,34 @@ const route = useRoute()
 
 const languages = ['de', 'en', 'fr']
 
-const { data: responseLanguage } = await useAsyncGraphqlQuery(
+const { data: withTransform } = await useAsyncGraphqlQuery(
   'testClientOptions',
   {
     path: route.path,
   },
   {
-    transform: function (data) {
-      return data.data.testClientOptions?.language
+    transform: function (data): string[] {
+      return [data.data.testClientOptions?.language || 'foobar']
+    },
+    default: () => {
+      return 'asdf'
     },
   },
 )
+
+const { data: withoutTransform } = await useAsyncGraphqlQuery(
+  'testClientOptions',
+  {
+    path: route.path,
+  },
+  {
+    default: function () {
+      return 'aasdf'
+    },
+  },
+)
+
+console.log(withoutTransform.value)
 
 const { data: serverRouteLanguage } = await useFetch('/api/client-options', {
   params: {

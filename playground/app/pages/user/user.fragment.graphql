@@ -6,4 +6,5 @@ fragment user on User {
   description
   dateOfBirth
   description
+  meansOfContact
 }

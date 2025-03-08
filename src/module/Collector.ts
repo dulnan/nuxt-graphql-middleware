@@ -6,11 +6,12 @@ import {
   FieldNotFoundError,
   FragmentNotFoundError,
   Generator,
+  type GeneratorOutputFile,
   TypeNotFoundError,
   type GeneratorOptions,
   type GeneratorOutputOperation,
 } from 'graphql-typescript-deluxe'
-import { generateContextTemplate } from './templates/context'
+import { generateResponseTypeTemplate } from './templates/context'
 import type { ModuleContext } from './types'
 import type { WatchEvent } from 'nuxt/schema'
 import colors from 'picocolors'
@@ -19,6 +20,7 @@ import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { RpcItem } from '../rpc-types'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
+import { generateNitroTypes } from './templates/nitro'
 
 export class Collector {
   /**
@@ -47,14 +49,29 @@ export class Collector {
   private outputTypes = ''
 
   /**
+   * The generated TypeScript enum template output.
+   */
+  private outputEnums = ''
+
+  /**
    * The generated oeprations file.
    */
   private outputOperations = ''
 
   /**
+   * The generated oepration types file.
+   */
+  private outputOperationTypes = ''
+
+  /**
    * The generated context template file.
    */
-  private outputContext = ''
+  private outputResponseTypes = ''
+
+  /**
+   * The generated nitro template file.
+   */
+  private outputNitroTypes = ''
 
   constructor(
     private schema: GraphQLSchema,
@@ -96,6 +113,19 @@ export class Collector {
     }
   }
 
+  private buildOutputTypes(file: GeneratorOutputFile): string {
+    let output = ''
+    const enumImports = file.getTypeScriptEnumDependencies()
+
+    if (enumImports.length) {
+      output += `import type { ${enumImports.join(', ')} } from './enums'\n\n`
+    }
+
+    output += file.getSource()
+
+    return output
+  }
+
   /**
    * Executes code gen and performs validation for operations.
    */
@@ -104,9 +134,19 @@ export class Collector {
     const operations = output.getCollectedOperations()
     const generatedCode = output.getGeneratedCode()
 
-    this.outputOperations = output.getOperationsFile()
-    this.outputTypes = output.getEverything()
-    this.outputContext = generateContextTemplate(
+    this.outputOperations = output.getOperationsFile().getSource()
+    this.outputOperationTypes = output
+      .getOperationTypesFile({
+        importFrom: './../graphql-operations',
+      })
+      .getSource()
+    this.outputEnums = output.buildFile(['enum']).getSource()
+    this.outputTypes = this.buildOutputTypes(output.getTypes())
+    this.outputResponseTypes = generateResponseTypeTemplate(
+      operations,
+      this.context,
+    )
+    this.outputNitroTypes = generateNitroTypes(
       operations,
       this.context.serverApiPrefix,
     )
@@ -386,10 +426,17 @@ export class Collector {
   }
 
   /**
+   * Get the TypeScript Enums template contents.
+   */
+  public getTemplateEnums(): string {
+    return this.outputEnums
+  }
+
+  /**
    * Get the context template contents.
    */
-  public getTemplateContext(): string {
-    return this.outputContext
+  public getTemplateResponseTypes(): string {
+    return this.outputResponseTypes
   }
 
   /**
@@ -397,5 +444,19 @@ export class Collector {
    */
   public getTemplateOperations(): string {
     return this.outputOperations
+  }
+
+  /**
+   * Get the operation types template contents.
+   */
+  public getTemplateOperationTypes(): string {
+    return this.outputOperationTypes
+  }
+
+  /**
+   * Get the nitro types template contents.
+   */
+  public getTemplateNitroTypes(): string {
+    return this.outputNitroTypes
   }
 }

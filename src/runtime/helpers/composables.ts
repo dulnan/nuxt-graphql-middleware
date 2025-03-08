@@ -1,17 +1,9 @@
 import type { FetchOptions } from 'ofetch'
 import { useRuntimeConfig } from '#imports'
-import type {
-  GraphqlMiddlewareQuery,
-  GraphqlMiddlewareMutation,
-} from '#nuxt-graphql-middleware/generated-types'
-import type { RequestCacheOptions } from '#graphql-middleware/types'
+import type { RequestCacheOptions } from './../types'
 import { CLIENT_CONTEXT_PREFIX } from '../settings'
-import type { GraphqlClientContext } from '#graphql-middleware-client-options'
-
-// Possible query names.
-export type GraphqlMiddlewareQueryName = keyof GraphqlMiddlewareQuery
-// Possible mutation names.
-export type GraphqlMiddlewareMutationName = keyof GraphqlMiddlewareMutation
+import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
+import type { Query, Mutation } from '#nuxt-graphql-middleware/operations'
 
 export type GraphqlComposableOptions = {
   fetchOptions?: FetchOptions
@@ -22,35 +14,33 @@ export type GraphqlComposableOptions = {
 // Determine the argument signature for the query method.
 // Variables are either not required at all, required or optional.
 export type GetQueryArgs<
-  T extends GraphqlMiddlewareQueryName,
-  M extends GraphqlMiddlewareQuery,
-> = M[T][0] extends null
-  ? [T, (null | undefined)?, GraphqlComposableOptions?]
-  : M[T][1] extends false
-    ? [T, M[T][0], GraphqlComposableOptions?]
-    : [T, M[T][0]?, GraphqlComposableOptions?]
+  K extends keyof Query,
+  Q extends Query[K] = Query[K],
+> = Q['variables'] extends null
+  ? [K, (null | undefined)?, GraphqlComposableOptions?]
+  : Q['needsVariables'] extends true
+    ? [K, Q['variables'], GraphqlComposableOptions?]
+    : [K, (Q['variables'] | null)?, GraphqlComposableOptions?]
 
 // Determine the argument signature for the mutation method.
 export type GetMutationArgs<
-  T extends GraphqlMiddlewareMutationName,
-  M extends GraphqlMiddlewareMutation,
-> = M[T][0] extends null
-  ? [T, (null | undefined)?, GraphqlComposableOptions?]
-  : M[T][1] extends false
-    ? [T, M[T][0], GraphqlComposableOptions?]
-    : [T, M[T][0]?, GraphqlComposableOptions?]
+  K extends keyof Mutation,
+  M extends Mutation[K] = Mutation[K],
+> = M['needsVariables'] extends true
+  ? [K, M['variables'], GraphqlComposableOptions?]
+  : [K, (M['variables'] | null)?, GraphqlComposableOptions?]
 
 // Determine the query result.
 export type GetQueryResult<
-  T extends GraphqlMiddlewareQueryName,
-  M extends GraphqlMiddlewareQuery,
-> = M[T] extends undefined ? undefined : M[T][2]
+  K extends keyof Query,
+  Q extends Query[K] = Query[K],
+> = Q['response']
 
 // Determine the query result.
 export type GetMutationResult<
-  T extends GraphqlMiddlewareMutationName,
-  M extends GraphqlMiddlewareMutation,
-> = M[T] extends undefined ? undefined : M[T][2]
+  K extends keyof Mutation,
+  M extends Mutation[K] = Mutation[K],
+> = M['response']
 
 export function getEndpoint(operation: string, operationName: string): string {
   const config = useRuntimeConfig()
@@ -58,37 +48,37 @@ export function getEndpoint(operation: string, operationName: string): string {
 }
 
 export type QueryObjectArgs<
-  T extends GraphqlMiddlewareQueryName,
-  M extends GraphqlMiddlewareQuery,
-> = M[T][0] extends null
+  K extends keyof Query,
+  Q extends Query[K] = Query[K],
+> = Q['needsVariables'] extends true
   ? {
-      name: T
+      name: K
       fetchOptions?: FetchOptions
       graphqlCaching?: RequestCacheOptions
       clientContext?: Partial<GraphqlClientContext>
-      variables?: null
+      variables: Q['variables']
     }
   : {
-      name: T
-      variables: M[T][0]
+      name: K
+      variables?: Q['variables'] | null
       fetchOptions?: FetchOptions
       graphqlCaching?: RequestCacheOptions
       clientContext?: Partial<GraphqlClientContext>
     }
 
 export type MutationObjectArgs<
-  T extends GraphqlMiddlewareMutationName,
-  M extends GraphqlMiddlewareMutation,
-> = M[T][0] extends null
+  K extends keyof Mutation,
+  M extends Mutation[K] = Mutation[K],
+> = M['needsVariables'] extends true
   ? {
-      name: T
-      variables?: null
+      name: K
+      variables: M['variables']
       fetchOptions?: FetchOptions
       clientContext?: Partial<GraphqlClientContext>
     }
   : {
-      name: T
-      variables: M[T][0]
+      name: K
+      variables?: M['variables'] | null
       fetchOptions?: FetchOptions
       clientContext?: Partial<GraphqlClientContext>
     }

@@ -1,11 +1,8 @@
 import type { H3Event } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type { GraphQLError } from 'graphql'
-import type {
-  ContextType,
-  GraphqlServerResponse,
-} from '#graphql-middleware/types'
-import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/generated-types'
+import type { ContextType, GraphqlServerResponse } from './runtime/types'
+import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/response'
 
 export type GraphqlMiddlewareRequestContext<
   C extends ContextType = ContextType,

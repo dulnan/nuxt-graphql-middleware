@@ -1,5 +1,4 @@
 import {
-  type GraphqlMiddlewareQueryName,
   type KeysOf,
   type PickFrom,
   encodeContext,
@@ -11,14 +10,14 @@ import { performRequest } from './nuxtApp'
 import {
   clientOptions,
   type GraphqlClientContext,
-} from '#graphql-middleware-client-options'
-import type { GraphqlMiddlewareQuery } from '#nuxt-graphql-middleware/generated-types'
+} from '#nuxt-graphql-middleware/client-options'
 import { useAsyncData, useAppConfig, useNuxtApp } from '#imports'
 import { hash } from 'ohash'
-import type { GraphqlResponse } from '#graphql-middleware-server-options-build'
-import type { RequestCacheOptions } from '#graphql-middleware/types'
+import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
+import type { RequestCacheOptions } from './../types'
 import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
 import type { DefaultAsyncDataValue } from 'nuxt/app/defaults'
+import type { Query } from '#nuxt-graphql-middleware/operations'
 
 type AsyncGraphqlQueryOptions<
   FetchOptions,
@@ -46,18 +45,20 @@ type AsyncGraphqlQueryOptions<
 }
 
 export function useAsyncGraphqlQuery<
-  Name extends GraphqlMiddlewareQueryName,
-  VarType extends GraphqlMiddlewareQuery[Name][0],
-  VarsOptional extends GraphqlMiddlewareQuery[Name][1],
-  ResT extends GraphqlResponse<GraphqlMiddlewareQuery[Name][2]>,
-  FetchO extends FetchOptions<'json'>,
+  Name extends keyof Query,
+  Operation extends Query[Name] = Query[Name],
+  ResT extends GraphqlResponse<Operation['response']> = GraphqlResponse<
+    Operation['response']
+  >,
+  FetchO extends FetchOptions<'json'> = FetchOptions<'json'>,
+  VarType extends Operation['variables'] = Operation['variables'],
   NuxtErrorDataT = unknown,
   DataT = ResT,
   DefaultT = undefined,
   PickKeys extends KeysOf<DataT> = KeysOf<DataT>,
 >(
   name: Name,
-  ...args: VarsOptional extends true
+  ...args: Operation['needsVariables'] extends false
     ? [
         (undefined | null | Record<string, never> | VarType | Ref<VarType>)?,
         AsyncGraphqlQueryOptions<FetchO, ResT, DataT, PickKeys, DefaultT>?,
@@ -79,18 +80,20 @@ export function useAsyncGraphqlQuery<
 >
 
 export function useAsyncGraphqlQuery<
-  Name extends GraphqlMiddlewareQueryName,
-  VarType extends GraphqlMiddlewareQuery[Name][0],
-  VarsOptional extends GraphqlMiddlewareQuery[Name][1],
-  ResT extends GraphqlResponse<GraphqlMiddlewareQuery[Name][2]>,
-  FetchO extends FetchOptions<'json'>,
+  Name extends keyof Query,
+  Operation extends Query[Name] = Query[Name],
+  ResT extends GraphqlResponse<Operation['response']> = GraphqlResponse<
+    Operation['response']
+  >,
+  FetchO extends FetchOptions<'json'> = FetchOptions<'json'>,
+  VarType extends Operation['variables'] = Operation['variables'],
   NuxtErrorDataT = unknown,
   DataT = ResT,
   DefaultT = DataT,
   PickKeys extends KeysOf<DataT> = KeysOf<DataT>,
 >(
   name: Name,
-  ...args: VarsOptional extends true
+  ...args: Operation['needsVariables'] extends false
     ? [
         (undefined | null | Record<string, never> | VarType | Ref<VarType>)?,
         AsyncGraphqlQueryOptions<FetchO, ResT, DataT, PickKeys, DefaultT>?,
@@ -116,15 +119,17 @@ export function useAsyncGraphqlQuery<
  */
 export function useAsyncGraphqlQuery<
   // The name of the query.
-  Name extends GraphqlMiddlewareQueryName,
+  Name extends keyof Query,
   // The type for the variables.
-  VarType extends GraphqlMiddlewareQuery[Name][0],
-  // Whether the variables argument is optional or not.
-  VarsOptional extends GraphqlMiddlewareQuery[Name][1],
+  Operation extends Query[Name] = Query[Name],
   // The type for the query response.
-  ResT extends GraphqlResponse<GraphqlMiddlewareQuery[Name][2]>,
+  ResT extends GraphqlResponse<Operation['response']> = GraphqlResponse<
+    Operation['response']
+  >,
   // Type for the $fetch options.
-  FetchO extends FetchOptions<'json'>,
+  FetchO extends FetchOptions<'json'> = FetchOptions<'json'>,
+  // The variable type.
+  VarType extends Operation['variables'] = Operation['variables'],
   // The error type.
   NuxtErrorDataT = unknown,
   // The transformed data.
@@ -136,7 +141,7 @@ export function useAsyncGraphqlQuery<
 >(
   name: Name,
   // Arguments are optional, so the method signature makes it optional.
-  ...args: VarsOptional extends true
+  ...args: Operation['needsVariables'] extends false
     ? [
         (undefined | null | Record<string, never> | VarType | Ref<VarType>)?,
         AsyncGraphqlQueryOptions<FetchO, ResT, DataT, PickKeys, DefaultT>?,
