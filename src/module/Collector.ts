@@ -134,7 +134,11 @@ export class Collector {
     const operations = output.getCollectedOperations()
     const generatedCode = output.getGeneratedCode()
 
-    this.outputOperations = output.getOperationsFile().getSource()
+    this.outputOperations = output
+      .getOperationsFile({
+        exportName: 'documents',
+      })
+      .getSource()
     this.outputOperationTypes = output
       .getOperationTypesFile({
         importFrom: './../graphql-operations',

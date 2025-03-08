@@ -11,7 +11,7 @@ import {
   CLIENT_CONTEXT_PREFIX,
   GraphqlMiddlewareOperation,
 } from './../../settings'
-import type { Documents } from '#graphql-documents'
+import type { Documents } from '#nuxt-graphql-middleware/documents'
 
 // Get the variables from query parameters.
 //
