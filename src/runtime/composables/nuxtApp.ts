@@ -5,34 +5,7 @@ import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { useNuxtApp, useAppConfig } from '#imports'
-import type { GraphqlResponseError, RequestCacheOptions } from './../types'
-
-function logGraphQLErrors(
-  operation: string,
-  operationName: string,
-  errors: GraphqlResponseError[],
-): void {
-  errors.forEach((error) => {
-    console.group(
-      `Error in GraphQL response for ${operation} "${operationName}"`,
-    )
-
-    console.error(`Message: ${error.message}`)
-
-    if (error.locations && error.locations.length > 0) {
-      const formattedLocations = error.locations
-        .map((loc) => `line ${loc.line}, column ${loc.column}`)
-        .join(' | ')
-      console.error(`Locations: ${formattedLocations}`)
-    }
-
-    if (error.path) {
-      console.error(`Path: ${error.path.join(' -> ')}`)
-    }
-
-    console.groupEnd()
-  })
-}
+import type { RequestCacheOptions } from './../types'
 
 export function performRequest<T>(
   operation: string,
@@ -71,6 +44,18 @@ export function performRequest<T>(
       const cached = app.$graphqlCache.get<Promise<GraphqlResponse<T>>>(key)
 
       if (cached) {
+        if (import.meta.dev) {
+          cached.then((response) => {
+            if (response.errors.length) {
+              app.callHook('nuxt-graphql-middleware:errors', {
+                operation,
+                operationName,
+                errors: response.errors,
+                stack: Error().stack,
+              })
+            }
+          })
+        }
         return cached
       }
     }
@@ -85,7 +70,12 @@ export function performRequest<T>(
     },
   ).then((v) => {
     if (import.meta.dev && v.errors?.length) {
-      logGraphQLErrors(operation, operationName, v.errors)
+      app.callHook('nuxt-graphql-middleware:errors', {
+        operation,
+        operationName,
+        errors: v.errors,
+        stack: Error().stack,
+      })
     }
     return {
       ...v,

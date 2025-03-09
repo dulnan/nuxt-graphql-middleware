@@ -126,6 +126,8 @@ const typeDefs = `#graphql
     How the user likes to be contacted.
     """
     meansOfContact: MeansOfContact
+
+    triggerError: Boolean
   }
 
   input UserData {
@@ -291,6 +293,16 @@ const resolvers = {
   User: {
     friends: () => {
       return []
+    },
+    triggerError: () => {
+      throw new GraphQLError(
+        'An error triggered inside the triggerError field resolver.',
+        {
+          extensions: {
+            code: 'USER_ERROR',
+          },
+        },
+      )
     },
   },
   Mutation: {

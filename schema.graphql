@@ -110,6 +110,7 @@ type User {
 
   """How the user likes to be contacted."""
   meansOfContact: MeansOfContact
+  triggerError: Boolean
 }
 
 input UserData {

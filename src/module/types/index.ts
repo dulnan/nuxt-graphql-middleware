@@ -25,8 +25,10 @@ export type CollectedFragment = {
 }
 
 export type ModuleContext = {
+  isDev: boolean
   patterns: string[]
   srcDir: string
+  rootDir: string
   buildDir: string
   schemaPath: string
   serverApiPrefix: string

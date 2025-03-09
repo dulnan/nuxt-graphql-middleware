@@ -4,6 +4,13 @@ import type {
   GraphqlResponse,
 } from '#nuxt-graphql-middleware/response'
 
+export type OperationResponseError = {
+  operation: string
+  operationName: string
+  errors: GraphqlResponseError[]
+  stack?: string
+}
+
 export type GraphqlResponseErrorLocation = {
   line: number
   column: number
@@ -13,6 +20,7 @@ export type GraphqlResponseError = {
   message: string
   locations: GraphqlResponseErrorLocation[]
   path: string[]
+  extensions?: Record<string, unknown>
 }
 
 // Type for the query or mutation responses.

@@ -31,9 +31,10 @@ import {
 } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
-import type { Nuxt } from 'nuxt/schema'
+import type { HookResult, Nuxt } from 'nuxt/schema'
 import { generateDocumentTypesTemplate } from './module/templates/document-types'
 import type { ModuleContext } from './module/types'
+import type { OperationResponseError } from './runtime/types'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
@@ -113,6 +114,11 @@ export interface ModuleOptions {
    * @default false
    */
   debug?: boolean
+
+  /**
+   * Displays GraphQL response errors in an overlay in dev mode.
+   */
+  errorOverlay?: boolean
 
   /**
    * The URL of the GraphQL server.
@@ -305,8 +311,10 @@ export default defineNuxtModule<ModuleOptions>({
     addAlias('#graphql-operations', operationTypesBuildDir)
 
     const context: ModuleContext = {
+      isDev: nuxt.options.dev,
       patterns: options.autoImportPatterns || [],
       srcDir: nuxt.options.srcDir,
+      rootDir: nuxt.options.rootDir,
       buildDir: srcResolver.resolve(nuxt.options.buildDir),
       nuxtConfigPath: rootResolver.resolve('nuxt.config.ts'),
       schemaPath,
@@ -392,10 +400,28 @@ export default defineNuxtModule<ModuleOptions>({
       getContents: () => collector.getTemplateTypes(),
     })
 
+    addTypeTemplate({
+      filename: GraphqlMiddlewareTemplate.Types,
+      write: true,
+      getContents: () => {
+        return `
+declare module '#nuxt-graphql-middleware/sources' {
+  export const operationSources: Record<string, string>
+}
+`
+      },
+    })
+
     addTemplate({
       filename: GraphqlMiddlewareTemplate.Enums,
       write: true,
       getContents: () => collector.getTemplateEnums(),
+    })
+
+    addTemplate({
+      filename: GraphqlMiddlewareTemplate.OperationSources,
+      write: true,
+      getContents: () => collector.getTemplateSources(),
     })
 
     addTemplate({
@@ -586,6 +612,12 @@ export type GraphqlClientContext = {}
       append: false,
     })
 
+    if (context.isDev && options.errorOverlay) {
+      addPlugin(moduleResolver.resolve('./runtime/plugins/devMode'), {
+        append: false,
+      })
+    }
+
     // @TODO: Why is this needed?!
     nuxt.hook('nitro:config', (nitroConfig) => {
       nitroConfig.externals = defu(
@@ -652,5 +684,13 @@ declare module '@nuxt/schema' {
       clientCacheEnabled: boolean
       clientCacheMaxSize: number
     }
+  }
+}
+
+declare module '#app' {
+  interface RuntimeNuxtHooks {
+    'nuxt-graphql-middleware:errors': (
+      errors: OperationResponseError,
+    ) => HookResult
   }
 }

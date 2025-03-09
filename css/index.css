@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  #nuxt-graphql-middleware-errors {
+    @apply fixed top-0 left-0 size-full z-[999999999999];
+    @apply flex justify-center items-start p-5;
+  }
+
+  #nuxt-graphql-middleware-errors-background {
+    @apply bg-stone-700/95 absolute top-0 left-0 size-full;
+  }
+
+  #nuxt-graphql-middleware-errors-content {
+    @apply bg-stone-900 relative z-50 p-7 w-full max-w-[1200px] overflow-auto shadow-2xl rounded;
+    max-height: calc(100vh - 40px);
+
+    header {
+      @apply flex justify-between border-b border-b-stone-700 pb-5 mb-3;
+      h1 {
+        @apply text-white text-xl font-bold;
+      }
+
+      button {
+        @apply font-bold bg-stone-600 text-stone-100 uppercase tracking-widest text-sm px-2.5 py-2 rounded hover:bg-stone-200 hover:text-stone-900;
+      }
+    }
+  }
+
+  .nuxt-graphql-middleware-error-group {
+    @apply font-mono text-stone-100;
+    td {
+      @apply py-1.5;
+      &:first-child {
+        @apply pr-10;
+      }
+
+      &:nth-child(2) {
+        @apply whitespace-pre-wrap overflow-auto;
+      }
+
+      &.ngm-large {
+        @apply font-bold text-2xl py-3;
+      }
+    }
+    code {
+      @apply bg-stone-900;
+    }
+  }
+
+  .nuxt-graphql-middleware-errors-code {
+    @apply whitespace-pre block font-mono text-white p-3 bg-stone-800 rounded my-4 border border-stone-600;
+    @apply flex gap-8;
+  }
+
+  .nuxt-graphql-middleware-errors-code-code {
+    &.ngm-is-highlighted {
+      @apply bg-red-900 border border-red-700 rounded;
+    }
+  }
+  .nuxt-graphql-middleware-errors-code-line-number {
+    @apply text-right;
+  }
+}
