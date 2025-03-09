@@ -1,5 +1,4 @@
 import { defineNuxtPlugin, useState } from '#imports'
-import type { HookResult } from '@nuxt/schema'
 import type { OperationResponseError } from './../types'
 import { createApp } from 'vue'
 import DevModeOverlay from '../components/DevModeOverlay.vue'

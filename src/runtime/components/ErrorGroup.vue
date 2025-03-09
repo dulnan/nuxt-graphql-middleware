@@ -40,7 +40,7 @@
           </tr>
         </template>
 
-        <Extensions :extensions="error.extensions" />
+        <ErrorExtensions :extensions="error.extensions" />
       </template>
     </tbody>
   </table>
@@ -52,7 +52,7 @@ import { documents } from '#nuxt-graphql-middleware/documents'
 import { operationSources } from '#nuxt-graphql-middleware/sources'
 import { computed } from '#imports'
 import CodeFrame from './CodeFrame.vue'
-import Extensions from './Extensions.vue'
+import ErrorExtensions from './ErrorExtensions.vue'
 
 type MappedError = GraphqlResponseError & { count: number; key: string }
 

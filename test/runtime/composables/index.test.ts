@@ -14,6 +14,13 @@ const useNuxtApp = function () {
 
 vi.stubGlobal('useNuxtApp', useNuxtApp)
 
+vi.mock('#nuxt-graphql-middleware/helpers', () => {
+  return {
+    getEndpoint(operation: string, operationName: string) {
+      return `/nuxt-graphql-middleware/${operation}/${operationName}`
+    },
+  }
+})
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
@@ -48,7 +55,7 @@ vi.mock('#imports', () => {
   }
 })
 
-vi.mock('#graphql-middleware-client-options', () => {
+vi.mock('#nuxt-graphql-middleware/client-options', () => {
   return {
     clientOptions: {},
   }
