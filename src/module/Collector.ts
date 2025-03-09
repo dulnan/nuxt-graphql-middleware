@@ -21,6 +21,7 @@ import type { RpcItem } from '../rpc-types'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import { generateNitroTypes } from './templates/nitro'
+import { generateSourcesTemplate } from './templates/sources'
 
 export class Collector {
   /**
@@ -72,6 +73,11 @@ export class Collector {
    * The generated nitro template file.
    */
   private outputNitroTypes = ''
+
+  /**
+   * The generated nitro template file.
+   */
+  private outputSources = ''
 
   constructor(
     private schema: GraphQLSchema,
@@ -137,6 +143,7 @@ export class Collector {
     this.outputOperations = output
       .getOperationsFile({
         exportName: 'documents',
+        minify: !this.context.isDev,
       })
       .getSource()
     this.outputOperationTypes = output
@@ -153,6 +160,11 @@ export class Collector {
     this.outputNitroTypes = generateNitroTypes(
       operations,
       this.context.serverApiPrefix,
+    )
+
+    this.outputSources = generateSourcesTemplate(
+      operations,
+      this.context.rootDir,
     )
 
     // A map of GraphQL fragment name => fragment source.
@@ -462,5 +474,12 @@ export class Collector {
    */
   public getTemplateNitroTypes(): string {
     return this.outputNitroTypes
+  }
+
+  /**
+   * Get the nitro types template contents.
+   */
+  public getTemplateSources(): string {
+    return this.outputSources
   }
 }

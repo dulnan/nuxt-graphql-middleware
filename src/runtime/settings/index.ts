@@ -38,6 +38,13 @@ export enum GraphqlMiddlewareTemplate {
    * Exports a single opject containing the compiled queries and mutations.
    */
   Documents = 'nuxt-graphql-middleware/documents.mjs',
+
+  /**
+   * Contains the source file paths for every operation.
+   */
+  OperationSources = 'nuxt-graphql-middleware/sources.mjs',
+
+  Types = 'nuxt-graphql-middleware/types.d.ts',
 }
 
 export enum GraphqlMiddlewareOperation {

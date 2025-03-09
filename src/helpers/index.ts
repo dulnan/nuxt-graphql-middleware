@@ -20,6 +20,7 @@ export const defaultOptions: ModuleOptions = {
   includeComposables: true,
   documents: [],
   devtools: true,
+  errorOverlay: true,
 }
 
 /**
