@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import eventHandler from './../../../src/runtime/serverHandler/debug'
 
-vi.mock('#graphql-documents', () => {
+vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
     documents: {
       query: {
@@ -14,6 +14,14 @@ vi.mock('#graphql-documents', () => {
   login
 }`,
       },
+    },
+  }
+})
+
+vi.mock('#nuxt-graphql-middleware/helpers', () => {
+  return {
+    getEndpoint(operation: string, operationName: string) {
+      return `/nuxt-graphql-middleware/${operation}/${operationName}`
     },
   }
 })

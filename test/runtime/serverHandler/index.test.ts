@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import eventHandler from './../../../src/runtime/serverHandler/index'
 
-vi.mock('#graphql-documents', () => {
+vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
     documents: {
       query: {
@@ -33,7 +33,7 @@ vi.mock('#imports', () => {
   }
 })
 
-vi.mock('#graphql-middleware-server-options-build', () => {
+vi.mock('#nuxt-graphql-middleware/server-options', () => {
   return {
     serverOptions: {
       onServerResponse: (event, response) => {
