@@ -49,7 +49,10 @@ const { data: fetchOptions } = await useAsyncData('fetchOptions', () => {
   })
 })
 
-const fetchOptionsApi = await useFetch('/api/fetch-options').then(
-  (v) => v.data.value?.testFetchOptions,
-)
+const { data: fetchOptionsApi } = await useFetch('/api/fetch-options', {
+  key: 'api-fetch-options',
+  transform: function (v) {
+    return v.testFetchOptions
+  },
+})
 </script>

@@ -17,11 +17,14 @@ import {
   resolveAlias,
   addServerImports,
   addTypeTemplate,
+  addServerTemplate,
+  useNitro,
 } from '@nuxt/kit'
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
 import { setupDevToolsUI } from './devtools'
 import { GraphqlMiddlewareTemplate } from './runtime/settings'
+import type { Nitro } from 'nitropack'
 import {
   validateOptions,
   getSchemaPath,
@@ -42,6 +45,21 @@ function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
     nuxt.hooks.hook('vite:serverCreated', (viteServer) => {
       resolve(viteServer.ws)
     })
+  })
+}
+
+/**
+ * Adds a Nuxt and Nitro template.
+ */
+function addHybridTemplate(filename: string, getContents: () => string) {
+  addTemplate({
+    filename,
+    getContents,
+  })
+
+  addServerTemplate({
+    filename: '#' + filename.replace('.mjs', ''),
+    getContents,
   })
 }
 
@@ -394,23 +412,35 @@ export default defineNuxtModule<ModuleOptions>({
       addServerImports(serverUtils)
     }
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.OperationTypes,
-      write: true,
-      getContents: () => collector.getTemplateTypes(),
-    })
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.OperationTypes,
+        write: true,
+        getContents: () => collector.getTemplateTypes(),
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.Types,
-      write: true,
-      getContents: () => {
-        return `
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.Types,
+        write: true,
+        getContents: () => {
+          return `
 declare module '#nuxt-graphql-middleware/sources' {
   export const operationSources: Record<string, string>
 }
 `
+        },
       },
-    })
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
     addTemplate({
       filename: GraphqlMiddlewareTemplate.Enums,
@@ -435,44 +465,71 @@ export function getEndpoint(operation, operationName) {
 `,
     })
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.HelpersTypes,
-      write: true,
-      getContents: () => `export const serverApiPrefix: string;
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.HelpersTypes,
+        write: true,
+        getContents: () => `export const serverApiPrefix: string;
 export function getEndpoint(operation: string, operationName: string): string
 `,
-    })
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.NitroTypes,
-      write: true,
-      getContents: () => collector.getTemplateNitroTypes(),
-    })
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.NitroTypes,
+        write: true,
+        getContents: () => collector.getTemplateNitroTypes(),
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.OperationTypesAll,
-      write: true,
-      getContents: () => collector.getTemplateOperationTypes(),
-    })
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.OperationTypesAll,
+        write: true,
+        getContents: () => collector.getTemplateOperationTypes(),
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
-    const templateDocuments = addTemplate({
-      filename: GraphqlMiddlewareTemplate.Documents,
-      write: true,
-      getContents: () => collector.getTemplateOperations(),
-    })
-    inlineNitroExternals(templateDocuments.dst)
+    addHybridTemplate(GraphqlMiddlewareTemplate.Documents, () =>
+      collector.getTemplateOperations(),
+    )
 
-    addTypeTemplate({
-      filename: GraphqlMiddlewareTemplate.ResponseTypes,
-      write: true,
-      getContents: () => collector.getTemplateResponseTypes(),
-    })
+    addTypeTemplate(
+      {
+        filename: GraphqlMiddlewareTemplate.ResponseTypes,
+        write: true,
+        getContents: () => collector.getTemplateResponseTypes(),
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
-    addTypeTemplate({
-      write: true,
-      filename: 'nuxt-graphql-middleware/documents.d.ts',
-      getContents: () => generateDocumentTypesTemplate(),
-    })
+    addTypeTemplate(
+      {
+        write: true,
+        filename: 'nuxt-graphql-middleware/documents.d.ts',
+        getContents: () => generateDocumentTypesTemplate(),
+      },
+      {
+        nitro: true,
+        nuxt: true,
+      },
+    )
 
     const findServerOptions = () => {
       // Look for the file in the server directory.
@@ -628,8 +685,24 @@ export type GraphqlClientContext = {}
       )
     })
 
+    nuxt.options.nitro.typescript ||= {}
+    nuxt.options.nitro.typescript.tsConfig ||= {}
+    nuxt.options.nitro.typescript.tsConfig.compilerOptions ||= {}
+    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths ||= {}
+    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
+      '#nuxt-graphql-middleware'
+    ] = ['./nuxt-graphql-middleware']
+    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
+      '#nuxt-graphql-middleware/*'
+    ] = ['./nuxt-graphql-middleware/*']
+
     // Watch for file changes in dev mode.
     if (nuxt.options.dev || nuxt.options._prepare) {
+      let nitro: Nitro | null = null
+
+      nuxt.hooks.hook('ready', () => {
+        nitro = useNitro()
+      })
       addServerHandler({
         handler: moduleResolver.resolve('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
@@ -669,6 +742,12 @@ export type GraphqlClientContext = {}
         }
 
         if (hasChanged) {
+          if (nitro) {
+            // Unfortunately this is the only way currently to make sure that
+            // the operations are rebuilt.
+            nitro.hooks.callHook('rollup:reload')
+          }
+
           if (rpc) {
             rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
           }

@@ -74,6 +74,7 @@ const { data: withoutTransform } = await useAsyncGraphqlQuery(
 console.log(withoutTransform.value)
 
 const { data: serverRouteLanguage } = await useFetch('/api/client-options', {
+  key: 'api-client-options',
   params: {
     language: language.value,
   },
