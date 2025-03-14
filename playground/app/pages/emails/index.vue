@@ -21,5 +21,7 @@
 <script setup lang="ts">
 import { useFetch } from '#imports'
 
-const { data: emails } = await useFetch('/api/server-route')
+const { data: emails } = await useFetch('/api/server-route', {
+  key: 'api-server-route',
+})
 </script>

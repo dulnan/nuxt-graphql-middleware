@@ -13,9 +13,11 @@ export function generateResponseTypeTemplate(
 import type { GraphqlResponseAdditions } from './server-options'
 import type { GraphqlServerResponse } from '${context.runtimeTypesPath}'
 
-export type GraphqlMiddlewareResponseUnion =
-  | ${allTypes.join('\n  | ') || 'never'}
+declare module '#nuxt-graphql-middleware/response' {
+  export type GraphqlMiddlewareResponseUnion =
+    | ${allTypes.join('\n  | ') || 'never'}
 
-export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
-export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>`
+  export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
+  export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>
+}`
 }
