@@ -22,6 +22,7 @@ import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import { generateNitroTypes } from './templates/nitro'
 import { generateSourcesTemplate } from './templates/sources'
+import * as micromatch from 'micromatch'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -303,6 +304,10 @@ export class Collector {
     return []
   }
 
+  private matchesImportPattern(filePath: string): boolean {
+    return micromatch.isMatch(filePath, this.context.patterns)
+  }
+
   /**
    * Initialise the collector.
    */
@@ -339,8 +344,12 @@ export class Collector {
   /**
    * Add a file.
    */
-  private async addFile(filePath: string): Promise<CollectedFile> {
+  private async addFile(filePath: string): Promise<CollectedFile | null> {
     const file = await CollectedFile.fromFilePath(filePath)
+    // Skip empty files.
+    if (!file.fileContents) {
+      return null
+    }
     this.files.set(filePath, file)
     this.generator.add({
       filePath,
@@ -350,28 +359,39 @@ export class Collector {
   }
 
   private async handleAdd(filePath: string): Promise<boolean> {
-    const matching = await this.getImportPatternFiles()
-    if (!matching.includes(filePath)) {
+    if (!this.matchesImportPattern(filePath)) {
       return false
     }
-    await this.addFile(filePath)
-    return true
+    const result = await this.addFile(filePath)
+    return !!result
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
-    const file = this.files.get(filePath)
-    if (!file) {
+    if (!this.matchesImportPattern(filePath)) {
       return false
+    }
+    const file = this.files.get(filePath)
+
+    // If the file does not yet exist, it might have been skipped when it was
+    // added (e.g. because it's empty).
+    if (!file) {
+      return this.handleAdd(filePath)
     }
 
-    const needsUpdate = await file.update()
-    if (!needsUpdate) {
-      return false
+    try {
+      const needsUpdate = await file.update()
+      if (!needsUpdate) {
+        return false
+      }
+      this.generator.update({
+        filePath: filePath,
+        documentNode: file.parsed,
+      })
+    } catch {
+      // Error: File is invalid (e.g. empty), so let's remove it.
+      return this.handleUnlink(filePath)
     }
-    this.generator.update({
-      filePath: filePath,
-      documentNode: file.parsed,
-    })
+
     return true
   }
 
