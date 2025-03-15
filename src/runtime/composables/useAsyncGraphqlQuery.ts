@@ -199,7 +199,7 @@ export function useAsyncGraphqlQuery<
     }
   }
 
-  return useAsyncData<any, any, DataT, PickKeys, DefaultT>(
+  const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     key,
     () => {
       const globalClientContext = clientOptions.buildClientContext
@@ -226,4 +226,14 @@ export function useAsyncGraphqlQuery<
     },
     asyncDataOptions as any,
   )
+
+  if (import.meta.hot) {
+    import.meta.hot.on('nuxt-graphql-middleware:reload', (data) => {
+      if (data.operations.includes(name)) {
+        result.refresh()
+      }
+    })
+  }
+
+  return result
 }

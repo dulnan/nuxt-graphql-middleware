@@ -188,6 +188,8 @@ const typeDefs = `#graphql
     """
     getCurrentTime: String
 
+    getText(text: String!): String!
+
     dataForLayer: DataForLayer
 
     """
@@ -251,6 +253,9 @@ const resolvers = {
     },
     getCurrentTime: () => {
       return new Date()
+    },
+    getText: (_: any, args: any) => {
+      return args.text
     },
     dataForLayer: () => {
       return { text: 'This is data for the layer page.' }

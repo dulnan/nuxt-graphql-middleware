@@ -53,6 +53,7 @@ type Query {
 
   """Get all submissions."""
   getSubmissions: [FormSubmission]
+  getText(text: String!): String!
 
   """Test the client options."""
   testClientOptions(path: String!): TestClientOptions
