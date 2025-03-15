@@ -20,5 +20,6 @@ export default defineBuildConfig({
     '@polka/url',
     'mrmime',
     '#nuxt-graphql-middleware/response',
+    'micromatch',
   ],
 })
