@@ -23,6 +23,12 @@ import { CollectedFile } from './CollectedFile'
 import { generateNitroTypes } from './templates/nitro'
 import { generateSourcesTemplate } from './templates/sources'
 
+export type CollectorWatchEventResult = {
+  hasChanged: boolean
+  affectedOperations: string[]
+  error?: { message: string }
+}
+
 export class Collector {
   /**
    * All collected files.
@@ -399,8 +405,9 @@ export class Collector {
   public async handleWatchEvent(
     event: WatchEvent,
     filePath: string,
-  ): Promise<{ hasChanged: boolean; error?: { message: string } }> {
+  ): Promise<CollectorWatchEventResult> {
     let hasChanged = false
+    const oldOperationTimestamps = new Map(this.operationTimestamps)
     try {
       if (event === 'add') {
         hasChanged = await this.handleAdd(filePath)
@@ -423,15 +430,25 @@ export class Collector {
       this.logError(e)
       return {
         hasChanged: false,
+        affectedOperations: [],
         error: { message: this.buildErrorMessage(e) },
       }
     }
 
+    const affectedOperations: string[] = []
+
     if (hasChanged) {
       logger.success('Finished GraphQL code update successfully.')
+
+      for (const [name, newTimestamp] of this.operationTimestamps) {
+        const oldTimestamp = oldOperationTimestamps.get(name)
+        if (!oldTimestamp || oldTimestamp !== newTimestamp) {
+          affectedOperations.push(name)
+        }
+      }
     }
 
-    return { hasChanged }
+    return { hasChanged, affectedOperations }
   }
 
   /**

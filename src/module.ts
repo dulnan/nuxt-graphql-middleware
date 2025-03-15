@@ -698,11 +698,6 @@ export type GraphqlClientContext = {}
 
     // Watch for file changes in dev mode.
     if (nuxt.options.dev || nuxt.options._prepare) {
-      let nitro: Nitro | null = null
-
-      nuxt.hooks.hook('ready', () => {
-        nitro = useNitro()
-      })
       addServerHandler({
         handler: moduleResolver.resolve('./runtime/serverHandler/debug'),
         route: options.serverApiPrefix + '/debug',
@@ -722,6 +717,34 @@ export type GraphqlClientContext = {}
         })
       }
 
+      let nitro: Nitro | null = null
+      // Names of operations for which we need to trigger a HMR event.
+      const operationsToReload: Set<string> = new Set()
+
+      nuxt.hooks.hook('ready', () => {
+        nitro = useNitro()
+
+        // Event emitted when the Nitro server has finished compiling.
+        nitro.hooks.hook('compiled', () => {
+          if (!operationsToReload.size) {
+            return
+          }
+
+          // Get all operations that need to be reloaded.
+          const operations = [...operationsToReload.values()]
+          operationsToReload.clear()
+
+          // Send the HMR event to trigger refreshing in useAsyncGraphqlQuery.
+          wsPromise.then((ws) => {
+            ws.send({
+              type: 'custom',
+              event: 'nuxt-graphql-middleware:reload',
+              data: { operations },
+            })
+          })
+        })
+      })
+
       nuxt.hook('builder:watch', async (event, pathAbsolute) => {
         if (pathAbsolute === schemaPath) {
           return
@@ -732,24 +755,35 @@ export type GraphqlClientContext = {}
           return
         }
 
-        const { hasChanged, error } = await collector.handleWatchEvent(
-          event,
-          pathAbsolute,
-        )
+        const { hasChanged, affectedOperations, error } =
+          await collector.handleWatchEvent(event, pathAbsolute)
 
         if (error) {
           sendError(error)
         }
 
-        if (hasChanged) {
-          if (nitro) {
-            // Unfortunately this is the only way currently to make sure that
-            // the operations are rebuilt.
-            nitro.hooks.callHook('rollup:reload')
-          }
+        if (!hasChanged) {
+          return
+        }
 
-          if (rpc) {
+        if (nitro) {
+          // Unfortunately this is the only way currently to make sure that
+          // the operations are rebuilt, as Nitro does not provide any way
+          // to update templates.
+          await nitro.hooks.callHook('rollup:reload')
+        }
+
+        if (affectedOperations.length) {
+          affectedOperations.forEach((operation) =>
+            operationsToReload.add(operation),
+          )
+        }
+
+        if (rpc) {
+          try {
             rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
+          } catch {
+            // Noop.
           }
         }
       })
@@ -771,5 +805,11 @@ declare module '#app' {
     'nuxt-graphql-middleware:errors': (
       errors: OperationResponseError,
     ) => HookResult
+  }
+}
+
+declare module 'vite/types/customEvent.d.ts' {
+  interface CustomEventMap {
+    'nuxt-graphql-middleware:reload': { operations: string[] }
   }
 }
