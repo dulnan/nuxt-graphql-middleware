@@ -5,8 +5,9 @@ import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
 import { type GraphqlMiddlewareDocument } from './../types'
-import { type ModuleOptions } from './../module'
 import { name } from '../../package.json'
+import type { ModuleOptions } from '../module/types/options'
+import type { Nuxt } from '@nuxt/schema'
 
 export const logger: ConsolaInstance = useLogger(name)
 
@@ -77,4 +78,15 @@ export async function getOutputDocumentsPath(
   } else {
     return await resolvePath(optionsOutputDocuments)
   }
+}
+
+/**
+ * Not exactly sure what this is doing, but it's needed for certain templates
+ * to work correctly.
+ */
+export function inlineNitroExternals(nuxt: Nuxt, path: string) {
+  nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
+  nuxt.options.nitro.externals.inline =
+    nuxt.options.nitro.externals.inline || []
+  nuxt.options.nitro.externals.inline.push(path)
 }

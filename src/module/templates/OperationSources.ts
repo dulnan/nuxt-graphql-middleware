@@ -1,7 +1,7 @@
 import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
 import { relative } from 'pathe'
 
-export function generateSourcesTemplate(
+export default function (
   operations: readonly GeneratorOutputOperation[],
   srcDir: string,
 ) {

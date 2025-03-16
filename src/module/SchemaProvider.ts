@@ -1,4 +1,3 @@
-import type { ModuleOptions } from '../module'
 import fs from 'node:fs/promises'
 import { logger } from '../helpers'
 import { generate } from '@graphql-codegen/cli'
@@ -7,7 +6,7 @@ import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 import { loadSchema } from '@graphql-tools/load'
 import { type GraphQLSchema } from 'graphql'
-import type { ModuleContext } from './types'
+import type { ModuleHelper } from './ModuleHelper'
 
 /**
  * Handles downloading, loading and saving the GraphQL schema.
@@ -23,11 +22,38 @@ export class SchemaProvider {
    */
   private schema: GraphQLSchema | null = null
 
-  constructor(
-    private context: ModuleContext,
-    private options: ModuleOptions,
-    public readonly schemaPath: string,
-  ) {}
+  constructor(private helper: ModuleHelper) {}
+
+  public async init(): Promise<void> {
+    try {
+      await this.loadSchema()
+    } catch (error) {
+      logger.error(error)
+      const hasLoaded = await this.loadFromDiskFallback()
+      if (!hasLoaded) {
+        throw new Error('Failed to load GraphQL schema.')
+      }
+    }
+  }
+
+  private async loadFromDiskFallback(): Promise<boolean> {
+    const hasSchemaOnDisk = await this.hasSchemaOnDisk()
+    if (
+      this.helper.isDev &&
+      hasSchemaOnDisk &&
+      this.helper.options.downloadSchema
+    ) {
+      const shouldUseFromDisk = await this.helper.prompt.confirm(
+        'Do you want to continue with the previously downloaded schema from disk?',
+      )
+      if (shouldUseFromDisk === 'yes') {
+        await this.loadSchema({ forceDisk: true })
+        return true
+      }
+    }
+
+    return false
+  }
 
   /**
    * Loads the schema from disk.
@@ -39,12 +65,12 @@ export class SchemaProvider {
     if (!fileExists) {
       logger.error(
         '"downloadSchema" is set to false but no schema exists at ' +
-          this.schemaPath,
+          this.helper.paths.schema,
       )
       throw new Error('Missing GraphQL schema.')
     }
-    logger.info(`Loading GraphQL schema from disk: ${this.schemaPath}`)
-    return await fs.readFile(this.schemaPath).then((v) => v.toString())
+    logger.info(`Loading GraphQL schema from disk: ${this.helper.paths.schema}`)
+    return await fs.readFile(this.helper.paths.schema).then((v) => v.toString())
   }
 
   /**
@@ -53,15 +79,15 @@ export class SchemaProvider {
    * @returns The schema contents.
    */
   private downloadSchema(): Promise<string> {
-    const endpoint = this.options.graphqlEndpoint
+    const endpoint = this.helper.options.graphqlEndpoint
     if (!endpoint) {
       throw new Error('Missing graphqlEndpoint config.')
     }
     const pluginConfig: Types.UrlSchemaOptions | undefined =
-      this.options.codegenSchemaConfig?.urlSchemaOptions
+      this.helper.options.codegenSchemaConfig?.urlSchemaOptions
 
-    const schemaAstConfig: SchemaASTConfig = this.options.codegenSchemaConfig
-      ?.schemaAstConfig || {
+    const schemaAstConfig: SchemaASTConfig = this.helper.options
+      .codegenSchemaConfig?.schemaAstConfig || {
       sort: true,
     }
 
@@ -82,7 +108,7 @@ export class SchemaProvider {
       config: pluginConfig,
 
       generates: {
-        [this.schemaPath]: {
+        [this.helper.paths.schema]: {
           plugins: ['schema-ast'],
           config: schemaAstConfig,
         },
@@ -101,7 +127,7 @@ export class SchemaProvider {
    */
   public hasSchemaOnDisk(): Promise<boolean> {
     return fs
-      .access(this.schemaPath)
+      .access(this.helper.paths.schema)
       .then(() => true)
       .catch(() => false)
   }
@@ -117,7 +143,7 @@ export class SchemaProvider {
   }) {
     if (opts?.forceDisk) {
       this.schemaContent = await this.loadSchemaFromDisk()
-    } else if (this.options.downloadSchema || opts?.forceDownload) {
+    } else if (this.helper.options.downloadSchema || opts?.forceDownload) {
       this.schemaContent = await this.downloadSchema()
     } else {
       this.schemaContent = await this.loadSchemaFromDisk()

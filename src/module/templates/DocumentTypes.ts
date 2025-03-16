@@ -1,4 +1,4 @@
-export function generateDocumentTypesTemplate() {
+export default function () {
   return `
 import type { Query, Mutation } from './operations'
 

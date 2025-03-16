@@ -1,7 +1,7 @@
 import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
 import { OperationTypeNode } from 'graphql'
 
-export function generateNitroTypes(
+export default function (
   operations: readonly GeneratorOutputOperation[],
   serverApiPrefix: string,
 ) {

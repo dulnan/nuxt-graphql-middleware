@@ -8,7 +8,7 @@
 
 <script lang="ts" setup>
 defineProps<{
-  id: string
+  id: number
   firstName: string
   lastName: string
 }>()
