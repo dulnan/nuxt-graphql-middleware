@@ -106,6 +106,20 @@ export class Collector {
     this.generator = new Generator(schema, mappedOptions)
   }
 
+  public async reset() {
+    this.files.clear()
+    this.generator.reset()
+    this.operationTimestamps.clear()
+    this.rpcItems.clear()
+    await this.init()
+  }
+
+  public async updateSchema(schema: GraphQLSchema) {
+    this.schema = schema
+    this.generator.updateSchema(schema)
+    await this.reset()
+  }
+
   private filePathToBuildRelative(filePath: string): string {
     return './' + relative(this.context.buildDir, filePath)
   }

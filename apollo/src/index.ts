@@ -153,6 +153,7 @@ const typeDefs = `#graphql
   }
 
   type Query {
+    foobar: String
     """
     Get all users.
     """
@@ -262,6 +263,9 @@ const resolvers = {
     },
     getSubmissions: () => {
       return formSubmissions
+    },
+    foobar: () => {
+      return 'test'
     },
     userById: (_: any, args: any) => {
       const id = parseInt(args.id)

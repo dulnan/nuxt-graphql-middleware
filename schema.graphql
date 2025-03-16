@@ -41,6 +41,7 @@ type Mutation {
 
 type Query {
   dataForLayer: DataForLayer
+  foobar: String
 
   """Get the current time."""
   getCurrentTime: String

@@ -30,7 +30,6 @@ export type ModuleContext = {
   srcDir: string
   rootDir: string
   buildDir: string
-  schemaPath: string
   serverApiPrefix: string
   logOnlyErrors: boolean
   nuxtConfigPath: string
