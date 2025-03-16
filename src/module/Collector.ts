@@ -5,7 +5,6 @@ import {
   FieldNotFoundError,
   FragmentNotFoundError,
   Generator,
-  type GeneratorOutputFile,
   TypeNotFoundError,
   type GeneratorOutputOperation,
 } from 'graphql-typescript-deluxe'
@@ -21,6 +20,8 @@ import type { ModuleHelper } from './ModuleHelper'
 import ResponseTypes from './templates/ResponseTypes'
 import NitroTypes from './templates/NitroTypes'
 import OperationSources from './templates/OperationSources'
+import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
+import OperationTypes from './templates/OperationTypes'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -106,24 +107,11 @@ export class Collector {
     }
   }
 
-  private buildOutputTypes(file: GeneratorOutputFile): string {
-    let output = ''
-    const enumImports = file.getTypeScriptEnumDependencies()
-
-    if (enumImports.length) {
-      output += `import type { ${enumImports.join(', ')} } from './enums'\n\n`
-    }
-
-    output += file.getSource()
-
-    return output
-  }
-
   private updateTemplate(template: Template, content: string) {
     this.templates.set(template, content)
   }
 
-  public getTemplate(template: Template): string {
+  private getTemplate(template: Template): string {
     const content = this.templates.get(template)
     if (content === undefined) {
       throw new Error(`Missing template content: ${template}`)
@@ -164,10 +152,7 @@ export class Collector {
       NitroTypes(operations, this.helper.options.serverApiPrefix),
     )
 
-    this.updateTemplate(
-      Template.OperationTypes,
-      this.buildOutputTypes(output.getTypes()),
-    )
+    this.updateTemplate(Template.OperationTypes, OperationTypes(output))
 
     this.updateTemplate(
       Template.ResponseTypes,
@@ -487,5 +472,56 @@ export class Collector {
     }
 
     return { hasChanged, affectedOperations }
+  }
+
+  /**
+   * Adds a virtual template (not written to disk) for both Nuxt and Nitro.
+   *
+   * For some reason a template written to disk works for both Nuxt and Nitro,
+   * but a virtual template requires adding two templates.
+   */
+  public addVirtualTemplate(template: Template) {
+    const getContents = () => this.getTemplate(template)
+
+    addTemplate({
+      filename: template,
+      getContents,
+    })
+
+    addServerTemplate({
+      // Since this is a virtual template, the name must match the final
+      // alias, example:
+      // - nuxt-graphql-middleware/foobar.mjs => #nuxt-graphql-middleware/foobar
+      //
+      // That way we can reference the same template using the alias in both
+      // Nuxt and Nitro environments.
+      filename: '#' + template.replace('.mjs', ''),
+      getContents,
+    })
+  }
+
+  /**
+   * Adds a template that dependes on Collector state.
+   */
+  public addTemplate(template: Template) {
+    if (template.endsWith('.d.ts')) {
+      addTypeTemplate(
+        {
+          filename: template as any,
+          write: true,
+          getContents: () => this.getTemplate(template),
+        },
+        {
+          nuxt: true,
+          nitro: true,
+        },
+      )
+    } else {
+      addTemplate({
+        filename: template,
+        write: true,
+        getContents: () => this.getTemplate(template),
+      })
+    }
   }
 }

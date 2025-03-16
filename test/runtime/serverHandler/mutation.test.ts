@@ -1,14 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
-import eventHandler from './../../../src/runtime/serverHandler/index'
+import eventHandler from './../../../src/runtime/server/api/mutation'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
     documents: {
-      query: {
-        foobar: 'Query',
-      },
       mutation: {
         barfoo: 'Mutation',
       },
@@ -30,6 +27,12 @@ vi.mock('#imports', () => {
         },
       }
     },
+  }
+})
+
+vi.mock('nitropack/runtime', () => {
+  return {
+    getEvent: () => null,
   }
 })
 
@@ -86,33 +89,6 @@ function testHandler(
 }
 
 describe('defineEventHandler', () => {
-  test('Should handle a valid query', async () => {
-    expect(await testHandler('query', 'foobar')).toMatchSnapshot()
-  })
-
-  test('Should handle an invalid query', async () => {
-    const result = await testHandler('query', 'invalid').catch((e) => e)
-    expect(result).toMatchSnapshot()
-  })
-
-  test('Should handle an invalid operation', async () => {
-    const result = await testHandler('subscribe', 'foobar').catch((e) => e)
-    expect(result).toMatchSnapshot()
-  })
-
-  test('Should correctly handle variables.', async () => {
-    expect(
-      await testHandler('query', 'foobar', { variable: 'one' }),
-    ).toMatchSnapshot()
-  })
-
-  test('Should handle unexpected errors.', async () => {
-    const result = await testHandler('query', 'foobar', {
-      fetchError: true,
-    }).catch((e) => e)
-    expect(result).toMatchSnapshot()
-  })
-
   test('Should handle a valid mutation', async () => {
     expect(
       await testHandler('mutation', 'barfoo', {}, 'POST'),

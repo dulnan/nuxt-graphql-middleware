@@ -3,22 +3,23 @@ import {
   readMultipartFormData,
   getQuery,
   type MultiPartData,
+  getRouterParam,
 } from 'h3'
 import type { FetchError } from 'ofetch'
-import { type GraphqlMiddlewareRuntimeConfig } from '../../types'
+import type { GraphqlMiddlewareRuntimeConfig } from '../../../types'
 import {
   getEndpoint,
   getFetchOptions,
-  validateRequest,
   onServerResponse,
   onServerError,
   throwError,
   extractRequestContext,
-} from './helpers'
-import { GraphqlMiddlewareOperation } from './../settings'
+  isValidMutation,
+} from './../helpers'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
 import { useRuntimeConfig } from '#imports'
+import { GraphqlMiddlewareOperation } from '../../settings'
 
 type GraphqlUploadData = {
   variables: Record<string, any>
@@ -42,18 +43,15 @@ function parseMultipart(data: MultiPartData[]): GraphqlUploadData {
 }
 
 export default defineEventHandler(async (event) => {
-  const method = event.method
   const operation = GraphqlMiddlewareOperation.Mutation
+  const operationName = getRouterParam(event, 'name')
 
-  // The name of the query or mutation.
-  const operationName = event.context?.params?.name as string
-
-  // Make sure the request is valid. Will throw an error if the request is
-  // invalid.
-  validateRequest(method, operation, operationName, documents)
+  if (!isValidMutation(operationName)) {
+    return throwError('Invalid mutation name.')
+  }
 
   // The GraphQL query document as a string.
-  const operationDocument: string = (documents as any)[operation][operationName]
+  const operationDocument = documents.mutation[operationName]
 
   const multiPartData = await readMultipartFormData(event)
 
