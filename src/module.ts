@@ -1,5 +1,4 @@
 import type { WebSocketServer } from 'vite'
-import { loadSchema } from '@graphql-tools/load'
 import { fileURLToPath } from 'url'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
@@ -25,19 +24,15 @@ import { name, version } from '../package.json'
 import { setupDevToolsUI } from './devtools'
 import { GraphqlMiddlewareTemplate } from './runtime/settings'
 import type { Nitro } from 'nitropack'
-import {
-  validateOptions,
-  getSchemaPath,
-  defaultOptions,
-  logger,
-  fileExists,
-} from './helpers'
+import { validateOptions, defaultOptions, logger, fileExists } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
 import type { HookResult, Nuxt } from 'nuxt/schema'
 import { generateDocumentTypesTemplate } from './module/templates/document-types'
 import type { ModuleContext } from './module/types'
 import type { OperationResponseError } from './runtime/types'
+import { SchemaProvider } from './module/SchemaProvider'
+import { ConsolePrompt } from './module/ConsolePrompt'
 export type { GraphqlMiddlewareServerOptions } from './types'
 
 function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
@@ -303,17 +298,6 @@ export default defineNuxtModule<ModuleOptions>({
     const rootDir = nuxt.options.rootDir
     const rootResolver = createResolver(rootDir)
 
-    const { schemaPath, schemaContent } = await getSchemaPath(
-      resolveAlias(options.schemaPath!),
-      options,
-      rootResolver.resolve,
-      options.downloadSchema,
-    )
-
-    const schema = await loadSchema(schemaContent, {
-      loaders: [],
-    })
-
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
 
@@ -335,7 +319,6 @@ export default defineNuxtModule<ModuleOptions>({
       rootDir: nuxt.options.rootDir,
       buildDir: srcResolver.resolve(nuxt.options.buildDir),
       nuxtConfigPath: rootResolver.resolve('nuxt.config.ts'),
-      schemaPath,
       serverApiPrefix: options.serverApiPrefix!,
       logOnlyErrors: !!options.logOnlyErrors,
       runtimeTypesPath: toBuildRelative(
@@ -343,8 +326,40 @@ export default defineNuxtModule<ModuleOptions>({
       ),
     }
 
+    async function loadFromDiskFallback(): Promise<boolean> {
+      const hasSchemaOnDisk = await schemaProvider.hasSchemaOnDisk()
+      if (context.isDev && hasSchemaOnDisk && options.downloadSchema) {
+        const shouldUseFromDisk = await prompt.confirm(
+          'Do you want to continue with the previously downloaded schema from disk?',
+        )
+        if (shouldUseFromDisk) {
+          await schemaProvider.loadSchema({ forceDisk: true })
+          return true
+        }
+      }
+
+      return false
+    }
+
+    const prompt = new ConsolePrompt()
+
+    const schemaProvider = new SchemaProvider(
+      context,
+      options,
+      rootResolver.resolve(options.schemaPath!),
+    )
+    try {
+      await schemaProvider.loadSchema()
+    } catch (error) {
+      logger.error(error)
+      const hasLoaded = await loadFromDiskFallback()
+      if (!hasLoaded) {
+        throw new Error('Failed to load GraphQL schema.')
+      }
+    }
+
     const collector = new Collector(
-      schema,
+      schemaProvider.getSchema(),
       context,
       options.documents,
       options.codegenConfig,
@@ -746,7 +761,7 @@ export type GraphqlClientContext = {}
       })
 
       nuxt.hook('builder:watch', async (event, pathAbsolute) => {
-        if (pathAbsolute === schemaPath) {
+        if (pathAbsolute === schemaProvider.schemaPath) {
           return
         }
 
@@ -755,11 +770,27 @@ export type GraphqlClientContext = {}
           return
         }
 
+        prompt.abort()
+
         const { hasChanged, affectedOperations, error } =
           await collector.handleWatchEvent(event, pathAbsolute)
 
         if (error) {
           sendError(error)
+          await prompt
+            .confirm('Do you want to download and update the GraphQL schema?')
+            .then(async (shouldReload) => {
+              if (!shouldReload) {
+                return
+              }
+              try {
+                await schemaProvider.loadSchema({ forceDownload: true })
+                await collector.updateSchema(schemaProvider.getSchema())
+              } catch (e) {
+                logger.error(e)
+              }
+            })
+          return
         }
 
         if (!hasChanged) {

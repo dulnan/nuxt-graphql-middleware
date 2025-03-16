@@ -64,6 +64,7 @@
     "styles:watch": "postcss ./css/index.css -o ./src/runtime/css/output.css --watch"
   },
   "dependencies": {
+    "@clack/prompts": "^0.10.0",
     "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/schema-ast": "^4.1.0",
     "@graphql-tools/utils": "^10.2.2",
