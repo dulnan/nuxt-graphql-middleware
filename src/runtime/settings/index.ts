@@ -50,6 +50,31 @@ export enum Template {
   OperationSources = 'nuxt-graphql-middleware/sources.mjs',
 
   Types = 'nuxt-graphql-middleware/types.d.ts',
+
+  /**
+   * The graphql-config file.
+   */
+  GraphqlConfig = 'nuxt-graphql-middleware/graphql.config.ts',
+
+  /**
+   * Imports and exports the user's server options file.
+   */
+  ServerOptions = 'nuxt-graphql-middleware/server-options.mjs',
+
+  /**
+   * Exports the server options types.
+   */
+  ServerOptionsTypes = 'nuxt-graphql-middleware/server-options.d.ts',
+
+  /**
+   * Imports and exports the user's client options file.
+   */
+  ClientOptions = 'nuxt-graphql-middleware/client-options.mjs',
+
+  /**
+   * Exports the client option specific types.
+   */
+  ClientOptionsTypes = 'nuxt-graphql-middleware/client-options.d.ts',
 }
 
 export enum GraphqlMiddlewareOperation {
