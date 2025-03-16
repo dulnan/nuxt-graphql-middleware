@@ -44,7 +44,7 @@ const lines = computed(() => {
   const sliced = fullLines.slice(indexStart, indexEnd)
 
   // Remove trailing empty lines
-  while (sliced.length && !sliced[sliced.length - 1].trim()) {
+  while (sliced.length && !sliced[sliced.length - 1]?.trim()) {
     sliced.pop()
   }
 

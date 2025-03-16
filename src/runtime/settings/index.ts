@@ -1,4 +1,4 @@
-export enum GraphqlMiddlewareTemplate {
+export enum Template {
   /**
    * Contains the TS definitions for all GraphQL queries, mutations and fragments.
    */
@@ -38,6 +38,11 @@ export enum GraphqlMiddlewareTemplate {
    * Exports a single opject containing the compiled queries and mutations.
    */
   Documents = 'nuxt-graphql-middleware/documents.mjs',
+
+  /**
+   * Exports a single opject containing the compiled queries and mutations.
+   */
+  DocumentTypes = 'nuxt-graphql-middleware/documents.d.ts',
 
   /**
    * Contains the source file paths for every operation.

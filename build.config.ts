@@ -21,5 +21,7 @@ export default defineBuildConfig({
     'mrmime',
     '#nuxt-graphql-middleware/response',
     'micromatch',
+    '@clack/core',
+    'is-unicode-supported',
   ],
 })
