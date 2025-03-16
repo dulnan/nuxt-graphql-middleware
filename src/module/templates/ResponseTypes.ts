@@ -1,9 +1,9 @@
 import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
-import type { ModuleContext } from '../types'
+import type { ModuleHelper } from '../ModuleHelper'
 
-export function generateResponseTypeTemplate(
+export default function (
   operations: readonly GeneratorOutputOperation[],
-  context: ModuleContext,
+  helper: ModuleHelper,
 ): string {
   const allTypes = operations.map((v) => v.typeName).sort()
 
@@ -11,7 +11,7 @@ export function generateResponseTypeTemplate(
   ${allTypes.join(',\n  ')}
 } from './../graphql-operations'
 import type { GraphqlResponseAdditions } from './server-options'
-import type { GraphqlServerResponse } from '${context.runtimeTypesPath}'
+import type { GraphqlServerResponse } from '${helper.paths.runtimeTypes}'
 
 declare module '#nuxt-graphql-middleware/response' {
   export type GraphqlMiddlewareResponseUnion =

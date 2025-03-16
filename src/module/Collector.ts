@@ -1,18 +1,14 @@
 import { basename } from 'node:path'
 import { relative } from 'pathe'
 import { parse, type GraphQLSchema, type GraphQLError, Source } from 'graphql'
-import { resolveFiles } from '@nuxt/kit'
 import {
   FieldNotFoundError,
   FragmentNotFoundError,
   Generator,
   type GeneratorOutputFile,
   TypeNotFoundError,
-  type GeneratorOptions,
   type GeneratorOutputOperation,
 } from 'graphql-typescript-deluxe'
-import { generateResponseTypeTemplate } from './templates/context'
-import type { ModuleContext } from './types'
 import type { WatchEvent } from 'nuxt/schema'
 import colors from 'picocolors'
 import { logger } from '../helpers'
@@ -20,11 +16,11 @@ import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { RpcItem } from '../rpc-types'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
-import { generateNitroTypes } from './templates/nitro'
-import { generateSourcesTemplate } from './templates/sources'
-import * as micromatch from 'micromatch'
 import { Template } from '../runtime/settings'
-import { generateDocumentTypesTemplate } from './templates/document-types'
+import type { ModuleHelper } from './ModuleHelper'
+import ResponseTypes from './templates/ResponseTypes'
+import NitroTypes from './templates/NitroTypes'
+import OperationSources from './templates/OperationSources'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -60,11 +56,9 @@ export class Collector {
 
   constructor(
     private schema: GraphQLSchema,
-    private context: ModuleContext,
-    private nuxtConfigDocuments: string[] = [],
-    generatorOptions: GeneratorOptions = {},
+    private helper: ModuleHelper,
   ) {
-    const mappedOptions = { ...generatorOptions }
+    const mappedOptions = { ...helper.options.codegenConfig }
     if (!mappedOptions.output) {
       mappedOptions.output = {}
     }
@@ -76,31 +70,6 @@ export class Collector {
     }
 
     this.generator = new Generator(schema, mappedOptions)
-
-    this.updateTemplate(
-      Template.Types,
-      `declare module '#nuxt-graphql-middleware/sources' {
-  export const operationSources: Record<string, string>
-}`,
-    )
-
-    this.updateTemplate(
-      Template.HelpersTypes,
-      `export const serverApiPrefix: string;
-export function getEndpoint(operation: string, operationName: string): string
-`,
-    )
-
-    this.updateTemplate(
-      Template.Helpers,
-      `export const serverApiPrefix = '${context.serverApiPrefix}'
-export function getEndpoint(operation, operationName) {
-  return '${context.serverApiPrefix}' + '/' + operation + '/' + operationName
-}
-`,
-    )
-
-    this.updateTemplate(Template.DocumentTypes, generateDocumentTypesTemplate())
   }
 
   public async reset() {
@@ -114,11 +83,11 @@ export function getEndpoint(operation, operationName) {
     this.schema = schema
     this.generator.updateSchema(schema)
     await this.reset()
-    await this.init()
+    await this.initDocuments()
   }
 
   private filePathToBuildRelative(filePath: string): string {
-    return './' + relative(this.context.buildDir, filePath)
+    return './' + this.helper.toBuildRelative(filePath)
   }
 
   private filePathToSourceRelative(filePath: string): string {
@@ -176,7 +145,7 @@ export function getEndpoint(operation, operationName) {
       output
         .getOperationsFile({
           exportName: 'documents',
-          minify: !this.context.isDev,
+          minify: !this.helper.isDev,
         })
         .getSource(),
     )
@@ -192,7 +161,7 @@ export function getEndpoint(operation, operationName) {
 
     this.updateTemplate(
       Template.NitroTypes,
-      generateNitroTypes(operations, this.context.serverApiPrefix),
+      NitroTypes(operations, this.helper.options.serverApiPrefix),
     )
 
     this.updateTemplate(
@@ -202,14 +171,14 @@ export function getEndpoint(operation, operationName) {
 
     this.updateTemplate(
       Template.ResponseTypes,
-      generateResponseTypeTemplate(operations, this.context),
+      ResponseTypes(operations, this.helper),
     )
 
     this.updateTemplate(Template.Enums, output.buildFile(['enum']).getSource())
 
     this.updateTemplate(
       Template.OperationSources,
-      generateSourcesTemplate(operations, this.context.rootDir),
+      OperationSources(operations, this.helper.paths.root),
     )
 
     // A map of GraphQL fragment name => fragment source.
@@ -257,7 +226,7 @@ export function getEndpoint(operation, operationName) {
         this.operationTimestamps.set(operation.graphqlName, operation.timestamp)
       }
 
-      const shouldLog = errors.length || !this.context.logOnlyErrors
+      const shouldLog = errors.length || !this.helper.options.logOnlyErrors
 
       if (shouldLog) {
         logEntries.push(this.operationToLogEntry(operation, errors))
@@ -331,37 +300,48 @@ export function getEndpoint(operation, operationName) {
   }
 
   /**
-   * Get all file paths that match the import patterns.
+   * Initialise the collector.
+   *
+   * In dev mode, the method will call itself recursively until all documents
+   * are valid.
+   *
+   * If not in dev mode the method will throw an error when documents are not
+   * valid.
    */
-  private async getImportPatternFiles(): Promise<string[]> {
-    if (this.context.patterns.length) {
-      return resolveFiles(this.context.srcDir, this.context.patterns, {
-        followSymbolicLinks: false,
-      })
-    }
-    return []
-  }
+  public async init(): Promise<void> {
+    try {
+      await this.initDocuments()
+    } catch (e) {
+      if (this.helper.isDev) {
+        const shouldRevalidate = await this.helper.prompt.confirm(
+          'Do you want to revalidate the GraphQL documents?',
+        )
 
-  private matchesImportPattern(filePath: string): boolean {
-    return micromatch.isMatch(filePath, this.context.patterns)
+        if (shouldRevalidate === 'yes') {
+          await this.reset()
+          return this.init()
+        }
+      }
+      throw new Error('Graphql document validation failed.')
+    }
   }
 
   /**
    * Initialise the collector.
    */
-  public async init() {
+  private async initDocuments() {
     try {
       // Get all files that match the import patterns.
-      const files = await this.getImportPatternFiles()
+      const files = await this.helper.getImportPatternFiles()
 
       for (const filePath of files) {
         await this.addFile(filePath)
       }
 
-      const nuxtConfigDocuments = this.nuxtConfigDocuments.join('\n\n')
+      const nuxtConfigDocuments = this.helper.options.documents.join('\n\n')
 
       if (nuxtConfigDocuments.length) {
-        const filePath = this.context.nuxtConfigPath
+        const filePath = this.helper.paths.nuxtConfig
         const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
         this.files.set(filePath, file)
         this.generator.add({
@@ -397,7 +377,7 @@ export function getEndpoint(operation, operationName) {
   }
 
   private async handleAdd(filePath: string): Promise<boolean> {
-    if (!this.matchesImportPattern(filePath)) {
+    if (!this.helper.matchesImportPattern(filePath)) {
       return false
     }
     const result = await this.addFile(filePath)
@@ -405,7 +385,7 @@ export function getEndpoint(operation, operationName) {
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
-    if (!this.matchesImportPattern(filePath)) {
+    if (!this.helper.matchesImportPattern(filePath)) {
       return false
     }
     const file = this.files.get(filePath)

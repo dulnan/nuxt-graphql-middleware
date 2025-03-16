@@ -1,5 +1,6 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import graphqlMiddlewareModule, { type ModuleOptions } from './../src/module'
+import graphqlMiddlewareModule from './../src/module'
+import type { ModuleOptions } from '../src/module/types/options'
 const IS_DEV = process.env.NODE_ENV === 'development'
 
 const graphqlMiddleware: ModuleOptions = {
