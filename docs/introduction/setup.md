@@ -25,6 +25,26 @@ export default defineNuxtConfig({
 })
 ```
 
+### Optional: Configure IDE integration
+
+In order for your IDE/LSP to be aware of your operations and fragments you need
+to define a
+[GraphQL config file](https://the-guild.dev/graphql/config/docs/user/usage).
+
+The module will generate a graphql.config.ts file during build which you can
+extend from. Create a file named `graphql.config.ts` in the **same folder as
+nuxt.config.ts** with these contents:
+
+::: code-group
+
+```typescript [~/graphql.config.ts]
+import config from './playground/.nuxt/nuxt-graphql-middleware/graphql.config'
+
+export default config
+```
+
+:::
+
 ## Step 3: Write a query
 
 Write your first query and save it wherever you like. By default all `*.graphql`

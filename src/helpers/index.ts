@@ -20,6 +20,7 @@ export const defaultOptions: ModuleOptions = {
   documents: [],
   devtools: true,
   errorOverlay: true,
+  graphqlConfigFilePath: './graphql.config.ts',
 }
 
 /**

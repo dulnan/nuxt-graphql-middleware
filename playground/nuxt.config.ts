@@ -6,6 +6,7 @@ const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
   downloadSchema: IS_DEV,
   schemaPath: './../schema.graphql',
+  graphqlConfigFilePath: '../graphql.config.ts',
   codegenConfig: {},
   outputDocuments: true,
   devtools: true,
