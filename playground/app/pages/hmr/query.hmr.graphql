@@ -1,5 +1,3 @@
 query hmr {
-  text: getText(text: "TEST")
-  # foobaraa
-  asdfasdf
+  text: getText(text: "asdfasdfasdfasdf")
 }

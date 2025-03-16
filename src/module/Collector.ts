@@ -111,13 +111,13 @@ export class Collector {
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
-    await this.init()
   }
 
   public async updateSchema(schema: GraphQLSchema) {
     this.schema = schema
     this.generator.updateSchema(schema)
     await this.reset()
+    await this.init()
   }
 
   private filePathToBuildRelative(filePath: string): string {

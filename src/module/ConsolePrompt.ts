@@ -31,7 +31,7 @@ const symbol = (state: State) => {
 export class ConsolePrompt {
   private abortController: AbortController | null = null
 
-  public confirm(message: string): Promise<boolean> {
+  public confirm(message: string): Promise<'yes' | 'no' | 'cancel'> {
     this.abort()
 
     this.abortController = new AbortController()
@@ -69,7 +69,15 @@ export class ConsolePrompt {
       },
     })
       .prompt()
-      .then((v) => (v as any) === true)
+      .then((v) => {
+        const result = v as any
+        if (result === true) {
+          return 'yes'
+        } else if (result === false) {
+          return 'no'
+        }
+        return 'cancel'
+      })
   }
 
   public abort() {
