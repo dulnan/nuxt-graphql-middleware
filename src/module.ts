@@ -476,7 +476,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.appConfig.graphqlMiddleware = {
       clientCacheEnabled: !!options.clientCache?.enabled,
-      clientCacheMaxSize: options.clientCache?.maxSize || 100,
+      clientCacheMaxSize: options.clientCache?.maxSize ?? 100,
     }
 
     nuxt.options.runtimeConfig.graphqlMiddleware = {
@@ -536,7 +536,8 @@ export default defineNuxtModule<ModuleOptions>({
         return serverPath
       }
 
-      // Possible locations for backwards compatibility.
+      // Check for previous locations of the server options file that are not
+      // supported anymore.
       const candidates: string[] = [
         rootResolver.resolve('graphqlMiddleware.serverOptions'),
         rootResolver.resolve('app/graphqlMiddleware.serverOptions'),
@@ -547,11 +548,11 @@ export default defineNuxtModule<ModuleOptions>({
         const path = candidates[i]
         const filePath = fileExists(path)
 
+        // File exists. Throw an error so that module users can migrate.
         if (filePath) {
-          logger.warn(
-            `The graphqlMiddleware.serverOptions file should be placed in Nuxt's <serverDir> ("${nuxt.options.serverDir}/graphqlMiddleware.serverOptions.ts"). The new path will be enforced in the next major release.`,
+          throw new Error(
+            `The graphqlMiddleware.serverOptions file should be placed in Nuxt's <serverDir> ("${nuxt.options.serverDir}/graphqlMiddleware.serverOptions.ts").`,
           )
-          return filePath
         }
       }
 
@@ -731,6 +732,7 @@ export type GraphqlClientContext = {}
       })
 
       nuxt.hook('builder:watch', async (event, pathAbsolute) => {
+        // Skip the GraphQL schema itself.
         if (pathAbsolute === schemaProvider.schemaPath) {
           return
         }
@@ -781,10 +783,14 @@ export type GraphqlClientContext = {}
         }
 
         if (rpc) {
+          // Update the documents for the dev tools.
+          // For some reason this sometimes throws an error which results in a Nuxt restart.
           try {
             rpc.broadcast.documentsUpdated([...collector.rpcItems.values()])
           } catch {
-            // Noop.
+            logger.info(
+              'Failed to update GraphQL documents in dev tools. The documents might be stale.',
+            )
           }
         }
       })
@@ -795,7 +801,14 @@ export type GraphqlClientContext = {}
 declare module '@nuxt/schema' {
   interface AppConfig {
     graphqlMiddleware: {
+      /**
+       * Whether the client cache is enabled.
+       */
       clientCacheEnabled: boolean
+
+      /**
+       * The max number of items in the cache.
+       */
       clientCacheMaxSize: number
     }
   }
@@ -803,6 +816,9 @@ declare module '@nuxt/schema' {
 
 declare module '#app' {
   interface RuntimeNuxtHooks {
+    /**
+     * Emitted when any GraphQL response contains errors.
+     */
     'nuxt-graphql-middleware:errors': (
       errors: OperationResponseError,
     ) => HookResult
@@ -811,6 +827,9 @@ declare module '#app' {
 
 declare module 'vite/types/customEvent.d.ts' {
   interface CustomEventMap {
+    /**
+     * Emitted when GraphQL operations have been updated.
+     */
     'nuxt-graphql-middleware:reload': { operations: string[] }
   }
 }
