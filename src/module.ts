@@ -326,13 +326,23 @@ export default defineNuxtModule<ModuleOptions>({
       ),
     }
 
+    const prompt = new ConsolePrompt()
+    const schemaProvider = new SchemaProvider(
+      context,
+      options,
+      rootResolver.resolve(options.schemaPath!),
+    )
+
+    /**
+     * Loads the schema from disk.
+     */
     async function loadFromDiskFallback(): Promise<boolean> {
       const hasSchemaOnDisk = await schemaProvider.hasSchemaOnDisk()
       if (context.isDev && hasSchemaOnDisk && options.downloadSchema) {
         const shouldUseFromDisk = await prompt.confirm(
           'Do you want to continue with the previously downloaded schema from disk?',
         )
-        if (shouldUseFromDisk) {
+        if (shouldUseFromDisk === 'yes') {
           await schemaProvider.loadSchema({ forceDisk: true })
           return true
         }
@@ -341,13 +351,31 @@ export default defineNuxtModule<ModuleOptions>({
       return false
     }
 
-    const prompt = new ConsolePrompt()
+    /**
+     * Initialise the collector.
+     *
+     * In dev mode, the method will call itself recursively until all documents
+     * are valid.
+     */
+    async function initDocumentValidation() {
+      try {
+        await collector.init()
+      } catch (e) {
+        if (!context.isDev) {
+          throw new Error('Graphql document validation failed.')
+        }
+        const shouldRevalidate = await prompt.confirm(
+          'Do you want to revalidate the GraphQL documents?',
+        )
 
-    const schemaProvider = new SchemaProvider(
-      context,
-      options,
-      rootResolver.resolve(options.schemaPath!),
-    )
+        if (shouldRevalidate === 'yes') {
+          await collector.reset()
+          return initDocumentValidation()
+        }
+        throw new Error('Graphql document validation failed.')
+      }
+    }
+
     try {
       await schemaProvider.loadSchema()
     } catch (error) {
@@ -365,8 +393,7 @@ export default defineNuxtModule<ModuleOptions>({
       options.codegenConfig,
     )
 
-    // Generates everything and will throw an error when there are validation errors.
-    await collector.init()
+    await initDocumentValidation()
 
     const isDevToolsEnabled = nuxt.options.dev && options.devtools
 
@@ -780,7 +807,7 @@ export type GraphqlClientContext = {}
           await prompt
             .confirm('Do you want to download and update the GraphQL schema?')
             .then(async (shouldReload) => {
-              if (!shouldReload) {
+              if (shouldReload !== 'yes') {
                 return
               }
               try {

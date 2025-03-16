@@ -7,7 +7,6 @@ import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 import { loadSchema } from '@graphql-tools/load'
 import { type GraphQLSchema } from 'graphql'
-import consola from 'consola'
 import type { ModuleContext } from './types'
 
 /**
