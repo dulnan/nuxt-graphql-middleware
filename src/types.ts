@@ -11,16 +11,16 @@ export type GraphqlMiddlewareRequestContext<
 
 export type GraphqlMiddlewareGraphqlEndpointMethod<C extends ContextType> = (
   event?: H3Event,
-  operation?: string,
-  operationName?: string,
-  context?: GraphqlMiddlewareRequestContext<C>,
+  operation?: string | null,
+  operationName?: string | null,
+  context?: GraphqlMiddlewareRequestContext<C> | null,
 ) => string | Promise<string> | undefined
 
 export type GraphqlMiddlewareServerFetchOptionsMethod<C extends ContextType> = (
   event?: H3Event,
-  operation?: string,
-  operationName?: string,
-  context?: GraphqlMiddlewareRequestContext<C>,
+  operation?: string | null,
+  operationName?: string | null,
+  context?: GraphqlMiddlewareRequestContext<C> | null,
 ) => FetchOptions | Promise<FetchOptions>
 
 export type GraphqlMiddlewareOnServerResponseMethod<
@@ -30,17 +30,17 @@ export type GraphqlMiddlewareOnServerResponseMethod<
 > = (
   event: H3Event,
   response: FetchResponse<ServerReponse>,
-  operation?: string,
-  operationName?: string,
-  context?: GraphqlMiddlewareRequestContext<C>,
+  operation?: string | null,
+  operationName?: string | null,
+  context?: GraphqlMiddlewareRequestContext<C> | null,
 ) => T | Promise<T>
 
 export type GraphqlMiddlewareOnServerErrorMethod<C extends ContextType> = (
   event: H3Event,
   error: FetchError,
-  operation?: string,
-  operationName?: string,
-  context?: GraphqlMiddlewareRequestContext<C>,
+  operation?: string | null,
+  operationName?: string | null,
+  context?: GraphqlMiddlewareRequestContext<C> | null,
 ) => any | Promise<any>
 
 export type GraphqlMiddlewareDoRequestMethodContext<C extends ContextType> = {
@@ -52,12 +52,12 @@ export type GraphqlMiddlewareDoRequestMethodContext<C extends ContextType> = {
   /**
    * The type of operation.
    */
-  operation: 'query' | 'mutation'
+  operation?: 'query' | 'mutation'
 
   /**
    * The name of the operation.
    */
-  operationName: string
+  operationName?: string
 
   /**
    * The operation document (the raw GraphQL query/mutation as a string).

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import eventHandler from './../../../src/runtime/serverHandler/debug'
+import eventHandler from './../../../src/runtime/server/api/debug'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
@@ -24,6 +24,10 @@ vi.mock('#nuxt-graphql-middleware/helpers', () => {
       return `/nuxt-graphql-middleware/${operation}/${operationName}`
     },
   }
+})
+
+vi.mock('#nitro-internal-virtual/error-handler', () => {
+  return {}
 })
 
 vi.mock('#imports', () => {

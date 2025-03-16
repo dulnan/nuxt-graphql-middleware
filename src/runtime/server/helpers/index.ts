@@ -9,9 +9,18 @@ import type {
 } from './../../../types'
 import {
   CLIENT_CONTEXT_PREFIX,
-  GraphqlMiddlewareOperation,
+  type GraphqlMiddlewareOperation,
 } from './../../settings'
-import type { Documents } from '#nuxt-graphql-middleware/documents'
+import { documents } from '#nuxt-graphql-middleware/documents'
+import type { Mutation, Query } from '#nuxt-graphql-middleware/operations'
+
+export function isValidMutation(v?: string): v is keyof Mutation {
+  return !!v && Object.hasOwn(documents.mutation, v)
+}
+
+export function isValidQuery(v?: string): v is keyof Query {
+  return !!v && Object.hasOwn(documents.query, v)
+}
 
 // Get the variables from query parameters.
 //
@@ -62,9 +71,9 @@ export function getEndpoint(
   config: GraphqlMiddlewareRuntimeConfig,
   serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
-  operation: GraphqlMiddlewareOperation,
-  operationName: string,
-  context: GraphqlMiddlewareRequestContext<any>,
+  operation: GraphqlMiddlewareOperation | null,
+  operationName: string | null,
+  context: GraphqlMiddlewareRequestContext<any> | null,
 ): string | Promise<string> {
   // Check if a custom graphqlEndpoint method exists.
   if (serverOptions.graphqlEndpoint) {
@@ -93,9 +102,9 @@ export function getEndpoint(
 export function getFetchOptions(
   serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
-  operation: GraphqlMiddlewareOperation,
-  operationName: string,
-  context: GraphqlMiddlewareRequestContext<any>,
+  operation: GraphqlMiddlewareOperation | null,
+  operationName: string | null,
+  context: GraphqlMiddlewareRequestContext<any> | null,
 ): FetchOptions | Promise<FetchOptions> {
   if (serverOptions.serverFetchOptions) {
     return (
@@ -119,58 +128,15 @@ export function throwError(statusMessage: string, statusCode = 400): never {
 }
 
 /**
- * Assure that the request is valid.
- */
-export function validateRequest(
-  method?: string,
-  operation?: GraphqlMiddlewareOperation | string,
-  name?: string,
-  documents?: Documents,
-): void {
-  if (method !== 'POST' && method !== 'GET') {
-    throwError('Method not allowed.', 405)
-  }
-
-  if (
-    operation !== GraphqlMiddlewareOperation.Query &&
-    operation !== GraphqlMiddlewareOperation.Mutation
-  ) {
-    throwError('Unknown operation.')
-  }
-
-  // Only allow POST for /mutation/:name.
-  if (method === 'POST' && operation !== GraphqlMiddlewareOperation.Mutation) {
-    throwError('Queries must be a GET request.')
-  }
-
-  // Only allow GET for /query/:name.
-  if (method === 'GET' && operation !== GraphqlMiddlewareOperation.Query) {
-    throwError('Mutations must be a POST request.')
-  }
-
-  if (!name) {
-    throwError('Missing name for operation.')
-  }
-
-  if (!documents) {
-    throwError('Failed to load GraphQL documents', 500)
-  }
-
-  if (!(documents as any)[operation][name]) {
-    throwError(`Operation "${operation}" with name "${name}" not found.`)
-  }
-}
-
-/**
  * Handle GraphQL server response.
  */
 export function onServerResponse(
   serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   response: FetchResponse<any>,
-  operation: string,
-  operationName: string,
-  context: GraphqlMiddlewareRequestContext<any>,
+  operation: string | null,
+  operationName: string | null,
+  context: GraphqlMiddlewareRequestContext<any> | null,
 ) {
   if (serverOptions.onServerResponse) {
     return serverOptions.onServerResponse(
@@ -192,9 +158,9 @@ export function onServerError(
   serverOptions: GraphqlMiddlewareServerOptions<any, any>,
   event: H3Event,
   error: FetchError,
-  operation: string,
-  operationName: string,
-  context: GraphqlMiddlewareRequestContext<any>,
+  operation: string | null,
+  operationName: string | null,
+  context: GraphqlMiddlewareRequestContext<any> | null,
 ) {
   if (serverOptions.onServerError) {
     return serverOptions.onServerError(

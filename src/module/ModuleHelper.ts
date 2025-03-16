@@ -1,16 +1,24 @@
 import {
+  addImports,
+  addPlugin,
+  addServerHandler,
+  addServerImports,
+  addTemplate,
+  addTypeTemplate,
   createResolver,
   resolveAlias,
   resolveFiles,
   type Resolver,
 } from '@nuxt/kit'
 import { relative } from 'pathe'
-import type { Nuxt } from 'nuxt/schema'
+import type { RouterMethod } from 'h3'
+import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
 import { defu } from 'defu'
 import { defaultOptions, fileExists, logger, validateOptions } from '../helpers'
 import * as micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
+import type { Template } from '../runtime/settings'
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
@@ -56,14 +64,13 @@ type ModuleHelperPaths = {
   schema: string
   serverOptions: string | null
   clientOptions: string | null
+  moduleBuildDir: string
+  moduleTypesDir: string
 }
 
 export class ModuleHelper {
   public readonly resolvers: ModuleHelperResolvers
   public readonly paths: ModuleHelperPaths
-
-  public readonly moduleBuildDir: string
-  public readonly moduleOperationTypesDir: string
 
   public readonly isDev: boolean
 
@@ -122,13 +129,8 @@ export class ModuleHelper {
       root: createResolver(nuxt.options.rootDir),
     }
 
-    this.moduleBuildDir = nuxt.options.buildDir + '/nuxt-graphql-middleware'
-    this.moduleOperationTypesDir = nuxt.options.buildDir + '/graphql-operations'
-
     this.paths = {
-      runtimeTypes: this.toModuleBuildRelative(
-        this.resolvers.module.resolve('./runtime/types.ts'),
-      ),
+      runtimeTypes: '',
       root: nuxt.options.rootDir,
       nuxtConfig: this.resolvers.root.resolve('nuxt.config.ts'),
       serverDir: nuxt.options.serverDir,
@@ -137,7 +139,15 @@ export class ModuleHelper {
       ),
       serverOptions: this.findServerOptions(),
       clientOptions: this.findClientOptions(),
+      moduleBuildDir: nuxt.options.buildDir + '/nuxt-graphql-middleware',
+      moduleTypesDir: nuxt.options.buildDir + '/graphql-operations',
     }
+
+    // This path needs to be built afterwards since the method we call
+    // depends on a value of this.paths.
+    this.paths.runtimeTypes = this.toModuleBuildRelative(
+      this.resolvers.module.resolve('./runtime/types.ts'),
+    )
   }
 
   /**
@@ -198,7 +208,7 @@ export class ModuleHelper {
    * @returns The path relative to the module's build directory.
    */
   public toModuleBuildRelative(path: string): string {
-    return relative(this.moduleBuildDir, path)
+    return relative(this.paths.moduleBuildDir, path)
   }
 
   /**
@@ -249,5 +259,62 @@ export class ModuleHelper {
     this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
       name + '/*'
     ] = [pathFromName + '/*']
+  }
+
+  public inlineNitroExternals(arg: ResolvedNuxtTemplate | string) {
+    const path = typeof arg === 'string' ? arg : arg.dst
+    this.nuxt.options.nitro.externals = this.nuxt.options.nitro.externals || {}
+    this.nuxt.options.nitro.externals.inline =
+      this.nuxt.options.nitro.externals.inline || []
+    this.nuxt.options.nitro.externals.inline.push(path)
+  }
+
+  public addTemplate(template: Template, cb: (helper: ModuleHelper) => string) {
+    // Run the callback only once, since the template does not depend on
+    // any state that might change during dev.
+    const content = cb(this)
+    if (template.endsWith('d.ts')) {
+      addTypeTemplate({
+        filename: template as `${string}.d.ts`,
+        write: true,
+        getContents: () => content,
+      })
+    } else {
+      addTemplate({
+        filename: template,
+        write: true,
+        getContents: () => content,
+      })
+    }
+  }
+
+  public addPlugin(path: string) {
+    addPlugin(this.resolvers.module.resolve(path), {
+      append: false,
+    })
+  }
+
+  public addServerHandler(name: string, path: string, method: RouterMethod) {
+    addServerHandler({
+      handler: this.resolvers.module.resolve('./runtime/server/api/' + name),
+      route: this.options.serverApiPrefix + path,
+      method,
+    })
+  }
+
+  public addComposable(name: string) {
+    addImports({
+      from: this.resolvers.module.resolve('./runtime/composables/' + name),
+      name,
+    })
+  }
+
+  public addServerUtil(name: string) {
+    addServerImports([
+      {
+        from: this.resolvers.module.resolve('./runtime/server/utils/' + name),
+        name,
+      },
+    ])
   }
 }

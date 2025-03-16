@@ -3,11 +3,10 @@ import { GraphqlMiddlewareOperation } from './../../../../src/runtime/settings'
 import {
   queryParamToVariables,
   getEndpoint,
-  validateRequest,
   getFetchOptions,
-} from './../../../../src/runtime/serverHandler/helpers'
+} from './../../../../src/runtime/server/helpers'
 
-vi.mock('#graphql-documents', () => {
+vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
     documents: {
       query: {
@@ -161,104 +160,5 @@ describe('getEndpoint', () => {
         'test',
       ),
     ).toThrowError('Failed to determine endpoint for GraphQL server.')
-  })
-})
-
-describe('validateRequest', () => {
-  const documents = {
-    query: {
-      one: 'query one { }',
-    },
-    mutation: {
-      two: 'mutation two { }',
-    },
-  }
-
-  test('validates HTTP methods', () => {
-    expect(
-      validateRequest(
-        'GET',
-        GraphqlMiddlewareOperation.Query,
-        'one',
-        documents,
-      ),
-    ).toBeUndefined()
-
-    expect(() =>
-      validateRequest(
-        'OPTIONS',
-        GraphqlMiddlewareOperation.Mutation,
-        'two',
-        documents,
-      ),
-    ).toThrowError('Method not allowed')
-  })
-
-  test('validates valid operations', () => {
-    expect(() =>
-      validateRequest('GET', 'invalid' as any, 'one', documents),
-    ).toThrowError('Unknown operation')
-    expect(() =>
-      validateRequest('GET', '' as any, 'two', documents),
-    ).toThrowError('Unknown operation')
-  })
-
-  test('validates valid operation and method combinations', () => {
-    expect(() =>
-      validateRequest(
-        'POST',
-        GraphqlMiddlewareOperation.Query,
-        'one',
-        documents,
-      ),
-    ).toThrowError('Queries must be a GET request')
-
-    expect(() =>
-      validateRequest(
-        'GET',
-        GraphqlMiddlewareOperation.Mutation,
-        'one',
-        documents,
-      ),
-    ).toThrowError('Mutations must be a POST request')
-
-    expect(
-      validateRequest(
-        'POST',
-        GraphqlMiddlewareOperation.Mutation,
-        'two',
-        documents,
-      ),
-    ).toBeUndefined()
-
-    expect(
-      validateRequest(
-        'GET',
-        GraphqlMiddlewareOperation.Query,
-        'one',
-        documents,
-      ),
-    ).toBeUndefined()
-  })
-
-  test('documents are provided', () => {
-    expect(() =>
-      validateRequest('GET', GraphqlMiddlewareOperation.Query, 'one'),
-    ).toThrowError('Failed to load GraphQL documents')
-  })
-
-  test('a valid name is provided', () => {
-    expect(() =>
-      validateRequest('GET', GraphqlMiddlewareOperation.Query),
-    ).toThrowError('Missing name for operation')
-
-    expect(() =>
-      validateRequest(
-        'GET',
-        GraphqlMiddlewareOperation.Query,
-        'foobar',
-        documents,
-      ),
-    ).toThrowError('Operation "query" with name "foobar" not found.')
   })
 })

@@ -1,0 +1,59 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defineEventHandler > Should correctly handle variables. 1`] = `
+{
+  "__customProperty": "foobar",
+  "data": {},
+  "endpoint": "http//localhost/graphql",
+  "options": {
+    "body": {
+      "operationName": undefined,
+      "query": "Query",
+      "variables": {
+        "variables": "{"variable":"one"}",
+      },
+    },
+    "method": "POST",
+  },
+}
+`;
+
+exports[`defineEventHandler > Should handle a valid query 1`] = `
+{
+  "__customProperty": "foobar",
+  "data": {},
+  "endpoint": "http//localhost/graphql",
+  "options": {
+    "body": {
+      "operationName": undefined,
+      "query": "Query",
+      "variables": {
+        "variables": "{}",
+      },
+    },
+    "method": "POST",
+  },
+}
+`;
+
+exports[`defineEventHandler > Should handle an invalid operation 1`] = `
+{
+  "__customProperty": "foobar",
+  "data": {},
+  "endpoint": "http//localhost/graphql",
+  "options": {
+    "body": {
+      "operationName": undefined,
+      "query": "Query",
+      "variables": {
+        "variables": "{}",
+      },
+    },
+    "method": "POST",
+  },
+}
+`;
+
+exports[`defineEventHandler > Should handle an invalid query 1`] = `[Error: Invalid query name.]`;
+
+exports[`defineEventHandler > Should handle unexpected errors. 1`] = `[Error: Couldn't execute GraphQL query: Fetch Error]`;
