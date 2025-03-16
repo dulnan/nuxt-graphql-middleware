@@ -23,6 +23,8 @@ import { CollectedFile } from './CollectedFile'
 import { generateNitroTypes } from './templates/nitro'
 import { generateSourcesTemplate } from './templates/sources'
 import * as micromatch from 'micromatch'
+import { Template } from '../runtime/settings'
+import { generateDocumentTypesTemplate } from './templates/document-types'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -52,39 +54,9 @@ export class Collector {
   public readonly rpcItems: Map<string, RpcItem> = new Map()
 
   /**
-   * The generated TypeScript type template output.
+   * The generated templates.
    */
-  private outputTypes = ''
-
-  /**
-   * The generated TypeScript enum template output.
-   */
-  private outputEnums = ''
-
-  /**
-   * The generated oeprations file.
-   */
-  private outputOperations = ''
-
-  /**
-   * The generated oepration types file.
-   */
-  private outputOperationTypes = ''
-
-  /**
-   * The generated context template file.
-   */
-  private outputResponseTypes = ''
-
-  /**
-   * The generated nitro template file.
-   */
-  private outputNitroTypes = ''
-
-  /**
-   * The generated nitro template file.
-   */
-  private outputSources = ''
+  private templates: Map<Template, string> = new Map()
 
   constructor(
     private schema: GraphQLSchema,
@@ -104,6 +76,31 @@ export class Collector {
     }
 
     this.generator = new Generator(schema, mappedOptions)
+
+    this.updateTemplate(
+      Template.Types,
+      `declare module '#nuxt-graphql-middleware/sources' {
+  export const operationSources: Record<string, string>
+}`,
+    )
+
+    this.updateTemplate(
+      Template.HelpersTypes,
+      `export const serverApiPrefix: string;
+export function getEndpoint(operation: string, operationName: string): string
+`,
+    )
+
+    this.updateTemplate(
+      Template.Helpers,
+      `export const serverApiPrefix = '${context.serverApiPrefix}'
+export function getEndpoint(operation, operationName) {
+  return '${context.serverApiPrefix}' + '/' + operation + '/' + operationName
+}
+`,
+    )
+
+    this.updateTemplate(Template.DocumentTypes, generateDocumentTypesTemplate())
   }
 
   public async reset() {
@@ -153,6 +150,19 @@ export class Collector {
     return output
   }
 
+  private updateTemplate(template: Template, content: string) {
+    this.templates.set(template, content)
+  }
+
+  public getTemplate(template: Template): string {
+    const content = this.templates.get(template)
+    if (content === undefined) {
+      throw new Error(`Missing template content: ${template}`)
+    }
+
+    return content
+  }
+
   /**
    * Executes code gen and performs validation for operations.
    */
@@ -161,31 +171,45 @@ export class Collector {
     const operations = output.getCollectedOperations()
     const generatedCode = output.getGeneratedCode()
 
-    this.outputOperations = output
-      .getOperationsFile({
-        exportName: 'documents',
-        minify: !this.context.isDev,
-      })
-      .getSource()
-    this.outputOperationTypes = output
-      .getOperationTypesFile({
-        importFrom: './../graphql-operations',
-      })
-      .getSource()
-    this.outputEnums = output.buildFile(['enum']).getSource()
-    this.outputTypes = this.buildOutputTypes(output.getTypes())
-    this.outputResponseTypes = generateResponseTypeTemplate(
-      operations,
-      this.context,
-    )
-    this.outputNitroTypes = generateNitroTypes(
-      operations,
-      this.context.serverApiPrefix,
+    this.updateTemplate(
+      Template.Documents,
+      output
+        .getOperationsFile({
+          exportName: 'documents',
+          minify: !this.context.isDev,
+        })
+        .getSource(),
     )
 
-    this.outputSources = generateSourcesTemplate(
-      operations,
-      this.context.rootDir,
+    this.updateTemplate(
+      Template.OperationTypesAll,
+      output
+        .getOperationTypesFile({
+          importFrom: './../graphql-operations',
+        })
+        .getSource(),
+    )
+
+    this.updateTemplate(
+      Template.NitroTypes,
+      generateNitroTypes(operations, this.context.serverApiPrefix),
+    )
+
+    this.updateTemplate(
+      Template.OperationTypes,
+      this.buildOutputTypes(output.getTypes()),
+    )
+
+    this.updateTemplate(
+      Template.ResponseTypes,
+      generateResponseTypeTemplate(operations, this.context),
+    )
+
+    this.updateTemplate(Template.Enums, output.buildFile(['enum']).getSource())
+
+    this.updateTemplate(
+      Template.OperationSources,
+      generateSourcesTemplate(operations, this.context.rootDir),
     )
 
     // A map of GraphQL fragment name => fragment source.
@@ -483,54 +507,5 @@ export class Collector {
     }
 
     return { hasChanged, affectedOperations }
-  }
-
-  /**
-   * Get the TypeScript types template contents.
-   */
-  public getTemplateTypes(): string {
-    return this.outputTypes
-  }
-
-  /**
-   * Get the TypeScript Enums template contents.
-   */
-  public getTemplateEnums(): string {
-    return this.outputEnums
-  }
-
-  /**
-   * Get the context template contents.
-   */
-  public getTemplateResponseTypes(): string {
-    return this.outputResponseTypes
-  }
-
-  /**
-   * Get the operations template contents.
-   */
-  public getTemplateOperations(): string {
-    return this.outputOperations
-  }
-
-  /**
-   * Get the operation types template contents.
-   */
-  public getTemplateOperationTypes(): string {
-    return this.outputOperationTypes
-  }
-
-  /**
-   * Get the nitro types template contents.
-   */
-  public getTemplateNitroTypes(): string {
-    return this.outputNitroTypes
-  }
-
-  /**
-   * Get the nitro types template contents.
-   */
-  public getTemplateSources(): string {
-    return this.outputSources
   }
 }

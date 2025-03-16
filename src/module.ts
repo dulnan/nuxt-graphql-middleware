@@ -22,13 +22,12 @@ import {
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
 import { name, version } from '../package.json'
 import { setupDevToolsUI } from './devtools'
-import { GraphqlMiddlewareTemplate } from './runtime/settings'
+import { Template } from './runtime/settings'
 import type { Nitro } from 'nitropack'
 import { validateOptions, defaultOptions, logger, fileExists } from './helpers'
 import { type ClientFunctions, type ServerFunctions } from './rpc-types'
 import { Collector } from './module/Collector'
 import type { HookResult, Nuxt } from 'nuxt/schema'
-import { generateDocumentTypesTemplate } from './module/templates/document-types'
 import type { ModuleContext } from './module/types'
 import type { OperationResponseError } from './runtime/types'
 import { SchemaProvider } from './module/SchemaProvider'
@@ -40,21 +39,6 @@ function useViteWebSocket(nuxt: Nuxt): Promise<WebSocketServer> {
     nuxt.hooks.hook('vite:serverCreated', (viteServer) => {
       resolve(viteServer.ws)
     })
-  })
-}
-
-/**
- * Adds a Nuxt and Nitro template.
- */
-function addHybridTemplate(filename: string, getContents: () => string) {
-  addTemplate({
-    filename,
-    getContents,
-  })
-
-  addServerTemplate({
-    filename: '#' + filename.replace('.mjs', ''),
-    getContents,
   })
 }
 
@@ -248,13 +232,89 @@ export default defineNuxtModule<ModuleOptions>({
 
     function addAlias(name: string, path: string) {
       nuxt.options.alias[name] = path
+
+      // In our case, the name of the alias corresponds to a folder in the build
+      // dir with the same name (minus the #).
+      const pathFromName = `./${name.substring(1)}`
+
+      // Currently needed due to a bug in Nuxt that does not add aliases for
+      // nitro. As this has happened before in the past, let's leave it so that
+      // we are guaranteed to have these aliases also for server types.
+      nuxt.options.nitro.typescript ||= {}
+      nuxt.options.nitro.typescript.tsConfig ||= {}
+      nuxt.options.nitro.typescript.tsConfig.compilerOptions ||= {}
+      nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths ||= {}
+      nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[name] = [
+        pathFromName,
+      ]
+      nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
+        name + '/*'
+      ] = [pathFromName + '/*']
     }
 
+    /**
+     * Not exactly sure what this is doing, but it's needed for certain templates
+     * to work correctly.
+     */
     function inlineNitroExternals(path: string) {
       nuxt.options.nitro.externals = nuxt.options.nitro.externals || {}
       nuxt.options.nitro.externals.inline =
         nuxt.options.nitro.externals.inline || []
       nuxt.options.nitro.externals.inline.push(path)
+    }
+
+    /**
+     * Adds a dynamic collector type template.
+     */
+    function addCollectorTypeTemplate(template: Template) {
+      addTypeTemplate(
+        {
+          filename: template as any,
+          write: true,
+          getContents: () => collector.getTemplate(template),
+        },
+        {
+          nuxt: true,
+          nitro: true,
+        },
+      )
+    }
+
+    /**
+     * Adds a dynamic collector template.
+     */
+    function addCollectorTemplate(template: Template) {
+      addTemplate({
+        filename: template,
+        write: true,
+        getContents: () => collector.getTemplate(template),
+      })
+    }
+
+    /**
+     * Adds a virtual template for both Nuxt and Nitro.
+     *
+     * For some reason a template written to disk works for both Nuxt and Nitro,
+     * but a virtual template requires adding two templates.
+     */
+    function addVirtualCollectorTemplate(template: Template) {
+      const getContents = () => collector.getTemplate(template)
+
+      addTemplate({
+        filename: template,
+        getContents,
+      })
+
+      addServerTemplate({
+        // Since this is a virtual template, the name must match the final
+        // alias, example:
+        // - nuxt-graphql-middleware/foobar.mjs => #nuxt-graphql-middleware/foobar
+        //
+        // That way we can reference the same template using the alias in both
+        // Nuxt and Nitro environments.
+        filename: '#' + template.replace('.mjs', ''),
+        getContents,
+      })
     }
 
     const isModuleBuild =
@@ -330,7 +390,7 @@ export default defineNuxtModule<ModuleOptions>({
     const schemaProvider = new SchemaProvider(
       context,
       options,
-      rootResolver.resolve(options.schemaPath!),
+      rootResolver.resolve(resolveAlias(options.schemaPath!)),
     )
 
     /**
@@ -361,16 +421,15 @@ export default defineNuxtModule<ModuleOptions>({
       try {
         await collector.init()
       } catch (e) {
-        if (!context.isDev) {
-          throw new Error('Graphql document validation failed.')
-        }
-        const shouldRevalidate = await prompt.confirm(
-          'Do you want to revalidate the GraphQL documents?',
-        )
+        if (context.isDev) {
+          const shouldRevalidate = await prompt.confirm(
+            'Do you want to revalidate the GraphQL documents?',
+          )
 
-        if (shouldRevalidate === 'yes') {
-          await collector.reset()
-          return initDocumentValidation()
+          if (shouldRevalidate === 'yes') {
+            await collector.reset()
+            return initDocumentValidation()
+          }
         }
         throw new Error('Graphql document validation failed.')
       }
@@ -454,124 +513,19 @@ export default defineNuxtModule<ModuleOptions>({
       addServerImports(serverUtils)
     }
 
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.OperationTypes,
-        write: true,
-        getContents: () => collector.getTemplateTypes(),
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
+    addCollectorTypeTemplate(Template.OperationTypes)
+    addCollectorTypeTemplate(Template.OperationTypesAll)
+    addCollectorTypeTemplate(Template.Types)
+    addCollectorTypeTemplate(Template.HelpersTypes)
+    addCollectorTypeTemplate(Template.NitroTypes)
+    addCollectorTypeTemplate(Template.ResponseTypes)
+    addCollectorTypeTemplate(Template.DocumentTypes)
 
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.Types,
-        write: true,
-        getContents: () => {
-          return `
-declare module '#nuxt-graphql-middleware/sources' {
-  export const operationSources: Record<string, string>
-}
-`
-        },
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
+    addCollectorTemplate(Template.Enums)
+    addCollectorTemplate(Template.OperationSources)
+    addCollectorTemplate(Template.Helpers)
 
-    addTemplate({
-      filename: GraphqlMiddlewareTemplate.Enums,
-      write: true,
-      getContents: () => collector.getTemplateEnums(),
-    })
-
-    addTemplate({
-      filename: GraphqlMiddlewareTemplate.OperationSources,
-      write: true,
-      getContents: () => collector.getTemplateSources(),
-    })
-
-    addTemplate({
-      filename: GraphqlMiddlewareTemplate.Helpers,
-      write: true,
-      getContents: () =>
-        `export const serverApiPrefix = '${context.serverApiPrefix}'
-export function getEndpoint(operation, operationName) {
-  return '${context.serverApiPrefix}' + '/' + operation + '/' + operationName
-}
-`,
-    })
-
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.HelpersTypes,
-        write: true,
-        getContents: () => `export const serverApiPrefix: string;
-export function getEndpoint(operation: string, operationName: string): string
-`,
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
-
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.NitroTypes,
-        write: true,
-        getContents: () => collector.getTemplateNitroTypes(),
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
-
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.OperationTypesAll,
-        write: true,
-        getContents: () => collector.getTemplateOperationTypes(),
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
-
-    addHybridTemplate(GraphqlMiddlewareTemplate.Documents, () =>
-      collector.getTemplateOperations(),
-    )
-
-    addTypeTemplate(
-      {
-        filename: GraphqlMiddlewareTemplate.ResponseTypes,
-        write: true,
-        getContents: () => collector.getTemplateResponseTypes(),
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
-
-    addTypeTemplate(
-      {
-        write: true,
-        filename: 'nuxt-graphql-middleware/documents.d.ts',
-        getContents: () => generateDocumentTypesTemplate(),
-      },
-      {
-        nitro: true,
-        nuxt: true,
-      },
-    )
+    addVirtualCollectorTemplate(Template.Documents)
 
     const findServerOptions = () => {
       // Look for the file in the server directory.
@@ -726,17 +680,6 @@ export type GraphqlClientContext = {}
         },
       )
     })
-
-    nuxt.options.nitro.typescript ||= {}
-    nuxt.options.nitro.typescript.tsConfig ||= {}
-    nuxt.options.nitro.typescript.tsConfig.compilerOptions ||= {}
-    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths ||= {}
-    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
-      '#nuxt-graphql-middleware'
-    ] = ['./nuxt-graphql-middleware']
-    nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
-      '#nuxt-graphql-middleware/*'
-    ] = ['./nuxt-graphql-middleware/*']
 
     // Watch for file changes in dev mode.
     if (nuxt.options.dev || nuxt.options._prepare) {
