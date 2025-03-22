@@ -21,7 +21,8 @@ import ResponseTypes from './templates/ResponseTypes'
 import NitroTypes from './templates/NitroTypes'
 import OperationSources from './templates/OperationSources'
 import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
-import OperationTypes from './templates/OperationTypes'
+import OperationsTypeDefinitions from './templates/OperationsTypeDefinitions'
+import OperationsCode from './templates/OperationsCode'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -152,14 +153,17 @@ export class Collector {
       NitroTypes(operations, this.helper.options.serverApiPrefix),
     )
 
-    this.updateTemplate(Template.OperationTypes, OperationTypes(output))
+    this.updateTemplate(
+      Template.OperationsTypeDefinitions,
+      OperationsTypeDefinitions(output),
+    )
+
+    this.updateTemplate(Template.OperationsCode, OperationsCode(output))
 
     this.updateTemplate(
       Template.ResponseTypes,
       ResponseTypes(operations, this.helper),
     )
-
-    this.updateTemplate(Template.Enums, output.buildFile(['enum']).getSource())
 
     this.updateTemplate(
       Template.OperationSources,
@@ -440,8 +444,6 @@ export class Collector {
         hasChanged = this.handleUnlink(filePath)
       } else if (event === 'unlinkDir') {
         hasChanged = this.handleUnlinkDir(filePath)
-      } else if (event === 'addDir') {
-        // @TODO: Should this be handled?
       }
 
       if (hasChanged) {
@@ -503,9 +505,9 @@ export class Collector {
   /**
    * Adds a template that dependes on Collector state.
    */
-  public addTemplate(template: Template) {
+  public addTemplate(template: Template): string {
     if (template.endsWith('.d.ts')) {
-      addTypeTemplate(
+      return addTypeTemplate(
         {
           filename: template as any,
           write: true,
@@ -515,13 +517,13 @@ export class Collector {
           nuxt: true,
           nitro: true,
         },
-      )
+      ).dst
     } else {
-      addTemplate({
+      return addTemplate({
         filename: template,
         write: true,
         getContents: () => this.getTemplate(template),
-      })
+      }).dst
     }
   }
 }

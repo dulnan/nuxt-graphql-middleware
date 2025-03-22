@@ -11,7 +11,7 @@ import type { ModuleOptions } from './module/types/options'
 import { ModuleHelper } from './module/ModuleHelper'
 import GraphqlConfig from './module/templates/GraphqlConfig'
 import DocumentTypes from './module/templates/DocumentTypes'
-import Types from './module/templates/Types'
+import OperationSourcesTypes from './module/templates/OperationSourcesTypes'
 import HelpersTypes from './module/templates/HelpersTypes'
 import Helpers from './module/templates/Helpers'
 import ServerOptions from './module/templates/ServerOptions'
@@ -29,7 +29,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '>=3.16.0',
+      nuxt: '>=3.15.0',
     },
   },
   defaults: defaultOptions,
@@ -59,12 +59,10 @@ export default defineNuxtModule<ModuleOptions>({
       graphqlEndpoint: helper.options.graphqlEndpoint || '',
     }
 
-    nuxt.options.build.transpile.push(
-      fileURLToPath(new URL('./runtime', import.meta.url)),
-    )
-
+    helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))
     helper.inlineNitroExternals(helper.resolvers.module.resolve('./runtime'))
     helper.inlineNitroExternals(helper.paths.moduleBuildDir)
+    helper.inlineNitroExternals(helper.paths.moduleTypesDir)
 
     // =========================================================================
     // Aliases
@@ -131,17 +129,23 @@ export default defineNuxtModule<ModuleOptions>({
     helper.addTemplate(Template.HelpersTypes, HelpersTypes)
     helper.addTemplate(Template.ServerOptions, ServerOptions)
     helper.addTemplate(Template.ServerOptionsTypes, ServerOptionsTypes)
-    helper.addTemplate(Template.Types, Types)
+    helper.addTemplate(Template.OperationSourcesTypes, OperationSourcesTypes)
 
     // Templates that depend on collected GraphQL documents.
     // Their contents are provided by the Collector and updated on watch event.
-    collector.addTemplate(Template.Enums)
     collector.addTemplate(Template.NitroTypes)
     collector.addTemplate(Template.OperationSources)
-    collector.addTemplate(Template.OperationTypes)
+    collector.addTemplate(Template.OperationsTypeDefinitions)
+    collector.addTemplate(Template.OperationsCode)
     collector.addTemplate(Template.OperationTypesAll)
     collector.addTemplate(Template.ResponseTypes)
     collector.addVirtualTemplate(Template.Documents)
+
+    // =========================================================================
+    // Build
+    // =========================================================================
+
+    helper.applyBuildConfig()
 
     // =========================================================================
     // Dev Mode

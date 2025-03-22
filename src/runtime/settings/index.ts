@@ -1,18 +1,19 @@
 export enum Template {
   /**
    * Contains the TS definitions for all GraphQL queries, mutations and fragments.
+   * Additionally, exports enum const declaration and string union type.
    */
-  OperationTypes = 'graphql-operations/index.d.ts',
+  OperationsTypeDefinitions = 'graphql-operations/index.d.ts',
+
+  /**
+   * Contains the JS (enums).
+   */
+  OperationsCode = 'graphql-operations/index.mjs',
 
   /**
    * Contains the TS definitions for all GraphQL queries, mutations and fragments.
    */
   OperationTypesAll = 'nuxt-graphql-middleware/operations.d.ts',
-
-  /**
-   * Contains the TS definitions for all GraphQL queries, mutations and fragments.
-   */
-  Enums = 'graphql-operations/enums.ts',
 
   /**
    * Template for the middleware response types.
@@ -49,7 +50,10 @@ export enum Template {
    */
   OperationSources = 'nuxt-graphql-middleware/sources.mjs',
 
-  Types = 'nuxt-graphql-middleware/types.d.ts',
+  /**
+   * Types for the operation sources.
+   */
+  OperationSourcesTypes = 'nuxt-graphql-middleware/sources.d.ts',
 
   /**
    * The graphql-config file.
