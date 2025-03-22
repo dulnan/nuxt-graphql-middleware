@@ -33,11 +33,13 @@ export default config
   },
   () => {
     return `
-import type { IGraphQLConfig } from 'graphql-config'
+import type { IGraphQLProject } from 'graphql-config'
 
-const config: IGraphQLConfig
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
-export default config
+const config: WithRequired<IGraphQLProject, 'schema' | 'documents'>;
+
+export default config;
 `
   },
 )
