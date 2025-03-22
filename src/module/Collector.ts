@@ -275,7 +275,7 @@ export class Collector {
   public async init(): Promise<void> {
     try {
       await this.initDocuments()
-    } catch (e) {
+    } catch {
       if (this.helper.isDev) {
         const shouldRevalidate = await this.helper.prompt.confirm(
           'Do you want to revalidate the GraphQL documents?',

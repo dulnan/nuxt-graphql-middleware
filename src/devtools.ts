@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { type Nuxt } from 'nuxt/schema'
+import type { Nuxt } from 'nuxt/schema'
 
 const DEVTOOLS_UI_ROUTE = '/__nuxt-graphql-middleware'
 const DEVTOOLS_UI_LOCAL_PORT = 3300

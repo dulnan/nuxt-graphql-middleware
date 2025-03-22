@@ -1,11 +1,11 @@
 import fs from 'node:fs/promises'
 import { logger } from '../helpers'
 import { generate } from '@graphql-codegen/cli'
-import { type Types } from '@graphql-codegen/plugin-helpers'
-import { type SchemaASTConfig } from '@graphql-codegen/schema-ast'
+import type { Types } from '@graphql-codegen/plugin-helpers'
+import type { SchemaASTConfig } from '@graphql-codegen/schema-ast'
 import * as PluginSchemaAst from '@graphql-codegen/schema-ast'
 import { loadSchema } from '@graphql-tools/load'
-import { type GraphQLSchema } from 'graphql'
+import type { GraphQLSchema } from 'graphql'
 import type { ModuleHelper } from './ModuleHelper'
 
 /**

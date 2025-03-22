@@ -1,4 +1,4 @@
-import { type QueryObject } from 'ufo'
+import type { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
 import { createError } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
@@ -34,7 +34,7 @@ export function queryParamToVariables(query: QueryObject) {
     if (query.__variables && typeof query.__variables === 'string') {
       return JSON.parse(query.__variables)
     }
-  } catch (_e) {
+  } catch {
     // Noop.
   }
 
