@@ -7,7 +7,7 @@ import {
 } from './../../helpers/composables'
 import { buildRequestParams } from './../../helpers'
 import { performRequest } from '.'
-import type { Query } from '#nuxt-graphql-middleware/operations'
+import type { Query } from '#nuxt-graphql-middleware/operation-types'
 
 /**
  * Performs a GraphQL query.

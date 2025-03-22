@@ -1,13 +1,16 @@
-import type { GeneratorOutputOperation } from 'graphql-typescript-deluxe'
-import type { ModuleHelper } from '../ModuleHelper'
+import { defineGeneratorTemplate } from './../defineTemplate'
 
-export default function (
-  operations: readonly GeneratorOutputOperation[],
-  helper: ModuleHelper,
-): string {
-  const allTypes = operations.map((v) => v.typeName).sort()
+/**
+ * Template for the middleware response types.
+ */
+export default defineGeneratorTemplate(
+  { path: 'nuxt-graphql-middleware/response' },
+  null,
+  (output, helper) => {
+    const operations = output.getCollectedOperations()
+    const allTypes = operations.map((v) => v.typeName).sort()
 
-  return `import type {
+    return `import type {
   ${allTypes.join(',\n  ')}
 } from './../graphql-operations'
 import type { GraphqlResponseAdditions } from './server-options'
@@ -20,4 +23,5 @@ declare module '#nuxt-graphql-middleware/response' {
   export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
   export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>
 }`
-}
+  },
+)

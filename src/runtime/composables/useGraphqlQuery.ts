@@ -8,7 +8,7 @@ import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
-import type { Query } from '#nuxt-graphql-middleware/operations'
+import type { Query } from '#nuxt-graphql-middleware/operation-types'
 
 /**
  * Performs a GraphQL query.

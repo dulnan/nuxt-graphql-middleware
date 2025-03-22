@@ -6,7 +6,7 @@ import {
   encodeContext,
 } from './../../helpers/composables'
 import { performRequest } from '.'
-import type { Mutation } from '#nuxt-graphql-middleware/operations'
+import type { Mutation } from '#nuxt-graphql-middleware/operation-types'
 
 /**
  * Performs a GraphQL mutation.

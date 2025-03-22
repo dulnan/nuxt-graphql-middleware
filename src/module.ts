@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
-import { Template } from './runtime/settings'
 import { defaultOptions } from './helpers'
 import { Collector } from './module/Collector'
 import type { HookResult } from 'nuxt/schema'
@@ -9,18 +8,11 @@ import type { OperationResponseError } from './runtime/types'
 import { SchemaProvider } from './module/SchemaProvider'
 import type { ModuleOptions } from './module/types/options'
 import { ModuleHelper } from './module/ModuleHelper'
-import GraphqlConfig from './module/templates/GraphqlConfig'
-import DocumentTypes from './module/templates/DocumentTypes'
-import OperationSourcesTypes from './module/templates/OperationSourcesTypes'
-import HelpersTypes from './module/templates/HelpersTypes'
-import Helpers from './module/templates/Helpers'
-import ServerOptions from './module/templates/ServerOptions'
-import ServerOptionsTypes from './module/templates/ServerOptionsTypes'
-import ClientOptions from './module/templates/ClientOptions'
-import ClientOptionsTypes from './module/templates/ClientOptionsTypes'
+import { TEMPLATES } from './module/templates'
 import { DevModeHandler } from './module/DevModeHandler'
-export type { GraphqlMiddlewareServerOptions } from './types'
 
+export type { GraphqlMiddlewareServerOptions } from './types'
+export type { ModuleOptions }
 export interface ModuleHooks {}
 
 export default defineNuxtModule<ModuleOptions>({
@@ -44,7 +36,6 @@ export default defineNuxtModule<ModuleOptions>({
     await schemaProvider.init()
 
     const collector = new Collector(schemaProvider.getSchema(), helper)
-    await collector.init()
 
     // =========================================================================
     // Runtime Config, App Config, Hacks
@@ -119,33 +110,22 @@ export default defineNuxtModule<ModuleOptions>({
     // Templates
     // =========================================================================
 
-    // Static templates that only need to be built once, since they don't depend
-    // on collected GraphQL documents.
-    helper.addTemplate(Template.ClientOptions, ClientOptions)
-    helper.addTemplate(Template.ClientOptionsTypes, ClientOptionsTypes)
-    helper.addTemplate(Template.DocumentTypes, DocumentTypes)
-    helper.addTemplate(Template.GraphqlConfig, GraphqlConfig)
-    helper.addTemplate(Template.Helpers, Helpers)
-    helper.addTemplate(Template.HelpersTypes, HelpersTypes)
-    helper.addTemplate(Template.ServerOptions, ServerOptions)
-    helper.addTemplate(Template.ServerOptionsTypes, ServerOptionsTypes)
-    helper.addTemplate(Template.OperationSourcesTypes, OperationSourcesTypes)
-
-    // Templates that depend on collected GraphQL documents.
-    // Their contents are provided by the Collector and updated on watch event.
-    collector.addTemplate(Template.NitroTypes)
-    collector.addTemplate(Template.OperationSources)
-    collector.addTemplate(Template.OperationsTypeDefinitions)
-    collector.addTemplate(Template.OperationsCode)
-    collector.addTemplate(Template.OperationTypesAll)
-    collector.addTemplate(Template.ResponseTypes)
-    collector.addVirtualTemplate(Template.Documents)
+    TEMPLATES.forEach((template) => {
+      if (template.type === 'static') {
+        // Static templates only need to be generated once.
+        helper.addTemplate(template)
+      } else {
+        // Templates that require GraphQL documents to generate the contents.
+        collector.addTemplate(template)
+      }
+    })
 
     // =========================================================================
     // Build
     // =========================================================================
 
     helper.applyBuildConfig()
+    await collector.init()
 
     // =========================================================================
     // Dev Mode
@@ -164,8 +144,6 @@ export default defineNuxtModule<ModuleOptions>({
     devModeHandler.init()
   },
 })
-
-export type { ModuleOptions }
 
 declare module '@nuxt/schema' {
   interface AppConfig {

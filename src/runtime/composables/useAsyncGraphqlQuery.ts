@@ -17,7 +17,7 @@ import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { RequestCacheOptions } from './../types'
 import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
 import type { DefaultAsyncDataValue } from 'nuxt/app/defaults'
-import type { Query } from '#nuxt-graphql-middleware/operations'
+import type { Query } from '#nuxt-graphql-middleware/operation-types'
 
 type AsyncGraphqlQueryOptions<
   FetchOptions,

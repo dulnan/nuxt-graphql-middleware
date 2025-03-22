@@ -15,14 +15,9 @@ import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { RpcItem } from '../rpc-types'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
-import { Template } from '../runtime/settings'
 import type { ModuleHelper } from './ModuleHelper'
-import ResponseTypes from './templates/ResponseTypes'
-import NitroTypes from './templates/NitroTypes'
-import OperationSources from './templates/OperationSources'
 import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
-import OperationsTypeDefinitions from './templates/OperationsTypeDefinitions'
-import OperationsCode from './templates/OperationsCode'
+import type { GeneratorTemplate } from './templates/defineTemplate'
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -52,9 +47,14 @@ export class Collector {
   public readonly rpcItems: Map<string, RpcItem> = new Map()
 
   /**
-   * The generated templates.
+   * The registered templates.
    */
-  private templates: Map<Template, string> = new Map()
+  private templates: GeneratorTemplate[] = []
+
+  /**
+   * The generated template contents.
+   */
+  private templateResult: Map<string, string> = new Map()
 
   constructor(
     private schema: GraphQLSchema,
@@ -108,12 +108,8 @@ export class Collector {
     }
   }
 
-  private updateTemplate(template: Template, content: string) {
-    this.templates.set(template, content)
-  }
-
-  private getTemplate(template: Template): string {
-    const content = this.templates.get(template)
+  private getTemplate(template: string): string {
+    const content = this.templateResult.get(template)
     if (content === undefined) {
       throw new Error(`Missing template content: ${template}`)
     }
@@ -129,46 +125,20 @@ export class Collector {
     const operations = output.getCollectedOperations()
     const generatedCode = output.getGeneratedCode()
 
-    this.updateTemplate(
-      Template.Documents,
-      output
-        .getOperationsFile({
-          exportName: 'documents',
-          minify: !this.helper.isDev,
-        })
-        .getSource(),
-    )
+    this.templates.forEach((template) => {
+      if (template.build) {
+        const filename = template.options.path + '.js'
+        this.templateResult.set(filename, template.build(output, this.helper))
+      }
 
-    this.updateTemplate(
-      Template.OperationTypesAll,
-      output
-        .getOperationTypesFile({
-          importFrom: './../graphql-operations',
-        })
-        .getSource(),
-    )
-
-    this.updateTemplate(
-      Template.NitroTypes,
-      NitroTypes(operations, this.helper.options.serverApiPrefix),
-    )
-
-    this.updateTemplate(
-      Template.OperationsTypeDefinitions,
-      OperationsTypeDefinitions(output),
-    )
-
-    this.updateTemplate(Template.OperationsCode, OperationsCode(output))
-
-    this.updateTemplate(
-      Template.ResponseTypes,
-      ResponseTypes(operations, this.helper),
-    )
-
-    this.updateTemplate(
-      Template.OperationSources,
-      OperationSources(operations, this.helper.paths.root),
-    )
+      if (template.buildTypes) {
+        const filename = template.options.path + '.d.ts'
+        this.templateResult.set(
+          filename,
+          template.buildTypes(output, this.helper),
+        )
+      }
+    })
 
     // A map of GraphQL fragment name => fragment source.
     const fragmentMap: Map<string, string> = new Map()
@@ -228,29 +198,31 @@ export class Collector {
       throw new Error('GraphQL errors')
     }
 
-    for (const code of generatedCode) {
-      const id = `${code.identifier}_${code.graphqlName}`
-      if (
-        code.identifier === 'fragment' ||
-        code.identifier === 'mutation' ||
-        code.identifier === 'query'
-      ) {
-        if (this.rpcItems.get(id)?.timestamp === code.timestamp) {
-          continue
-        }
+    if (this.helper.isDev) {
+      for (const code of generatedCode) {
+        const id = `${code.identifier}_${code.graphqlName}`
+        if (
+          code.identifier === 'fragment' ||
+          code.identifier === 'mutation' ||
+          code.identifier === 'query'
+        ) {
+          if (this.rpcItems.get(id)?.timestamp === code.timestamp) {
+            continue
+          }
 
-        const fragmentDepdendencies = code
-          .getGraphQLFragmentDependencies()
-          .map((name) => fragmentMap.get(name) || '')
-          .join('\n\n')
-        this.rpcItems.set(id, {
-          id,
-          timestamp: code.timestamp,
-          source: code.source! + '\n\n' + fragmentDepdendencies,
-          name: code.graphqlName!,
-          filePath: code.filePath!,
-          identifier: code.identifier,
-        })
+          const fragmentDepdendencies = code
+            .getGraphQLFragmentDependencies()
+            .map((name) => fragmentMap.get(name) || '')
+            .join('\n\n')
+          this.rpcItems.set(id, {
+            id,
+            timestamp: code.timestamp,
+            source: code.source! + '\n\n' + fragmentDepdendencies,
+            name: code.graphqlName!,
+            filePath: code.filePath!,
+            identifier: code.identifier,
+          })
+        }
       }
     }
   }
@@ -482,11 +454,12 @@ export class Collector {
    * For some reason a template written to disk works for both Nuxt and Nitro,
    * but a virtual template requires adding two templates.
    */
-  public addVirtualTemplate(template: Template) {
-    const getContents = () => this.getTemplate(template)
+  private addVirtualTemplate(template: GeneratorTemplate) {
+    const filename = template.options.path + '.js'
+    const getContents = () => this.getTemplate(filename)
 
     addTemplate({
-      filename: template,
+      filename,
       getContents,
     })
 
@@ -497,7 +470,7 @@ export class Collector {
       //
       // That way we can reference the same template using the alias in both
       // Nuxt and Nitro environments.
-      filename: '#' + template.replace('.mjs', ''),
+      filename: '#' + template.options.path,
       getContents,
     })
   }
@@ -505,25 +478,35 @@ export class Collector {
   /**
    * Adds a template that dependes on Collector state.
    */
-  public addTemplate(template: Template): string {
-    if (template.endsWith('.d.ts')) {
-      return addTypeTemplate(
-        {
-          filename: template as any,
+  public addTemplate(template: GeneratorTemplate) {
+    this.templates.push(template)
+
+    if (template.build) {
+      if (template.options.virtual) {
+        this.addVirtualTemplate(template)
+      } else {
+        const filename = template.options.path + '.js'
+        addTemplate({
+          filename,
           write: true,
-          getContents: () => this.getTemplate(template),
+          getContents: () => this.getTemplate(filename),
+        })
+      }
+    }
+
+    if (template.buildTypes) {
+      const filename = (template.options.path + '.d.ts') as any
+      addTypeTemplate(
+        {
+          filename,
+          write: true,
+          getContents: () => this.getTemplate(filename),
         },
         {
           nuxt: true,
           nitro: true,
         },
-      ).dst
-    } else {
-      return addTemplate({
-        filename: template,
-        write: true,
-        getContents: () => this.getTemplate(template),
-      }).dst
+      )
     }
   }
 }
