@@ -10,13 +10,19 @@
         <hr />
         <h2 class="title is-3">Date of birth</h2>
         <p>{{ dateOfBirth }}</p>
+        <h2 class="title is-3">Means of Contact</h2>
+        <p v-if="user.meansOfContact === MeansOfContact.email">Email</p>
+        <p v-else-if="user.meansOfContact === MeansOfContact.phone">Phone</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { UserByIdQueryVariables } from '#build/graphql-operations'
+import {
+  MeansOfContact,
+  type UserByIdQueryVariables,
+} from '#build/graphql-operations'
 import { computed } from 'vue'
 import { useRoute, useAsyncGraphqlQuery } from '#imports'
 

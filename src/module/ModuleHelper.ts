@@ -78,6 +78,8 @@ export class ModuleHelper {
 
   public readonly prompt: ConsolePrompt = new ConsolePrompt()
 
+  private nitroExternals: string[] = []
+
   constructor(
     private nuxt: Nuxt,
     moduleUrl: string,
@@ -259,14 +261,26 @@ export class ModuleHelper {
     this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
       name + '/*'
     ] = [pathFromName + '/*']
+
+    // Add the alias as an external so that the nitro server build doesn't fail.
+    this.inlineNitroExternals(name)
   }
 
   public inlineNitroExternals(arg: ResolvedNuxtTemplate | string) {
     const path = typeof arg === 'string' ? arg : arg.dst
-    this.nuxt.options.nitro.externals = this.nuxt.options.nitro.externals || {}
-    this.nuxt.options.nitro.externals.inline =
-      this.nuxt.options.nitro.externals.inline || []
-    this.nuxt.options.nitro.externals.inline.push(path)
+    this.nitroExternals.push(path)
+    this.transpile(path)
+  }
+
+  public transpile(path: string) {
+    this.nuxt.options.build.transpile.push(path)
+  }
+
+  public applyBuildConfig() {
+    // Workaround for https://github.com/nuxt/nuxt/issues/28995
+    this.nuxt.options.nitro.externals ||= {}
+    this.nuxt.options.nitro.externals.inline ||= []
+    this.nuxt.options.nitro.externals.inline.push(...this.nitroExternals)
   }
 
   public addTemplate(template: Template, cb: (helper: ModuleHelper) => string) {
