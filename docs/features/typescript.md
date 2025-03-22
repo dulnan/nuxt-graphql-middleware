@@ -2,7 +2,7 @@
 
 Type definitions for your queries, mutations and fragments are generated
 automatically using
-[GraphQL Code Generator](https://www.graphql-code-generator.com/plugins/typescript/typescript).
+[graphql-typescript-deluxe](https://www.github.com/dulnan/graphql-typescript-deluxe).
 
 You can provide custom configuration for graphql-codegen using the
 [`codegenConfig` configuration property](/configuration/module.html#codegenconfig-typescriptdocumentspluginconfig).
@@ -62,17 +62,11 @@ export type FilmFragment = {
 You can import types via the `#graphql-operations` alias:
 
 ```vue
-<script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import { FilmFragment } from '#graphql-operations'
+<script setup lang="ts">
+import type { FilmFragment } from '#graphql-operations'
 
-export default defineComponent({
-  props: {
-    films: {
-      type: Array as PropType<FilmFragment[]>,
-      default: () => [],
-    },
-  },
-})
+defineProps<{
+  film: FilmFragment
+}>()
 </script>
 ```

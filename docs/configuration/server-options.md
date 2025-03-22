@@ -165,14 +165,17 @@ type GraphqlMiddlewareOnServerResponseMethod = (
 ) => any | Promise<any>
 ```
 
-### Example: Pass cookie from client to GraphQL server
+### Example: Pass cookie from client to GraphQL server and add custom property
+
+You can provide a generic argument (object) to define custom properties added to
+the response.
 
 ```typescript
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
-export default defineGraphqlServerOptions({
+export default defineGraphqlServerOptions<{ __customProperty: string[] }>({
   onServerResponse(event, graphqlResponse) {
     // Set a static header.
     event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
