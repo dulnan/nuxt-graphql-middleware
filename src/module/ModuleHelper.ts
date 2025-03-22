@@ -285,7 +285,7 @@ export class ModuleHelper {
 
   public addTemplate(template: StaticTemplate) {
     if (template.build) {
-      const content = template.build(this)
+      const content = template.build(this).trim()
       addTemplate({
         filename: template.options.path + '.js',
         write: true,
@@ -293,7 +293,7 @@ export class ModuleHelper {
       })
     }
     if (template.buildTypes) {
-      const content = template.buildTypes(this)
+      const content = template.buildTypes(this).trim()
       const filename = template.options.path + '.d.ts'
       addTypeTemplate({
         filename: filename as `${string}.d.ts`,

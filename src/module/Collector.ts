@@ -128,14 +128,17 @@ export class Collector {
     this.templates.forEach((template) => {
       if (template.build) {
         const filename = template.options.path + '.js'
-        this.templateResult.set(filename, template.build(output, this.helper))
+        this.templateResult.set(
+          filename,
+          template.build(output, this.helper).trim(),
+        )
       }
 
       if (template.buildTypes) {
         const filename = template.options.path + '.d.ts'
         this.templateResult.set(
           filename,
-          template.buildTypes(output, this.helper),
+          template.buildTypes(output, this.helper).trim(),
         )
       }
     })
