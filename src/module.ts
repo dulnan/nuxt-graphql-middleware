@@ -13,6 +13,7 @@ import { DevModeHandler } from './module/DevModeHandler'
 
 export type { GraphqlMiddlewareServerOptions } from './types'
 export type { ModuleOptions }
+
 export interface ModuleHooks {}
 
 export default defineNuxtModule<ModuleOptions>({

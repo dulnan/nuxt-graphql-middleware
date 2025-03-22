@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid({
   base: (process.env.BASE_URL as `/${string}/` | undefined) || '/',
   title: 'Nuxt GraphQL Middleware',
   lang: 'en',
@@ -44,19 +44,10 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/introduction/overview' },
           { text: 'Setup', link: '/introduction/setup' },
+          { text: 'Lifecycle', link: '/introduction/lifecycle' },
         ],
       },
-      {
-        text: 'Features',
-        items: [
-          { text: 'Caching', link: '/features/caching' },
-          { text: 'Auto Import', link: '/features/auto-import' },
-          { text: 'Fragments', link: '/features/fragments' },
-          { text: 'TypeScript', link: '/features/typescript' },
-          { text: 'Debug', link: '/features/debug' },
-          { text: 'Server Routes', link: '/features/server-route' },
-        ],
-      },
+
       {
         text: 'Composables',
         items: [
@@ -74,6 +65,17 @@ export default defineConfig({
             link: '/composables/useGraphqlUploadMutation',
           },
           { text: 'useGraphqlState', link: '/composables/useGraphqlState' },
+        ],
+      },
+      {
+        text: 'Features',
+        items: [
+          { text: 'Caching', link: '/features/caching' },
+          { text: 'Auto Import', link: '/features/auto-import' },
+          { text: 'Fragments', link: '/features/fragments' },
+          { text: 'TypeScript', link: '/features/typescript' },
+          { text: 'Debug', link: '/features/debug' },
+          { text: 'Server Routes', link: '/features/server-route' },
         ],
       },
       {

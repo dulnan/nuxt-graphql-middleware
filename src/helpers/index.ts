@@ -4,7 +4,7 @@ import { useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
-import { type GraphqlMiddlewareDocument } from './../types'
+import type { GraphqlMiddlewareDocument } from './../types'
 import { name } from '../../package.json'
 import type { ModuleOptions } from '../module/types/options'
 

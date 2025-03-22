@@ -10,8 +10,8 @@ method. In particular, it **does not use** any state set using the
 
 This util is auto-imported and available in a server (nitro) context. It's
 function signature is identical to the
-[useGraphqlQuery composable](/composables/useGraphqlQuery) composable available
-in a Nuxt app context.
+[useGraphqlQuery composable](/composables/useGraphqlQuery) available in a Nuxt
+app context.
 
 ## Example
 

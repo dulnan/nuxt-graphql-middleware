@@ -16,14 +16,21 @@ Add the module to your Nuxt config and provide the basic configuration.
 // ./nuxt.config.ts
 import { defineNuxtConfig } from 'nuxt'
 
+const IS_DEV = process.env.NODE_ENV === 'development'
+
 export default defineNuxtConfig({
   modules: ['nuxt-graphql-middleware'],
 
   graphqlMiddleware: {
     graphqlEndpoint: 'https://example.com/graphql',
+    downloadSchema: IS_DEV,
   },
 })
 ```
+
+The module will attempt to download the schema from the provided endpoint and
+store it locally. By setting `downloadSchema` to `true` only during development
+the module will use the already downloaded schema during build.
 
 ### Optional: Configure IDE integration
 

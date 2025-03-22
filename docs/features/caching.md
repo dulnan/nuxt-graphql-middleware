@@ -36,6 +36,19 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
 })
 ```
 
+### useGraphqlQuery
+
+To opt-in to client side caching, set `client: true` on the `graphqlCaching`
+property in the options argument:
+
+```typescript
+const data = await useGraphqlQuery('users', null, {
+  graphqlCaching: {
+    client: true,
+  },
+})
+```
+
 Now, the result of the `users` query is stored in memory and any subsequent call
 will resolve the cached response.
 

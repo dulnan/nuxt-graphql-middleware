@@ -7,7 +7,7 @@ editLink: true
 
 nuxt-graphql-middleware exposes your GraphQL queries and mutations as simple
 JSON endpoints using
-[Nuxt server routes](https://v3.nuxtjs.org/guide/features/server-routes/).
+[Nuxt server routes](https://nuxt.com/docs/guide/directory-structure/server#server-routes).
 
 It offers fully typed
 [composables](https://vuejs.org/guide/reusability/composables.html) to perform

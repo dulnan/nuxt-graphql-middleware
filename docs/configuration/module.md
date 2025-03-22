@@ -141,10 +141,10 @@ order to generate types.
 
 ## codegenConfig: TypeScriptDocumentsPluginConfig
 
-These options are passed to the graphql-codegen method when generating the
-operations types.
+These options are passed to graphql-typescript-deluxe when generating the
+operation types.
 
-[Check out `@graphql-codegen/typescript-operations` for all available options](https://www.the-guild.dev/graphql/codegen/plugins/typescript/typescript-operations)
+[Check out all available options](https://github.com/dulnan/graphql-typescript-deluxe/blob/main/src/types/options.ts#L193)
 
 ## outputDocuments: boolean | string
 
@@ -157,20 +157,4 @@ path.
 
 ```typescript
 false
-```
-
-### Default
-
-```typescript
-const codegenConfig = {
-  exportFragmentSpreadSubTypes: true,
-  preResolveTypes: true,
-  skipTypeNameForRoot: true,
-  skipTypename: true,
-  useTypeImports: true,
-  onlyOperationTypes: true,
-  namingConvention: {
-    enumValues: 'change-case-all#upperCaseFirst',
-  },
-}
 ```
