@@ -2,7 +2,7 @@ import type { FetchOptions } from 'ofetch'
 import type { RequestCacheOptions } from './../types'
 import { CLIENT_CONTEXT_PREFIX } from '../settings'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
-import type { Query, Mutation } from '#nuxt-graphql-middleware/operations'
+import type { Query, Mutation } from '#nuxt-graphql-middleware/operation-types'
 
 export type GraphqlComposableOptions = {
   fetchOptions?: FetchOptions

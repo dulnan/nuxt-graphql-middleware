@@ -7,7 +7,7 @@ import {
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import { useGraphqlState } from '#imports'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
-import type { Mutation } from '#nuxt-graphql-middleware/operations'
+import type { Mutation } from '#nuxt-graphql-middleware/operation-types'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 
 /**

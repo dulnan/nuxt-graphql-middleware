@@ -18,7 +18,7 @@ import { defu } from 'defu'
 import { defaultOptions, fileExists, logger, validateOptions } from '../helpers'
 import * as micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
-import type { Template } from '../runtime/settings'
+import type { StaticTemplate } from './templates/defineTemplate'
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
@@ -283,19 +283,20 @@ export class ModuleHelper {
     this.nuxt.options.nitro.externals.inline.push(...this.nitroExternals)
   }
 
-  public addTemplate(template: Template, cb: (helper: ModuleHelper) => string) {
-    // Run the callback only once, since the template does not depend on
-    // any state that might change during dev.
-    const content = cb(this)
-    if (template.endsWith('d.ts')) {
-      addTypeTemplate({
-        filename: template as `${string}.d.ts`,
+  public addTemplate(template: StaticTemplate) {
+    if (template.build) {
+      const content = template.build(this)
+      addTemplate({
+        filename: template.options.path + '.js',
         write: true,
         getContents: () => content,
       })
-    } else {
-      addTemplate({
-        filename: template,
+    }
+    if (template.buildTypes) {
+      const content = template.buildTypes(this)
+      const filename = template.options.path + '.d.ts'
+      addTypeTemplate({
+        filename: filename as `${string}.d.ts`,
         write: true,
         getContents: () => content,
       })

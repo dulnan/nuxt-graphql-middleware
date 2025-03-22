@@ -7,7 +7,7 @@ import {
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
-import type { Mutation } from '#nuxt-graphql-middleware/operations'
+import type { Mutation } from '#nuxt-graphql-middleware/operation-types'
 
 /**
  * Performs a GraphQL mutation.

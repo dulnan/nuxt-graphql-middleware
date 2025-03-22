@@ -12,7 +12,7 @@ import {
   type GraphqlMiddlewareOperation,
 } from './../../settings'
 import { documents } from '#nuxt-graphql-middleware/documents'
-import type { Mutation, Query } from '#nuxt-graphql-middleware/operations'
+import type { Mutation, Query } from '#nuxt-graphql-middleware/operation-types'
 
 export function isValidMutation(v?: string): v is keyof Mutation {
   return !!v && Object.hasOwn(documents.mutation, v)
