@@ -11,7 +11,7 @@ import { ModuleHelper } from './module/ModuleHelper'
 import { TEMPLATES } from './module/templates'
 import { DevModeHandler } from './module/DevModeHandler'
 
-export type { GraphqlMiddlewareServerOptions } from './types'
+export type { GraphqlMiddlewareServerOptions } from './runtime/types'
 export type { ModuleOptions }
 
 export default defineNuxtModule<ModuleOptions>({
