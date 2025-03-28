@@ -262,6 +262,19 @@ export class ModuleHelper {
       name + '/*'
     ] = [pathFromName + '/*']
 
+    // Currently needed due to a bug in Nuxt that does not add aliases for
+    // nitro. As this has happened before in the past, let's leave it so that
+    // we are guaranteed to have these aliases also for server types.
+    this.nuxt.options.typescript.tsConfig ||= {}
+    this.nuxt.options.typescript.tsConfig.compilerOptions ||= {}
+    this.nuxt.options.typescript.tsConfig.compilerOptions.paths ||= {}
+    this.nuxt.options.typescript.tsConfig.compilerOptions.paths[name] = [
+      pathFromName,
+    ]
+    this.nuxt.options.typescript.tsConfig.compilerOptions.paths[name + '/*'] = [
+      pathFromName + '/*',
+    ]
+
     // Add the alias as an external so that the nitro server build doesn't fail.
     this.inlineNitroExternals(name)
   }

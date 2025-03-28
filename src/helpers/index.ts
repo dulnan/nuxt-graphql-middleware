@@ -1,10 +1,8 @@
-import fs from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
 import type { Resolver } from '@nuxt/kit'
-import type { GraphqlMiddlewareDocument } from './../types'
 import { name } from '../../package.json'
 import type { ModuleOptions } from '../module/types/options'
 
@@ -47,20 +45,6 @@ export const fileExists = (
   )
 
   return extension ? `${path}.${extension}` : null
-}
-
-export async function outputDocuments(
-  outputPath: string,
-  documents: GraphqlMiddlewareDocument[],
-) {
-  await fs.mkdir(outputPath, { recursive: true })
-  documents.forEach((v) => {
-    if (v.operation && v.name) {
-      const fileName = [v.operation, v.name, 'graphql'].join('.')
-      const filePath = resolve(outputPath, fileName)
-      fs.writeFile(filePath, v.content)
-    }
-  })
 }
 
 export async function getOutputDocumentsPath(

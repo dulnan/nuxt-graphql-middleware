@@ -6,7 +6,6 @@ import {
   getRouterParam,
 } from 'h3'
 import type { FetchError } from 'ofetch'
-import type { GraphqlMiddlewareRuntimeConfig } from '../../../types'
 import {
   getEndpoint,
   getFetchOptions,
@@ -101,8 +100,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get the runtime config.
-  const runtimeConfig = useRuntimeConfig()
-    .graphqlMiddleware as GraphqlMiddlewareRuntimeConfig
+  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
 
   // Determine the endpoint of the GraphQL server.
   const endpoint = await getEndpoint(

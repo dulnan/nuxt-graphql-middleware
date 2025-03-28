@@ -1,5 +1,4 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import { fileURLToPath } from 'url'
 import graphqlMiddlewareModule from './../src/module'
 import type { ModuleOptions } from '../src/module/types/options'
 const IS_DEV = process.env.NODE_ENV === 'development'
@@ -49,6 +48,7 @@ export default defineNuxtConfig({
 
   typescript: {
     typeCheck: 'build',
+    strict: true,
   },
 
   future: {

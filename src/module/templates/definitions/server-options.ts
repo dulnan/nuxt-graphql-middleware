@@ -25,12 +25,8 @@ export { serverOptions }
       ? `import serverOptions from '${resolvedPathRelative}'`
       : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
 
-    const moduleTypesPath = helper.toModuleBuildRelative(
-      helper.resolvers.module.resolve('./types'),
-    )
-
     return `
-import type { GraphqlMiddlewareServerOptions } from '${moduleTypesPath}'
+import type { GraphqlMiddlewareServerOptions } from '${helper.paths.runtimeTypes}'
 ${serverOptionsLineTypes}
 
 export type GraphqlResponseAdditions =

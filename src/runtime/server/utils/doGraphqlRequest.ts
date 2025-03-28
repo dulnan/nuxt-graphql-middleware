@@ -2,7 +2,7 @@ import type { H3Event } from 'h3'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
 import { useRuntimeConfig } from '#imports'
 import { useEvent } from 'nitropack/runtime'
-import type { GraphqlMiddlewareRequestContext } from '../../../types'
+import type { GraphqlMiddlewareRequestContext } from '../../types'
 import {
   getEndpoint,
   getFetchOptions,

@@ -6,7 +6,7 @@ import type {
   GraphqlMiddlewareRequestContext,
   GraphqlMiddlewareRuntimeConfig,
   GraphqlMiddlewareServerOptions,
-} from './../../../types'
+} from './../../types'
 import {
   CLIENT_CONTEXT_PREFIX,
   type GraphqlMiddlewareOperation,
