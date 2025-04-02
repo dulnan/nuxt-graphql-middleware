@@ -139,7 +139,7 @@ export class ModuleHelper {
       schema: this.resolvers.root.resolve(
         resolveAlias(this.options.schemaPath),
       ),
-      serverOptions: this.findServerOptions(),
+      serverOptions: '',
       clientOptions: this.findClientOptions(),
       moduleBuildDir: nuxt.options.buildDir + '/nuxt-graphql-middleware',
       moduleTypesDir: nuxt.options.buildDir + '/graphql-operations',
@@ -150,6 +150,8 @@ export class ModuleHelper {
     this.paths.runtimeTypes = this.toModuleBuildRelative(
       this.resolvers.module.resolve('./runtime/types.ts'),
     )
+
+    this.paths.serverOptions = this.findServerOptions()
   }
 
   /**
@@ -262,9 +264,6 @@ export class ModuleHelper {
       name + '/*'
     ] = [pathFromName + '/*']
 
-    // Currently needed due to a bug in Nuxt that does not add aliases for
-    // nitro. As this has happened before in the past, let's leave it so that
-    // we are guaranteed to have these aliases also for server types.
     this.nuxt.options.typescript.tsConfig ||= {}
     this.nuxt.options.typescript.tsConfig.compilerOptions ||= {}
     this.nuxt.options.typescript.tsConfig.compilerOptions.paths ||= {}
