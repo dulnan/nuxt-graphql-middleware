@@ -349,7 +349,10 @@ export class Collector {
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
-    if (!this.helper.matchesImportPattern(filePath)) {
+    const matchesImportPattern = this.helper.matchesImportPattern(filePath)
+    const fileExists = this.files.has(filePath)
+
+    if (!matchesImportPattern && !fileExists) {
       return false
     }
     const file = this.files.get(filePath)

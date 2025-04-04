@@ -1,0 +1,8 @@
+query testEscape {
+  singleQuote: getText(
+    text: "Ich akzeptiere die <a href=\"@url\">Nutzungsbedingungen</a>."
+  )
+  tonsOfQuotes: getText(
+    text: "Ich ```````````` \" \\\" \\` akzeptiere die <a href=\"@url\">Nutzungsbedingungen`</a>. \\`"
+  )
+}

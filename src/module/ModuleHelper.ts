@@ -16,7 +16,7 @@ import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
 import { defu } from 'defu'
 import { defaultOptions, fileExists, logger, validateOptions } from '../helpers'
-import * as micromatch from 'micromatch'
+import micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
 import type { StaticTemplate } from './templates/defineTemplate'
 
@@ -109,12 +109,20 @@ export class ModuleHelper {
         '!node_modules',
       ]
     }
+    const srcResolver = createResolver(nuxt.options.srcDir)
     mergedOptions.autoImportPatterns = (
       mergedOptions.autoImportPatterns || []
     ).map((pattern) => {
+      // Skip resolving for ignore patterns.
+      if (pattern.startsWith('!')) {
+        return pattern
+      }
+
       // Resolves aliases such as `~` or `#custom`.
-      return resolveAlias(pattern)
+      const resolved = resolveAlias(pattern)
+      return srcResolver.resolve(resolved)
     })
+
     this.options = mergedOptions as RequiredModuleOptions
 
     // Will throw an error if the options are not valid.
@@ -126,7 +134,7 @@ export class ModuleHelper {
     this.resolvers = {
       module: createResolver(moduleUrl),
       server: createResolver(nuxt.options.serverDir),
-      src: createResolver(nuxt.options.srcDir),
+      src: srcResolver,
       app: createResolver(nuxt.options.dir.app),
       root: createResolver(nuxt.options.rootDir),
     }
@@ -240,7 +248,12 @@ export class ModuleHelper {
   }
 
   public matchesImportPattern(filePath: string): boolean {
-    return micromatch.isMatch(filePath, this.options.autoImportPatterns)
+    // Use micromatch to match using globs, but also check if the file path
+    // exists as a literal string in the patterns array.
+    return (
+      micromatch.isMatch(filePath, this.options.autoImportPatterns) ||
+      this.options.autoImportPatterns.includes(filePath)
+    )
   }
 
   public addAlias(name: string, path: string) {
