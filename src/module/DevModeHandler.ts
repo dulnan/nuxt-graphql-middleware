@@ -63,14 +63,25 @@ export class DevModeHandler {
     this.nitro.hooks.hook('compiled', this.onNitroCompiled.bind(this))
   }
 
-  async onBuilderWatch(event: WatchEvent, pathAbsolute: string) {
-    // Skip the GraphQL schema itself.
-    if (pathAbsolute === this.helper.paths.schema) {
+  async onBuilderWatch(event: WatchEvent, providedFilePath: string) {
+    // We only care about GraphQL files, so these can be skipped.
+    if (
+      !providedFilePath.endsWith('.graphql') &&
+      !providedFilePath.endsWith('.gql')
+    ) {
       return
     }
 
-    // We only care about GraphQL files.
-    if (!pathAbsolute.match(/\.(gql|graphql)$/)) {
+    // Hack: This is supposed to be absolute. But it's not. Sometimes.
+    // Let's make sure it's really absolute. We have to assume that the path
+    // is actually relative to the source directory. If not, HMR will be
+    // broken.
+    const pathAbsolute = providedFilePath.startsWith('/')
+      ? providedFilePath
+      : this.helper.resolvers.src.resolve(providedFilePath)
+
+    // Skip the GraphQL schema itself.
+    if (pathAbsolute === this.helper.paths.schema) {
       return
     }
 
