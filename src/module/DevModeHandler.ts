@@ -64,7 +64,7 @@ export class DevModeHandler {
   }
 
   async onBuilderWatch(event: WatchEvent, providedFilePath: string) {
-    // We only care about GraphQL files, so these can be skipped.
+    // We only care about GraphQL files.
     if (
       !providedFilePath.endsWith('.graphql') &&
       !providedFilePath.endsWith('.gql')
