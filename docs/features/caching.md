@@ -23,6 +23,14 @@ export default defineNuxtConfig({
 
 ## Usage
 
+In both composables the cache key is automatically derived from:
+
+- operation type
+- operation name
+- operation variables
+- (if available) the client context built in
+  [client options](/configuration/client-options)
+
 ### useAsyncGraphqlQuery
 
 To opt-in to client side caching, set `client: true` on the `graphqlCaching`
