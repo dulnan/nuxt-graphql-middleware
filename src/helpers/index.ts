@@ -1,12 +1,9 @@
 import { existsSync } from 'node:fs'
 import { useLogger } from '@nuxt/kit'
-import { resolve } from 'pathe'
 import type { ConsolaInstance } from 'consola'
-import type { Resolver } from '@nuxt/kit'
-import { name } from '../../package.json'
 import type { ModuleOptions } from '../module/types/options'
 
-export const logger: ConsolaInstance = useLogger(name)
+export const logger: ConsolaInstance = useLogger('nuxt-graphql-middleware')
 
 export const defaultOptions: ModuleOptions = {
   downloadSchema: true,
@@ -45,20 +42,4 @@ export const fileExists = (
   )
 
   return extension ? `${path}.${extension}` : null
-}
-
-export async function getOutputDocumentsPath(
-  optionsOutputDocuments: ModuleOptions['outputDocuments'],
-  nuxtBuildDir: string,
-  resolvePath: Resolver['resolvePath'],
-): Promise<string | null> {
-  if (!optionsOutputDocuments) {
-    return null
-  }
-
-  if (typeof optionsOutputDocuments === 'boolean') {
-    return resolve(nuxtBuildDir, `${name}/documents`)
-  } else {
-    return await resolvePath(optionsOutputDocuments)
-  }
 }

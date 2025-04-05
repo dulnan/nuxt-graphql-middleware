@@ -25,6 +25,8 @@ export function useGraphqlModuleContext(options: {
 /**
  * Get the nuxt-graphql-middleware module context helper.
  *
+ * This util can only be used inside modules.
+ *
  * @param options - The options.
  * @param options.nullOnMissing - If true, returns null if the context is missing.
  *
@@ -103,10 +105,10 @@ export default defineNuxtModule<ModuleOptions>({
     // Plugins
     // =========================================================================
 
-    helper.addPlugin('./runtime/plugins/provideState')
+    helper.addPlugin('provideState')
 
     if (helper.isDev && helper.options.errorOverlay) {
-      helper.addPlugin('./runtime/plugins/devMode')
+      helper.addPlugin('devMode')
     }
 
     // =========================================================================

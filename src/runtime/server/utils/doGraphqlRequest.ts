@@ -30,10 +30,7 @@ export async function doGraphqlRequest(
   context: GraphqlMiddlewareRequestContext | null | undefined = null,
   providedEvent: H3Event | null | undefined = null,
 ) {
-  const operationName = body.operationName || null
   const event = providedEvent ?? useEvent()
-  // Get the runtime config.
-  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
 
   if (serverOptions.doGraphqlRequest) {
     return serverOptions.doGraphqlRequest({
@@ -45,6 +42,11 @@ export async function doGraphqlRequest(
       context: context || {},
     })
   }
+
+  const operationName = body.operationName || null
+
+  // Get the runtime config.
+  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
 
   // Determine the endpoint of the GraphQL server.
   const endpoint = await getEndpoint(

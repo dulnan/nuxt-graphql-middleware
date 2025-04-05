@@ -345,8 +345,8 @@ export class ModuleHelper {
     }
   }
 
-  public addPlugin(path: string) {
-    addPlugin(this.resolvers.module.resolve(path), {
+  public addPlugin(name: string) {
+    addPlugin(this.resolvers.module.resolve('./runtime/plugins/' + name), {
       append: false,
     })
   }
