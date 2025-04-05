@@ -16,6 +16,7 @@ export default defineBuildConfig({
     'change-case',
     'change-case-all',
     'sirv',
+    'consola',
     'totalist/sync',
     '@polka/url',
     'mrmime',
