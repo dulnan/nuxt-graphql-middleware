@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "5.0.0-alpha.13",
+  "version": "5.0.0-alpha.14",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -41,7 +41,7 @@
     "debug": "nuxi dev playground --inspect",
     "dev:build": "nuxi build playground",
     "dev:layers:build": "nuxi build playground-layers",
-    "dev:prepare": "MODULE_BUILD=true nuxt-module-build build --stub && MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground-layers && nuxi prepare playground",
+    "dev:prepare": "PLAYGROUND_MODULE_BUILD=true nuxt-module-build build --stub && PLAYGROUND_MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground-layers && nuxi prepare playground",
     "dev:start": "node ./playground/.output/server/index.mjs",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",

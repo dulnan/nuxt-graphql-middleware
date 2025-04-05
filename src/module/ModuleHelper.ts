@@ -79,6 +79,7 @@ export class ModuleHelper {
   public readonly prompt: ConsolePrompt = new ConsolePrompt()
 
   private nitroExternals: string[] = []
+  private tsPaths: Record<string, string> = {}
 
   constructor(
     private nuxt: Nuxt,
@@ -86,7 +87,7 @@ export class ModuleHelper {
     options: ModuleOptions,
   ) {
     const isModuleBuild =
-      process.env.MODULE_BUILD === 'true' && nuxt.options._prepare
+      process.env.PLAYGROUND_MODULE_BUILD === 'true' && nuxt.options._prepare
 
     const mergedOptions = defu({}, options, defaultOptions)
     // Add sane default for the autoImportPatterns option.
@@ -282,29 +283,8 @@ export class ModuleHelper {
     // dir with the same name (minus the #).
     const pathFromName = `./${name.substring(1)}`
 
-    // Currently needed due to a bug in Nuxt that does not add aliases for
-    // nitro. As this has happened before in the past, let's leave it so that
-    // we are guaranteed to have these aliases also for server types.
-    this.nuxt.options.nitro.typescript ||= {}
-    this.nuxt.options.nitro.typescript.tsConfig ||= {}
-    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions ||= {}
-    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths ||= {}
-    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[name] = [
-      pathFromName,
-    ]
-    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[
-      name + '/*'
-    ] = [pathFromName + '/*']
-
-    this.nuxt.options.typescript.tsConfig ||= {}
-    this.nuxt.options.typescript.tsConfig.compilerOptions ||= {}
-    this.nuxt.options.typescript.tsConfig.compilerOptions.paths ||= {}
-    this.nuxt.options.typescript.tsConfig.compilerOptions.paths[name] = [
-      pathFromName,
-    ]
-    this.nuxt.options.typescript.tsConfig.compilerOptions.paths[name + '/*'] = [
-      pathFromName + '/*',
-    ]
+    this.tsPaths[name] = pathFromName
+    this.tsPaths[name + '/*'] = pathFromName + '/*'
 
     // Add the alias as an external so that the nitro server build doesn't fail.
     this.inlineNitroExternals(name)
@@ -325,6 +305,24 @@ export class ModuleHelper {
     this.nuxt.options.nitro.externals ||= {}
     this.nuxt.options.nitro.externals.inline ||= []
     this.nuxt.options.nitro.externals.inline.push(...this.nitroExternals)
+
+    // Currently needed due to a bug in Nuxt that does not add aliases for
+    // nitro. As this has happened before in the past, let's leave it so that
+    // we are guaranteed to have these aliases also for server types.
+    this.nuxt.options.nitro.typescript ||= {}
+    this.nuxt.options.nitro.typescript.tsConfig ||= {}
+    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions ||= {}
+    this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths ||= {}
+
+    this.nuxt.options.typescript.tsConfig ||= {}
+    this.nuxt.options.typescript.tsConfig.compilerOptions ||= {}
+    this.nuxt.options.typescript.tsConfig.compilerOptions.paths ||= {}
+
+    for (const [name, path] of Object.entries(this.tsPaths)) {
+      this.nuxt.options.nitro.typescript.tsConfig.compilerOptions.paths[name] =
+        [path]
+      this.nuxt.options.typescript.tsConfig.compilerOptions.paths[name] = [path]
+    }
   }
 
   public addTemplate(template: StaticTemplate) {
