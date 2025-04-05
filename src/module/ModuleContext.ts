@@ -1,6 +1,6 @@
 import type { Collector } from './Collector'
 import type { SchemaProvider } from './SchemaProvider'
-import type { GraphQLSchema } from 'graphql'
+import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
 
 /**
  * The public module context class.
@@ -13,6 +13,9 @@ export class ModuleContext {
 
   /**
    * Return the GraphQL schema.
+   *
+   * Note that the schema may be updated during development, so it can become
+   * stale. Prefer using methods like `schemaHasType()` to query the schema.
    *
    * @returns The GraphQL schema.
    */
@@ -33,6 +36,17 @@ export class ModuleContext {
   }
 
   /**
+   * Get a type from the schema.
+   *
+   * @param name - The name of the type.
+   *
+   * @returns The type.
+   */
+  public schemaGetType(name: string): GraphQLNamedType | undefined {
+    return this.schemaProvider.getSchema().getType(name)
+  }
+
+  /**
    * Add an additional static document.
    *
    * @param identifier - The unique identifier for your document.
@@ -50,11 +64,15 @@ export class ModuleContext {
    */
   public addImportFile(filePath: string): ModuleContext {
     if (!filePath.startsWith('/')) {
-      throw new Error('The provided file path must be an absolute path.')
+      throw new Error(
+        `The provided file path "${filePath}" must be an absolute path.`,
+      )
     }
 
     if (!filePath.endsWith('.graphql') && !filePath.endsWith('.gql')) {
-      throw new Error('The provided file extension must be .graphql or .gql.')
+      throw new Error(
+        `The provided file path "${filePath}" should have a .graphql or .gql extension.`,
+      )
     }
 
     this.collector.addHookFile(filePath)
