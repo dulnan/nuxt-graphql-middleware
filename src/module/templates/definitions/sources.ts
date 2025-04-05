@@ -9,7 +9,9 @@ export default defineGeneratorTemplate(
     const lines: string[] = []
 
     for (const operation of operations) {
-      const filePath = relative(srcDir, operation.filePath)
+      const filePath = operation.filePath.startsWith('/')
+        ? relative(srcDir, operation.filePath)
+        : operation.filePath
       lines.push(
         `${operation.operationType}_${operation.graphqlName}: '${filePath}',`,
       )

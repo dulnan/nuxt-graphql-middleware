@@ -40,7 +40,7 @@ import { defineNuxtConfig } from 'nuxt'
 export default defineNuxtConfig({
   graphqlMiddleware: {
     autoImportPatterns: [
-      './pages/**\/*.graphql',
+      '~/pages/**\/*.graphql',
       'node_modules/my_library/dist/**\/*.graphql'
     ]
   }
@@ -131,7 +131,7 @@ Path to the GraphQL schema file.
 
 If `downloadSchema` is `true`, the downloaded schema is written to this
 specified path. If `downloadSchema` is `false`, this file must be present in
-order to generate types.
+order to validate documents and generate types.
 
 ### default
 
