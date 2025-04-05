@@ -8,10 +8,9 @@ import {
   createResolver,
   resolveAlias,
   resolveFiles,
-  resolvePath,
   type Resolver,
 } from '@nuxt/kit'
-import { relative, resolve } from 'pathe'
+import { relative } from 'pathe'
 import type { RouterMethod } from 'h3'
 import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
