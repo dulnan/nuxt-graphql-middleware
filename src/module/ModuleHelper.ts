@@ -8,9 +8,10 @@ import {
   createResolver,
   resolveAlias,
   resolveFiles,
+  resolvePath,
   type Resolver,
 } from '@nuxt/kit'
-import { relative } from 'pathe'
+import { relative, resolve } from 'pathe'
 import type { RouterMethod } from 'h3'
 import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
@@ -109,18 +110,40 @@ export class ModuleHelper {
         '!node_modules',
       ]
     }
+
+    // Gather all aliases for each layer.
+    const layerAliases = nuxt.options._layers.map((layer) => {
+      // @see https://nuxt.com/docs/api/nuxt-config#alias
+      return {
+        '~~': layer.config.rootDir,
+        '@@': layer.config.rootDir,
+        '~': layer.config.srcDir,
+        '@': layer.config.srcDir,
+        // Merge any additional aliases defined by the layer.
+        // Must be last so that the layer may override the "default" aliases.
+        ...(layer.config.alias || {}),
+      }
+    })
+
+    // Resolver for the root directory.
     const srcResolver = createResolver(nuxt.options.srcDir)
+    const rootResolver = createResolver(nuxt.options.rootDir)
+
     mergedOptions.autoImportPatterns = (
       mergedOptions.autoImportPatterns || []
-    ).map((pattern) => {
-      // Skip resolving for ignore patterns.
-      if (pattern.startsWith('!')) {
+    ).flatMap((pattern) => {
+      if (pattern.startsWith('!') || pattern.startsWith('/')) {
+        // Skip resolving for ignore patterns or absolute paths.
         return pattern
+      } else if (pattern.startsWith('~') || pattern.startsWith('@')) {
+        // Any of the internal Nuxt aliases need to be resolved for each layer.
+        // @see https://nuxt.com/docs/api/nuxt-config#alias
+        return layerAliases.map((aliases) => resolveAlias(pattern, aliases))
       }
 
-      // Resolves aliases such as `~` or `#custom`.
-      const resolved = resolveAlias(pattern)
-      return srcResolver.resolve(resolved)
+      // The path starts with a dot, so we resolve it relative to the app root
+      // directory, which is where the nuxt.config.ts file is located.
+      return rootResolver.resolve(pattern)
     })
 
     this.options = mergedOptions as RequiredModuleOptions
@@ -136,7 +159,7 @@ export class ModuleHelper {
       server: createResolver(nuxt.options.serverDir),
       src: srcResolver,
       app: createResolver(nuxt.options.dir.app),
-      root: createResolver(nuxt.options.rootDir),
+      root: rootResolver,
     }
 
     this.paths = {
@@ -241,9 +264,6 @@ export class ModuleHelper {
     return resolveFiles(
       this.nuxt.options.srcDir,
       this.options.autoImportPatterns,
-      {
-        followSymbolicLinks: false,
-      },
     )
   }
 
