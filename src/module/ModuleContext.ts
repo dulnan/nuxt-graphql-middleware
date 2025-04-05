@@ -2,6 +2,9 @@ import type { Collector } from './Collector'
 import type { SchemaProvider } from './SchemaProvider'
 import type { GraphQLSchema } from 'graphql'
 
+/**
+ * The public module context class.
+ */
 export class ModuleContext {
   constructor(
     private schemaProvider: SchemaProvider,
@@ -36,7 +39,25 @@ export class ModuleContext {
    * @param source - The document source.
    */
   public addDocument(identifier: string, source: string): ModuleContext {
-    this.collector.addHookFile(identifier, source)
+    this.collector.addHookDocument(identifier, source)
+    return this
+  }
+
+  /**
+   * Add an additional GraphQL file to import.
+   *
+   * @param filePath - The absolute path to the file.
+   */
+  public addImportFile(filePath: string): ModuleContext {
+    if (!filePath.startsWith('/')) {
+      throw new Error('The provided file path must be an absolute path.')
+    }
+
+    if (!filePath.endsWith('.graphql') && !filePath.endsWith('.gql')) {
+      throw new Error('The provided file extension must be .graphql or .gql.')
+    }
+
+    this.collector.addHookFile(filePath)
     return this
   }
 }

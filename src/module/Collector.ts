@@ -32,9 +32,14 @@ export class Collector {
   private files = new Map<string, CollectedFile>()
 
   /**
-   * All files provided by hooks.
+   * All documents provided by hooks.
    */
-  private hookFiles = new Map<string, string>()
+  private hookDocuments = new Map<string, string>()
+
+  /**
+   * All file paths provided by hooks.
+   */
+  private hookFiles = new Set<string>()
 
   /**
    * The code generator.
@@ -295,8 +300,12 @@ export class Collector {
     }
   }
 
-  public addHookFile(identifier: string, source: string) {
-    this.hookFiles.set(identifier, source)
+  public addHookDocument(identifier: string, source: string) {
+    this.hookDocuments.set(identifier, source)
+  }
+
+  public addHookFile(filePath: string) {
+    this.hookFiles.add(filePath)
   }
 
   /**
@@ -323,8 +332,8 @@ export class Collector {
         })
       }
 
-      const hookFiles = [...this.hookFiles.entries()]
-      hookFiles.forEach(([identifier, source]) => {
+      const hookDocuments = [...this.hookDocuments.entries()]
+      hookDocuments.forEach(([identifier, source]) => {
         const file = new CollectedFile(identifier, source, false)
         this.files.set(identifier, file)
         this.generator.add({
@@ -332,6 +341,10 @@ export class Collector {
           documentNode: file.parsed,
         })
       })
+
+      for (const filePath of this.hookFiles) {
+        await this.addFile(filePath)
+      }
 
       this.buildState()
       logger.success('All GraphQL documents are valid.')
@@ -359,8 +372,17 @@ export class Collector {
     return file
   }
 
+  private matchesPatternOrExists(filePath: string): boolean {
+    return (
+      this.files.has(filePath) ||
+      this.hookFiles.has(filePath) ||
+      this.hookDocuments.has(filePath) ||
+      this.helper.matchesImportPattern(filePath)
+    )
+  }
+
   private async handleAdd(filePath: string): Promise<boolean> {
-    if (!this.helper.matchesImportPattern(filePath)) {
+    if (!this.matchesPatternOrExists(filePath)) {
       return false
     }
     const result = await this.addFile(filePath)
@@ -368,10 +390,7 @@ export class Collector {
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
-    const matchesImportPattern = this.helper.matchesImportPattern(filePath)
-    const fileExists = this.files.has(filePath)
-
-    if (!matchesImportPattern && !fileExists) {
+    if (!this.matchesPatternOrExists(filePath)) {
       return false
     }
     const file = this.files.get(filePath)
