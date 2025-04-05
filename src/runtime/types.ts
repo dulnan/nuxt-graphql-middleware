@@ -110,14 +110,14 @@ export type GraphqlMiddlewareRequestContext<
 }
 
 export type GraphqlMiddlewareGraphqlEndpointMethod<C extends ContextType> = (
-  event?: H3Event,
+  event: H3Event,
   operation?: string | null,
   operationName?: string | null,
   context?: GraphqlMiddlewareRequestContext<C> | null,
 ) => string | Promise<string> | undefined
 
 export type GraphqlMiddlewareServerFetchOptionsMethod<C extends ContextType> = (
-  event?: H3Event,
+  event: H3Event,
   operation?: string | null,
   operationName?: string | null,
   context?: GraphqlMiddlewareRequestContext<C> | null,
