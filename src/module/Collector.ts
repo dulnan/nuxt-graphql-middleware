@@ -77,7 +77,11 @@ export class Collector {
 
     if (!mappedOptions.output.buildTypeDocFilePath) {
       mappedOptions.output.buildTypeDocFilePath = (filePath: string) => {
-        return this.filePathToBuildRelative(filePath)
+        if (filePath.startsWith('/')) {
+          return this.filePathToBuildRelative(filePath)
+        }
+
+        return filePath
       }
     }
 
@@ -103,7 +107,11 @@ export class Collector {
   }
 
   private filePathToSourceRelative(filePath: string): string {
-    return './' + relative(process.cwd(), filePath)
+    if (filePath.startsWith('/')) {
+      return './' + relative(process.cwd(), filePath)
+    }
+
+    return filePath
   }
 
   private operationToLogEntry(
@@ -205,7 +213,12 @@ export class Collector {
       }
     }
 
-    logAllEntries(logEntries)
+    logAllEntries(
+      logEntries.sort((a, b) => {
+        // Sort by operation type and then operation name.
+        return a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
+      }),
+    )
 
     if (hasErrors) {
       throw new Error('GraphQL errors')
@@ -301,7 +314,7 @@ export class Collector {
   }
 
   public addHookDocument(identifier: string, source: string) {
-    this.hookDocuments.set(identifier, source)
+    this.hookDocuments.set('hook:' + identifier, source)
   }
 
   public addHookFile(filePath: string) {
