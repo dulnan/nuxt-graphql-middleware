@@ -1,5 +1,6 @@
 import { defineNuxtModule } from '@nuxt/kit'
 import { useGraphqlModuleContext } from '../../../src/module'
+import { fileURLToPath } from 'url'
 
 const USER_FRAGMENT = `
 fragment userFromModule on User {
@@ -22,10 +23,15 @@ export default defineNuxtModule({
   setup() {
     const context = useGraphqlModuleContext()
 
+    const queryFromDisk =
+      fileURLToPath(new URL('./graphql', import.meta.url)) +
+      '/queryFromDisk.graphql'
+
     // Conditionally add documents based on the schema.
     if (context.schemaHasType('User')) {
       context.addDocument('fragmentFromModule', USER_FRAGMENT)
       context.addDocument('queryFromModule', USER_QUERY)
+      context.addImportFile(queryFromDisk)
     }
 
     if (context.schemaHasType('NonExistingType')) {
