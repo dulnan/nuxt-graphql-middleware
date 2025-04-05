@@ -38,9 +38,29 @@ const graphqlMiddleware: ModuleOptions = {
 }
 
 export default defineNuxtConfig({
-  modules: [graphqlMiddlewareModule as any, '@nuxt/devtools', '@nuxt/eslint'],
+  modules: [
+    graphqlMiddlewareModule as any,
+    '@nuxt/devtools',
+    '@nuxt/eslint',
+    './modules/playground-module',
+  ],
   graphqlMiddleware,
   ssr: true,
+
+  hooks: {
+    'nuxt-graphql-middleware:init': (ctx) => {
+      ctx.addDocument(
+        'queryFromHook',
+        `
+query queryFromHook {
+      users {
+        id
+      }
+    }
+`,
+      )
+    },
+  },
 
   imports: {
     autoImport: false,

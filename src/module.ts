@@ -1,18 +1,53 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule } from '@nuxt/kit'
+import { defineNuxtModule, useNuxt } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './helpers'
 import { Collector } from './module/Collector'
-import type { HookResult } from 'nuxt/schema'
-import type { OperationResponseError } from './runtime/types'
 import { SchemaProvider } from './module/SchemaProvider'
 import type { ModuleOptions } from './module/types/options'
 import { ModuleHelper } from './module/ModuleHelper'
 import { TEMPLATES } from './module/templates'
 import { DevModeHandler } from './module/DevModeHandler'
+import { ModuleContext } from './module/ModuleContext'
+import type { OperationResponseError } from './runtime/types'
+import type { HookResult } from 'nuxt/schema'
 
 export type { GraphqlMiddlewareServerOptions } from './runtime/types'
 export type { ModuleOptions }
+
+const CONTEXT_KEY = '_nuxt_graphql_middleware'
+
+export function useGraphqlModuleContext(): ModuleContext
+export function useGraphqlModuleContext(options: {
+  nullOnMissing: true
+}): ModuleContext | null
+
+/**
+ * Get the nuxt-graphql-middleware module context helper.
+ *
+ * @param options - The options.
+ * @param options.nullOnMissing - If true, returns null if the context is missing.
+ *
+ * @returns The nuxt-graphql-middleware module context.
+ */
+export function useGraphqlModuleContext(options?: {
+  nullOnMissing?: boolean
+}): ModuleContext | null {
+  const nuxt = useNuxt()
+  const context = nuxt[CONTEXT_KEY]
+
+  if (!context) {
+    if (options?.nullOnMissing) {
+      return null
+    }
+
+    throw new Error(
+      'nuxt-graphql-middleware context is not available. Make sure you call this method only after nuxt-graphql-middleware has been setup. If you call this in a module, make sure your module is declared after nuxt-graphql-middleware in your `modules` Nuxt config.',
+    )
+  }
+
+  return context
+}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {
@@ -35,6 +70,9 @@ export default defineNuxtModule<ModuleOptions>({
     await schemaProvider.init()
 
     const collector = new Collector(schemaProvider.getSchema(), helper)
+
+    const moduleContext = new ModuleContext(schemaProvider, collector)
+    nuxt._nuxt_graphql_middleware = moduleContext
 
     // =========================================================================
     // Runtime Config, App Config, Hacks
@@ -124,7 +162,15 @@ export default defineNuxtModule<ModuleOptions>({
     // =========================================================================
 
     helper.applyBuildConfig()
-    await collector.init()
+
+    // This is called once all modules have been initialised.
+    nuxt.hooks.hookOnce('modules:done', async () => {
+      // Let other modules add additional documents.
+      await nuxt.hooks.callHook('nuxt-graphql-middleware:init', moduleContext)
+
+      // Initalise the documents.
+      await collector.init()
+    })
 
     // =========================================================================
     // Dev Mode
@@ -144,22 +190,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
 })
 
-declare module '@nuxt/schema' {
-  interface AppConfig {
-    graphqlMiddleware: {
-      /**
-       * Whether the client cache is enabled.
-       */
-      clientCacheEnabled: boolean
-
-      /**
-       * The max number of items in the cache.
-       */
-      clientCacheMaxSize: number
-    }
-  }
-}
-
 declare module '#app' {
   interface RuntimeNuxtHooks {
     /**
@@ -177,5 +207,54 @@ declare module 'vite/types/customEvent.d.ts' {
      * Emitted when GraphQL operations have been updated.
      */
     'nuxt-graphql-middleware:reload': { operations: string[] }
+  }
+}
+
+declare module '@nuxt/schema' {
+  interface AppConfig {
+    graphqlMiddleware: {
+      /**
+       * Whether the client cache is enabled.
+       */
+      clientCacheEnabled: boolean
+
+      /**
+       * The max number of items in the cache.
+       */
+      clientCacheMaxSize: number
+    }
+  }
+
+  interface Nuxt {
+    /**
+     * The nuxt-graphql-middleware module context.
+     */
+    _nuxt_graphql_middleware?: ModuleContext
+  }
+
+  interface NuxtHooks {
+    /**
+     * Called once right before the documents are initialised.
+     *
+     * Use this hook to add any additional documents based on for example the parsed schema.
+     *
+     * @example
+     *
+     * ```typescript`
+     * export default defineNuxtConfig({
+     *   hooks: {
+     *     'nuxt-graphql-middleware:init': (ctx) => {
+     *       if (ctx.schemaHasType('Comment')) {
+     *         ctx.addDocument(
+     *           'queryFromHook',
+     *           `query loadComments { author subject date body }`
+     *         )
+     *       }
+     *     },
+     *   },
+     * })
+     * ```
+     */
+    'nuxt-graphql-middleware:init': (ctx: ModuleContext) => void | Promise<void>
   }
 }

@@ -32,6 +32,11 @@ export class Collector {
   private files = new Map<string, CollectedFile>()
 
   /**
+   * All files provided by hooks.
+   */
+  private hookFiles = new Map<string, string>()
+
+  /**
    * The code generator.
    */
   private generator: Generator
@@ -290,6 +295,10 @@ export class Collector {
     }
   }
 
+  public addHookFile(identifier: string, source: string) {
+    this.hookFiles.set(identifier, source)
+  }
+
   /**
    * Initialise the collector.
    */
@@ -313,6 +322,16 @@ export class Collector {
           documentNode: file.parsed,
         })
       }
+
+      const hookFiles = [...this.hookFiles.entries()]
+      hookFiles.forEach(([identifier, source]) => {
+        const file = new CollectedFile(identifier, source, false)
+        this.files.set(identifier, file)
+        this.generator.add({
+          filePath: identifier,
+          documentNode: file.parsed,
+        })
+      })
 
       this.buildState()
       logger.success('All GraphQL documents are valid.')
