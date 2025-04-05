@@ -18,7 +18,7 @@ import type { GraphqlServerResponse } from '${helper.paths.runtimeTypes}'
 
 declare module '#nuxt-graphql-middleware/response' {
   export type GraphqlMiddlewareResponseUnion =
-    | ${allTypes.join('\n  | ') || 'never'}
+    | ${allTypes.join('\n    | ') || 'never'}
 
   export type GraphqlResponse<T> = GraphqlServerResponse<T> & GraphqlResponseAdditions
   export type GraphqlResponseTyped = GraphqlResponse<GraphqlMiddlewareResponseUnion>
