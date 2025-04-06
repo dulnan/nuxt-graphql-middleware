@@ -7,6 +7,9 @@ automatically using
 You can provide custom configuration for graphql-codegen using the
 [`codegenConfig` configuration property](/configuration/module.html#codegenconfig-typescriptdocumentspluginconfig).
 
+To enable full GraphQL support in your LSP/IDE, make sure to
+[configure a graphql.config.ts file](/introduction/setup.html#optional-configure-ide-integration).
+
 ## Queries
 
 Given this query:

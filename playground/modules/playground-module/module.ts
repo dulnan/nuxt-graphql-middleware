@@ -33,9 +33,5 @@ export default defineNuxtModule({
       context.addDocument('queryFromModule', USER_QUERY)
       context.addImportFile(queryFromDisk)
     }
-
-    if (context.schemaHasType('NonExistingType')) {
-      throw new Error('Type should not exist!')
-    }
   },
 })
