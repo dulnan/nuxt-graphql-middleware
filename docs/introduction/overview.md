@@ -14,24 +14,25 @@ It offers fully typed
 GraphQL requests using Nuxt's built-in
 [$fetch](https://v3.nuxtjs.org/api/utils/$fetch) method.
 
-## Rationale
-
 This module was created to solve the following problems:
 
-- Lots of GraphQL queries bloat the client bundle
-- GraphQL requests are not easily cachable
-- GraphQL server is exposed
-- Client libraries tend be large
+- Lots of GraphQL oeprations can bloat the client bundle
+- By default GraphQL POST requests are not easily cachable
+- The GraphQL server must be exposed
 
-Sure, there are various ways that each of these problems can be solved, but they
-tend to be quite complex and require lots of build tooling.
+All of these challenges could also be solved with existing libraries and
+solutions such as
+[Persisted Queries](https://www.apollographql.com/docs/kotlin/advanced/persisted-queries).
+However, this is not always possible, for example if the GraphQL server does not
+support these features. They may also require additional build steps.
 
 ## Solution: GraphQL only on the server
 
 By moving all GraphQL requests and logic to the server side of your Nuxt app, we
 can solve all of the listed problems:
 
-- No queries are bundled
-- Queries are GET requests and can be easily cached
-- GraphQL endpoint is only accessible by Nuxt on your server
-- 0kb client library
+- Query operations are GET requests and can be cached on CDNs or other caching
+  layers
+- No GraphQL documents in client bundles
+- The GraphQL server can be made inaccessible for public requests, for example
+  using basic auth

@@ -116,8 +116,12 @@ export default withMermaid({
         text: 'Examples',
         items: [
           {
-            text: 'Passing Auth Headers',
-            link: '/examples/passing-auth-headers',
+            text: 'Header Forwarding',
+            link: '/examples/header-forwarding',
+          },
+          {
+            text: 'Handling Authentication',
+            link: '/examples/handling-authentication',
           },
           {
             text: 'Static GraphQL Server Headers',
@@ -126,6 +130,10 @@ export default withMermaid({
           {
             text: 'GraphQL Response Extensions',
             link: '/examples/graphql-response-extensions',
+          },
+          {
+            text: 'nuxt-multi-cache Integration',
+            link: '/examples/nuxt-multi-cache',
           },
         ],
       },
