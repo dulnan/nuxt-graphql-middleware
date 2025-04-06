@@ -1,6 +1,6 @@
 This file contains explanation and help around code in package.json
 
-# scritps
+# scripts
 
 For the following commands to work you need to execute npm run dev:prepare at
 least once

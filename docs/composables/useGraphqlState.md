@@ -28,10 +28,27 @@ export default defineNuxtPlugin({
       return
     }
 
+    const token = useToken()
+
     // Set fetch options for all GraphQL queries and mutations.
     state.fetchOptions = {
+      // Static header that should be the same for all requests.
       headers: {
         CustomHeader: 'foobar',
+      },
+
+      // Header value is evaluated on every request.
+      onRequest({ options, request }) {
+        options.headers.set('x-auth-token', token.value)
+      },
+
+      // Handle headers sent from the middleware to the Nuxt app (client or server side).
+      onResponse(result) {
+        const headers = result.response?.headers
+        const newToken = headers.get('x-auth-token')
+        if (newToken) {
+          token.value = newToken
+        }
       },
     }
   },

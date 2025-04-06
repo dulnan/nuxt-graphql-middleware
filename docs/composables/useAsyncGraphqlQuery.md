@@ -1,6 +1,8 @@
 # useAsyncGraphqlQuery
 
-This is a convenience wrapper for using `useGraphqlQuery` inside `useAsyncData`:
+This is a convenience wrapper for using `useGraphqlQuery` inside `useAsyncData`.
+In addition, it will automatically refetch the data during development when the
+underlying GraphQL document (or used fragments) change.
 
 ```typescript
 const { data } = await useAsyncGraphqlQuery('users')

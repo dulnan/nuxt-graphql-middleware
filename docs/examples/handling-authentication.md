@@ -1,7 +1,6 @@
-# Passing Auth Headers
+# Handling Authentication
 
-This example shows how to pass authentication headers all the way from
-`useGraphqlQuery()` to the GraphQL server.
+This example shows how to handle authentication.
 
 The Nuxt docs have a section on
 [passing headers and cookies](https://nuxt.com/docs/getting-started/data-fetching#passing-headers-and-cookies)
@@ -19,7 +18,7 @@ const token = useToken()
 const data = await useGraphqlQuery('loadUsers', null, {
   fetchOptions: {
     headers: {
-      'x-auth-token': token.value,
+      Authorization: 'Bearer ' + token.value,
     },
   },
 })
@@ -28,7 +27,7 @@ const data = await useGraphqlQuery('loadUsers', null, {
 ### Using `useGraphqlState()`
 
 If you want to always pass a token on every request to the middleware you can do
-so using the [useGraphqlState composable](/composables/useGraphqlState).
+so using the [useGraphqlState() composable](/composables/useGraphqlState).
 
 ::: code-group
 
@@ -48,8 +47,10 @@ export default defineNuxtPlugin({
     // These are the regular fetch options from ofetch.
     state.fetchOptions = {
       onRequest({ options, request }) {
-        // Header will be sent for every request.
-        options.headers.set('x-auth-token', token.value)
+        if (token.value) {
+          // Header will be sent for every request.
+          options.headers.set('Authorization', 'Bearer ' + token.value)
+        }
       },
     }
   },
@@ -72,11 +73,15 @@ import { getHeader } from 'h3'
 
 export default defineGraphqlServerOptions({
   serverFetchOptions(event, operation, operationName) {
-    const token = getHeader(event, 'x-auth-token')
+    const headers: Record<string, string> = {}
+
+    const value = getHeader(event, 'Authorization')
+    if (value) {
+      headers['Authorization'] = value
+    }
+
     return {
-      headers: {
-        'x-auth-token': token,
-      },
+      headers,
     }
   },
 })
@@ -86,20 +91,24 @@ export default defineGraphqlServerOptions({
 
 ## Response: On the server
 
-If we also want to pass headers back from the GraphQL server to our Nuxt app:
+If we also want to pass headers back from the GraphQL server to our Nuxt app.
+This is done in the `onServerResponse()` method:
 
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
-import { setHeader } from 'h3'
+import { appendResponseHeader } from 'h3'
 
 export default defineGraphqlServerOptions({
   onServerResponse(event, graphqlResponse) {
-    // Let's assume the token is sent back as a cookie.
-    const cookie = graphqlResponse.headers.getSetCookie()
-    if (cookie) {
-      setHeader(event, 'set-cookie', cookie)
+    // Assuming that the new token is sent as a set-cookie header.
+    const cookies = graphqlResponse.headers.getSetCookie()
+
+    if (cookies) {
+      for (const cookie of cookies) {
+        appendResponseHeader(event, 'set-cookie', cookie)
+      }
     }
 
     // Return the GraphQL response.
@@ -128,33 +137,32 @@ export default defineNuxtPlugin({
   name: 'custom-plugin:graphql-request',
   dependsOn: ['nuxt-graphql-middleware-provide-state'],
   setup() {
-    const state = useGraphqlState()
+    if (import.meta.server) {
+      const state = useGraphqlState()
 
-    if (!state) {
-      // This can only happen if this plugin is executed *before* the nuxt-graphql-middleware-provide-state plugin.
-      // However, as long as "dependsOn" is set, this should never happen.
-      throw new Error('GraphQL state not available.')
-    }
+      if (!state) {
+        throw new Error('GraphQL state not available.')
+      }
 
-    const event = useRequestEvent()
+      const event = useRequestEvent()
 
-    state.fetchOptions = {
-      onResponse(result) {
-        // This only needs to be done on the server.
-        if (import.meta.server && event) {
+      state.fetchOptions = {
+        onResponse(result) {
           // The response headers from the middleware request.
           const headers = result.response?.headers
+
           if (!headers) {
             return
           }
 
           const cookie = headers.getSetCookie()
+
           // Append all cookies to the response.
           for (const cookie of cookies) {
             appendResponseHeader(event, 'set-cookie', cookie)
           }
-        }
-      },
+        },
+      }
     }
   },
 })
@@ -166,4 +174,5 @@ export default defineNuxtPlugin({
 
 If you're using cookies to handle your token, there is _no additional code_
 needed, because during client side rendering the browser already receives a
-response from the middleware that contains a `Set-Cookie` header.
+response from the middleware that contains a `Set-Cookie` header, so the browser
+will update the cookie accordingly.
