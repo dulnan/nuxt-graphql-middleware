@@ -1,53 +1,138 @@
-# Module Configuration
+# Module Options
 
-## graphqlEndpoint: string
+## autoImportPatterns?
 
-The URL of the GraphQL server.
+> `optional` **autoImportPatterns**: `string`[]
 
-You can also
-[provide an URL at runtime](/configuration/server-options.html#graphqlendpoint-determine-graphql-endpoint-per-request)
-via serverOptions.
+Defined in: [options.ts:25](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L25)
 
-### Example: Static URL
+File glob patterns for the auto import feature.
 
-```typescript
-import { defineNuxtConfig } from 'nuxt'
-
-export default defineNuxtConfig({
-  graphqlMiddleware: {
-    graphqlEndpoint: 'https://api.example.com/graphql'
-  }
-}
-```
-
-## autoImportPatterns: string[]
-
-File glob patterns for the auto import feature. If left empty, no documents are
-auto imported.
+If left empty, no documents are auto imported.
 
 ### Default
 
 ```json
-["**/*.{gql,graphql}", "!node_modules"]
+["**/.{gql,graphql}", "!node_modules"]
 ```
 
 ### Example
 
-```typescript
-import { defineNuxtConfig } from 'nuxt'
-
+```ts
 // Load .graphql files from pages folder and from a node_modules dependency.
-export default defineNuxtConfig({
-  graphqlMiddleware: {
-    autoImportPatterns: [
-      '~/pages/**\/*.graphql',
-      'node_modules/my_library/dist/**\/*.graphql'
-    ]
+const autoImportPatterns = [
+  './pages/**/*.graphql',
+  'node_modules/my_library/dist/**/*.graphql'
+]
+```
+
+***
+
+## clientCache?
+
+> `optional` **clientCache**: `object`
+
+Defined in: [options.ts:187](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L187)
+
+Client caching configuration.
+
+### enabled?
+
+> `optional` **enabled**: `boolean`
+
+### maxSize?
+
+> `optional` **maxSize**: `number`
+
+***
+
+## codegenConfig?
+
+> `optional` **codegenConfig**: `GeneratorOptions`
+
+Defined in: [options.ts:139](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L139)
+
+Options for graphql-typescript-deluxe code generator.
+
+### See
+
+[GeneratorOptions](https://github.com/dulnan/graphql-typescript-deluxe/blob/main/src/types/options.ts#L193)
+
+***
+
+## codegenSchemaConfig?
+
+> `optional` **codegenSchemaConfig**: `object`
+
+Defined in: [options.ts:144](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L144)
+
+Configuration for graphql-codegen when downloading the schema.
+
+### schemaAstConfig?
+
+> `optional` **schemaAstConfig**: `SchemaASTConfig`
+
+Configure how the schema.graphql file should be generated.
+
+##### See
+
+[SchemaASTConfig](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/other/schema-ast/src/index.ts#L23)
+
+### urlSchemaOptions?
+
+> `optional` **urlSchemaOptions**: `UrlSchemaOptions`
+
+Configure how the schema-ast introspection request should be made.
+
+Usually this is where you can provide a custom authentication header:
+
+```typescript
+const codegenSchemaConfig = {
+  urlSchemaOptions: {
+    headers: {
+      authentication: 'foobar',
+    }
   }
 }
 ```
 
-## documents: string[]
+##### See
+
+[Types.UrlSchemaOptions](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/utils/plugins-helpers/src/types.ts#L82)
+
+***
+
+## debug?
+
+> `optional` **debug**: `boolean`
+
+Defined in: [options.ts:82](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L82)
+
+Enable detailled debugging messages.
+
+### Default
+
+```ts
+false
+```
+
+***
+
+## devtools?
+
+> `optional` **devtools**: `boolean`
+
+Defined in: [options.ts:182](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L182)
+
+Enable Nuxt DevTools integration.
+
+***
+
+## documents?
+
+> `optional` **documents**: `string`[]
+
+Defined in: [options.ts:56](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L56)
 
 Additional raw documents to include.
 
@@ -55,106 +140,171 @@ Useful if for example you need to generate queries during build time.
 
 ### Default
 
-```json
+```ts
 []
 ```
 
 ### Example
 
-```typescript
-import { defineNuxtConfig } from 'nuxt'
-import { getGeneratedDocuments } from './helpers'
-
-export default defineNuxtConfig({
-  graphqlMiddleware: {
-    documents: [`
-      query myQuery {
-        articles {
-          title
-          id
-        }
-      }`,
-      ...getGeneratedDocuments()
-    ]
-  }
-}
+```ts
+const documents = [`
+  query myQuery {
+    articles {
+      title
+      id
+    }
+  }`,
+  ...getGeneratedDocuments()
+]
 ```
 
-## includeComposables: boolean
+***
 
-Wether the useGraphqlQuery, useGraphqlMutation and useGraphqlState composables
-should be included.
+## downloadSchema?
 
-Set this to false if you want to customize how to do your queries and mutations
-inside your app. You can also create your own composables that extend the
-provided composables.
+> `optional` **downloadSchema**: `boolean`
+
+Defined in: [options.ts:105](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L105)
+
+Download the GraphQL schema and store it on disk.
+
+Usually you'll want to only enable this during dev mode.
 
 ### Default
 
-```typescript
+```ts
 true
 ```
 
-## debug: boolean
+***
 
-Enable detailled debugging messages.
+## enableFileUploads?
+
+> `optional` **enableFileUploads**: `boolean`
+
+Defined in: [options.ts:75](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L75)
+
+Enable support for uploading files via GraphQL.
+
+When enabled, an additional `useGraphqlUploadMutation` composable is
+included, in addition to a new server endpoint that handles multi part
+file uploads for GraphQL mutations.
+
+***
+
+## errorOverlay?
+
+> `optional` **errorOverlay**: `boolean`
+
+Defined in: [options.ts:87](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L87)
+
+Displays GraphQL response errors in an overlay in dev mode.
+
+***
+
+## graphqlConfigFilePath?
+
+> `optional` **graphqlConfigFilePath**: `string`
+
+Defined in: [options.ts:34](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L34)
+
+The path where your graphql.config.ts is, relative to the location of nuxt.config.ts.
+
+Used to generate the correct paths in the graphql.config.ts file generated by the module.
 
 ### Default
 
-```typescript
-false
+```ts
+"./graphql.config.ts"
 ```
 
-## serverApiPrefix: string
+***
+
+## graphqlEndpoint
+
+> **graphqlEndpoint**: `string`
+
+Defined in: [options.ts:96](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L96)
+
+The URL of the GraphQL server.
+
+For the runtime execution you can provide a method that determines the endpoint
+during runtime. See the server/graphqlMiddleware.serverOptions.ts documentation
+for more information.
+
+***
+
+## includeComposables?
+
+> `optional` **includeComposables**: `boolean`
+
+Defined in: [options.ts:66](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L66)
+
+Wether the useGraphqlQuery, useGraphqlMutation and useGraphqlState
+composables should be included.
+
+### Default
+
+```ts
+true
+```
+
+***
+
+## logOnlyErrors?
+
+> `optional` **logOnlyErrors**: `boolean`
+
+Defined in: [options.ts:132](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L132)
+
+Logs only errors.
+
+When enabled only errors are logged to the console when generating the GraphQL operations.
+If false, all operations are logged, including valid ones.
+
+***
+
+## outputDocuments?
+
+> `optional` **outputDocuments**: `string` \| `boolean`
+
+Defined in: [options.ts:177](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L177)
+
+Set to true if you want to output each compiled query and mutation in the
+.nuxt folder.
+Set to a path to output to a custom path.
+
+***
+
+## schemaPath?
+
+> `optional` **schemaPath**: `string`
+
+Defined in: [options.ts:115](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L115)
+
+Path to the GraphQL schema file.
+
+If `downloadSchema` is `true`, the downloaded schema is written to this specified path.
+If `downloadSchema` is `false`, this file must be present in order to generate types.
+
+### Default
+
+```ts
+'./schema.graphql'
+```
+
+***
+
+## serverApiPrefix?
+
+> `optional` **serverApiPrefix**: `string`
+
+Defined in: [options.ts:124](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/module/types/options.ts#L124)
 
 The prefix for the server route.
 
 ### Default
 
-```typescript
-'/api/graphql_middleware'
-```
-
-## downloadSchema: boolean
-
-Download the GraphQL schema and save it to disk.
-
-### Default
-
-```typescript
-true
-```
-
-## schemaPath: string
-
-Path to the GraphQL schema file.
-
-If `downloadSchema` is `true`, the downloaded schema is written to this
-specified path. If `downloadSchema` is `false`, this file must be present in
-order to validate documents and generate types.
-
-### default
-
-```typescript
-'./schema.graphql'
-```
-
-## codegenConfig: TypeScriptDocumentsPluginConfig
-
-These options are passed to graphql-typescript-deluxe when generating the
-operation types.
-
-[Check out all available options](https://github.com/dulnan/graphql-typescript-deluxe/blob/main/src/types/options.ts#L193)
-
-## outputDocuments: boolean | string
-
-Output the compiled documents to disk. If boolean then path is
-$buildDir/nuxt-graphql-middleware/documents, usually
-`/.nuxt/nuxt-graphql-middleware/documents` else we use `outputDocuments` as the
-path.
-
-### default
-
-```typescript
-false
+```ts
+"/api/graphql_middleware"
 ```
