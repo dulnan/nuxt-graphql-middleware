@@ -2,7 +2,15 @@
 
 This composable allows you to set fetch options for the useGraphqlQuery,
 useAsyncGraphqlQuery and useGraphqlMutation composables. One common use case is
-to pass custom request headers to the GraphQL middleware request:
+to pass custom request headers to the GraphQL middleware request.
+
+::: warning
+
+The state is only used for requests made from within a Nuxt app context (e.g.
+pages, route middleware, etc.). Usually this is used to "pass" information from
+the client/browser context to the middleware.
+
+:::
 
 ::: code-group
 
@@ -31,6 +39,3 @@ export default defineNuxtPlugin({
 ```
 
 :::
-
-You can find more examples in the
-[composables configuration section](/configuration/composable).

@@ -1,9 +1,16 @@
-# Using Auth Headers
+# Static GraphQL Server Headers
 
-If your GraphQL endpoint requires you to authenticate requests via
-`Authentication` header (or any other header) there's two things you need to do:
+This example shows what to do if your GraphQL server requires you to send static
+headers (such as basic auth or a token header) _that are not user/session
+based_.
 
-## For `schema-ast` introspection requests (downloading schema) during build
+## Downloading the schema
+
+Because downloading the schema happens during the module's initialisation,
+[server options](/configuration/server-options) are not yet loaded.
+
+For this reason, there are only limited possibilities to define headers for this
+request.
 
 Header key and value must be provided directly in the configuration. Check out
 the
@@ -30,7 +37,7 @@ export default defineNuxtConfig({
 
 ## For query/mutation requests at runtime
 
-Define a `serverFetchOptions` callback in
+Define a `serverFetchOptions` method in
 `~/server/graphqlMiddleware.serverOptions.ts`. This method is called before a
 GraphQL request is made.
 

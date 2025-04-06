@@ -44,7 +44,6 @@ export default withMermaid({
         items: [
           { text: 'Overview', link: '/introduction/overview' },
           { text: 'Setup', link: '/introduction/setup' },
-          { text: 'Lifecycle', link: '/introduction/lifecycle' },
         ],
       },
 
@@ -104,17 +103,40 @@ export default withMermaid({
             link: '/configuration/client-options',
           },
           {
-            text: 'Full Example',
-            link: '/configuration/full-example',
+            text: 'Module Hooks',
+            link: '/configuration/module-hooks',
           },
           {
-            text: 'Composable',
-            link: '/configuration/composable',
+            text: 'Module Utils',
+            link: '/configuration/module-utils',
+          },
+        ],
+      },
+      {
+        text: 'Examples',
+        items: [
+          {
+            text: 'Passing Auth Headers',
+            link: '/examples/passing-auth-headers',
           },
           {
-            text: 'Using Auth Headers',
-            link: '/configuration/using-auth-headers',
+            text: 'Static GraphQL Server Headers',
+            link: '/examples/static-graphql-server-headers',
           },
+          {
+            text: 'GraphQL Response Extensions',
+            link: '/examples/graphql-response-extensions',
+          },
+        ],
+      },
+      {
+        text: 'Advanced',
+        items: [
+          {
+            text: 'Templates',
+            link: '/advanced/templates',
+          },
+          { text: 'Request Lifecycle', link: '/advanced/request-lifecycle' },
         ],
       },
     ],

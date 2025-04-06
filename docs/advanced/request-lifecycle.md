@@ -1,4 +1,4 @@
-# Lifecycle
+# Request Lifecycle
 
 There are various steps that a GraphQL query goes through. Let's look at what
 happens when you do `await useGraphqlQuery('myQuery')` in a component:
