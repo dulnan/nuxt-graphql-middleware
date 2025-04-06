@@ -325,9 +325,23 @@ export class ModuleHelper {
     }
   }
 
+  public processTemplate(path: string, content: string) {
+    if (path.includes('graphql-operations/')) {
+      return content.trim()
+    }
+    const name = path.split('/')[1]
+    return `/*
+ * @see [Documentation](https://nuxt-graphql-middleware.dulnan.net/advanced/templates#${name})
+ */
+${content.trim()}`
+  }
+
   public addTemplate(template: StaticTemplate) {
     if (template.build) {
-      const content = template.build(this).trim()
+      const content = this.processTemplate(
+        template.options.path,
+        template.build(this),
+      )
       addTemplate({
         filename: template.options.path + '.js',
         write: true,
@@ -335,7 +349,10 @@ export class ModuleHelper {
       })
     }
     if (template.buildTypes) {
-      const content = template.buildTypes(this).trim()
+      const content = this.processTemplate(
+        template.options.path,
+        template.buildTypes(this),
+      )
       const filename = template.options.path + '.d.ts'
       addTypeTemplate({
         filename: filename as `${string}.d.ts`,

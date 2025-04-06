@@ -133,6 +133,8 @@ export interface ModuleOptions {
 
   /**
    * Options for graphql-typescript-deluxe code generator.
+   *
+   * @see [GeneratorOptions](https://github.com/dulnan/graphql-typescript-deluxe/blob/main/src/types/options.ts#L193)
    */
   codegenConfig?: GeneratorOptions
 
@@ -142,6 +144,8 @@ export interface ModuleOptions {
   codegenSchemaConfig?: {
     /**
      * Configure how the schema.graphql file should be generated.
+     *
+     * @see [SchemaASTConfig](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/plugins/other/schema-ast/src/index.ts#L23)
      */
     schemaAstConfig?: SchemaASTConfig
 
@@ -159,6 +163,8 @@ export interface ModuleOptions {
      *   }
      * }
      * ```
+     *
+     * @see [Types.UrlSchemaOptions](https://github.com/dotansimha/graphql-code-generator/blob/master/packages/utils/plugins-helpers/src/types.ts#L82)
      */
     urlSchemaOptions?: Types.UrlSchemaOptions
   }
