@@ -1,0 +1,12 @@
+{
+  "entryPoints": ["./src/module/types/options.ts"],
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "./typedoc",
+  "excludeReferences": true,
+  "readme": "none",
+  "sourceLinkTemplate": "https://github.com/dulnan/nuxt-graphql-middleware/blob/main/{path}#L{line}",
+  "textContentMappings": {
+    "title.indexPage": "API",
+    "title.memberPage": "{name}"
+  }
+}
