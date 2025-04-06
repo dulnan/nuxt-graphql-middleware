@@ -103,7 +103,7 @@ export class Collector {
   }
 
   private filePathToBuildRelative(filePath: string): string {
-    return './' + this.helper.toBuildRelative(filePath)
+    return './' + this.helper.toModuleBuildRelative(filePath)
   }
 
   private filePathToSourceRelative(filePath: string): string {
@@ -148,7 +148,10 @@ export class Collector {
         const filename = template.options.path + '.js'
         this.templateResult.set(
           filename,
-          template.build(output, this.helper).trim(),
+          this.helper.processTemplate(
+            template.options.path,
+            template.build(output, this.helper),
+          ),
         )
       }
 
@@ -156,7 +159,10 @@ export class Collector {
         const filename = template.options.path + '.d.ts'
         this.templateResult.set(
           filename,
-          template.buildTypes(output, this.helper).trim(),
+          this.helper.processTemplate(
+            template.options.path,
+            template.buildTypes(output, this.helper),
+          ),
         )
       }
     })
