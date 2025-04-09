@@ -379,10 +379,12 @@ export class Collector {
    */
   private async addFile(filePath: string): Promise<CollectedFile | null> {
     const file = await CollectedFile.fromFilePath(filePath)
+
     // Skip empty files.
-    if (!file.fileContents) {
+    if (!file?.fileContents) {
       return null
     }
+
     this.files.set(filePath, file)
     this.generator.add({
       filePath,

@@ -14,8 +14,11 @@ export class CollectedFile {
     this.parsed = parse(fileContents)
   }
 
-  static async fromFilePath(filePath: string): Promise<CollectedFile> {
+  static async fromFilePath(filePath: string): Promise<CollectedFile | null> {
     const content = (await fs.readFile(filePath)).toString()
+    if (!content) {
+      return null
+    }
     return new CollectedFile(filePath, content, true)
   }
 
