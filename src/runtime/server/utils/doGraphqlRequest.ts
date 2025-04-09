@@ -43,6 +43,7 @@ export async function doGraphqlRequest(
     })
   }
 
+  const operation = body.operation || null
   const operationName = body.operationName || null
 
   // Get the runtime config.
@@ -83,7 +84,7 @@ export async function doGraphqlRequest(
         serverOptions,
         event,
         response,
-        null,
+        operation,
         operationName,
         context,
       )
@@ -93,7 +94,7 @@ export async function doGraphqlRequest(
         serverOptions,
         event,
         error,
-        null,
+        operation,
         operationName,
         context,
       )

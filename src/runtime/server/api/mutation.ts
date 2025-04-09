@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
       query: operationDocument,
       variables,
       operation: GraphqlMiddlewareOperation.Mutation,
+      operationName,
     },
     context,
     event,
