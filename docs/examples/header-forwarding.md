@@ -55,7 +55,7 @@ middleware to the GraphQL server. To do this, we need to define
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { getProxyRequestHeaders } from 'h3'
 
 export default defineGraphqlServerOptions({

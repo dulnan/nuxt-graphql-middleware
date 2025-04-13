@@ -68,7 +68,7 @@ middleware to the GraphQL server. To do this, we need to define
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { getHeader } from 'h3'
 
 export default defineGraphqlServerOptions({
@@ -97,7 +97,7 @@ This is done in the `onServerResponse()` method:
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { appendResponseHeader } from 'h3'
 
 export default defineGraphqlServerOptions({

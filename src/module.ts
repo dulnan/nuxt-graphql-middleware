@@ -1,55 +1,18 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, useNuxt } from '@nuxt/kit'
+import { defineNuxtModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
-import { defaultOptions } from './helpers'
-import { Collector } from './module/Collector'
-import { SchemaProvider } from './module/SchemaProvider'
-import type { ModuleOptions } from './module/types/options'
-import { ModuleHelper } from './module/ModuleHelper'
-import { TEMPLATES } from './module/templates'
-import { DevModeHandler } from './module/DevModeHandler'
-import { ModuleContext } from './module/ModuleContext'
+import { defaultOptions } from './build/helpers'
+import { Collector } from './build/Collector'
+import { SchemaProvider } from './build/SchemaProvider'
+import type { ModuleOptions } from './build/types/options'
+import { ModuleHelper } from './build/ModuleHelper'
+import { TEMPLATES } from './build/templates'
+import { DevModeHandler } from './build/DevModeHandler'
+import { ModuleContext } from './build/ModuleContext'
 import type { OperationResponseError } from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
 
-export type { GraphqlMiddlewareServerOptions } from './runtime/types'
 export type { ModuleOptions }
-
-const CONTEXT_KEY = '_nuxt_graphql_middleware'
-
-export function useGraphqlModuleContext(): ModuleContext
-export function useGraphqlModuleContext(options: {
-  nullOnMissing: true
-}): ModuleContext | null
-
-/**
- * Get the nuxt-graphql-middleware module context helper.
- *
- * This util can only be used inside modules.
- *
- * @param options - The options.
- * @param options.nullOnMissing - If true, returns null if the context is missing.
- *
- * @returns The nuxt-graphql-middleware module context.
- */
-export function useGraphqlModuleContext(options?: {
-  nullOnMissing?: boolean
-}): ModuleContext | null {
-  const nuxt = useNuxt()
-  const context = nuxt[CONTEXT_KEY]
-
-  if (!context) {
-    if (options?.nullOnMissing) {
-      return null
-    }
-
-    throw new Error(
-      'nuxt-graphql-middleware context is not available. Make sure you call this method only after nuxt-graphql-middleware has been setup. If you call this in a module, make sure your module is declared after nuxt-graphql-middleware in your `modules` Nuxt config.',
-    )
-  }
-
-  return context
-}
 
 export default defineNuxtModule<ModuleOptions>({
   meta: {

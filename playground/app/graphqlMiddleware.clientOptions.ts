@@ -1,4 +1,4 @@
-import { defineGraphqlClientOptions } from './../../src/runtime/clientOptions/index'
+import { defineGraphqlClientOptions } from './../../src/client-options'
 import { useCurrentLanguage } from '#imports'
 
 export default defineGraphqlClientOptions<{

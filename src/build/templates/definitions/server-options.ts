@@ -18,20 +18,30 @@ export { serverOptions }
 `
   },
   (helper) => {
-    const resolvedPathRelative = helper.paths.serverOptions
-      ? helper.toModuleBuildRelative(helper.paths.serverOptions)
-      : null
-    const serverOptionsLineTypes = resolvedPathRelative
-      ? `import serverOptions from '${resolvedPathRelative}'`
-      : `const serverOptions: GraphqlMiddlewareServerOptions = {}`
+    // Type template when server options exist.
+    if (helper.paths.serverOptions) {
+      const resolvedPathRelative = helper.toModuleBuildRelative(
+        helper.paths.serverOptions,
+      )
 
-    return `
+      return `
 import type { GraphqlMiddlewareServerOptions } from '${helper.paths.runtimeTypes}'
-${serverOptionsLineTypes}
+import serverOptionsImport from '${resolvedPathRelative}'
 
 export type GraphqlResponseAdditions =
-  typeof serverOptions extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
+  typeof serverOptionsImport extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
 
-export { serverOptions }`
+declare export const serverOptions: GraphqlMiddlewareServerOptions
+`
+    }
+
+    // Fallback type template when no server options exist.
+    return `
+import type { GraphqlMiddlewareServerOptions } from '${helper.paths.runtimeTypes}'
+
+declare export const serverOptions: GraphqlMiddlewareServerOptions
+
+export type GraphqlResponseAdditions = object
+`
   },
 )

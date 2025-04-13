@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { RpcItem } from './../../src/rpc-types'
+import type { RpcItem } from './../../src/build/types/rpc'
 const props = defineProps<RpcItem & { serverApiPrefix: string }>()
 
 const errorsMapped = computed(() => {
