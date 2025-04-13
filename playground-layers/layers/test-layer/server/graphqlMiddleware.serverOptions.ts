@@ -1,3 +1,3 @@
-import { defineGraphqlServerOptions } from './../../../../src/runtime/serverOptions/index'
+import { defineGraphqlServerOptions } from './../../../../src/server-options'
 
 export default defineGraphqlServerOptions({})

@@ -12,7 +12,7 @@ config this will be `./server`.
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 
 export default defineGraphqlServerOptions({
   // ...
@@ -42,7 +42,7 @@ request fails because of an expired token it will refresh the token and then
 retry the request.
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { refreshToken } from './../helpers'
 
 export default defineGraphqlServerOptions({
@@ -102,7 +102,7 @@ Here we determine the current language from the incoming `Accept-Language`
 header and use it to target a specific language-prefixed GraphQL endpoint.
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { getHeader } from 'h3'
 import acceptLanguageParser from 'accept-language-parser'
 
@@ -134,7 +134,7 @@ type GraphqlMiddlewareServerFetchOptionsMethod = (
 ### Example: Pass cookie from client to GraphQL server
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { getHeader } from 'h3'
 
 // Pass the cookie from the client request to the GraphQL request.
@@ -171,7 +171,7 @@ You can provide a generic argument (object) to define custom properties added to
 the response.
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import type { H3Event } from 'h3'
 import type { FetchResponse } from 'ofetch'
 
@@ -214,7 +214,7 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ### Example: Always return a 200 status to the clients
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
 

@@ -1,6 +1,6 @@
 import { type GraphQLError, printSourceLocation } from 'graphql'
 import colors from 'picocolors'
-import { logger } from '../../helpers'
+import { logger } from './../helpers'
 
 export const SYMBOL_CROSS = 'x'
 export const SYMBOL_CHECK = '✔'

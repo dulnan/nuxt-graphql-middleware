@@ -64,9 +64,9 @@ import type {
   ServerFunctions,
   ClientFunctions,
   RpcItem,
-} from './../../src/rpc-types'
+} from './../../src/build/types/rpc'
 
-const miniSearch = new MiniSearch({
+const miniSearch = new MiniSearch<RpcItem>({
   fields: ['id', 'source', 'name', 'filePath', 'identifier'],
   storeFields: ['id', 'source', 'name', 'identifier', 'filePath'],
   searchOptions: {
@@ -124,18 +124,20 @@ function copyToClipboard(item: RpcItem) {
   textArea.select()
 
   try {
-    const successful = document.execCommand('copy')
-  } catch (_e) {}
+    document.execCommand('copy')
+  } catch {
+    // Noop
+  }
 
   document.body.removeChild(textArea)
 }
 
-const documentsFiltered = computed(() => {
+const documentsFiltered = computed<RpcItem[]>(() => {
   if (!search.value) {
     return documents.value
   }
 
   const results = miniSearch.search(search.value)
-  return results
+  return results as unknown as RpcItem[]
 })
 </script>

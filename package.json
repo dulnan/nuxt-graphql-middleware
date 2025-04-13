@@ -6,34 +6,37 @@
     "type": "git",
     "url": "git+https://github.com/dulnan/nuxt-graphql-middleware.git"
   },
-  "license": "MIT",
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/types.d.ts",
-        "default": "./dist/module.mjs"
-      },
-      "require": {
-        "types": "./dist/types.d.ts",
-        "default": "./dist/module.cjs"
-      }
+      "types": "./dist/types.d.mts",
+      "import": "./dist/module.mjs"
     },
-    "./dist/runtime/serverOptions": {
-      "import": "./dist/runtime/serverOptions/index.js",
-      "types": "./dist/runtime/serverOptions/index.d.ts"
-    },
-    "./dist/runtime/clientOptions": {
-      "import": "./dist/runtime/clientOptions/index.js",
-      "types": "./dist/runtime/clientOptions/index.d.ts"
+    "./utils": "./dist/utils.mjs",
+    "./client-options": "./dist/client-options.mjs",
+    "./server-options": "./dist/server-options.mjs"
+  },
+  "main": "./dist/module.mjs",
+  "typesVersions": {
+    "*": {
+      ".": [
+        "./dist/types.d.mts"
+      ],
+      "utils": [
+        "./dist/utils.d.mts"
+      ],
+      "client-options": [
+        "./dist/client-options.d.mts"
+      ],
+      "server-options": [
+        "./dist/server-options.d.mts"
+      ]
     }
   },
-  "main": "./dist/module.cjs",
-  "module": "./dist/module.mjs",
-  "types": "./dist/types.d.ts",
   "files": [
     "dist"
   ],
+  "license": "MIT",
   "scripts": {
     "prepack": "npm run styles:build && nuxt-module-build build && npm run client:build",
     "dev": "nuxi dev playground --trace-warnings",
@@ -79,7 +82,7 @@
     "@nuxt/devtools-ui-kit": "^2.3.1",
     "@nuxt/eslint": "^1.2.0",
     "@nuxt/kit": "^3.16.2",
-    "@nuxt/module-builder": "^0.8.4",
+    "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^3.16.2",
     "@types/micromatch": "^4.0.9",
     "cypress": "^13.12.0",
@@ -102,7 +105,6 @@
     "typedoc-vitepress-theme": "^1.1.2",
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "^1.6.0",
-    "vue-tsc": "^2.2.8"
+    "vitest": "^1.6.0"
   }
 }

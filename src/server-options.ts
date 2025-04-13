@@ -1,8 +1,8 @@
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
 import type { GraphqlMiddlewareResponseUnion } from '#nuxt-graphql-middleware/response'
-import type { GraphqlMiddlewareServerOptions } from './../types'
+import type { GraphqlMiddlewareServerOptions } from './runtime/types'
 
-export function defineGraphqlServerOptions<T extends object>(
+export function defineGraphqlServerOptions<T extends object = object>(
   options: GraphqlMiddlewareServerOptions<
     T,
     GraphqlMiddlewareResponseUnion,
@@ -11,3 +11,5 @@ export function defineGraphqlServerOptions<T extends object>(
 ) {
   return options
 }
+
+export type { GraphqlMiddlewareServerOptions }

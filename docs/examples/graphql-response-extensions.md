@@ -23,7 +23,7 @@ _additional_ properties on the GraphQL response. For example:
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 
 export default defineGraphqlServerOptions<{
   extensions: {
@@ -60,7 +60,7 @@ extensions.
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 
 export default defineGraphqlServerOptions<{
   extensions: {
