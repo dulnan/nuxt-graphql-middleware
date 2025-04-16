@@ -32,4 +32,7 @@ export default defineBuildConfig({
     '@clack/core',
     'is-unicode-supported',
   ],
+  replace: {
+    'process.env.PLAYGROUND_MODULE_BUILD': 'undefined',
+  },
 })
