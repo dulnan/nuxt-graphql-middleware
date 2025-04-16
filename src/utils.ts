@@ -36,3 +36,5 @@ export function useGraphqlModuleContext(options?: {
 
   return context
 }
+
+export type { ModuleContext }
