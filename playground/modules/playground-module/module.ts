@@ -1,5 +1,5 @@
 import { defineNuxtModule } from '@nuxt/kit'
-import { useGraphqlModuleContext } from '../../../src/module'
+import { useGraphqlModuleContext } from '../../../src/utils'
 import { fileURLToPath } from 'url'
 
 const USER_FRAGMENT = `

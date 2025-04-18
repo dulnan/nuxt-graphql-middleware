@@ -15,7 +15,7 @@ import type { RouterMethod } from 'h3'
 import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
 import { defu } from 'defu'
-import { defaultOptions, fileExists, logger, validateOptions } from '../helpers'
+import { defaultOptions, fileExists, logger, validateOptions } from './helpers'
 import micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
 import type { StaticTemplate } from './templates/defineTemplate'
@@ -326,7 +326,7 @@ export class ModuleHelper {
   }
 
   public processTemplate(path: string, content: string) {
-    if (path.includes('graphql-operations/')) {
+    if (path.includes('graphql-operations/') || path.endsWith('.graphql')) {
       return content.trim()
     }
     const name = path.split('/')[1]

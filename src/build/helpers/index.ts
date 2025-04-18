@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { useLogger } from '@nuxt/kit'
 import type { ConsolaInstance } from 'consola'
-import type { ModuleOptions } from '../module/types/options'
+import type { ModuleOptions } from '../types/options'
 
 export const logger: ConsolaInstance = useLogger('nuxt-graphql-middleware')
 

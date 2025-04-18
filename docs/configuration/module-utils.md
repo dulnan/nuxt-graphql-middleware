@@ -1,5 +1,7 @@
 # Module Utils
 
+These utils can be imported from `nuxt-graphql-middleware/utils`.
+
 ::: warning
 
 These utils can **only** be used in other modules. Importing them in any other
@@ -19,7 +21,7 @@ of certain types and fields in the schema.
 
 ```typescript
 import { defineNuxtModule } from '@nuxt/kit'
-import { useGraphqlModuleContext } from 'nuxt-graphql-middleware'
+import { useGraphqlModuleContext } from 'nuxt-graphql-middleware/utils'
 import { isObjectType } from 'graphql'
 
 type Feature = 'comments' | 'blog' | 'analytics'

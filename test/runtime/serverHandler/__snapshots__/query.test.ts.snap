@@ -7,7 +7,7 @@ exports[`defineEventHandler > Should correctly handle variables. 1`] = `
   "endpoint": "http//localhost/graphql",
   "options": {
     "body": {
-      "operationName": undefined,
+      "operationName": "foobar",
       "query": "Query",
       "variables": {
         "variables": "{"variable":"one"}",
@@ -25,7 +25,7 @@ exports[`defineEventHandler > Should handle a valid query 1`] = `
   "endpoint": "http//localhost/graphql",
   "options": {
     "body": {
-      "operationName": undefined,
+      "operationName": "foobar",
       "query": "Query",
       "variables": {
         "variables": "{}",
@@ -43,7 +43,7 @@ exports[`defineEventHandler > Should handle an invalid operation 1`] = `
   "endpoint": "http//localhost/graphql",
   "options": {
     "body": {
-      "operationName": undefined,
+      "operationName": "foobar",
       "query": "Query",
       "variables": {
         "variables": "{}",

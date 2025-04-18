@@ -1,6 +1,11 @@
 import { defineBuildConfig } from 'unbuild'
 
 export default defineBuildConfig({
+  entries: [
+    './src/client-options.ts',
+    './src/server-options.ts',
+    './src/utils.ts',
+  ],
   externals: [
     'ofetch',
     'h3',
@@ -21,8 +26,13 @@ export default defineBuildConfig({
     '@polka/url',
     'mrmime',
     '#nuxt-graphql-middleware/response',
+    '#nuxt-graphql-middleware/client-options',
+    '#nuxt-graphql-middleware/server-options',
     'micromatch',
     '@clack/core',
     'is-unicode-supported',
   ],
+  replace: {
+    'process.env.PLAYGROUND_MODULE_BUILD': 'undefined',
+  },
 })

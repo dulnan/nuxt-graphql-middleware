@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { validateOptions } from '../../src/helpers'
+import { validateOptions } from '../../src/build/helpers'
 
 describe('validateOptions', () => {
   test('Throws an error if GraphQL endpoint is missing.', () => {

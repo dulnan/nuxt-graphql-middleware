@@ -1,5 +1,5 @@
 import { getHeader } from 'h3'
-import { defineGraphqlServerOptions } from './../../src/runtime/serverOptions/index'
+import { defineGraphqlServerOptions } from './../../src/server-options'
 import { createError } from '#imports'
 
 type Cacheability = {

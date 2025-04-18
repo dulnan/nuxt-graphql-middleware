@@ -22,7 +22,7 @@ before it is sent in the middleware.
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { useCDNHeaders } from '#nuxt-multi-cache/composables'
 import { setResponseHeader } from 'h3'
 

@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["./src/module/types/options.ts"],
+  "entryPoints": ["./src/build/types/options.ts"],
   "plugin": ["typedoc-plugin-markdown"],
   "out": "./typedoc",
   "excludeReferences": true,

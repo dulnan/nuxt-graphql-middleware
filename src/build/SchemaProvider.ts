@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import { logger } from '../helpers'
+import { logger } from './helpers'
 import { generate } from '@graphql-codegen/cli'
 import type { Types } from '@graphql-codegen/plugin-helpers'
 import type { SchemaASTConfig } from '@graphql-codegen/schema-ast'

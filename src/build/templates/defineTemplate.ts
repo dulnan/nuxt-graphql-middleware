@@ -1,14 +1,17 @@
 import type { GeneratorOutput } from 'graphql-typescript-deluxe'
 import type { ModuleHelper } from '../ModuleHelper'
+import type { Collector } from '../Collector'
 
 type TemplateOptions = {
   path: string
   virtual?: boolean
+  isFullPath?: boolean
 }
 
 type GeneratorTemplateCallback = (
   output: GeneratorOutput,
   helper: ModuleHelper,
+  collector: Collector,
 ) => string
 
 type StaticTemplateCallback = (helper: ModuleHelper) => string

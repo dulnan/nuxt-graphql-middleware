@@ -23,17 +23,17 @@ export { clientOptions }
         helper.paths.clientOptions,
       )
       return `import type { GraphqlClientOptions } from '${helper.paths.runtimeTypes}'
-import clientOptions from '${pathRelative}'
+import clientOptionsImport from '${pathRelative}'
 
-export type GraphqlClientContext = typeof clientOptions extends GraphqlClientOptions<infer R> ? R : {}
-
-export { clientOptions }`
+declare export const clientOptions: GraphqlClientOptions
+export type GraphqlClientContext = typeof clientOptionsImport extends GraphqlClientOptions<infer R> ? R : {}
+`
     }
 
     return `
 import type { GraphqlClientOptions } from '${helper.paths.runtimeTypes}'
-export const clientOptions: GraphqlClientOptions
 
+declare export const clientOptions: GraphqlClientOptions
 export type GraphqlClientContext = {}
 `
   },

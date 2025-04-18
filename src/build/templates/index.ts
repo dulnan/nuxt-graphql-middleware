@@ -9,6 +9,8 @@ import Operations from './definitions/operations'
 import Response from './definitions/response'
 import ServerOptions from './definitions/server-options'
 import Sources from './definitions/sources'
+import HookDocuments from './definitions/hookDocuments'
+import HookFiles from './definitions/hook-files'
 
 export const TEMPLATES: ModuleTemplate[] = [
   ClientOptions,
@@ -21,4 +23,6 @@ export const TEMPLATES: ModuleTemplate[] = [
   Response,
   ServerOptions,
   Sources,
+  HookDocuments,
+  HookFiles,
 ]

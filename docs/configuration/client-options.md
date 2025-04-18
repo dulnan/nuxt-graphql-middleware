@@ -27,7 +27,7 @@ called `graphqlMiddleware.clientOptions.ts` in your `app` directory (usually
 ::: code-group
 
 ```typescript [~/app/graphqlMiddleware.clientOptions.ts]
-import { defineGraphqlClientOptions } from 'nuxt-graphql-middleware/dist/runtime/clientOptions'
+import { defineGraphqlClientOptions } from 'nuxt-graphql-middleware/client-options'
 
 export default defineGraphqlClientOptions({})
 ```
@@ -42,7 +42,7 @@ values.
 ::: code-group
 
 ```typescript [~/app/graphqlMiddleware.clientOptions.ts]
-import { defineGraphqlClientOptions } from 'nuxt-graphql-middleware/dist/runtime/clientOptions'
+import { defineGraphqlClientOptions } from 'nuxt-graphql-middleware/client-options'
 
 export default defineGraphqlClientOptions<{
   language: string
@@ -97,7 +97,7 @@ On the server you can then access this client context from within all
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 
 export default defineGraphqlServerOptions({
   graphqlEndpoint(event, operation, operationName, context) {

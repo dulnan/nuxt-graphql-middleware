@@ -42,7 +42,7 @@ Define a `serverFetchOptions` method in
 GraphQL request is made.
 
 ```typescript
-import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/dist/runtime/serverOptions'
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 import { getHeader, createError } from 'h3'
 import type { H3Event } from 'h3'
 import type { FetchError } from 'ofetch'
