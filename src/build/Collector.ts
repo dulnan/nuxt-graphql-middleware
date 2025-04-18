@@ -587,4 +587,11 @@ export class Collector {
       }
     })
   }
+
+  /**
+   * Get the hook documents.
+   */
+  public getHookFiles(): string[] {
+    return [...this.hookFiles.values()]
+  }
 }
