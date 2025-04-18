@@ -29,13 +29,19 @@ export default defineStaticTemplate(
         ),
     )
 
-    return `const schema = ${JSON.stringify(schemaPath)}
+    return `
+import { hookFiles } from './hook-files'
+
+const schema = ${JSON.stringify(schemaPath)}
 
 const documents = ${JSON.stringify(documents, null, 2)};
 
 const config = {
   schema,
-  documents,
+  documents: [
+    ...documents,
+    ...hookFiles
+  ]
 }
 
 export default config
