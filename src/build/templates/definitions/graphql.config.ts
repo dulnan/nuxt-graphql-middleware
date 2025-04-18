@@ -1,5 +1,5 @@
 import { defineStaticTemplate } from './../defineTemplate'
-import { relative } from 'pathe'
+import { relative, join } from 'pathe'
 
 export default defineStaticTemplate(
   { path: 'nuxt-graphql-middleware/graphql.config' },
@@ -19,6 +19,16 @@ export default defineStaticTemplate(
           './' + relative(configPath, helper.resolvers.root.resolve(pattern))
         )
       })
+
+    // Also include the file containing documents provided via hooks.
+    documents.push(
+      './' +
+        relative(
+          configPath,
+          join(helper.paths.moduleBuildDir, 'hook-documents.graphql'),
+        ),
+    )
+
     return `const schema = ${JSON.stringify(schemaPath)}
 
 const documents = ${JSON.stringify(documents, null, 2)};

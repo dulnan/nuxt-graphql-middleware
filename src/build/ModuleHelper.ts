@@ -326,7 +326,7 @@ export class ModuleHelper {
   }
 
   public processTemplate(path: string, content: string) {
-    if (path.includes('graphql-operations/')) {
+    if (path.includes('graphql-operations/') || path.endsWith('.graphql')) {
       return content.trim()
     }
     const name = path.split('/')[1]

@@ -126,8 +126,8 @@ export class Collector {
     }
   }
 
-  private getTemplate(template: string): string {
-    const content = this.templateResult.get(template)
+  private getTemplate(template: string, type: 'default' | 'types'): string {
+    const content = this.templateResult.get(template + '-' + type)
     if (content === undefined) {
       throw new Error(`Missing template content: ${template}`)
     }
@@ -144,24 +144,23 @@ export class Collector {
     const generatedCode = output.getGeneratedCode()
 
     this.templates.forEach((template) => {
+      const path = template.options.path
       if (template.build) {
-        const filename = template.options.path + '.js'
         this.templateResult.set(
-          filename,
+          path + '-default',
           this.helper.processTemplate(
             template.options.path,
-            template.build(output, this.helper),
+            template.build(output, this.helper, this),
           ),
         )
       }
 
       if (template.buildTypes) {
-        const filename = template.options.path + '.d.ts'
         this.templateResult.set(
-          filename,
+          template.options.path + '-types',
           this.helper.processTemplate(
             template.options.path,
-            template.buildTypes(output, this.helper),
+            template.buildTypes(output, this.helper, this),
           ),
         )
       }
@@ -521,7 +520,7 @@ export class Collector {
    */
   private addVirtualTemplate(template: GeneratorTemplate) {
     const filename = template.options.path + '.js'
-    const getContents = () => this.getTemplate(filename)
+    const getContents = () => this.getTemplate(template.options.path, 'default')
 
     addTemplate({
       filename,
@@ -550,22 +549,24 @@ export class Collector {
       if (template.options.virtual) {
         this.addVirtualTemplate(template)
       } else {
-        const filename = template.options.path + '.js'
+        const path = template.options.path
+        const filename = template.options.isFullPath ? path : path + '.js'
         addTemplate({
           filename,
           write: true,
-          getContents: () => this.getTemplate(filename),
+          getContents: () => this.getTemplate(path, 'default'),
         })
       }
     }
 
     if (template.buildTypes) {
+      const path = template.options.path
       const filename = (template.options.path + '.d.ts') as any
       addTypeTemplate(
         {
           filename,
           write: true,
-          getContents: () => this.getTemplate(filename),
+          getContents: () => this.getTemplate(path, 'types'),
         },
         {
           nuxt: true,
@@ -573,5 +574,17 @@ export class Collector {
         },
       )
     }
+  }
+
+  /**
+   * Get the hook documents.
+   */
+  public getHookDocuments(): { identifier: string; source: string }[] {
+    return [...this.hookDocuments.entries()].map(([identifier, source]) => {
+      return {
+        identifier,
+        source,
+      }
+    })
   }
 }
