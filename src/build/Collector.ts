@@ -66,6 +66,8 @@ export class Collector {
    */
   private templateResult: Map<string, string> = new Map()
 
+  private isInitialised = false
+
   constructor(
     private schema: GraphQLSchema,
     private helper: ModuleHelper,
@@ -138,7 +140,7 @@ export class Collector {
   /**
    * Executes code gen and performs validation for operations.
    */
-  private buildState() {
+  private async buildState(): Promise<void> {
     const output = this.generator.build()
     const operations = output.getCollectedOperations()
     const generatedCode = output.getGeneratedCode()
@@ -229,6 +231,8 @@ export class Collector {
       throw new Error('GraphQL errors')
     }
 
+    await this.helper.nuxt.callHook('nuxt-graphql-middleware:build', { output })
+
     if (this.helper.isDev) {
       for (const code of generatedCode) {
         const id = `${code.identifier}_${code.graphqlName}`
@@ -311,7 +315,9 @@ export class Collector {
 
         if (shouldRevalidate === 'yes') {
           await this.reset()
-          return this.init()
+          await this.init()
+          this.isInitialised = true
+          return
         }
       }
       throw new Error('Graphql document validation failed.')
@@ -320,6 +326,22 @@ export class Collector {
 
   public addHookDocument(identifier: string, source: string) {
     this.hookDocuments.set('hook:' + identifier, source)
+  }
+
+  public async addOrUpdateHookDocument(
+    identifier: string,
+    source: string,
+  ): Promise<void> {
+    const fullIdentifier = 'hook:' + identifier
+    const exists = this.hookDocuments.has(fullIdentifier)
+    this.hookDocuments.set(fullIdentifier, source)
+    if (exists && this.isInitialised) {
+      this.generator.update({
+        filePath: fullIdentifier,
+        document: source,
+      })
+      await this.buildState()
+    }
   }
 
   public addHookFile(filePath: string) {
@@ -364,7 +386,7 @@ export class Collector {
         await this.addFile(filePath)
       }
 
-      this.buildState()
+      await this.buildState()
       logger.success('All GraphQL documents are valid.')
     } catch (e) {
       this.logError(e)
@@ -483,7 +505,7 @@ export class Collector {
       }
 
       if (hasChanged) {
-        this.buildState()
+        await this.buildState()
       }
     } catch (e) {
       this.generator.resetCaches()

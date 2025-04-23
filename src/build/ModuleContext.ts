@@ -58,6 +58,20 @@ export class ModuleContext {
   }
 
   /**
+   * Add or update an additional static document.
+   *
+   * @param identifier - The unique identifier for your document.
+   * @param source - The document source.
+   */
+  public async addOrUpdateDocument(
+    identifier: string,
+    source: string,
+  ): Promise<ModuleContext> {
+    await this.collector.addOrUpdateHookDocument(identifier, source)
+    return this
+  }
+
+  /**
    * Add an additional GraphQL file to import.
    *
    * @param filePath - The absolute path to the file.
