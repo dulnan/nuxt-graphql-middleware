@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "5.0.0-alpha.18",
+  "version": "5.0.0-alpha.20",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -72,7 +72,7 @@
     "@graphql-codegen/schema-ast": "^4.1.0",
     "@graphql-tools/utils": "^10.8.6",
     "@nuxt/devtools-kit": "^2.3.1",
-    "graphql-typescript-deluxe": "^0.0.12",
+    "graphql-typescript-deluxe": "^0.0.13",
     "minisearch": "^7.1.2",
     "picocolors": "^1.1.1"
   },

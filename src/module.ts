@@ -11,6 +11,7 @@ import { DevModeHandler } from './build/DevModeHandler'
 import { ModuleContext } from './build/ModuleContext'
 import type { OperationResponseError } from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
+import type { BuildHookContext } from './build/types/hook'
 
 export type { ModuleOptions }
 
@@ -221,5 +222,18 @@ declare module '@nuxt/schema' {
      * ```
      */
     'nuxt-graphql-middleware:init': (ctx: ModuleContext) => void | Promise<void>
+
+    /**
+     * Called when building the state and templates.
+     *
+     * Generally this hook is called from within the builder:watch event, when
+     * a GraphQL file change was detected.
+     *
+     * The received argument is the output from the graphql-typescript-deluxe
+     * generator.
+     */
+    'nuxt-graphql-middleware:build': (
+      ctx: BuildHookContext,
+    ) => void | Promise<void>
   }
 }

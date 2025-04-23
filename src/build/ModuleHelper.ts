@@ -82,7 +82,7 @@ export class ModuleHelper {
   private tsPaths: Record<string, string> = {}
 
   constructor(
-    private nuxt: Nuxt,
+    public readonly nuxt: Nuxt,
     moduleUrl: string,
     options: ModuleOptions,
   ) {
@@ -129,22 +129,28 @@ export class ModuleHelper {
     const srcResolver = createResolver(nuxt.options.srcDir)
     const rootResolver = createResolver(nuxt.options.rootDir)
 
-    mergedOptions.autoImportPatterns = (
-      mergedOptions.autoImportPatterns || []
-    ).flatMap((pattern) => {
-      if (pattern.startsWith('!') || pattern.startsWith('/')) {
-        // Skip resolving for ignore patterns or absolute paths.
-        return pattern
-      } else if (pattern.startsWith('~') || pattern.startsWith('@')) {
-        // Any of the internal Nuxt aliases need to be resolved for each layer.
-        // @see https://nuxt.com/docs/api/nuxt-config#alias
-        return layerAliases.map((aliases) => resolveAlias(pattern, aliases))
-      }
+    mergedOptions.autoImportPatterns = (mergedOptions.autoImportPatterns || [])
+      .flatMap((pattern) => {
+        if (pattern.startsWith('!') || pattern.startsWith('/')) {
+          // Skip resolving for ignore patterns or absolute paths.
+          return pattern
+        } else if (pattern.startsWith('~') || pattern.startsWith('@')) {
+          // Any of the internal Nuxt aliases need to be resolved for each layer.
+          // @see https://nuxt.com/docs/api/nuxt-config#alias
+          return layerAliases.map((aliases) => resolveAlias(pattern, aliases))
+        }
 
-      // The path starts with a dot, so we resolve it relative to the app root
-      // directory, which is where the nuxt.config.ts file is located.
-      return rootResolver.resolve(pattern)
-    })
+        // The path starts with a dot, so we resolve it relative to the app root
+        // directory, which is where the nuxt.config.ts file is located.
+        return rootResolver.resolve(pattern)
+      })
+      .map((pattern) => {
+        // Remove useless extension patterns. These only make sense when
+        // actually targeting more than one extension.
+        return pattern
+          .replace('.{graphql}', '.graphql')
+          .replace('.{gql}', '.gql')
+      })
 
     this.options = mergedOptions as RequiredModuleOptions
 
