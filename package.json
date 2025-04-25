@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "5.0.0-alpha.20",
+  "version": "5.0.0",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "repository": {
     "type": "git",
@@ -53,6 +53,7 @@
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs --port 5000",
     "typedoc": "./scripts/typedoc.sh",
+    "typedoc:generate": "typedoc --tsconfig tsconfig.typedoc.json",
     "cypress": "cypress run --e2e",
     "cypress:open": "cypress open --e2e",
     "lint": "eslint ./src",

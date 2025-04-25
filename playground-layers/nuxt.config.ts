@@ -7,7 +7,6 @@ const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
   downloadSchema: IS_DEV,
   codegenConfig: {},
-  outputDocuments: false,
   schemaPath: './../schema.graphql',
   codegenSchemaConfig: {
     urlSchemaOptions: {

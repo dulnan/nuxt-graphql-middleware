@@ -19,3 +19,4 @@ tail -n +13 "$input_file" > "$output_file"
 
 sed -i '1s/^/# Module Options\n\n/' "$output_file"
 rm -rf ./typedoc
+npm run prettier:fix

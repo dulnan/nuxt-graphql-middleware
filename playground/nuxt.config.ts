@@ -10,7 +10,6 @@ const graphqlMiddleware: ModuleOptions = {
   schemaPath: './../schema.graphql',
   graphqlConfigFilePath: '../graphql.config.ts',
   codegenConfig: {},
-  outputDocuments: true,
   devtools: true,
   documents: [
     `

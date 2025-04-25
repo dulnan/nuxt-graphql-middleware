@@ -170,13 +170,6 @@ export interface ModuleOptions {
   }
 
   /**
-   * Set to true if you want to output each compiled query and mutation in the
-   * .nuxt folder.
-   * Set to a path to output to a custom path.
-   */
-  outputDocuments?: boolean | string
-
-  /**
    * Enable Nuxt DevTools integration.
    */
   devtools?: boolean
