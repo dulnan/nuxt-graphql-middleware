@@ -85,3 +85,28 @@ export default defineNuxtModule({
   },
 })
 ```
+
+## `nuxt-graphql-middleware:build`
+
+This hook is called whenever the internal state of all GraphQL documents was
+rebuilt. It receives a context object that contains a `output` property
+containing the Generator output from
+[graphql-typescript-deluxe](https://github.com/dulnan/graphql-typescript-deluxe).
+It allows you to access all operations or fragments.
+
+### Example in `nuxt.config.ts`
+
+```typescript
+export default defineNuxtConfig({
+  hooks: {
+    'nuxt-graphql-middleware:build': (ctx) => {
+      const fragments = ctx.output.getFragments()
+      console.log('Collected Fragments')
+      fragments.forEach((v) => {
+        // v.node contains the FragmentDefinitionNode from 'graphql'.
+        console.log(v.node.name.value)
+      })
+    },
+  },
+})
+```
