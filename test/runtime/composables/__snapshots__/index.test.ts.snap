@@ -8,7 +8,9 @@ exports[`useGraphqlMutation > Performs a mutation 1`] = `
   "options": {
     "body": undefined,
     "method": "post",
-    "params": {},
+    "params": {
+      "__gqlh": "abc123",
+    },
   },
 }
 `;
@@ -23,7 +25,9 @@ exports[`useGraphqlMutation > Performs a mutation with variables 1`] = `
       "user": "foobar",
     },
     "method": "post",
-    "params": {},
+    "params": {
+      "__gqlh": "abc123",
+    },
   },
 }
 `;
@@ -36,7 +40,9 @@ exports[`useGraphqlMutation > Throws an error for invalid mutation names. 1`] = 
   "options": {
     "body": undefined,
     "method": "post",
-    "params": {},
+    "params": {
+      "__gqlh": undefined,
+    },
   },
 }
 `;
@@ -48,7 +54,9 @@ exports[`useGraphqlQuery > Performs a query 1`] = `
   "errors": [],
   "options": {
     "method": "get",
-    "params": {},
+    "params": {
+      "__gqlh": "abc123",
+    },
   },
 }
 `;
@@ -61,6 +69,7 @@ exports[`useGraphqlQuery > Performs a query with non-string variables 1`] = `
   "options": {
     "method": "get",
     "params": {
+      "__gqlh": "abc123",
       "__variables": "{"numeric":123}",
     },
   },
@@ -75,6 +84,7 @@ exports[`useGraphqlQuery > Performs a query with string variables 1`] = `
   "options": {
     "method": "get",
     "params": {
+      "__gqlh": "abc123",
       "stringVar": "foobar",
     },
   },
@@ -89,6 +99,7 @@ exports[`useGraphqlQuery > Performs a query with string variables 2`] = `
   "options": {
     "method": "get",
     "params": {
+      "__gqlh": "abc123",
       "stringVar": "foobar",
     },
   },
@@ -102,7 +113,9 @@ exports[`useGraphqlQuery > Throws an error for invalid query names. 1`] = `
   "errors": [],
   "options": {
     "method": "get",
-    "params": {},
+    "params": {
+      "__gqlh": undefined,
+    },
   },
 }
 `;

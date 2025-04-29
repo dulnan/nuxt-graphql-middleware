@@ -21,6 +21,15 @@ vi.mock('#nuxt-graphql-middleware/helpers', () => {
     },
   }
 })
+
+vi.mock('#nuxt-graphql-middleware/operation-hashes', () => {
+  return {
+    operationHashes: {
+      foobar: 'abc123',
+    },
+  }
+})
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
@@ -122,6 +131,7 @@ describe('useGraphqlQuery', () => {
           "method": "get",
           "params": {
             "__gqlc_language": "fr",
+            "__gqlh": "abc123",
             "customParam": "yes",
             "stringVar": "foobar",
           },
@@ -170,6 +180,7 @@ describe('useGraphqlMutation', () => {
     expect(result.options.params).toMatchInlineSnapshot(`
       {
         "__gqlc_language": "fr",
+        "__gqlh": "abc123",
         "customParam": "yes",
       }
     `)
