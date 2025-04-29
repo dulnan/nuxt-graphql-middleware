@@ -11,6 +11,7 @@ import ServerOptions from './definitions/server-options'
 import Sources from './definitions/sources'
 import HookDocuments from './definitions/hookDocuments'
 import HookFiles from './definitions/hook-files'
+import OperationHashes from './definitions/operation-hashes'
 
 export const TEMPLATES: ModuleTemplate[] = [
   ClientOptions,
@@ -25,4 +26,5 @@ export const TEMPLATES: ModuleTemplate[] = [
   Sources,
   HookDocuments,
   HookFiles,
+  OperationHashes,
 ]

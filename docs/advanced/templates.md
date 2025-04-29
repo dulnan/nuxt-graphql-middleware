@@ -164,6 +164,19 @@ function isUserQuery(name: ValidQueryName): boolean {
 }
 ```
 
+## `operation-hashes`
+
+**Alias: `#nuxt-graphql-middleware/operation-hashes`**
+
+Exports the unique hash for every operation.
+
+### Exports
+
+#### `operationHashes`
+
+An object of operation names as key and hashes as values. The hash is calculated
+from the operation source + all fragments used in the fragment.
+
 ## `response`
 
 **Alias: `#nuxt-graphql-middleware/response`**
