@@ -8,6 +8,7 @@ export default defineBuildConfig({
   ],
   externals: [
     'ofetch',
+    'ohash',
     'h3',
     'graphql',
     '@graphql-tools/load',
