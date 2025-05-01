@@ -6,10 +6,12 @@ export async function useWrappedGraphqlQuery(
 ) {
   const result = await useAsyncGraphqlQuery('returnSameValue', variables, {
     transform: function (data) {
-      return data.data.returnSameValue
+      return data.data
     },
     default: function () {
-      return 0
+      return {
+        returnSameValue: 0,
+      }
     },
     graphqlCaching: {
       client: true,

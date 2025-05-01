@@ -1,8 +1,10 @@
 <template>
   <div>
-    <button @click="number++">Incremenet</button>
-    <div>Value: {{ data }}</div>
-    <div>From GraphQL Response: {{ data }}</div>
+    <button @click="number++">Increment</button>
+    <button @click="number--">Decrement</button>
+    <button @click="onRefresh">Refresh</button>
+    <div>Value: {{ number }}</div>
+    <div>From GraphQL Response: {{ data.returnSameValue }}</div>
   </div>
 </template>
 
@@ -17,5 +19,9 @@ const variables = computed(() => {
   }
 })
 
-const { data } = await useWrappedGraphqlQuery(variables)
+const { data, refresh } = await useWrappedGraphqlQuery(variables)
+
+function onRefresh() {
+  refresh()
+}
 </script>
