@@ -59,5 +59,22 @@ export class GraphqlMiddlewareCache {
 
   purge() {
     this.cache = {}
+    this.keys = []
+  }
+
+  remove(key: string) {
+    if (Object.prototype.hasOwnProperty.call(this.cache, key)) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete this.cache[key]
+
+      const index = this.keys.indexOf(key)
+      if (index > -1) {
+        this.keys.splice(index, 1)
+      }
+
+      return true
+    }
+
+    return false
   }
 }
