@@ -1,8 +1,7 @@
-import {
-  type GetMutationArgs,
-  type MutationObjectArgs,
-  type GetMutationResult,
-  encodeContext,
+import type {
+  GetMutationArgs,
+  MutationObjectArgs,
+  GetMutationResult,
 } from './../helpers/composables'
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
@@ -18,7 +17,7 @@ export function useGraphqlMutation<
 >(
   ...args: GetMutationArgs<K> | [MutationObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
-  const [name, body, fetchOptions = {}, overrideClientContext = {}] =
+  const [name, body, fetchOptions, overrideClientContext] =
     typeof args[0] === 'string'
       ? [args[0], args[1], args[2]?.fetchOptions, args[2]?.clientContext]
       : [
@@ -32,15 +31,13 @@ export function useGraphqlMutation<
     ? clientOptions.buildClientContext()
     : {}
 
-  return performRequest<R>('mutation', name, 'post', {
-    ...fetchOptions,
-    body,
-    params: {
-      ...(fetchOptions.params || {}),
-      ...encodeContext({
-        ...globalClientContext,
-        ...overrideClientContext,
-      }),
-    },
-  })
+  return performRequest<R>(
+    'mutation',
+    name,
+    body || {},
+    fetchOptions || {},
+    globalClientContext,
+    overrideClientContext || {},
+    {},
+  )
 }

@@ -128,6 +128,7 @@ describe('useGraphqlQuery', () => {
         "endpoint": "/nuxt-graphql-middleware/query/foobar",
         "errors": [],
         "options": {
+          "body": undefined,
           "method": "get",
           "params": {
             "__gqlc_language": "fr",

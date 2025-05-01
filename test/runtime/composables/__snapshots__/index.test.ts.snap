@@ -6,7 +6,7 @@ exports[`useGraphqlMutation > Performs a mutation 1`] = `
   "endpoint": "/nuxt-graphql-middleware/mutation/foobar",
   "errors": [],
   "options": {
-    "body": undefined,
+    "body": {},
     "method": "post",
     "params": {
       "__gqlh": "abc123",
@@ -38,7 +38,7 @@ exports[`useGraphqlMutation > Throws an error for invalid mutation names. 1`] = 
   "endpoint": "/nuxt-graphql-middleware/mutation/undefined",
   "errors": [],
   "options": {
-    "body": undefined,
+    "body": {},
     "method": "post",
     "params": {
       "__gqlh": undefined,
@@ -53,6 +53,7 @@ exports[`useGraphqlQuery > Performs a query 1`] = `
   "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
   "options": {
+    "body": undefined,
     "method": "get",
     "params": {
       "__gqlh": "abc123",
@@ -67,6 +68,7 @@ exports[`useGraphqlQuery > Performs a query with non-string variables 1`] = `
   "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
   "options": {
+    "body": undefined,
     "method": "get",
     "params": {
       "__gqlh": "abc123",
@@ -82,6 +84,7 @@ exports[`useGraphqlQuery > Performs a query with string variables 1`] = `
   "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
   "options": {
+    "body": undefined,
     "method": "get",
     "params": {
       "__gqlh": "abc123",
@@ -97,6 +100,7 @@ exports[`useGraphqlQuery > Performs a query with string variables 2`] = `
   "endpoint": "/nuxt-graphql-middleware/query/foobar",
   "errors": [],
   "options": {
+    "body": undefined,
     "method": "get",
     "params": {
       "__gqlh": "abc123",
@@ -112,6 +116,7 @@ exports[`useGraphqlQuery > Throws an error for invalid query names. 1`] = `
   "endpoint": "/nuxt-graphql-middleware/query/undefined",
   "errors": [],
   "options": {
+    "body": undefined,
     "method": "get",
     "params": {
       "__gqlh": undefined,
