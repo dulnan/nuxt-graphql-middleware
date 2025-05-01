@@ -5,7 +5,7 @@ import {
   type GetQueryResult,
   encodeContext,
 } from './../../helpers/composables'
-import { buildRequestParams } from './../../helpers'
+import { encodeVariables } from './../../helpers/queryEncoding'
 import { performRequest } from '.'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'
 
@@ -32,7 +32,7 @@ export function useGraphqlQuery<
     ...fetchOptions,
     params: {
       ...(fetchOptions.params || {}),
-      ...buildRequestParams(variables),
+      ...encodeVariables(variables),
       ...encodeContext(clientContext),
     },
   })

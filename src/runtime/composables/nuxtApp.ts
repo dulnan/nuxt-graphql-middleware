@@ -7,8 +7,9 @@ import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { useNuxtApp, useAppConfig } from '#imports'
 import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
 import type { RequestCacheOptions } from './../types'
-import { buildRequestParams } from '../helpers'
+import { encodeVariables } from '../helpers/queryEncoding'
 import { encodeContext } from '../helpers/composables'
+import { OPERATION_HASH_PREFIX } from '../settings'
 
 export function performRequest<T>(
   /**
@@ -75,12 +76,12 @@ export function performRequest<T>(
     {
       // The unique operation hash that changes whenever any operation source or
       // fragment changes.
-      __gqlh: operationHashes[operationName],
+      [OPERATION_HASH_PREFIX]: operationHashes[operationName],
     },
     encodeContext(clientContext),
     fetchOptions.params,
     fetchOptions.query,
-    operation === 'query' ? buildRequestParams(variablesOrBody) : null,
+    operation === 'query' ? encodeVariables(variablesOrBody) : null,
   )
 
   // The cache key that includes the variables, client context and

@@ -13,6 +13,12 @@ vi.mock('#nuxt-graphql-middleware/documents', () => {
   }
 })
 
+vi.mock('#nuxt-graphql-middleware/operation-variables', () => {
+  return {
+    operationVariables: {},
+  }
+})
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {

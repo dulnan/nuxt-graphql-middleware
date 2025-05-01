@@ -7,25 +7,3 @@
 export function falsy<T>(value: T): value is NonNullable<T> {
   return value !== null && value !== undefined
 }
-
-/**
- * Get the parameters for the GraphQL middleware query.
- */
-export function buildRequestParams(
-  variables?: Record<string, any> | undefined | null,
-): Record<string, any> {
-  if (typeof variables !== 'object' || !variables) {
-    return {}
-  }
-  // Determine if each variable can safely be passed as query parameter.
-  // This is only the case for strings.
-  for (const key in variables) {
-    if (typeof variables[key] !== 'string') {
-      return {
-        __variables: JSON.stringify(variables),
-      }
-    }
-  }
-
-  return variables
-}

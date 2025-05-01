@@ -4,3 +4,4 @@ export enum GraphqlMiddlewareOperation {
 }
 
 export const CLIENT_CONTEXT_PREFIX = '__gqlc_'
+export const OPERATION_HASH_PREFIX = '__gqlh'

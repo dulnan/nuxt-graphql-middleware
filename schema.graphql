@@ -39,6 +39,17 @@ type Mutation {
   uploadFile(file: Upload): Boolean!
 }
 
+input NestedInput {
+  filterArray: [NestedInputFilter]
+  filterObject: NestedInputFilter
+}
+
+input NestedInputFilter {
+  field: String!
+  nested: NestedInputFilter
+  value: ID!
+}
+
 type Query {
   dataForLayer: DataForLayer
   foobar: String
@@ -55,6 +66,7 @@ type Query {
   """Get all submissions."""
   getSubmissions: [FormSubmission]
   getText(text: String!): String!
+  nestedInput(query: NestedInput!): [User]
 
   """Returns the same value."""
   returnSameValue(value: Int!): Int!
