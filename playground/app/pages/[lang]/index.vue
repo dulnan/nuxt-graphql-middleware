@@ -57,9 +57,10 @@ const { data: responseLanguage } = await useAsyncGraphqlQuery(
 )
 
 const { data: serverRouteLanguage } = await useFetch('/api/client-options', {
-  key: 'api-client-options',
+  key: 'api-client-options-' + language.value,
   params: {
     language: language.value,
   },
+  watch: [language],
 })
 </script>
