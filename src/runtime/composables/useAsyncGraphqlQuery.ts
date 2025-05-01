@@ -6,13 +6,14 @@ import {
   clientOptions,
   type GraphqlClientContext,
 } from '#nuxt-graphql-middleware/client-options'
-import { useAsyncData, useAppConfig, useNuxtApp } from '#imports'
+import { useAsyncData, useAppConfig, useNuxtApp, computed } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { RequestCacheOptions } from './../types'
 import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
 import type { DefaultAsyncDataValue } from 'nuxt/app/defaults'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'
+import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 
 type AsyncGraphqlQueryOptions<
   FetchOptions,
@@ -158,7 +159,10 @@ export function useAsyncGraphqlQuery<
 > {
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
-  const key = `graphql:${name}:${hash(unref(variables as any))}`
+  const asyncDataKey = computed(() => {
+    const vars = isRef(variables) ? variables.value : variables
+    return `useAsyncGraphqlQuery:${name}:${hash(vars)}`
+  })
 
   const config = useAppConfig()
   const app = useNuxtApp()
@@ -173,28 +177,37 @@ export function useAsyncGraphqlQuery<
       asyncDataOptions.watch.push(variables)
     }
 
+    if (asyncDataOptions.graphqlCaching?.client && app.isHydrating) {
+      if (!app.$graphqlCache) {
+        app.$graphqlCache = new GraphqlMiddlewareCache(
+          config.graphqlMiddleware.clientCacheMaxSize,
+        )
+      }
+
+      // Store the initial payload in our GraphQL cache.
+      const key = asyncDataKey.value
+      const payload = app.payload.data[asyncDataKey.value]
+      if (payload) {
+        app.$graphqlCache.set(key, payload)
+      }
+    }
+
     // On the client side, if client caching is requested, we can directly return
     // data from the payload if possible.
     if (
       asyncDataOptions.graphqlCaching?.client &&
       !asyncDataOptions.getCachedData
     ) {
-      asyncDataOptions.getCachedData = function (key) {
-        // When the app is not hydrating and the client cache is disabled, return.
-        // This is identical to the default behaviour of useAsyncData, where the
-        // payload data is only used during hydration.
-        if (!app.isHydrating && !config.graphqlMiddleware.clientCacheEnabled) {
-          return
+      asyncDataOptions.getCachedData = function (key, app, ctx) {
+        if (ctx.cause === 'initial') {
+          return app.payload.data[key] ?? app.$graphqlCache?.get(key)
         }
-
-        // Try to return data from payload.
-        return app.payload.data[key]
       }
     }
   }
 
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
-    key,
+    asyncDataKey,
     () => {
       const globalClientContext = clientOptions.buildClientContext
         ? clientOptions.buildClientContext()

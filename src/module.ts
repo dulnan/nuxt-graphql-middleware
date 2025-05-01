@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule } from '@nuxt/kit'
+import { defineNuxtModule, getNuxtVersion } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './build/helpers'
 import { Collector } from './build/Collector'
@@ -21,7 +21,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '>=3.15.0',
+      nuxt: '>=3.17.0',
     },
   },
   defaults: defaultOptions,
