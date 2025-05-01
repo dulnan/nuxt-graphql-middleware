@@ -96,6 +96,7 @@ export class ModuleHelper {
     if (!mergedOptions.autoImportPatterns) {
       mergedOptions.autoImportPatterns = [
         '~~/**/*.{gql,graphql}',
+        '~/**/*.{gql,graphql}',
         '!node_modules',
       ]
     }

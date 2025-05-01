@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, getNuxtVersion } from '@nuxt/kit'
+import { defineNuxtModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './build/helpers'
 import { Collector } from './build/Collector'
