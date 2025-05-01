@@ -29,13 +29,15 @@ export function performRequest<T>(
   // fragment changes.
   const operationHash = operationHashes[operationName]
 
-  const params = {
-    ...(state && state.fetchOptions.params
-      ? (state.fetchOptions.params as any)
-      : {}),
-    ...(options?.params || {}),
-    __gqlh: operationHash,
-  }
+  const stateFetchOptions = state?.fetchOptions || {}
+  const params = Object.assign(
+    {
+      __gqlh: operationHash,
+    },
+    stateFetchOptions.params,
+    stateFetchOptions.query,
+    options.params,
+  )
 
   // The cache key that includes the variables, client context and
   // operation hash.
