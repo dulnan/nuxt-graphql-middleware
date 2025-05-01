@@ -7,17 +7,49 @@ import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { useNuxtApp, useAppConfig } from '#imports'
 import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
 import type { RequestCacheOptions } from './../types'
+import { buildRequestParams } from '../helpers'
+import { encodeContext } from '../helpers/composables'
 
 export function performRequest<T>(
-  operation: string,
+  /**
+   * The operation type.
+   */
+  operation: 'query' | 'mutation',
+
+  /**
+   * The name of the operation.
+   */
   operationName: string,
-  method: 'get' | 'post',
-  options: FetchOptions,
-  cacheOptions?: RequestCacheOptions,
+
+  /**
+   * The operation variables.
+   */
+  variablesOrBody: Record<string, any>,
+
+  /**
+   * Fetch options set on the composable.
+   */
+  overrideFetchOptions: FetchOptions,
+
+  /**
+   * The global client options determined in the composable.
+   */
+  globalClientContext: Record<string, any>,
+
+  /**
+   * Client options overrides set on the composable.
+   */
+  overrideClientContext: Record<string, any>,
+
+  /**
+   * The cache options set on the composable.
+   */
+  cacheOptions: RequestCacheOptions,
 ): Promise<GraphqlResponse<T>> {
   const state = useGraphqlState()
   const app = useNuxtApp()
   const config = useAppConfig()
+  const method: 'get' | 'post' = operation === 'query' ? 'get' : 'post'
 
   if (!state) {
     console.error(
@@ -25,18 +57,30 @@ export function performRequest<T>(
     )
   }
 
-  // The unique operation hash that changes whenever any operation source or
-  // fragment changes.
-  const operationHash = operationHashes[operationName]
+  const clientContext = Object.assign(
+    {},
+    globalClientContext,
+    overrideClientContext,
+  )
 
-  const stateFetchOptions = state?.fetchOptions || {}
+  // Merge all fetch options.
+  const fetchOptions = Object.assign(
+    {},
+    state?.fetchOptions,
+    overrideFetchOptions,
+  )
+
+  // Merge all query params.
   const params = Object.assign(
     {
-      __gqlh: operationHash,
+      // The unique operation hash that changes whenever any operation source or
+      // fragment changes.
+      __gqlh: operationHashes[operationName],
     },
-    stateFetchOptions.params,
-    stateFetchOptions.query,
-    options.params,
+    encodeContext(clientContext),
+    fetchOptions.params,
+    fetchOptions.query,
+    operation === 'query' ? buildRequestParams(variablesOrBody) : null,
   )
 
   // The cache key that includes the variables, client context and
@@ -79,12 +123,23 @@ export function performRequest<T>(
 
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
-    {
-      ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
-      ...options,
-      params,
-      method,
-    },
+    Object.assign(
+      {},
+      // Use the merged fetch options.
+      fetchOptions,
+      // Remove params and query from the fetch options.
+      {
+        params: undefined,
+        query: undefined,
+      },
+      // Set the previously merged params. That way we only ever pass "params"
+      // as the query params.
+      {
+        params,
+        method,
+        body: operation === 'mutation' ? variablesOrBody : undefined,
+      },
+    ),
   ).then((v) => {
     if (import.meta.dev && v.errors?.length) {
       app.callHook('nuxt-graphql-middleware:errors', {
@@ -94,11 +149,12 @@ export function performRequest<T>(
         stack: Error().stack,
       })
     }
-    return {
-      ...v,
-      data: v.data,
-      errors: v.errors || [],
-    }
+
+    // Make sure we get at least "data" and "errors" properties in the end.
+    return Object.assign({}, v, {
+      data: v?.data,
+      errors: v?.errors || [],
+    })
   })
 
   if (import.meta.client && cacheKey && app.$graphqlCache) {

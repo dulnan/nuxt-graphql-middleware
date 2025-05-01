@@ -1,10 +1,8 @@
-import {
-  type GetQueryArgs,
-  type QueryObjectArgs,
-  type GetQueryResult,
-  encodeContext,
+import type {
+  GetQueryArgs,
+  QueryObjectArgs,
+  GetQueryResult,
 } from './../helpers/composables'
-import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
@@ -19,13 +17,7 @@ export function useGraphqlQuery<
 >(
   ...args: GetQueryArgs<K> | [QueryObjectArgs<K>]
 ): Promise<GraphqlResponse<R>> {
-  const [
-    name,
-    variables,
-    fetchOptions = {},
-    graphqlCaching = {},
-    overrideClientContext = {},
-  ] =
+  const [name, variables, fetchOptions, graphqlCaching, overrideClientContext] =
     typeof args[0] === 'string'
       ? [
           args[0],
@@ -49,18 +41,10 @@ export function useGraphqlQuery<
   return performRequest<R>(
     'query',
     name,
-    'get',
-    {
-      ...fetchOptions,
-      params: {
-        ...(fetchOptions.params || {}),
-        ...buildRequestParams(variables),
-        ...encodeContext({
-          ...globalClientContext,
-          ...overrideClientContext,
-        }),
-      },
-    },
-    graphqlCaching,
+    variables || {},
+    fetchOptions || {},
+    globalClientContext || {},
+    overrideClientContext || {},
+    graphqlCaching || {},
   )
 }

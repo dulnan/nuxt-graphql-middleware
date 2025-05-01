@@ -1,11 +1,6 @@
-import {
-  type KeysOf,
-  type PickFrom,
-  encodeContext,
-} from './../helpers/composables'
+import type { KeysOf, PickFrom } from './../helpers/composables'
 import type { FetchOptions } from 'ofetch'
 import { type Ref, isRef, unref } from 'vue'
-import { buildRequestParams } from './../helpers'
 import { performRequest } from './nuxtApp'
 import {
   clientOptions,
@@ -163,8 +158,7 @@ export function useAsyncGraphqlQuery<
 > {
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
-  const fetchOptions = asyncDataOptions.fetchOptions
-  const key = `graphql:${name}:${hash(unref(variables))}`
+  const key = `graphql:${name}:${hash(unref(variables as any))}`
 
   const config = useAppConfig()
   const app = useNuxtApp()
@@ -209,19 +203,11 @@ export function useAsyncGraphqlQuery<
       return performRequest<any>(
         'query',
         name,
-        'get',
-        {
-          ...(fetchOptions as any),
-          params: {
-            ...(fetchOptions?.params || {}),
-            ...buildRequestParams(unref(variables)),
-            ...encodeContext({
-              ...globalClientContext,
-              ...(asyncDataOptions.clientContext || {}),
-            }),
-          },
-        },
-        asyncDataOptions.graphqlCaching,
+        unref(variables as any) || {},
+        (asyncDataOptions.fetchOptions || {}) as Record<string, any>,
+        globalClientContext,
+        asyncDataOptions.clientContext || {},
+        asyncDataOptions.graphqlCaching || {},
       )
     },
     asyncDataOptions as any,
