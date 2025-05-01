@@ -197,6 +197,11 @@ const typeDefs = `#graphql
     Test the client options.
     """
     testClientOptions(path: String!): TestClientOptions
+
+    """
+    Returns the same value.
+    """
+    returnSameValue(value: Int!): Int!
   }
 
   type UploadedFile {
@@ -297,6 +302,9 @@ const resolvers = {
         language: context.headers['x-nuxt-client-options-language'],
         languageFromPath: getLanguageFromPath(args.path),
       }
+    },
+    returnSameValue: (_parent: any, args: any, context: any) => {
+      return args.value
     },
   },
   User: {

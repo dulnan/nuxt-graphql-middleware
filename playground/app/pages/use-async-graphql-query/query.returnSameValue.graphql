@@ -1,0 +1,3 @@
+query returnSameValue($value: Int!) {
+  returnSameValue(value: $value)
+}
