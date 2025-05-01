@@ -16,6 +16,9 @@ export const defaultOptions: ModuleOptions = {
   devtools: true,
   errorOverlay: true,
   graphqlConfigFilePath: './graphql.config.ts',
+  experimental: {
+    improvedQueryParamEncoding: false,
+  },
 }
 
 /**

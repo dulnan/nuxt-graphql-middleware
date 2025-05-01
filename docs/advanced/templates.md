@@ -177,6 +177,26 @@ Exports the unique hash for every operation.
 An object of operation names as key and hashes as values. The hash is calculated
 from the operation source + all fragments used in the fragment.
 
+## `operation-variables`
+
+**Alias: `#nuxt-graphql-middleware/operation-variables`**
+
+Exports an object with operation names as properties and variable names as
+values.
+
+### Exports
+
+#### `operationVariables`
+
+```js
+export const operationVariables = {
+  initState: [],
+  testClientOptions: ['path'],
+  deleteUser: ['id'],
+  createUser: ['name', 'age'],
+}
+```
+
 ## `response`
 
 **Alias: `#nuxt-graphql-middleware/response`**

@@ -1,13 +1,10 @@
 import { defineEventHandler, getQuery, getRouterParam } from 'h3'
-import {
-  queryParamToVariables,
-  extractRequestContext,
-  isValidQuery,
-  throwError,
-} from './../helpers'
+import { extractRequestContext, isValidQuery, throwError } from './../helpers'
 import { GraphqlMiddlewareOperation } from './../../settings'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { doGraphqlRequest } from '../utils/doGraphqlRequest'
+import { decodeVariables } from '../../helpers/queryEncoding'
+import { operationVariables } from '#nuxt-graphql-middleware/operation-variables'
 
 export default defineEventHandler(async (event) => {
   const operationName = getRouterParam(event, 'name')
@@ -19,7 +16,8 @@ export default defineEventHandler(async (event) => {
   const operationDocument = documents.query[operationName]
   const queryParams = getQuery(event)
   const context = extractRequestContext(queryParams)
-  const variables = queryParamToVariables(queryParams)
+  const validVariableKeys = operationVariables[operationName]
+  const variables = decodeVariables(queryParams, validVariableKeys)
 
   return doGraphqlRequest(
     {

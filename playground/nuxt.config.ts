@@ -35,6 +35,10 @@ const graphqlMiddleware: ModuleOptions = {
   },
 
   enableFileUploads: true,
+
+  experimental: {
+    improvedQueryParamEncoding: true,
+  },
 }
 
 export default defineNuxtConfig({

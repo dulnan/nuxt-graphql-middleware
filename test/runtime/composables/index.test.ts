@@ -136,6 +136,7 @@ describe('useGraphqlQuery', () => {
             "customParam": "yes",
             "stringVar": "foobar",
           },
+          "query": undefined,
         },
       }
     `)

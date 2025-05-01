@@ -181,4 +181,38 @@ export interface ModuleOptions {
     enabled?: boolean
     maxSize?: number
   }
+
+  /**
+   * Experimental features.
+   */
+  experimental?: {
+    /**
+     * Enables improved encoding for GraphQL query param encoding.
+     *
+     * If enabled, query variables that are non-strings such as numbers or
+     * booleans are encoded as strings, with a prefix in their name to indicate
+     * the type.
+     *
+     * For example, given this object definining query variables:
+     *
+     * ```
+     * {
+     *   name: 'John',
+     *   age: 35,
+     *   isUser: false
+     * }
+     * ```
+     *
+     * This would be encoded as:
+     *
+     * ```
+     * name=John&n:age=35&b:isUser=false
+     * ```
+     *
+     * This only works for flat primitive values. Nested objects or arrays are
+     * still encoded using the __variables fallback where all variables are
+     * JSON encoded.
+     */
+    improvedQueryParamEncoding?: boolean
+  }
 }
