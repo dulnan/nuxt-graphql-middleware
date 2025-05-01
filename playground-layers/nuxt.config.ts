@@ -15,6 +15,7 @@ const graphqlMiddleware: ModuleOptions = {
       },
     },
   },
+  autoImportPatterns: ['~/**/*.{gql,graphql}', '!node_modules'],
 
   clientCache: {
     enabled: true,
