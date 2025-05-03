@@ -1,14 +1,19 @@
 import type { FetchOptions } from 'ofetch'
 import { useGraphqlState } from './useGraphqlState'
 import { hash } from 'ohash'
-import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
+import type { GraphqlMiddlewareCache } from '../helpers/ClientCache'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { useNuxtApp, useAppConfig } from '#imports'
 import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
+import { clientCacheEnabledAtBuild } from '#nuxt-graphql-middleware/config'
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables } from '../helpers/queryEncoding'
-import { encodeContext, sortQueryParams } from '../helpers/composables'
+import {
+  encodeContext,
+  getOrCreateClientCache,
+  sortQueryParams,
+} from '../helpers/composables'
 import { OPERATION_HASH_PREFIX } from '../settings'
 
 export function performRequest<T>(
@@ -73,11 +78,13 @@ export function performRequest<T>(
 
   // Merge all query params.
   const paramsRaw = Object.assign(
-    {
-      // The unique operation hash that changes whenever any operation source or
-      // fragment changes.
-      [OPERATION_HASH_PREFIX]: operationHashes[operationName],
-    },
+    import.meta.client
+      ? {
+          // The unique operation hash that changes whenever any operation source or
+          // fragment changes.
+          [OPERATION_HASH_PREFIX]: operationHashes[operationName],
+        }
+      : {},
     encodeContext(clientContext),
     fetchOptions.params,
     fetchOptions.query,
@@ -97,36 +104,33 @@ export function performRequest<T>(
   // We only need to build the cache key if actually needed.
   const cacheKey =
     import.meta.client &&
+    clientCacheEnabledAtBuild &&
     cacheOptions?.client &&
     config.graphqlMiddleware.clientCacheEnabled
       ? `${operation}:${operationName}:${hash(params)}`
       : undefined
 
   // Try to return a cached query if possible.
-  if (import.meta.client && cacheKey) {
-    // Handle caching on client.
-    if (!app.$graphqlCache) {
-      app.$graphqlCache = new GraphqlMiddlewareCache(
-        config.graphqlMiddleware.clientCacheMaxSize,
-      )
-    }
+  if (import.meta.client && cacheKey && clientCacheEnabledAtBuild) {
+    const cache = getOrCreateClientCache(app, config)
+    if (cache) {
+      const cached = cache.get<Promise<GraphqlResponse<T>>>(cacheKey)
 
-    const cached = app.$graphqlCache.get<Promise<GraphqlResponse<T>>>(cacheKey)
-
-    if (cached) {
-      if (import.meta.dev) {
-        cached.then((response) => {
-          if (response.errors.length) {
-            app.callHook('nuxt-graphql-middleware:errors', {
-              operation,
-              operationName,
-              errors: response.errors,
-              stack: Error().stack,
-            })
-          }
-        })
+      if (cached) {
+        if (import.meta.dev) {
+          cached.then((response) => {
+            if (response.errors.length) {
+              app.callHook('nuxt-graphql-middleware:errors', {
+                operation,
+                operationName,
+                errors: response.errors,
+                stack: Error().stack,
+              })
+            }
+          })
+        }
+        return cached
       }
-      return cached
     }
   }
 
@@ -166,7 +170,12 @@ export function performRequest<T>(
     })
   })
 
-  if (import.meta.client && cacheKey && app.$graphqlCache) {
+  if (
+    import.meta.client &&
+    cacheKey &&
+    app.$graphqlCache &&
+    clientCacheEnabledAtBuild
+  ) {
     app.$graphqlCache.set(cacheKey, promise)
   }
 

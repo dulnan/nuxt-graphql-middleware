@@ -88,6 +88,9 @@ query queryFromHook {
   compatibilityDate: '2024-09-14',
 
   vite: {
+    build: {
+      minify: false,
+    },
     server: {
       watch: {
         usePolling: true,

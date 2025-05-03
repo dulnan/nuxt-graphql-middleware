@@ -1,4 +1,8 @@
-import type { KeysOf, PickFrom } from './../helpers/composables'
+import {
+  getOrCreateClientCache,
+  type KeysOf,
+  type PickFrom,
+} from './../helpers/composables'
 import type { FetchOptions } from 'ofetch'
 import { type Ref, isRef, unref } from 'vue'
 import { performRequest } from './nuxtApp'
@@ -178,17 +182,14 @@ export function useAsyncGraphqlQuery<
     }
 
     if (asyncDataOptions.graphqlCaching?.client && app.isHydrating) {
-      if (!app.$graphqlCache) {
-        app.$graphqlCache = new GraphqlMiddlewareCache(
-          config.graphqlMiddleware.clientCacheMaxSize,
-        )
-      }
-
-      // Store the initial payload in our GraphQL cache.
-      const key = asyncDataKey.value
-      const payload = app.payload.data[asyncDataKey.value]
-      if (payload) {
-        app.$graphqlCache.set(key, payload)
+      const cache = getOrCreateClientCache(app, config)
+      if (cache) {
+        // Store the initial payload in our GraphQL cache.
+        const key = asyncDataKey.value
+        const payload = app.payload.data[asyncDataKey.value]
+        if (payload) {
+          cache.set(key, payload)
+        }
       }
     }
 

@@ -19,6 +19,10 @@ export const defaultOptions: ModuleOptions = {
   experimental: {
     improvedQueryParamEncoding: false,
   },
+  clientCache: {
+    enabled: false,
+    maxSize: 100,
+  },
 }
 
 /**

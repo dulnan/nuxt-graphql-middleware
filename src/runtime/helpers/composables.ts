@@ -3,6 +3,10 @@ import type { RequestCacheOptions } from './../types'
 import { CLIENT_CONTEXT_PREFIX } from '../settings'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
 import type { Query, Mutation } from '#nuxt-graphql-middleware/operation-types'
+import type { NuxtApp } from '#app'
+import type { AppConfig } from 'nuxt/schema'
+import { GraphqlMiddlewareCache } from './ClientCache'
+import { clientCacheEnabledAtBuild } from '#nuxt-graphql-middleware/config'
 
 export type GraphqlComposableOptions = {
   fetchOptions?: FetchOptions
@@ -120,4 +124,25 @@ export function sortQueryParams(
   }
 
   return sortedObj
+}
+
+export function getOrCreateClientCache(
+  app: NuxtApp,
+  config: AppConfig,
+): GraphqlMiddlewareCache | undefined {
+  if (import.meta.server || !clientCacheEnabledAtBuild) {
+    return
+  }
+
+  if (!config.graphqlMiddleware.clientCacheEnabled) {
+    return
+  }
+
+  if (!app.$graphqlCache) {
+    app.$graphqlCache = new GraphqlMiddlewareCache(
+      config.graphqlMiddleware.clientCacheMaxSize,
+    )
+  }
+
+  return app.$graphqlCache
 }

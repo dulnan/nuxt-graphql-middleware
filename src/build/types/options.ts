@@ -171,6 +171,8 @@ export interface ModuleOptions {
 
   /**
    * Enable Nuxt DevTools integration.
+   *
+   * @default true
    */
   devtools?: boolean
 
@@ -178,7 +180,22 @@ export interface ModuleOptions {
    * Client caching configuration.
    */
   clientCache?: {
+    /**
+     * Whether client caching should be enabled.
+     *
+     * Note that if you set this to false during build, the cache will not be
+     * available at all. If you intend to enable/disable it using app config at
+     * runtime, it *must* be enabled at build!
+     *
+     * @default false
+     */
     enabled?: boolean
+
+    /**
+     * The maximum number of cache entries.
+     *
+     * @default 100
+     */
     maxSize?: number
   }
 
