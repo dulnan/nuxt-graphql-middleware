@@ -22,6 +22,14 @@ vi.mock('#nuxt-graphql-middleware/helpers', () => {
   }
 })
 
+vi.mock('#nuxt-graphql-middleware/config', () => {
+  return {
+    clientCacheEnabledAtBuild: true,
+    importMetaClient: true,
+    experimentalQueryParamEncoding: false,
+  }
+})
+
 vi.mock('#nuxt-graphql-middleware/operation-hashes', () => {
   return {
     operationHashes: {
