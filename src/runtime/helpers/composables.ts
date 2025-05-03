@@ -6,7 +6,10 @@ import type { Query, Mutation } from '#nuxt-graphql-middleware/operation-types'
 import type { NuxtApp } from '#app'
 import type { AppConfig } from 'nuxt/schema'
 import { GraphqlMiddlewareCache } from './ClientCache'
-import { clientCacheEnabledAtBuild } from '#nuxt-graphql-middleware/config'
+import {
+  clientCacheEnabledAtBuild,
+  importMetaServer,
+} from '#nuxt-graphql-middleware/config'
 
 export type GraphqlComposableOptions = {
   fetchOptions?: FetchOptions
@@ -130,7 +133,7 @@ export function getOrCreateClientCache(
   app: NuxtApp,
   config: AppConfig,
 ): GraphqlMiddlewareCache | undefined {
-  if (import.meta.server || !clientCacheEnabledAtBuild) {
+  if (importMetaServer || !clientCacheEnabledAtBuild) {
     return
   }
 

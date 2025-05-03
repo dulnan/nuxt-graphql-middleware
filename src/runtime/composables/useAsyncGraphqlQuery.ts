@@ -17,7 +17,7 @@ import type { RequestCacheOptions } from './../types'
 import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
 import type { DefaultAsyncDataValue } from 'nuxt/app/defaults'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'
-import { GraphqlMiddlewareCache } from '../helpers/ClientCache'
+import { importMetaClient } from '#nuxt-graphql-middleware/config'
 
 type AsyncGraphqlQueryOptions<
   FetchOptions,
@@ -171,7 +171,7 @@ export function useAsyncGraphqlQuery<
   const config = useAppConfig()
   const app = useNuxtApp()
 
-  if (import.meta.client) {
+  if (importMetaClient) {
     // If the variables are reactive, watch them cient side.
     if (variables && isRef(variables)) {
       if (!asyncDataOptions.watch) {

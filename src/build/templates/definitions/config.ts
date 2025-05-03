@@ -12,12 +12,16 @@ export default defineStaticTemplate(
     return `
 export const experimentalQueryParamEncoding = ${JSON.stringify(experimentalQueryParamEncoding)}
 export const clientCacheEnabledAtBuild = ${JSON.stringify(clientCacheEnabledAtBuild)}
+export const importMetaServer = import.meta.server
+export const importMetaClient = import.meta.client
 `
   },
   () => {
     return `
 declare export const experimentalQueryParamEncoding: boolean
 declare export const clientCacheEnabledAtBuild: boolean
+declare export const importMetaServer: boolean
+declare export const importMetaClient: boolean
 `
   },
 )

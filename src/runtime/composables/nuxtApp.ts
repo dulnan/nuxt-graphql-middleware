@@ -6,7 +6,10 @@ import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { useNuxtApp, useAppConfig } from '#imports'
 import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
-import { clientCacheEnabledAtBuild } from '#nuxt-graphql-middleware/config'
+import {
+  clientCacheEnabledAtBuild,
+  importMetaClient,
+} from '#nuxt-graphql-middleware/config'
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables } from '../helpers/queryEncoding'
 import {
@@ -56,6 +59,7 @@ export function performRequest<T>(
   const app = useNuxtApp()
   const config = useAppConfig()
   const method: 'get' | 'post' = operation === 'query' ? 'get' : 'post'
+  const isQuery = operation === 'query'
 
   if (!state) {
     console.error(
@@ -78,7 +82,7 @@ export function performRequest<T>(
 
   // Merge all query params.
   const paramsRaw = Object.assign(
-    import.meta.client
+    importMetaClient
       ? {
           // The unique operation hash that changes whenever any operation source or
           // fragment changes.
@@ -88,30 +92,29 @@ export function performRequest<T>(
     encodeContext(clientContext),
     fetchOptions.params,
     fetchOptions.query,
-    operation === 'query' ? encodeVariables(variablesOrBody) : null,
+    isQuery ? encodeVariables(variablesOrBody) : null,
   )
 
   // When doing a query on the client, we want the query params to be sorted
   // alphabetically, so that it's possible to consistently cache the exact same
   // query in both our client cache or on a CDN cache.
   const params =
-    import.meta.client && operation === 'query'
-      ? sortQueryParams(paramsRaw)
-      : paramsRaw
+    importMetaClient && isQuery ? sortQueryParams(paramsRaw) : paramsRaw
 
   // The cache key that includes the variables, client context and
   // operation hash.
   // We only need to build the cache key if actually needed.
   const cacheKey =
-    import.meta.client &&
+    importMetaClient &&
     clientCacheEnabledAtBuild &&
+    isQuery &&
     cacheOptions?.client &&
     config.graphqlMiddleware.clientCacheEnabled
       ? `${operation}:${operationName}:${hash(params)}`
       : undefined
 
   // Try to return a cached query if possible.
-  if (import.meta.client && cacheKey && clientCacheEnabledAtBuild) {
+  if (importMetaClient && cacheKey) {
     const cache = getOrCreateClientCache(app, config)
     if (cache) {
       const cached = cache.get<Promise<GraphqlResponse<T>>>(cacheKey)
@@ -171,7 +174,7 @@ export function performRequest<T>(
   })
 
   if (
-    import.meta.client &&
+    importMetaClient &&
     cacheKey &&
     app.$graphqlCache &&
     clientCacheEnabledAtBuild
