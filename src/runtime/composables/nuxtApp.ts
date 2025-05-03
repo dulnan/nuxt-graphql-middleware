@@ -8,7 +8,7 @@ import { useNuxtApp, useAppConfig } from '#imports'
 import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables } from '../helpers/queryEncoding'
-import { encodeContext } from '../helpers/composables'
+import { encodeContext, sortQueryParams } from '../helpers/composables'
 import { OPERATION_HASH_PREFIX } from '../settings'
 
 export function performRequest<T>(
@@ -72,7 +72,7 @@ export function performRequest<T>(
   )
 
   // Merge all query params.
-  const params = Object.assign(
+  const paramsRaw = Object.assign(
     {
       // The unique operation hash that changes whenever any operation source or
       // fragment changes.
@@ -83,6 +83,14 @@ export function performRequest<T>(
     fetchOptions.query,
     operation === 'query' ? encodeVariables(variablesOrBody) : null,
   )
+
+  // When doing a query on the client, we want the query params to be sorted
+  // alphabetically, so that it's possible to consistently cache the exact same
+  // query in both our client cache or on a CDN cache.
+  const params =
+    import.meta.client && operation === 'query'
+      ? sortQueryParams(paramsRaw)
+      : paramsRaw
 
   // The cache key that includes the variables, client context and
   // operation hash.
