@@ -210,9 +210,10 @@ export function useAsyncGraphqlQuery<
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     asyncDataKey,
     () => {
-      const globalClientContext = clientOptions.buildClientContext
-        ? clientOptions.buildClientContext()
-        : {}
+      const globalClientContext =
+        clientOptions && clientOptions.buildClientContext
+          ? clientOptions.buildClientContext()
+          : {}
 
       return performRequest<any>(
         'query',

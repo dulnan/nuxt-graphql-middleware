@@ -15,7 +15,7 @@ export { clientOptions }
 `
     }
 
-    return `export const clientOptions = {}`
+    return `export const clientOptions = undefined`
   },
   (helper) => {
     if (helper.paths.clientOptions) {
@@ -25,7 +25,7 @@ export { clientOptions }
       return `import type { GraphqlClientOptions } from '${helper.paths.runtimeTypes}'
 import clientOptionsImport from '${pathRelative}'
 
-declare export const clientOptions: GraphqlClientOptions
+declare export const clientOptions: GraphqlClientOptions|undefined
 export type GraphqlClientContext = typeof clientOptionsImport extends GraphqlClientOptions<infer R> ? R : {}
 `
     }
@@ -33,7 +33,7 @@ export type GraphqlClientContext = typeof clientOptionsImport extends GraphqlCli
     return `
 import type { GraphqlClientOptions } from '${helper.paths.runtimeTypes}'
 
-declare export const clientOptions: GraphqlClientOptions
+declare export const clientOptions: GraphqlClientOptions|undefined
 export type GraphqlClientContext = {}
 `
   },
