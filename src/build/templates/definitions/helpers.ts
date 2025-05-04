@@ -19,7 +19,7 @@ export function getEndpoint(operation, operationName) {
   () => {
     return `export const serverApiPrefix: string;
 export function getEndpoint(operation: 'subscription'): string;
-export function getEndpoint(operation: 'query' | 'mutation', operationName: string): string;
+export function getEndpoint(operation: 'query' | 'mutation' | 'upload', operationName: string): string;
 `
   },
 )

@@ -88,8 +88,6 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (helper.options.experimental.subscriptions) {
       helper.addServerHandler('subscription', '/subscription')
-      helper.nuxt.options.nitro.experimental ||= {}
-      helper.nuxt.options.nitro.experimental.websocket = true
     }
 
     if (helper.isDev) {

@@ -157,7 +157,7 @@ export class ModuleHelper {
 
     // Will throw an error if the options are not valid.
     if (!nuxt.options._prepare) {
-      validateOptions(this.options)
+      validateOptions(this.options, nuxt)
     }
 
     this.isDev = nuxt.options.dev

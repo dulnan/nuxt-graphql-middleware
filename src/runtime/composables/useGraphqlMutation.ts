@@ -29,7 +29,7 @@ export function useGraphqlMutation<
 
   const globalClientContext =
     clientOptions && clientOptions.buildClientContext
-      ? clientOptions.buildClientContext()
+      ? clientOptions.buildClientContext('mutation')
       : {}
 
   return performRequest<R>(

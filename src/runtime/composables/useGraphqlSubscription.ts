@@ -1,5 +1,17 @@
-import { importMetaServer } from '#nuxt-graphql-middleware/config'
-import { onMounted, onBeforeUnmount, useNuxtApp } from '#imports'
+import {
+  importMetaServer,
+  importMetaDev,
+} from '#nuxt-graphql-middleware/config'
+import {
+  computed,
+  isRef,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  type ComputedRef,
+  useNuxtApp,
+  watch,
+} from '#imports'
 import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { GraphqlMiddlewareWebsocketHandler } from '../helpers/WebsocketHandler'
@@ -10,7 +22,7 @@ import { hash } from 'ohash'
 import { sortQueryParams, encodeContext } from '../helpers/composables'
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 
-function getWebsocketUrl() {
+function getWebsocketUrl(): string {
   const isSecure = location.protocol === 'https:'
   const endpoint = getEndpoint('subscription')
   return (isSecure ? 'wss://' : 'ws://') + location.host + endpoint
@@ -29,19 +41,13 @@ type GetSubscriptionArgs<
   K extends keyof Subscription,
   Q extends Subscription[K] = Subscription[K],
   R extends Q['response'] = Q['response'],
-> = Q['variables'] extends null
-  ? [
+> = Q['needsVariables'] extends true
+  ? [K, Q['variables'] | ComputedRef<Q['variables']>, GetSubscriptionOptions<R>]
+  : [
       K,
-      (null | undefined | GetSubscriptionOptions<R>)?,
-      GetSubscriptionOptions<R>?,
+      Q['variables'] | null | ComputedRef<Q['variables'] | null>,
+      GetSubscriptionOptions<R>,
     ]
-  : Q['needsVariables'] extends true
-    ? [K, Q['variables'], GetSubscriptionOptions<R>?]
-    : [
-        K,
-        (Q['variables'] | null | GetSubscriptionOptions<R>)?,
-        GetSubscriptionOptions<R>?,
-      ]
 
 /**
  * Use a GraphQL subscription.
@@ -54,10 +60,15 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
   }
 
   const app = useNuxtApp()
+  const isMounted = ref(false)
 
   const name = args[0]
-  const variablesArg = typeof args[1] === 'function' ? {} : args[1]
-  const options = typeof args[1] === 'function' ? args[1] : args[2]
+  const variablesArg = args[1]
+  const options = args[2]
+
+  const variables = computed<Record<string, any>>(() => {
+    return (isRef(variablesArg) ? variablesArg.value : variablesArg) || {}
+  })
 
   const [handler, overrideClientContext] =
     typeof options === 'function'
@@ -66,64 +77,91 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
 
   const globalClientContext =
     clientOptions && clientOptions.buildClientContext
-      ? clientOptions.buildClientContext()
+      ? clientOptions.buildClientContext('subscription')
       : {}
 
   const clientContext = Object.assign(
     {},
     globalClientContext,
     overrideClientContext,
-  )
+  ) as GraphqlClientContext
 
-  const variables = variablesArg || {}
+  const params = computed(() => {
+    return sortQueryParams(
+      Object.assign({}, encodeContext(clientContext), variables.value),
+    )
+  })
 
-  const params = sortQueryParams(
-    Object.assign({}, encodeContext(clientContext), variables),
-  )
+  const subscriptionKey = computed(() => `${name}:${hash(params.value)}`)
 
-  // The unique key for the subscription + variables + client context.
-  const key = `${name}:${hash(params)}`
+  async function subscribe(key: string) {
+    if (!isMounted.value) {
+      return
+    }
+
+    // Create instance if it does not yet exist.
+    if (!app.$graphqlWebsocket) {
+      const url = getWebsocketUrl()
+
+      app.$graphqlWebsocket = new GraphqlMiddlewareWebsocketHandler(url, app, {
+        debug: importMetaDev,
+      })
+    }
+
+    try {
+      await app.$graphqlWebsocket.init()
+      app.$graphqlWebsocket.subscribe(name, key, variables.value, clientContext)
+    } catch (error) {
+      console.error('Failed to initialize GraphQL subscription:', error)
+    }
+  }
+
+  function unsubscribe(key: string) {
+    if (app.$graphqlWebsocket) {
+      app.$graphqlWebsocket.unsubscribe(key)
+    }
+  }
 
   function onSubscriptionResponse(message: WebsocketMessage) {
     if (
       message.type === 'response' &&
       message.name === name &&
-      message.key === key &&
+      message.key === subscriptionKey.value &&
       handler
     ) {
       handler(message.response)
     }
   }
 
-  onMounted(async () => {
-    // Create instance if it does not yet exist.
-    if (!app.$graphqlWebsocket) {
-      app.$graphqlWebsocket = new GraphqlMiddlewareWebsocketHandler(
-        getWebsocketUrl(),
-        app,
-      )
-    }
-    await app.$graphqlWebsocket.init()
-
-    app.$graphqlWebsocket.subscribe(name, key, variables)
+  onMounted(() => {
+    isMounted.value = true
+    subscribe(subscriptionKey.value)
     app.hook('nuxt-graphql-middleware:subscription', onSubscriptionResponse)
   })
 
   onBeforeUnmount(() => {
+    isMounted.value = false
+    unsubscribe(subscriptionKey.value)
     app.hooks.removeHook(
       'nuxt-graphql-middleware:subscription',
       onSubscriptionResponse,
     )
-    if (app.$graphqlWebsocket) {
-      app.$graphqlWebsocket.unsubscribe(key)
+  })
+
+  watch(subscriptionKey, (newKey, oldKey) => {
+    if (!isMounted.value) {
+      return
     }
+
+    unsubscribe(oldKey)
+    subscribe(newKey)
   })
 }
 
 declare module '#app' {
   interface NuxtApp {
     /**
-     * The GraphQL subscription WebSocket handler.
+     * The GraphQL subscription WebSocket handler with automatic reconnection
      */
     $graphqlWebsocket?: GraphqlMiddlewareWebsocketHandler
   }

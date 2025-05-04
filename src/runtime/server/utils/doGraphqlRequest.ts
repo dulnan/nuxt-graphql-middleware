@@ -35,7 +35,7 @@ export async function doGraphqlRequest(
   if (serverOptions.doGraphqlRequest) {
     return serverOptions.doGraphqlRequest({
       event,
-      operation: body.operation,
+      operation: body.operation as any,
       operationName: body.operationName,
       operationDocument: body.query,
       variables: body.variables || {},

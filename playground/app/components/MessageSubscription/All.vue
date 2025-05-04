@@ -8,9 +8,11 @@ import { ref, useGraphqlSubscription } from '#imports'
 
 const messages = ref<MessageFragment[]>([])
 
-useGraphqlSubscription('messageAdded', (data) => {
-  if (data.data.messageAdded) {
-    messages.value.push(data.data.messageAdded)
-  }
+useGraphqlSubscription('messageAdded', null, {
+  handler: (data) => {
+    if (data.data.messageAdded) {
+      messages.value.push(data.data.messageAdded)
+    }
+  },
 })
 </script>

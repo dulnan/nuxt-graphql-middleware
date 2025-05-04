@@ -102,7 +102,7 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    * })
    * ```
    */
-  buildClientContext?: () => T
+  buildClientContext?: (operation: 'query' | 'mutation' | 'subscription') => T
 }
 
 export type GraphqlMiddlewareRequestContext<
@@ -376,11 +376,12 @@ export type WebsocketMessageSubscriptionResponse = {
   response: GraphqlResponse<any>
 }
 
-export type WebsocketMessageSubscribe = {
+export type WebsocketMessageSubscribe<C extends ContextType = ContextType> = {
   type: 'subscribe'
   key: string
   variables?: Record<string, any>
   name: keyof Subscription
+  clientContext: C
 }
 
 export type WebsocketMessageUnsubscribe = {
