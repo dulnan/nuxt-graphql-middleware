@@ -4,8 +4,8 @@ import type { WebsocketMessage } from '../types'
 
 export class GraphqlMiddlewareWebsocketHandler {
   private ws: WebSocket | null = null
-  private subscriptions = new Set<string>()
-  private connectionPromise: Promise<void | any> | null = null
+  private subscriptions = new Map<string, number>()
+  private connectionPromise: Promise<any> | null = null
 
   constructor(
     private url: string,
@@ -47,7 +47,11 @@ export class GraphqlMiddlewareWebsocketHandler {
     key: string,
     variables?: Record<string, any>,
   ) {
-    if (this.subscriptions.has(key)) {
+    const existing = this.subscriptions.get(key)
+
+    // There are already subscriptions, so increment the count.
+    if (existing !== undefined) {
+      this.subscriptions.set(key, existing + 1)
       return
     }
 
@@ -57,12 +61,23 @@ export class GraphqlMiddlewareWebsocketHandler {
       key,
       variables,
     })
+
+    this.subscriptions.set(key, 1)
   }
 
   public async unsubscribe(key: string) {
+    const existing = this.subscriptions.get(key)
+
+    if (existing !== undefined && existing > 1) {
+      this.subscriptions.set(key, existing - 1)
+      return
+    }
+
     this.send({
       type: 'unsubscribe',
       key,
     })
+
+    this.subscriptions.delete(key)
   }
 }

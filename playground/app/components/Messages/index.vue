@@ -11,7 +11,17 @@
       </thead>
       <tbody>
         <tr v-for="message in messages" :key="message.timestamp">
-          <td>{{ message.type }}</td>
+          <td>
+            <span
+              class="tag"
+              :class="{
+                'is-info': message.type === 'info',
+                'is-warning': message.type === 'warning',
+                'is-danger': message.type === 'error',
+              }"
+              >{{ message.type }}</span
+            >
+          </td>
           <td>{{ message.user?.firstName }}</td>
           <td>{{ message.message }}</td>
         </tr>

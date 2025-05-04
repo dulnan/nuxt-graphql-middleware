@@ -3,10 +3,12 @@ import { onMounted, onBeforeUnmount, useNuxtApp } from '#imports'
 import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { GraphqlMiddlewareWebsocketHandler } from '../helpers/WebsocketHandler'
+import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
 import type { WebsocketMessage } from '../types'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { hash } from 'ohash'
-import { sortQueryParams } from '../helpers/composables'
+import { sortQueryParams, encodeContext } from '../helpers/composables'
+import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 
 function getWebsocketUrl() {
   const isSecure = location.protocol === 'https:'
@@ -14,17 +16,32 @@ function getWebsocketUrl() {
   return (isSecure ? 'wss://' : 'ws://') + location.host + endpoint
 }
 
-type GetSubscriptionOptions<R> = (data: GraphqlResponse<R>) => void
+type GetSubscriptionHandler<R> = (data: GraphqlResponse<R>) => void
+
+type GetSubscriptionOptions<R> =
+  | GetSubscriptionHandler<R>
+  | {
+      handler: GetSubscriptionHandler<R>
+      clientContext?: Partial<GraphqlClientContext>
+    }
 
 type GetSubscriptionArgs<
   K extends keyof Subscription,
   Q extends Subscription[K] = Subscription[K],
   R extends Q['response'] = Q['response'],
 > = Q['variables'] extends null
-  ? [K, (null | undefined)?, GetSubscriptionOptions<R>?]
+  ? [
+      K,
+      (null | undefined | GetSubscriptionOptions<R>)?,
+      GetSubscriptionOptions<R>?,
+    ]
   : Q['needsVariables'] extends true
     ? [K, Q['variables'], GetSubscriptionOptions<R>?]
-    : [K, (Q['variables'] | null)?, GetSubscriptionOptions<R>?]
+    : [
+        K,
+        (Q['variables'] | null | GetSubscriptionOptions<R>)?,
+        GetSubscriptionOptions<R>?,
+      ]
 
 /**
  * Use a GraphQL subscription.
@@ -38,22 +55,43 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
 
   const app = useNuxtApp()
 
-  const [name, variablesArg, cb] = args
-  const variables = sortQueryParams(variablesArg || {})
+  const name = args[0]
+  const variablesArg = typeof args[1] === 'function' ? {} : args[1]
+  const options = typeof args[1] === 'function' ? args[1] : args[2]
 
-  // The unique key for the subscription + variables. Makes sure that
-  // we don't subscribe for the same thing multiple times.
-  const key = hash(`${name}:${variables || {}}`)
+  const [handler, overrideClientContext] =
+    typeof options === 'function'
+      ? [options, undefined]
+      : [options?.handler, options?.clientContext]
+
+  const globalClientContext =
+    clientOptions && clientOptions.buildClientContext
+      ? clientOptions.buildClientContext()
+      : {}
+
+  const clientContext = Object.assign(
+    {},
+    globalClientContext,
+    overrideClientContext,
+  )
+
+  const variables = variablesArg || {}
+
+  const params = sortQueryParams(
+    Object.assign({}, encodeContext(clientContext), variables),
+  )
+
+  // The unique key for the subscription + variables + client context.
+  const key = `${name}:${hash(params)}`
 
   function onSubscriptionResponse(message: WebsocketMessage) {
     if (
       message.type === 'response' &&
       message.name === name &&
-      message.key === key
+      message.key === key &&
+      handler
     ) {
-      if (cb) {
-        cb(message.response)
-      }
+      handler(message.response)
     }
   }
 
