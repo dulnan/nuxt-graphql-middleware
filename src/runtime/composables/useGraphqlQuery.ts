@@ -34,9 +34,10 @@ export function useGraphqlQuery<
           args[0].clientContext,
         ]
 
-  const globalClientContext = clientOptions.buildClientContext
-    ? clientOptions.buildClientContext()
-    : {}
+  const globalClientContext =
+    clientOptions && clientOptions.buildClientContext
+      ? clientOptions.buildClientContext()
+      : {}
 
   return performRequest<R>(
     'query',

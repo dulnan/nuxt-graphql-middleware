@@ -82,9 +82,10 @@ export function useGraphqlUploadMutation<
 
   const formData = createFormData(variables)
 
-  const globalClientContext = clientOptions.buildClientContext
-    ? clientOptions.buildClientContext()
-    : {}
+  const globalClientContext =
+    clientOptions && clientOptions.buildClientContext
+      ? clientOptions.buildClientContext()
+      : {}
 
   const clientContext = encodeContext({
     ...globalClientContext,
