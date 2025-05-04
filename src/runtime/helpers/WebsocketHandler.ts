@@ -1,5 +1,6 @@
-import type { NuxtApp } from '#app'
+import { showError, type NuxtApp } from '#app'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
+import { importMetaDev } from '#nuxt-graphql-middleware/config'
 import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type { WebsocketMessage } from '../types'
 
@@ -15,6 +16,7 @@ export class GraphqlMiddlewareWebsocketHandler {
   private connectionPromise: Promise<void> | null = null
   private reconnectAttempts = 0
   private isDisposed = false
+  private serverClientReady = false
   private messageQueue: WebsocketMessage[] = []
   private readonly options: Required<WebSocketOptions>
 
@@ -36,7 +38,7 @@ export class GraphqlMiddlewareWebsocketHandler {
     }
   }
 
-  public async init(): Promise<void> {
+  public async init(clientContext: GraphqlClientContext): Promise<void> {
     if (this.isDisposed) {
       throw new Error('WebSocket handler has been disposed')
     }
@@ -45,11 +47,11 @@ export class GraphqlMiddlewareWebsocketHandler {
       return this.connectionPromise
     }
 
-    this.connectionPromise = this.connect()
+    this.connectionPromise = this.connect(clientContext)
     return this.connectionPromise
   }
 
-  private async connect(): Promise<void> {
+  private async connect(clientContext: GraphqlClientContext): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(this.url)
@@ -57,9 +59,17 @@ export class GraphqlMiddlewareWebsocketHandler {
         const onOpen = () => {
           this.log('WebSocket connected')
           this.reconnectAttempts = 0
-          this.flushMessageQueue()
           this.ws?.removeEventListener('open', onOpen)
           this.ws?.removeEventListener('error', onError)
+
+          // Send the message directly, because we don't want to queue it.
+          this.ws?.send(
+            JSON.stringify({
+              type: 'client:init',
+              clientContext,
+            }),
+          )
+
           resolve()
         }
 
@@ -84,11 +94,24 @@ export class GraphqlMiddlewareWebsocketHandler {
   private handleMessage = (event: MessageEvent) => {
     try {
       const response: WebsocketMessage = JSON.parse(event.data)
-      if (response.type === 'response') {
+      if (response.type === 'server:response') {
         this.app.hooks.callHook(
-          'nuxt-graphql-middleware:subscription',
+          'nuxt-graphql-middleware:subscription-response',
           response,
         )
+      } else if (response.type === 'server:init') {
+        this.serverClientReady = true
+        this.flushMessageQueue()
+      } else if (response.type === 'server:error') {
+        const errorMessage = `[nuxt-graphql-middleware] - Error "${response.errorType}" in WebSocket server handler: ${response.reason}`
+        if (importMetaDev) {
+          showError({
+            statusCode: 500,
+            statusMessage: errorMessage,
+          })
+        } else {
+          console.error(errorMessage)
+        }
       }
     } catch (error) {
       this.log('Error parsing WebSocket message:', error)
@@ -99,25 +122,25 @@ export class GraphqlMiddlewareWebsocketHandler {
     this.log('WebSocket closed', event.code, event.reason)
     this.connectionPromise = null
 
-    if (
-      !this.isDisposed &&
-      this.reconnectAttempts < this.options.reconnectAttempts
-    ) {
-      this.reconnectAttempts++
-      this.log(
-        `Attempting to reconnect (${this.reconnectAttempts}/${this.options.reconnectAttempts})`,
-      )
+    // @TODO: Re-subscribe - but how?
+    // if (
+    //   !this.isDisposed &&
+    //   this.reconnectAttempts < this.options.reconnectAttempts
+    // ) {
+    //   this.reconnectAttempts++
+    //   this.log(
+    //     `Attempting to reconnect (${this.reconnectAttempts}/${this.options.reconnectAttempts})`,
+    //   )
 
-      setTimeout(async () => {
-        try {
-          await this.connect()
-          // @TODO: Re-subscribe - but how?
-          this.flushMessageQueue()
-        } catch (error) {
-          this.log('Reconnection failed:', error)
-        }
-      }, this.options.reconnectDelay * this.reconnectAttempts)
-    }
+    // setTimeout(async () => {
+    //   try {
+    //     await this.connect()
+    //     this.flushMessageQueue()
+    //   } catch (error) {
+    //     this.log('Reconnection failed:', error)
+    //   }
+    // }, this.options.reconnectDelay * this.reconnectAttempts)
+    // }
   }
 
   private flushMessageQueue() {
@@ -130,12 +153,16 @@ export class GraphqlMiddlewareWebsocketHandler {
     }
   }
 
-  public send(message: WebsocketMessage) {
+  private send(message: WebsocketMessage) {
     if (this.isDisposed) {
       throw new Error('WebSocket handler has been disposed')
     }
 
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (
+      !this.ws ||
+      this.ws.readyState !== WebSocket.OPEN ||
+      !this.serverClientReady
+    ) {
       this.messageQueue.push(message)
       this.log('WebSocket not ready, queuing message', message)
       return
@@ -170,7 +197,7 @@ export class GraphqlMiddlewareWebsocketHandler {
     this.subscriptions.set(key, 1)
 
     this.send({
-      type: 'subscribe',
+      type: 'client:subscribe',
       name,
       key,
       variables,
@@ -193,7 +220,7 @@ export class GraphqlMiddlewareWebsocketHandler {
     this.subscriptions.delete(key)
 
     this.send({
-      type: 'unsubscribe',
+      type: 'client:unsubscribe',
       key,
     })
   }

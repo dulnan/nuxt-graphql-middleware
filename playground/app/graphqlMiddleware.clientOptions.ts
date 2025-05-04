@@ -3,9 +3,17 @@ import { useCurrentLanguage } from '#imports'
 
 export default defineGraphqlClientOptions<{
   language: string
+  wsToken?: string
 }>({
-  buildClientContext() {
+  buildClientContext(operation) {
     const language = useCurrentLanguage()
+    if (operation === 'subscription') {
+      return {
+        language: language.value,
+        wsToken: 'client-options-websocket-token',
+        // wsToken: 'client-options-websocket-token-foobar',
+      }
+    }
 
     return {
       language: language.value,

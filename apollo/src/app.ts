@@ -10,12 +10,11 @@ import GraphQLUpload, {
   type FileUpload,
 } from 'graphql-upload/GraphQLUpload.mjs'
 import { GraphQLError } from 'graphql'
-import data from './data.json' assert { type: 'json' }
+import data from './data.json'
 import type { Readable } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 import { makeExecutableSchema } from '@graphql-tools/schema'
 import { WebSocketServer } from 'ws'
-// @ts-ignore
 import { useServer } from 'graphql-ws/use/ws'
 import { PubSub, withFilter } from 'graphql-subscriptions'
 
@@ -497,7 +496,18 @@ const wsServer = new WebSocketServer({
   path: '/subscriptions',
 })
 // hook up graphql-ws
-const serverCleanup = useServer({ schema }, wsServer)
+const serverCleanup = useServer(
+  {
+    schema,
+    onConnect: (ctx) => {
+      const token = ctx.connectionParams.token
+      if (token !== 'client-options-websocket-token') {
+        throw new Error('GraphQL WebSocket token is not valid.')
+      }
+    },
+  },
+  wsServer,
+)
 
 const server = new ApolloServer({
   schema,
@@ -538,33 +548,38 @@ const server = new ApolloServer({
   ],
 })
 
-await server.start()
+async function main() {
+  await server.start()
 
-app.use(
-  '/',
-  cors(),
-  bodyParser.json(),
-  graphqlUploadExpress(),
-  expressMiddleware(server, {
-    context: async ({ req }) => {
-      const headerClient = req.headers['x-nuxt-header-client']
-      const headerServer = req.headers['x-nuxt-header-server']
-      const token = req.headers.authentication || ''
-      if (token !== 'server-token')
-        throw new GraphQLError('you must be logged in to query this schema', {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-          },
+  app.use(
+    '/',
+    cors(),
+    bodyParser.json(),
+    graphqlUploadExpress(),
+    expressMiddleware(server, {
+      context: async ({ req }) => {
+        const headerClient = req.headers['x-nuxt-header-client']
+        const headerServer = req.headers['x-nuxt-header-server']
+        const token = req.headers.authentication || ''
+        if (token !== 'server-token')
+          throw new GraphQLError('you must be logged in to query this schema', {
+            extensions: {
+              code: 'UNAUTHENTICATED',
+            },
+          })
+        return Promise.resolve({
+          headerClient,
+          headerServer,
+          headers: req.headers,
         })
-      return Promise.resolve({
-        headerClient,
-        headerServer,
-        headers: req.headers,
-      })
-    },
-  }),
-)
+      },
+    }),
+  )
+  await new Promise((resolve) =>
+    httpServer.listen({ port: 4000 }, () => resolve),
+  )
+}
 
-await new Promise((resolve) => httpServer.listen({ port: 4000 }, () => resolve))
+main()
 
 console.log(`🚀 Server ready at http://localhost:4000/`)

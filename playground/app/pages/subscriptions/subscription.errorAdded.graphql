@@ -1,5 +1,5 @@
 subscription errorMessageAdded {
-  messageAdded(type: error) {
+  errorAdded: messageAdded(type: error) {
     ...message
   }
 }

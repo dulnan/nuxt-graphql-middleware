@@ -1,5 +1,5 @@
 subscription messageAddedWithFilter($type: MessageType!) {
-  messageAdded(type: $type) {
+  messageAddedWithFilter: messageAdded(type: $type) {
     ...message
   }
 }

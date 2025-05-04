@@ -16,7 +16,7 @@ import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { GraphqlMiddlewareWebsocketHandler } from '../helpers/WebsocketHandler'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
-import type { WebsocketMessage } from '../types'
+import type { WebsocketMessageSubscriptionResponse } from '../types'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 import { hash } from 'ohash'
 import { sortQueryParams, encodeContext } from '../helpers/composables'
@@ -43,11 +43,13 @@ type GetSubscriptionArgs<
   R extends Q['response'] = Q['response'],
 > = Q['needsVariables'] extends true
   ? [K, Q['variables'] | ComputedRef<Q['variables']>, GetSubscriptionOptions<R>]
-  : [
-      K,
-      Q['variables'] | null | ComputedRef<Q['variables'] | null>,
-      GetSubscriptionOptions<R>,
-    ]
+  :
+      | [
+          K,
+          Q['variables'] | null | ComputedRef<Q['variables'] | null>,
+          GetSubscriptionOptions<R>,
+        ]
+      | [K, GetSubscriptionHandler<R>]
 
 /**
  * Use a GraphQL subscription.
@@ -67,18 +69,28 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
   const options = args[2]
 
   const variables = computed<Record<string, any>>(() => {
+    if (typeof variablesArg === 'function') {
+      return {}
+    }
+
     return (isRef(variablesArg) ? variablesArg.value : variablesArg) || {}
   })
 
-  const [handler, overrideClientContext] =
-    typeof options === 'function'
-      ? [options, undefined]
-      : [options?.handler, options?.clientContext]
+  const handler =
+    typeof variablesArg === 'function'
+      ? variablesArg
+      : typeof options === 'function'
+        ? options
+        : options?.handler
 
-  const globalClientContext =
+  const overrideClientContext =
+    typeof options === 'object' ? options.clientContext : {}
+
+  const globalClientContext = (
     clientOptions && clientOptions.buildClientContext
       ? clientOptions.buildClientContext('subscription')
       : {}
+  ) as GraphqlClientContext
 
   const clientContext = Object.assign(
     {},
@@ -109,7 +121,7 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
     }
 
     try {
-      await app.$graphqlWebsocket.init()
+      await app.$graphqlWebsocket.init(globalClientContext)
       app.$graphqlWebsocket.subscribe(name, key, variables.value, clientContext)
     } catch (error) {
       console.error('Failed to initialize GraphQL subscription:', error)
@@ -122,28 +134,34 @@ export function useGraphqlSubscription<K extends keyof Subscription>(
     }
   }
 
-  function onSubscriptionResponse(message: WebsocketMessage) {
-    if (
-      message.type === 'response' &&
-      message.name === name &&
-      message.key === subscriptionKey.value &&
-      handler
-    ) {
+  function onSubscriptionResponse(
+    message: WebsocketMessageSubscriptionResponse,
+  ) {
+    if (message.key === subscriptionKey.value && handler) {
       handler(message.response)
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     isMounted.value = true
-    subscribe(subscriptionKey.value)
-    app.hook('nuxt-graphql-middleware:subscription', onSubscriptionResponse)
+    await subscribe(subscriptionKey.value)
+
+    // If no handler is provided we don't need to add an event listener.
+    if (!handler) {
+      return
+    }
+
+    app.hook(
+      'nuxt-graphql-middleware:subscription-response',
+      onSubscriptionResponse,
+    )
   })
 
   onBeforeUnmount(() => {
     isMounted.value = false
     unsubscribe(subscriptionKey.value)
     app.hooks.removeHook(
-      'nuxt-graphql-middleware:subscription',
+      'nuxt-graphql-middleware:subscription-response',
       onSubscriptionResponse,
     )
   })

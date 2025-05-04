@@ -85,6 +85,5 @@ const addMessage = async () => {
     message: message.value,
     type: type.value,
   }).then((data) => data.data.addMessage)
-  message.value = ''
 }
 </script>

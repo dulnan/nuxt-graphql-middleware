@@ -30,9 +30,12 @@ const variables = computed(() => ({
   type: type.value,
 }))
 
-useGraphqlSubscription('messageAddedWithFilter', variables, (data) => {
-  if (data.data.messageAdded) {
-    messages.value.push(data.data.messageAdded)
-  }
+useGraphqlSubscription('messageAddedWithFilter', variables, {
+  handler: (data) => {
+    messages.value.push(data.data.messageAddedWithFilter)
+  },
+  clientContext: {
+    language: 'override-language',
+  },
 })
 </script>

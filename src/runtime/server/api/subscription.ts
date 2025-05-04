@@ -2,13 +2,11 @@ import { defineWebSocketHandler } from 'h3'
 import { createClient, type Client } from 'graphql-ws'
 import type { Peer } from 'crossws'
 import WebSocket from 'ws'
-import type {
-  WebsocketMessage,
-  WebsocketMessageSubscriptionResponse,
-} from '../../types'
+import type { WebsocketMessage } from '../../types'
 import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
+import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
 
 if (!serverOptions.websocket?.getEndpoint) {
   throw new Error(
@@ -18,14 +16,67 @@ if (!serverOptions.websocket?.getEndpoint) {
 
 type SubscriptionName = keyof Subscription
 
+function sendPeerMessage(peer: Peer, message: WebsocketMessage) {
+  peer.send(message)
+}
+
+function getErrorReason(e: unknown): string {
+  if (
+    typeof e === 'object' &&
+    e &&
+    'reason' in e &&
+    typeof e.reason === 'string'
+  ) {
+    return e.reason
+  } else if (e instanceof Error) {
+    return e.message
+  } else if (typeof e === 'string') {
+    return e
+  }
+
+  return 'Unknown Error'
+}
+
 class SubscriptionHandler {
-  private client: Client
   private subscriptions = new Map<string, () => void>()
 
-  constructor(url: string) {
-    this.client = createClient({
-      url,
-      webSocketImpl: WebSocket,
+  constructor(private client: Client) {}
+
+  public static create(
+    url: string,
+    connectionParams: Record<string, any>,
+  ): Promise<SubscriptionHandler> {
+    return new Promise((resolve, reject) => {
+      try {
+        const client = createClient({
+          url,
+          webSocketImpl: WebSocket,
+          connectionParams,
+          lazy: false,
+          onNonLazyError: (e) => {
+            reject(e)
+          },
+          on: {
+            connected: () => {
+              const handler = new SubscriptionHandler(client)
+              resolve(handler)
+            },
+            error: (e) => {
+              reject(e)
+            },
+            closed: (e) => {
+              reject(e)
+            },
+            message: (e) => {
+              console.log('on message')
+              console.log(e)
+            },
+          },
+        })
+      } catch (e) {
+        console.log('init error')
+        reject(e)
+      }
     })
   }
 
@@ -36,6 +87,7 @@ class SubscriptionHandler {
     peer: Peer,
     name: SubscriptionName,
     key: string,
+    clientContext: GraphqlClientContext,
     variables?: Record<string, any>,
   ) {
     if (this.subscriptions.has(key)) {
@@ -47,25 +99,31 @@ class SubscriptionHandler {
       throw new Error(`Invalid subscription name "${name}".`)
     }
 
+    const extensions = serverOptions.websocket?.operationExtensions
+      ? serverOptions.websocket.operationExtensions(clientContext)
+      : undefined
+
     const unsubscribe = this.client.subscribe(
       {
         query,
         variables,
+        extensions,
       },
       {
         next: (value) => {
-          const message: WebsocketMessageSubscriptionResponse = {
-            type: 'response',
+          sendPeerMessage(peer, {
+            type: 'server:response',
             name,
             key,
             response: value as any,
-          }
-          peer.send(message)
+          })
         },
-        error: (error) => {
-          console.log(error)
+        error: () => {
+          // console.log(error)
         },
-        complete: () => {},
+        complete: () => {
+          console.log('Complete')
+        },
       },
     )
 
@@ -93,40 +151,62 @@ class SubscriptionHandler {
 }
 
 export default defineWebSocketHandler({
-  open(peer) {
-    if (!peer.context.graphql) {
-      const url = serverOptions.websocket!.getEndpoint(peer)
-      peer.context.graphql = new SubscriptionHandler(url)
-    }
-  },
+  // open(peer) {},
 
-  message(peer, wsMessage) {
-    try {
-      const message: WebsocketMessage = wsMessage.json()
-      if (peer.context.graphql instanceof SubscriptionHandler) {
-        if (message.type === 'subscribe') {
-          peer.context.graphql.subscribe(
-            peer,
-            message.name,
-            message.key,
-            message.variables,
+  async message(peer, wsMessage) {
+    const message: WebsocketMessage = wsMessage.json()
+    if (message.type === 'client:init') {
+      try {
+        if (!peer.context.graphql) {
+          const url = serverOptions.websocket!.getEndpoint(peer)
+          const connectionParams = serverOptions.websocket?.connectionParams
+            ? serverOptions.websocket.connectionParams(
+                peer.request,
+                message.clientContext,
+              )
+            : {}
+
+          peer.context.graphql = await SubscriptionHandler.create(
+            url,
+            connectionParams,
           )
-        } else if (message.type === 'unsubscribe') {
-          peer.context.graphql.unsubscribe(message.key)
         }
+
+        sendPeerMessage(peer, {
+          type: 'server:init',
+        })
+      } catch (e) {
+        const reason = getErrorReason(e)
+
+        sendPeerMessage(peer, {
+          type: 'server:error',
+          errorType: 'closed-on-init',
+          reason,
+        })
       }
-    } catch (e) {
-      console.error(e)
+    } else if (peer.context.graphql instanceof SubscriptionHandler) {
+      if (message.type === 'client:subscribe') {
+        peer.context.graphql.subscribe(
+          peer,
+          message.name,
+          message.key,
+          message.clientContext as GraphqlClientContext,
+          message.variables,
+        )
+      } else if (message.type === 'client:unsubscribe') {
+        peer.context.graphql.unsubscribe(message.key)
+      }
     }
   },
 
-  close(peer, event) {
+  close(peer) {
     if (peer.context.graphql instanceof SubscriptionHandler) {
       peer.context.graphql.destroy()
+      peer.context.graphql = undefined
     }
   },
 
-  error(peer, error) {
+  error(peer) {
     console.log('[ws] error', peer.id)
   },
 })

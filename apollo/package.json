@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "compile": "tsc",
-    "start": "node ./dist/index.js"
+    "start": "node ./src/index.cjs"
   },
   "author": "",
   "license": "ISC",

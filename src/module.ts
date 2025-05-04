@@ -9,8 +9,6 @@ import { ModuleHelper } from './build/ModuleHelper'
 import { TEMPLATES } from './build/templates'
 import { DevModeHandler } from './build/DevModeHandler'
 import { ModuleContext } from './build/ModuleContext'
-import type { OperationResponseError } from './runtime/types'
-import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
 
 export type { ModuleOptions }
@@ -163,22 +161,6 @@ export default defineNuxtModule<ModuleOptions>({
     devModeHandler.init()
   },
 })
-
-declare module '#app' {
-  interface RuntimeNuxtHooks {
-    /**
-     * Emitted when any GraphQL response contains errors.
-     */
-    'nuxt-graphql-middleware:errors': (
-      errors: OperationResponseError,
-    ) => HookResult
-
-    /**
-     * Emitted when receiving a subscription response.
-     */
-    'nuxt-graphql-middleware:subscription': (data: any) => HookResult
-  }
-}
 
 declare module 'vite/types/customEvent.d.ts' {
   interface CustomEventMap {
