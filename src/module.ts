@@ -86,6 +86,12 @@ export default defineNuxtModule<ModuleOptions>({
       helper.addServerHandler('upload', '/upload/:name', 'post')
     }
 
+    if (helper.options.experimental.subscriptions) {
+      helper.addServerHandler('subscription', '/subscription')
+      helper.nuxt.options.nitro.experimental ||= {}
+      helper.nuxt.options.nitro.experimental.websocket = true
+    }
+
     if (helper.isDev) {
       helper.addServerHandler('debug', '/debug', 'get')
     }
@@ -102,6 +108,10 @@ export default defineNuxtModule<ModuleOptions>({
 
       if (helper.options.enableFileUploads) {
         helper.addComposable('useGraphqlUploadMutation')
+      }
+
+      if (helper.options.experimental.subscriptions) {
+        helper.addComposable('useGraphqlSubscription')
       }
 
       helper.addServerUtil('useGraphqlQuery')
@@ -164,6 +174,11 @@ declare module '#app' {
     'nuxt-graphql-middleware:errors': (
       errors: OperationResponseError,
     ) => HookResult
+
+    /**
+     * Emitted when receiving a subscription response.
+     */
+    'nuxt-graphql-middleware:subscription': (data: any) => HookResult
   }
 }
 

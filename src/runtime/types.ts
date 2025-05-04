@@ -1,8 +1,10 @@
+import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type {
   GraphqlMiddlewareResponseUnion,
   GraphqlResponse,
 } from '#nuxt-graphql-middleware/response'
 import type { H3Event } from 'h3'
+import type { Peer } from 'crossws'
 import type {
   FetchOptions,
   FetchResponse,
@@ -195,6 +197,13 @@ export type GraphqlMiddlewareDoRequestMethod<T, C extends ContextType> = (
   context: GraphqlMiddlewareDoRequestMethodContext<C>,
 ) => Promise<T>
 
+export type GraphqlMiddlewareServerOptionsWebsocket = {
+  /**
+   * Return the WebSocket endpoint for GraphQL subscriptions.
+   */
+  getEndpoint: (peer: Peer) => string
+}
+
 /**
  * Configuration options during runtime.
  */
@@ -220,6 +229,11 @@ export type GraphqlMiddlewareServerOptions<
    * ```
    */
   graphqlEndpoint?: GraphqlMiddlewareGraphqlEndpointMethod<C>
+
+  /**
+   * Options for the Websocket connection for GraphQL subscriptions.
+   */
+  websocket?: GraphqlMiddlewareServerOptionsWebsocket
 
   /**
    * Provide the options for the ofetch request to the GraphQL server.
@@ -354,3 +368,27 @@ export type GraphqlMiddlewareServerOptions<
 export type GraphqlMiddlewareRuntimeConfig = {
   graphqlEndpoint?: string
 }
+
+export type WebsocketMessageSubscriptionResponse = {
+  type: 'response'
+  name: keyof Subscription
+  key: string
+  response: GraphqlResponse<any>
+}
+
+export type WebsocketMessageSubscribe = {
+  type: 'subscribe'
+  key: string
+  variables?: Record<string, any>
+  name: keyof Subscription
+}
+
+export type WebsocketMessageUnsubscribe = {
+  type: 'unsubscribe'
+  key: string
+}
+
+export type WebsocketMessage =
+  | WebsocketMessageSubscribe
+  | WebsocketMessageUnsubscribe
+  | WebsocketMessageSubscriptionResponse

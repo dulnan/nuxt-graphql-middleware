@@ -231,5 +231,14 @@ export interface ModuleOptions {
      * JSON encoded.
      */
     improvedQueryParamEncoding?: boolean
+
+    /**
+     * Enable experimental support for GraphQL subscriptions.
+     *
+     * Subscriptions follow the same philosophy as the rest of the module and
+     * will proxy a WebSocket connection to your GraphQL server, meaning that
+     * it's only possible to use subscriptions defined at build time.
+     */
+    subscriptions?: boolean
   }
 }

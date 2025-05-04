@@ -18,6 +18,7 @@ export const defaultOptions: ModuleOptions = {
   graphqlConfigFilePath: './graphql.config.ts',
   experimental: {
     improvedQueryParamEncoding: false,
+    subscriptions: false,
   },
   clientCache: {
     enabled: false,

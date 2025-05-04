@@ -38,6 +38,7 @@ const graphqlMiddleware: ModuleOptions = {
 
   experimental: {
     improvedQueryParamEncoding: true,
+    subscriptions: true,
   },
 }
 

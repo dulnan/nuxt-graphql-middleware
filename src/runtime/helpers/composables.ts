@@ -2,7 +2,11 @@ import type { FetchOptions } from 'ofetch'
 import type { RequestCacheOptions } from './../types'
 import { CLIENT_CONTEXT_PREFIX } from '../settings'
 import type { GraphqlClientContext } from '#nuxt-graphql-middleware/client-options'
-import type { Query, Mutation } from '#nuxt-graphql-middleware/operation-types'
+import type {
+  Query,
+  Mutation,
+  Subscription,
+} from '#nuxt-graphql-middleware/operation-types'
 import type { NuxtApp } from '#app'
 import type { AppConfig } from 'nuxt/schema'
 import { GraphqlMiddlewareCache } from './ClientCache'
@@ -40,6 +44,12 @@ export type GetMutationArgs<
 export type GetQueryResult<
   K extends keyof Query,
   Q extends Query[K] = Query[K],
+> = Q['response']
+
+// Determine the query result.
+export type GetSubscriptionResult<
+  K extends keyof Subscription,
+  Q extends Subscription[K] = Subscription[K],
 > = Q['response']
 
 // Determine the query result.

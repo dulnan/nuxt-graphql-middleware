@@ -6,11 +6,31 @@ import http from 'http'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs'
-import GraphQLUpload, { FileUpload } from 'graphql-upload/GraphQLUpload.mjs'
+import GraphQLUpload, {
+  type FileUpload,
+} from 'graphql-upload/GraphQLUpload.mjs'
 import { GraphQLError } from 'graphql'
 import data from './data.json' assert { type: 'json' }
 import type { Readable } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
+import { makeExecutableSchema } from '@graphql-tools/schema'
+import { WebSocketServer } from 'ws'
+// @ts-ignore
+import { useServer } from 'graphql-ws/use/ws'
+import { PubSub, withFilter } from 'graphql-subscriptions'
+
+const pubsub = new PubSub()
+
+type MessageType = 'info' | 'warning' | 'error'
+
+type Message = {
+  user: number
+  message: string
+  timestamp: string
+  type: MessageType
+}
+
+const messages: Message[] = []
 
 function getLanguageFromPath(path = ''): string | undefined {
   if (!path) {
@@ -60,7 +80,18 @@ type FormSubmission = {
   documents: FormSubmissionDocument[]
 }
 
-let users = []
+type User = {
+  id: number
+  firstName: string
+  lastName: string
+  email: string
+  description?: string
+  dateOfBirth?: string
+  meansOfContact?: string
+  triggerError?: boolean
+}
+
+let users: User[] = []
 let idIncrement = 0
 let files: UploadedFile[] = []
 let formSubmissions: FormSubmission[] = []
@@ -84,6 +115,12 @@ const typeDefs = `#graphql
   enum MeansOfContact {
     phone
     email
+  }
+
+  enum MessageType {
+    info
+    warning
+    error
   }
 
   type User {
@@ -222,6 +259,13 @@ const typeDefs = `#graphql
     documents: [FormSubmissionDocument]
   }
 
+  type Message {
+    user: User
+    message: String!
+    timestamp: String!
+    type: MessageType!
+  }
+
   type Mutation {
     createUser(user: UserData!): User!
     deleteUser(id: Int!): Boolean
@@ -229,6 +273,14 @@ const typeDefs = `#graphql
     triggerError: Boolean
     uploadFile(file: Upload): Boolean!
     submitForm(input: FormSubmissionInput!): Boolean!
+    addMessage(message: String!, type: MessageType!): Boolean!
+  }
+
+  type Subscription {
+    """
+    Fires whenever a new message is added.
+    """
+    messageAdded(type: MessageType): Message!
   }
 
   input FormSubmissionDocumentsInput {
@@ -326,6 +378,7 @@ const resolvers = {
     createUser: (_: any, args: any) => {
       const user = { id: getId(), ...args.user }
       users.push(user)
+      pubsub.publish('USER_CREATED', { userCreated: user })
       return user
     },
     deleteUser: (_: any, args: any) => {
@@ -385,6 +438,39 @@ const resolvers = {
 
       return true
     },
+
+    addMessage: (_, args) => {
+      const message: Message = {
+        user: 4,
+        message: args.message,
+        timestamp: Date.now().toString(),
+        type: args.type,
+      }
+      messages.push(message)
+      pubsub.publish('MESSAGE_ADDED', { messageAdded: message })
+      return true
+    },
+  },
+
+  Message: {
+    user: (message: Message) => {
+      return users.find((v) => v.id === message.user)
+    },
+  },
+
+  Subscription: {
+    messageAdded: {
+      subscribe: withFilter(
+        () => {
+          return pubsub.asyncIterableIterator(['MESSAGE_ADDED'])
+        },
+        (payload, variables) => {
+          return (
+            !variables?.type || payload.messageAdded.type === variables?.type
+          )
+        },
+      ),
+    },
   },
 
   Upload: GraphQLUpload,
@@ -393,11 +479,42 @@ const resolvers = {
 const app = express()
 const httpServer = http.createServer(app)
 
+// const server = new ApolloServer({
+//   typeDefs,
+//   resolvers,
+//   plugins: [
+//     ApolloServerPluginDrainHttpServer({ httpServer }),
+//     {
+
+//   ],
+// })
+// create a single schema for both HTTP and WS
+const schema = makeExecutableSchema({ typeDefs, resolvers })
+
+// attach WebSocket server for subscriptions
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/subscriptions',
+})
+// hook up graphql-ws
+const serverCleanup = useServer({ schema }, wsServer)
+
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+  schema,
   plugins: [
+    // shut down the HTTP server
     ApolloServerPluginDrainHttpServer({ httpServer }),
+
+    // shut down the WebSocket server
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose()
+          },
+        }
+      },
+    },
     {
       requestDidStart() {
         return Promise.resolve({
@@ -420,6 +537,7 @@ const server = new ApolloServer({
     BASIC_LOGGING,
   ],
 })
+
 await server.start()
 
 app.use(

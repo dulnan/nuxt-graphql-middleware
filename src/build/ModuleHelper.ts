@@ -375,7 +375,7 @@ ${content.trim()}`
     })
   }
 
-  public addServerHandler(name: string, path: string, method: RouterMethod) {
+  public addServerHandler(name: string, path: string, method?: RouterMethod) {
     addServerHandler({
       handler: this.resolvers.module.resolve('./runtime/server/api/' + name),
       route: this.options.serverApiPrefix + path,
