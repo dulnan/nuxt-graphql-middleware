@@ -4,16 +4,6 @@ import { useGraphqlMutation } from './../../../src/runtime/composables/useGraphq
 import { useGraphqlQuery } from './../../../src/runtime/composables/useGraphqlQuery'
 import { useGraphqlUploadMutation } from './../../../src/runtime/composables/useGraphqlUploadMutation'
 
-const useNuxtApp = function () {
-  return {
-    $graphqlState: {
-      fetchOptions: {},
-    },
-  }
-}
-
-vi.stubGlobal('useNuxtApp', useNuxtApp)
-
 vi.mock('#nuxt-graphql-middleware/helpers', () => {
   return {
     getEndpoint(operation: string, operationName: string) {
@@ -48,7 +38,7 @@ vi.mock('#imports', () => {
           },
         },
         graphqlMiddleware: {
-          graphqlEndpoint: 'http//localhost/graphql',
+          graphqlEndpoint: 'http://localhost/graphql',
         },
       }
     },
@@ -90,35 +80,108 @@ vi.stubGlobal('$fetch', fetchMock)
 
 describe('useGraphqlQuery', () => {
   test('Performs a query', async () => {
-    expect(await useGraphqlQuery('foobar')).toMatchSnapshot()
+    expect(await useGraphqlQuery('foobar')).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/foobar",
+        "errors": [],
+        "options": {
+          "body": undefined,
+          "method": "get",
+          "params": {
+            "__gqlh": "abc123",
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Performs a query with string variables', async () => {
-    expect(
-      await useGraphqlQuery('foobar', { stringVar: 'foobar' }),
-    ).toMatchSnapshot()
+    expect(await useGraphqlQuery('userById', { id: '1' }))
+      .toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/userById",
+        "errors": [],
+        "options": {
+          "body": undefined,
+          "method": "get",
+          "params": {
+            "__gqlh": undefined,
+            "id": "1",
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Performs a query with string variables', async () => {
-    expect(
-      await useGraphqlQuery('foobar', { stringVar: 'foobar' }),
-    ).toMatchSnapshot()
+    expect(await useGraphqlQuery('userById', { id: '10' }))
+      .toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/userById",
+        "errors": [],
+        "options": {
+          "body": undefined,
+          "method": "get",
+          "params": {
+            "__gqlh": undefined,
+            "id": "10",
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Performs a query with non-string variables', async () => {
-    expect(await useGraphqlQuery('foobar', { numeric: 123 })).toMatchSnapshot()
+    expect(await useGraphqlQuery('returnSameValue', { value: 123 }))
+      .toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/returnSameValue",
+        "errors": [],
+        "options": {
+          "body": undefined,
+          "method": "get",
+          "params": {
+            "__gqlh": undefined,
+            "__variables": "{"value":123}",
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Throws an error for invalid query names.', async () => {
+    // @ts-expect-error Obviously wrong.
     const result = await useGraphqlQuery(123).catch((e) => e)
-    expect(result).toMatchSnapshot()
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/query/undefined",
+        "errors": [],
+        "options": {
+          "body": undefined,
+          "method": "get",
+          "params": {
+            "__gqlh": undefined,
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('takes options into account', async () => {
     expect(
       await useGraphqlQuery(
-        'foobar',
-        { stringVar: 'foobar' },
+        'userById',
+        { id: '123' },
         {
           fetchOptions: {
             params: {
@@ -133,16 +196,16 @@ describe('useGraphqlQuery', () => {
     ).toMatchInlineSnapshot(`
       {
         "data": undefined,
-        "endpoint": "/nuxt-graphql-middleware/query/foobar",
+        "endpoint": "/nuxt-graphql-middleware/query/userById",
         "errors": [],
         "options": {
           "body": undefined,
           "method": "get",
           "params": {
             "__gqlc_language": "fr",
-            "__gqlh": "abc123",
+            "__gqlh": undefined,
             "customParam": "yes",
-            "stringVar": "foobar",
+            "id": "123",
           },
           "query": undefined,
         },
@@ -153,24 +216,68 @@ describe('useGraphqlQuery', () => {
 
 describe('useGraphqlMutation', () => {
   test('Performs a mutation', async () => {
-    expect(await useGraphqlMutation('foobar')).toMatchSnapshot()
+    expect(await useGraphqlMutation('initState')).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/mutation/initState",
+        "errors": [],
+        "options": {
+          "body": {},
+          "method": "post",
+          "params": {
+            "__gqlh": undefined,
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Performs a mutation with variables', async () => {
-    expect(
-      await useGraphqlMutation('foobar', { user: 'foobar' }),
-    ).toMatchSnapshot()
+    expect(await useGraphqlMutation('deleteUser', { id: 123 }))
+      .toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/mutation/deleteUser",
+        "errors": [],
+        "options": {
+          "body": {
+            "id": 123,
+          },
+          "method": "post",
+          "params": {
+            "__gqlh": undefined,
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('Throws an error for invalid mutation names.', async () => {
+    // @ts-expect-error
     const result = await useGraphqlMutation(123).catch((e) => e)
-    expect(result).toMatchSnapshot()
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "data": undefined,
+        "endpoint": "/nuxt-graphql-middleware/mutation/undefined",
+        "errors": [],
+        "options": {
+          "body": {},
+          "method": "post",
+          "params": {
+            "__gqlh": undefined,
+          },
+          "query": undefined,
+        },
+      }
+    `)
   })
 
   test('takes options into account', async () => {
     const result = await useGraphqlMutation(
-      'foobar',
-      { stringVar: 'foobar' },
+      'deleteUser',
+      { id: 123 },
       {
         fetchOptions: {
           params: {
@@ -182,15 +289,17 @@ describe('useGraphqlMutation', () => {
         },
       },
     )
+    // @ts-expect-error Type used for testing.
     expect(result.options.body).toMatchInlineSnapshot(`
       {
-        "stringVar": "foobar",
+        "id": 123,
       }
     `)
+    // @ts-expect-error Type used for testing.
     expect(result.options.params).toMatchInlineSnapshot(`
       {
         "__gqlc_language": "fr",
-        "__gqlh": "abc123",
+        "__gqlh": undefined,
         "customParam": "yes",
       }
     `)
@@ -200,8 +309,8 @@ describe('useGraphqlMutation', () => {
 describe('useGraphqlUploadMutation', () => {
   test('takes options into account', async () => {
     const result = await useGraphqlUploadMutation(
-      'foobar',
-      { stringVar: 'foobar' },
+      'testUpload',
+      { file: 'foobar' },
       {
         fetchOptions: {
           params: {
@@ -213,28 +322,33 @@ describe('useGraphqlUploadMutation', () => {
         },
       },
     )
+
+    // @ts-expect-error Test type.
+    const formData: FormData = result.options.body
+    const entries = [...formData.entries()]
+    expect(entries).toMatchInlineSnapshot(`
+      [
+        [
+          "operations",
+          "{}",
+        ],
+        [
+          "variables",
+          "{"file":"foobar"}",
+        ],
+        [
+          "map",
+          "{}",
+        ],
+      ]
+    `)
     expect(result).toMatchInlineSnapshot(`
       {
         "data": undefined,
-        "endpoint": "/nuxt-graphql-middleware/upload/foobar",
+        "endpoint": "/nuxt-graphql-middleware/upload/testUpload",
         "errors": [],
         "options": {
-          "body": FormData {
-            Symbol(state): [
-              {
-                "name": "operations",
-                "value": "{}",
-              },
-              {
-                "name": "variables",
-                "value": "{"stringVar":"foobar"}",
-              },
-              {
-                "name": "map",
-                "value": "{}",
-              },
-            ],
-          },
+          "body": FormData {},
           "method": "POST",
           "params": {
             "__gqlc_language": "fr",

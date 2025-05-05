@@ -85,11 +85,14 @@
     "@nuxt/kit": "^3.17.2",
     "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^3.17.2",
+    "@nuxt/test-utils": "^3.18.0",
     "@types/micromatch": "^4.0.9",
+    "@vue/test-utils": "^2.4.6",
     "cypress": "^13.12.0",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
+    "happy-dom": "^17.4.6",
     "mermaid": "^11.5.0",
     "nuxt": "^3.17.2",
     "postcss": "^8.5.3",
@@ -106,6 +109,7 @@
     "typedoc-vitepress-theme": "^1.1.2",
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "^1.6.0"
+    "vitest": "^3.1.2",
+    "vitest-environment-nuxt": "^1.0.1"
   }
 }

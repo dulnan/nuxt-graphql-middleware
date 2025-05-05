@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import eventHandler from './../../../src/runtime/server/api/query'
+import type { GraphqlMiddlewareServerOptions } from '~/src/server-options'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
@@ -47,11 +48,11 @@ vi.mock('#nuxt-graphql-middleware/server-options', () => {
     serverOptions: {
       onServerResponse: (event, response) => {
         return {
-          ...response._data,
+          ...(response._data as any),
           __customProperty: 'foobar',
         }
       },
-    },
+    } satisfies GraphqlMiddlewareServerOptions,
   }
 })
 
@@ -85,6 +86,8 @@ function testHandler(
   req.url =
     'http://localhost:3000/api/graphql-middleware?variables=' +
     JSON.stringify(variables)
+
+  // @ts-expect-error Works.
   req[ParsedBodySymbol] = variables
   const event = new H3Event(req as any, res as any)
   event.context.params = {
@@ -96,29 +99,78 @@ function testHandler(
 
 describe('defineEventHandler', () => {
   test('Should handle a valid query', async () => {
-    expect(await testHandler('query', 'foobar')).toMatchSnapshot()
+    expect(await testHandler('query', 'foobar')).toMatchInlineSnapshot(`
+      {
+        "__customProperty": "foobar",
+        "data": {},
+        "endpoint": "http://localhost/graphql",
+        "options": {
+          "body": {
+            "operationName": "foobar",
+            "query": "Query",
+            "variables": {
+              "variables": "{}",
+            },
+          },
+          "method": "POST",
+        },
+      }
+    `)
   })
 
   test('Should handle an invalid query', async () => {
     const result = await testHandler('query', 'invalid').catch((e) => e)
-    expect(result).toMatchSnapshot()
+    expect(result).toMatchInlineSnapshot(`[Error: Invalid query name.]`)
   })
 
   test('Should handle an invalid operation', async () => {
     const result = await testHandler('subscribe', 'foobar').catch((e) => e)
-    expect(result).toMatchSnapshot()
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "__customProperty": "foobar",
+        "data": {},
+        "endpoint": "http://localhost/graphql",
+        "options": {
+          "body": {
+            "operationName": "foobar",
+            "query": "Query",
+            "variables": {
+              "variables": "{}",
+            },
+          },
+          "method": "POST",
+        },
+      }
+    `)
   })
 
   test('Should correctly handle variables.', async () => {
-    expect(
-      await testHandler('query', 'foobar', { variable: 'one' }),
-    ).toMatchSnapshot()
+    expect(await testHandler('query', 'foobar', { variable: 'one' }))
+      .toMatchInlineSnapshot(`
+      {
+        "__customProperty": "foobar",
+        "data": {},
+        "endpoint": "http://localhost/graphql",
+        "options": {
+          "body": {
+            "operationName": "foobar",
+            "query": "Query",
+            "variables": {
+              "variables": "{"variable":"one"}",
+            },
+          },
+          "method": "POST",
+        },
+      }
+    `)
   })
 
   test('Should handle unexpected errors.', async () => {
     const result = await testHandler('query', 'foobar', {
       fetchError: true,
     }).catch((e) => e)
-    expect(result).toMatchSnapshot()
+    expect(result).toMatchInlineSnapshot(
+      `[Error: Couldn't execute GraphQL query: Fetch Error]`,
+    )
   })
 })
