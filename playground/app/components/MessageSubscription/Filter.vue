@@ -31,7 +31,7 @@ const variables = computed(() => ({
 }))
 
 useGraphqlSubscription('messageAddedWithFilter', variables, {
-  handler: (data) => {
+  callback: (data) => {
     messages.value.push(data.data.messageAddedWithFilter)
   },
   clientContext: {

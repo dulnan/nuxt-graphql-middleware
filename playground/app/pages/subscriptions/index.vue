@@ -76,8 +76,38 @@ watch(type, (newType) => {
   message.value = `This is a message of type "${newType}"`
 })
 
-useGraphqlSubscription('messageAdded', null, (data) => {
+useGraphqlSubscription(
+  'messageAdded',
+  {},
+  {
+    callback: () => {},
+  },
+)
+
+useGraphqlSubscription('messageAdded', (data) => {
   console.log(data.data.messageAdded)
+})
+
+useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
+  console.log(data.data.messageAddedWithFilterOptional)
+})
+
+useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
+  console.log(data.data.messageAddedWithFilterOptional)
+})
+
+useGraphqlSubscription(
+  'messageAddedWithFilterOptional',
+  {},
+  {
+    callback: (data) => {
+      console.log(data.data.messageAddedWithFilterOptional)
+    },
+  },
+)
+
+useGraphqlSubscription('messageAddedWithFilter', { type: 'error' }, (data) => {
+  console.log(data.data.messageAddedWithFilter)
 })
 
 const addMessage = async () => {
