@@ -80,35 +80,38 @@ useGraphqlSubscription(
   'messageAdded',
   {},
   {
-    callback: () => {},
-  },
-)
-
-useGraphqlSubscription('messageAdded', (data) => {
-  console.log(data.data.messageAdded)
-})
-
-useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
-  console.log(data.data.messageAddedWithFilterOptional)
-})
-
-useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
-  console.log(data.data.messageAddedWithFilterOptional)
-})
-
-useGraphqlSubscription(
-  'messageAddedWithFilterOptional',
-  {},
-  {
     callback: (data) => {
-      console.log(data.data.messageAddedWithFilterOptional)
+      console.log('should not be called.')
     },
+    immediate: false,
   },
 )
 
-useGraphqlSubscription('messageAddedWithFilter', { type: 'error' }, (data) => {
-  console.log(data.data.messageAddedWithFilter)
-})
+// useGraphqlSubscription('messageAdded', (data) => {
+//   console.log(data.data.messageAdded)
+// })
+//
+// useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
+//   console.log(data.data.messageAddedWithFilterOptional)
+// })
+//
+// useGraphqlSubscription('messageAddedWithFilterOptional', (data) => {
+//   console.log(data.data.messageAddedWithFilterOptional)
+// })
+//
+// useGraphqlSubscription(
+//   'messageAddedWithFilterOptional',
+//   {},
+//   {
+//     callback: (data) => {
+//       console.log(data.data.messageAddedWithFilterOptional)
+//     },
+//   },
+// )
+//
+// useGraphqlSubscription('messageAddedWithFilter', { type: 'error' }, (data) => {
+//   console.log(data.data.messageAddedWithFilter)
+// })
 
 const addMessage = async () => {
   await useGraphqlMutation('addMessage', {

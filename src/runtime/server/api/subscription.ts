@@ -105,6 +105,7 @@ class SubscriptionHandler {
 
     const unsubscribe = this.client.subscribe(
       {
+        operationName: name,
         query,
         variables,
         extensions,

@@ -28,6 +28,18 @@ function getWebsocketUrl(): string {
   return (isSecure ? 'wss://' : 'ws://') + location.host + endpoint
 }
 
+type UseGraphqlSubscription = {
+  /**
+   * If immediate: false, call this method to subscribe.
+   */
+  subscribe: () => Promise<void>
+
+  /**
+   * Unsubscribe from the subscription.
+   */
+  unsubscribe: () => void
+}
+
 type GetSubscriptionCallback<R> = (data: GraphqlResponse<R>) => void
 
 type GetSubscriptionOptions<R> = {
@@ -45,6 +57,15 @@ type GetSubscriptionOptions<R> = {
   clientContext?:
     | Ref<Partial<GraphqlClientContext>>
     | Partial<GraphqlClientContext>
+
+  /**
+   * Whether to subscribe immediately.
+   *
+   * If false, the subscription only starts when subscribe() is called.
+   *
+   * @default true
+   */
+  immediate?: boolean
 }
 
 type GetSubscriptionCallbackOrOptions<R> =
@@ -94,7 +115,7 @@ export function useGraphqlSubscription<
    * containing a callback and/or client options.
    */
   callbackOrOptions: GetSubscriptionCallbackOrOptions<Response>,
-): void
+): UseGraphqlSubscription
 
 /**
  * Use a GraphQL subscription with optional variables.
@@ -125,7 +146,7 @@ export function useGraphqlSubscription<
    * containing a callback and/or client options.
    */
   callbackOrOptions?: GetSubscriptionCallbackOrOptions<Response>,
-): void
+): UseGraphqlSubscription
 
 /**
  * Use a GraphQL subscription without variables.
@@ -147,7 +168,7 @@ export function useGraphqlSubscription<
    * The callback to run when a subscription response is received.
    */
   callback: GetSubscriptionCallback<Response>,
-): void
+): UseGraphqlSubscription
 
 /**
  * Use a GraphQL subscription.
@@ -177,13 +198,19 @@ export function useGraphqlSubscription<
    * The options or callback.
    */
   optionsOrCallback?: GetSubscriptionCallbackOrOptions<Response>,
-): void {
+): UseGraphqlSubscription {
   if (importMetaServer) {
-    return
+    return {
+      subscribe: () => {
+        return Promise.resolve()
+      },
+      unsubscribe: () => {},
+    }
   }
 
   const app = useNuxtApp()
   const isMounted = ref(false)
+  const isSubscribed = ref(false)
 
   // Extract the callback. For subscriptions without variables, one signature
   // allows providing the callback as the second argument. In all other cases,
@@ -198,8 +225,14 @@ export function useGraphqlSubscription<
 
   const globalClientContext =
     clientOptions && clientOptions.buildClientContext
-      ? clientOptions.buildClientContext('subscription')
+      ? clientOptions.buildClientContext('subscription') || {}
       : {}
+
+  const options: Partial<GetSubscriptionOptions<Response>> =
+    typeof optionsOrCallback === 'function' ? {} : optionsOrCallback || {}
+
+  // Whether to subscribe immediately.
+  const immediate = options.immediate ?? true
 
   const variables = computed<Partial<Variables>>(() => {
     if (typeof variablesOrCallback === 'function') {
@@ -254,13 +287,16 @@ export function useGraphqlSubscription<
     }
 
     try {
-      await app.$graphqlWebsocket.init(globalClientContext)
+      await app.$graphqlWebsocket.init(
+        globalClientContext as GraphqlClientContext,
+      )
       app.$graphqlWebsocket.subscribe(
         name,
         key,
         variables.value,
         clientContext.value,
       )
+      isSubscribed.value = true
     } catch (error) {
       console.error('Failed to initialize GraphQL subscription:', error)
     }
@@ -268,14 +304,19 @@ export function useGraphqlSubscription<
 
   function unsubscribe(key: string) {
     if (app.$graphqlWebsocket) {
-      app.$graphqlWebsocket.unsubscribe(key)
+      return app.$graphqlWebsocket.unsubscribe(key)
     }
+    isSubscribed.value = false
   }
 
   function onSubscriptionResponse(
     message: WebsocketMessageSubscriptionResponse,
   ) {
-    if (message.key === subscriptionKey.value && callback) {
+    if (
+      isSubscribed.value &&
+      message.key === subscriptionKey.value &&
+      callback
+    ) {
       // @ts-expect-error The type is correct.
       callback(message.response)
     }
@@ -283,7 +324,9 @@ export function useGraphqlSubscription<
 
   onMounted(async () => {
     isMounted.value = true
-    await subscribe(subscriptionKey.value)
+    if (immediate) {
+      await subscribe(subscriptionKey.value)
+    }
 
     // If no callback is provided we don't need to add an event listener.
     if (!callback) {
@@ -305,14 +348,23 @@ export function useGraphqlSubscription<
     )
   })
 
-  watch(subscriptionKey, (newKey, oldKey) => {
+  watch(subscriptionKey, async (newKey, oldKey) => {
     if (!isMounted.value) {
       return
     }
 
     unsubscribe(oldKey)
-    subscribe(newKey)
+    await subscribe(newKey)
   })
+
+  return {
+    subscribe: () => {
+      return subscribe(subscriptionKey.value)
+    },
+    unsubscribe: () => {
+      return unsubscribe(subscriptionKey.value)
+    },
+  }
 }
 
 declare module '#app' {

@@ -176,7 +176,7 @@ export class GraphqlMiddlewareWebsocketHandler {
     }
   }
 
-  public async subscribe(
+  public subscribe(
     name: keyof Subscription,
     key: string,
     variables: Record<string, any> = {},
@@ -205,14 +205,18 @@ export class GraphqlMiddlewareWebsocketHandler {
     })
   }
 
-  public async unsubscribe(key: string) {
+  public unsubscribe(key: string) {
     if (this.isDisposed) {
       return
     }
 
     const existing = this.subscriptions.get(key)
 
-    if (existing !== undefined && existing > 1) {
+    if (existing === undefined) {
+      return
+    }
+
+    if (existing > 1) {
       this.subscriptions.set(key, existing - 1)
       return
     }
