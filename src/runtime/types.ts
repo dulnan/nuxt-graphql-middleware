@@ -1,8 +1,10 @@
+import type { Subscription } from '#nuxt-graphql-middleware/operation-types'
 import type {
   GraphqlMiddlewareResponseUnion,
   GraphqlResponse,
 } from '#nuxt-graphql-middleware/response'
 import type { H3Event } from 'h3'
+import type { Peer } from 'crossws'
 import type {
   FetchOptions,
   FetchResponse,
@@ -61,7 +63,7 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    * The method should return an object whose properties and values are strings.
    * This object will be encoded as a query param when making the request to
    * the GraphQL middleware. Each property name is prefixed when converted to a
-   * query param to prevent collisions.
+   * query param to prevent collisions with operation variables.
    *
    * On the server, the context is reassembled and passed to methods in custom
    * server options such as getEndpoint or serverFetchOptions.
@@ -99,8 +101,39 @@ export type GraphqlClientOptions<T extends ContextType = ContextType> = {
    *    },
    * })
    * ```
+   *
+   * For GraphQL subscriptions, the client context is not sent as query params,
+   * since subscriptions use a WebSocket connection. It's therefore safe to
+   * pass secrets such as authentication tokens:
+   *
+   * ```typescript
+   * export default defineGraphqlClientOptions({
+   *   buildClientContext(operation) {
+   *     const language = useCurrentLanguage()
+   *
+   *     // For subscriptions, we can safely pass secrets in the client context.
+   *     if (operation === 'subscription') {
+   *       const { authToken } = useAuth()
+   *       return {
+   *         authToken,
+   *         language: language.value,
+   *       }
+   *     }
+   *
+   *     // Pass the current language as context.
+   *     return {
+   *       language: language.value,
+   *     }
+   *   },
+   * })
+   * ```
    */
-  buildClientContext?: () => T
+  buildClientContext?: (
+    /**
+     * The operation type for which the context should be determined.
+     */
+    operation: 'query' | 'mutation' | 'subscription',
+  ) => T
 }
 
 export type GraphqlMiddlewareRequestContext<
@@ -195,6 +228,56 @@ export type GraphqlMiddlewareDoRequestMethod<T, C extends ContextType> = (
   context: GraphqlMiddlewareDoRequestMethodContext<C>,
 ) => Promise<T>
 
+export type GraphqlMiddlewareServerOptionsWebsocket<C extends ContextType> = {
+  /**
+   * Return the WebSocket endpoint for GraphQL subscriptions.
+   */
+  getEndpoint: (peer: Peer) => string
+
+  /**
+   * The connectionParams when creating the `graphql-ws` client for a connection.
+   *
+   * These are sent along when the client connects with the GraphQL websocket server.
+   *
+   * @see {@link https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions#connectionparams}
+   */
+  connectionParams?: (
+    request: Peer['request'],
+    clientContext: C,
+  ) => Record<string, any>
+
+  /**
+   * Provide extensions for the GraphQL subscription request.
+   *
+   * @example Pass an authentication token provided by buildClientContext()
+   * in your graphqlMiddleware.clientOptions.ts as an extension in the subscription
+   * request to your GraphQL server.
+   *
+   * ```typescript
+   * function operationExtensions(clientContext) {
+   *   return {
+   *     authenticationToken: clientContext.authToken,
+   *   }
+   * }
+   * ```
+   *
+   * This would send the following request to the GraphQL server:
+   *
+   * ```json
+   * {
+   *   "query": "subscription foobar($id: String!) { ... }",
+   *   "variables": {
+   *     "id": "123",
+   *   },
+   *   "extensions": {
+   *     "authenticationToken": "hunter2"
+   *   }
+   * }
+   * ```
+   */
+  operationExtensions?: (clientContext: C) => Record<string, any>
+}
+
 /**
  * Configuration options during runtime.
  */
@@ -220,6 +303,11 @@ export type GraphqlMiddlewareServerOptions<
    * ```
    */
   graphqlEndpoint?: GraphqlMiddlewareGraphqlEndpointMethod<C>
+
+  /**
+   * Options for the Websocket connection for GraphQL subscriptions.
+   */
+  websocket?: GraphqlMiddlewareServerOptionsWebsocket<C>
 
   /**
    * Provide the options for the ofetch request to the GraphQL server.
@@ -354,3 +442,93 @@ export type GraphqlMiddlewareServerOptions<
 export type GraphqlMiddlewareRuntimeConfig = {
   graphqlEndpoint?: string
 }
+
+export type WebsocketMessageSubscriptionResponse = {
+  [K in keyof Subscription]: {
+    type: 'server:response'
+
+    /**
+     * The subscription key.
+     */
+    key: string
+
+    /**
+     * The name of the subscription operation.
+     */
+    name: K
+
+    /**
+     * The GraphQL response of the subscription.
+     */
+    response: GraphqlResponse<Subscription[K]['response']>
+  }
+}[keyof Subscription]
+
+export type WebsocketMessageSubscribe<C extends ContextType = ContextType> = {
+  type: 'client:subscribe'
+  /**
+   * The subscription key.
+   */
+  key: string
+
+  /**
+   * The operation variables.
+   */
+  variables?: Record<string, any>
+
+  /**
+   * The name of the subscription operation.
+   */
+  name: keyof Subscription
+
+  /**
+   * The merged client context (global and from composable).
+   */
+  clientContext: C
+}
+
+export type WebsocketMessageUnsubscribe = {
+  type: 'client:unsubscribe'
+
+  /**
+   * The subscription key.
+   */
+  key: string
+}
+
+export type WebsocketMessageInitClient<C extends ContextType = ContextType> = {
+  type: 'client:init'
+
+  /**
+   * The global client context.
+   */
+  clientContext: C
+}
+
+export type WebsocketMessageInitServer = {
+  type: 'server:init'
+}
+
+export type WebsocketServerError = 'closed-on-init'
+
+export type WebsocketMessageServerError = {
+  type: 'server:error'
+
+  /**
+   * The type of error.
+   */
+  errorType: WebsocketServerError
+
+  /**
+   * The error reason.
+   */
+  reason: string
+}
+
+export type WebsocketMessage =
+  | WebsocketMessageSubscribe
+  | WebsocketMessageUnsubscribe
+  | WebsocketMessageSubscriptionResponse
+  | WebsocketMessageInitClient
+  | WebsocketMessageInitServer
+  | WebsocketMessageServerError

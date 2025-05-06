@@ -62,6 +62,7 @@ describe('getFetchOptions', () => {
         null as any,
         'query' as any,
         'foobar',
+        {},
       ),
     ).toEqual({
       headers: {
@@ -81,6 +82,7 @@ describe('getFetchOptions', () => {
         null as any,
         'query' as any,
         'foobar',
+        {},
       ),
     ).toEqual({})
   })
@@ -100,6 +102,7 @@ describe('getFetchOptions', () => {
         null as any,
         'query' as any,
         'foobar',
+        {},
       ),
     ).toEqual({
       headers: {
@@ -109,9 +112,9 @@ describe('getFetchOptions', () => {
   })
 
   test('Returns an empty options object', () => {
-    expect(getFetchOptions({}, null as any, 'query' as any, 'foobar')).toEqual(
-      {},
-    )
+    expect(
+      getFetchOptions({}, null as any, 'query' as any, 'foobar', {}),
+    ).toEqual({})
   })
 })
 
@@ -126,6 +129,7 @@ describe('getEndpoint', () => {
         null as any,
         GraphqlMiddlewareOperation.Query,
         'test',
+        {},
       ),
     ).toEqual('http://example.com/graphql')
   })
@@ -142,6 +146,7 @@ describe('getEndpoint', () => {
         null as any,
         GraphqlMiddlewareOperation.Query,
         'test',
+        {},
       ),
     ).toEqual('http://foobar.com/graphql')
   })
@@ -158,6 +163,7 @@ describe('getEndpoint', () => {
         null as any,
         GraphqlMiddlewareOperation.Query,
         'test',
+        {},
       ),
     ).toThrowError('Failed to determine endpoint for GraphQL server.')
   })

@@ -38,6 +38,7 @@ const graphqlMiddleware: ModuleOptions = {
 
   experimental: {
     improvedQueryParamEncoding: true,
+    subscriptions: true,
   },
 }
 
@@ -83,6 +84,12 @@ query queryFromHook {
 
   future: {
     compatibilityVersion: 4,
+  },
+
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
   },
 
   compatibilityDate: '2024-09-14',

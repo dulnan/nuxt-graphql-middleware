@@ -10,7 +10,7 @@ export default defineEventHandler(() => {
     Object.entries(items).forEach(([operationName, operation]) => {
       body += '<tr>'
       body += `<td style="font-size: 1.5rem">${operationType}</td>`
-      const url = getEndpoint(operationType, operationName)
+      const url = getEndpoint(operationType as any, operationName)
       body += `<td>
         <strong style="font-size: 1.5rem">${operationName}</strong><br>
         <a href="${url}">${url}</a>

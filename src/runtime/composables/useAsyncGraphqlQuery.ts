@@ -212,7 +212,7 @@ export function useAsyncGraphqlQuery<
     () => {
       const globalClientContext =
         clientOptions && clientOptions.buildClientContext
-          ? clientOptions.buildClientContext()
+          ? clientOptions.buildClientContext('query')
           : {}
 
       return performRequest<any>(

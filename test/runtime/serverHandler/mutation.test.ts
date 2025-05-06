@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import eventHandler from './../../../src/runtime/server/api/mutation'
+import type { GraphqlMiddlewareServerOptions } from '~/src/server-options'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
   return {
@@ -41,11 +42,11 @@ vi.mock('#nuxt-graphql-middleware/server-options', () => {
     serverOptions: {
       onServerResponse: (event, response) => {
         return {
-          ...response._data,
+          ...(response._data as any),
           __customProperty: 'foobar',
         }
       },
-    },
+    } satisfies GraphqlMiddlewareServerOptions,
   }
 })
 
@@ -79,6 +80,7 @@ function testHandler(
   req.url =
     'http://localhost:3000/api/graphql-middleware?variables=' +
     JSON.stringify(variables)
+  // @ts-expect-error Test.
   req[ParsedBodySymbol] = variables
   const event = new H3Event(req as any, res as any)
   event.context.params = {
@@ -90,8 +92,21 @@ function testHandler(
 
 describe('defineEventHandler', () => {
   test('Should handle a valid mutation', async () => {
-    expect(
-      await testHandler('mutation', 'barfoo', {}, 'POST'),
-    ).toMatchSnapshot()
+    expect(await testHandler('mutation', 'barfoo', {}, 'POST'))
+      .toMatchInlineSnapshot(`
+      {
+        "__customProperty": "foobar",
+        "data": {},
+        "endpoint": "http://localhost/graphql",
+        "options": {
+          "body": {
+            "operationName": "barfoo",
+            "query": "Mutation",
+            "variables": {},
+          },
+          "method": "POST",
+        },
+      }
+    `)
   })
 })

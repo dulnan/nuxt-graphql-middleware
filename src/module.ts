@@ -9,8 +9,6 @@ import { ModuleHelper } from './build/ModuleHelper'
 import { TEMPLATES } from './build/templates'
 import { DevModeHandler } from './build/DevModeHandler'
 import { ModuleContext } from './build/ModuleContext'
-import type { OperationResponseError } from './runtime/types'
-import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
 
 export type { ModuleOptions }
@@ -86,6 +84,10 @@ export default defineNuxtModule<ModuleOptions>({
       helper.addServerHandler('upload', '/upload/:name', 'post')
     }
 
+    if (helper.options.experimental.subscriptions) {
+      helper.addServerHandler('subscription', '/subscription')
+    }
+
     if (helper.isDev) {
       helper.addServerHandler('debug', '/debug', 'get')
     }
@@ -102,6 +104,10 @@ export default defineNuxtModule<ModuleOptions>({
 
       if (helper.options.enableFileUploads) {
         helper.addComposable('useGraphqlUploadMutation')
+      }
+
+      if (helper.options.experimental.subscriptions) {
+        helper.addComposable('useGraphqlSubscription')
       }
 
       helper.addServerUtil('useGraphqlQuery')
@@ -155,17 +161,6 @@ export default defineNuxtModule<ModuleOptions>({
     devModeHandler.init()
   },
 })
-
-declare module '#app' {
-  interface RuntimeNuxtHooks {
-    /**
-     * Emitted when any GraphQL response contains errors.
-     */
-    'nuxt-graphql-middleware:errors': (
-      errors: OperationResponseError,
-    ) => HookResult
-  }
-}
 
 declare module 'vite/types/customEvent.d.ts' {
   interface CustomEventMap {

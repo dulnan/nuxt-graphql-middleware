@@ -14,6 +14,11 @@ export default defineGeneratorTemplate(
     const imports: string[] = []
 
     for (const operation of operations) {
+      // Ignore subscriptions, because they are handled via WebSocket.
+      if (operation.operationType === OperationTypeNode.SUBSCRIPTION) {
+        continue
+      }
+
       imports.push(operation.typeName)
       const method =
         operation.operationType === OperationTypeNode.QUERY ? 'get' : 'post'

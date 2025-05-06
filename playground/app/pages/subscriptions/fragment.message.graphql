@@ -1,0 +1,9 @@
+fragment message on Message {
+  user {
+    firstName
+    lastName
+  }
+  message
+  timestamp
+  type
+}

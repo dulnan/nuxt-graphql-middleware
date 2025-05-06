@@ -1,0 +1,3 @@
+mutation addMessage($message: String!, $type: MessageType!) {
+  addMessage(message: $message, type: $type)
+}

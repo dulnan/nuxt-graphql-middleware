@@ -15,12 +15,13 @@ export default defineGeneratorTemplate(
   },
   () => {
     return `
-import type { Query, Mutation } from './operation-types'
+import type { Query, Mutation, Subscription } from './operation-types'
 
 declare module '#nuxt-graphql-middleware/documents' {
   export type Documents = {
     query: Record<keyof Query, string>
     mutation: Record<keyof Mutation, string>
+    subscription: Record<keyof Subscription, string>
   }
   export const documents: Documents
 }`
