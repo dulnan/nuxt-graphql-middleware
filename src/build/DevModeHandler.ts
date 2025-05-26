@@ -21,6 +21,8 @@ export class DevModeHandler {
 
   private operationsToReload: Set<string> = new Set()
 
+  private emitBroadcastEventTimeout: NodeJS.Timeout | null = null
+
   constructor(
     private nuxt: Nuxt,
     private schemaProvider: SchemaProvider,
@@ -127,17 +129,28 @@ export class DevModeHandler {
     }
 
     if (this.devToolsRpc) {
-      // Update the documents for the dev tools.
-      // For some reason this sometimes throws an error which results in a Nuxt restart.
-      try {
-        this.devToolsRpc.broadcast.documentsUpdated([
-          ...this.collector.rpcItems.values(),
-        ])
-      } catch {
-        logger.info(
-          'Failed to update GraphQL documents in dev tools. The documents might be stale.',
-        )
+      if (this.emitBroadcastEventTimeout) {
+        globalThis.clearTimeout(this.emitBroadcastEventTimeout)
       }
+
+      // For some reason this sometimes throws an error which results in a Nuxt restart.
+      // As a workaround, we need to delay sending the message.
+      this.emitBroadcastEventTimeout = globalThis.setTimeout(() => {
+        if (!this.devToolsRpc) {
+          return
+        }
+
+        // Update the documents for the dev tools.
+        try {
+          this.devToolsRpc.broadcast.documentsUpdated([
+            ...this.collector.rpcItems.values(),
+          ])
+        } catch {
+          logger.info(
+            'Failed to update GraphQL documents in dev tools. The documents might be stale.',
+          )
+        }
+      }, 1000)
     }
   }
 
