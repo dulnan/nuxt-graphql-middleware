@@ -30,7 +30,7 @@ export default defineStaticTemplate(
     )
 
     return `
-import { hookFiles } from './hook-files'
+import { hookFiles } from './hook-files.js'
 
 const schema = ${JSON.stringify(schemaPath)}
 
