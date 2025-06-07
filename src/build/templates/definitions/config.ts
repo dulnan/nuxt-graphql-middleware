@@ -14,6 +14,7 @@ export const experimentalQueryParamEncoding = ${JSON.stringify(experimentalQuery
 export const clientCacheEnabledAtBuild = ${JSON.stringify(clientCacheEnabledAtBuild)}
 export const importMetaServer = import.meta.server
 export const importMetaClient = import.meta.client
+export const importMetaDev = import.meta.dev
 `
   },
   () => {
@@ -22,6 +23,7 @@ declare export const experimentalQueryParamEncoding: boolean
 declare export const clientCacheEnabledAtBuild: boolean
 declare export const importMetaServer: boolean
 declare export const importMetaClient: boolean
+declare export const importMetaDev: boolean
 `
   },
 )

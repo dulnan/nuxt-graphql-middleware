@@ -30,7 +30,21 @@ enum MeansOfContact {
   phone
 }
 
+type Message {
+  message: String!
+  timestamp: String!
+  type: MessageType!
+  user: User
+}
+
+enum MessageType {
+  error
+  info
+  warning
+}
+
 type Mutation {
+  addMessage(message: String!, type: MessageType!): Boolean!
   createUser(user: UserData!): User!
   deleteUser(id: Int!): Boolean
   initState: Boolean!
@@ -70,6 +84,11 @@ type Query {
 
   """Get all users."""
   users: [User!]!
+}
+
+type Subscription {
+  """Fires whenever a new message is added."""
+  messageAdded(type: MessageType): Message!
 }
 
 type TestClientOptions {

@@ -15,6 +15,17 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
     }
   },
 
+  websocket: {
+    getEndpoint() {
+      return 'ws://127.0.0.1:4000/subscriptions'
+    },
+    connectionParams(request, clientContext) {
+      return {
+        token: clientContext.wsToken,
+      }
+    },
+  },
+
   serverFetchOptions: function (event, _operation, operationName, context) {
     const headers: Record<string, any> = {
       'x-nuxt-header-server': 'Value from server',

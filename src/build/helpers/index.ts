@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { useLogger } from '@nuxt/kit'
 import type { ConsolaInstance } from 'consola'
 import type { ModuleOptions } from '../types/options'
+import type { Nuxt } from 'nuxt/schema'
 
 export const logger: ConsolaInstance = useLogger('nuxt-graphql-middleware')
 
@@ -18,6 +19,7 @@ export const defaultOptions: ModuleOptions = {
   graphqlConfigFilePath: './graphql.config.ts',
   experimental: {
     improvedQueryParamEncoding: false,
+    subscriptions: false,
   },
   clientCache: {
     enabled: false,
@@ -28,9 +30,19 @@ export const defaultOptions: ModuleOptions = {
 /**
  * Validate the module options.
  */
-export function validateOptions(options: Partial<ModuleOptions>) {
+export function validateOptions(options: Partial<ModuleOptions>, nuxt: Nuxt) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
+  }
+
+  if (options.experimental?.subscriptions) {
+    const websocketEnabled = nuxt.options.nitro.experimental?.websocket
+    if (!websocketEnabled) {
+      logger.error(
+        'Support for subscriptions requires enabling the experimental "websocket" feature in Nitro. https://nitro.build/guide/websocket#opt-in-to-the-experimental-feature',
+      )
+      throw new Error('Nitro websocket support not enabled.')
+    }
   }
 }
 

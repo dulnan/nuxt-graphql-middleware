@@ -42,6 +42,12 @@
           <nuxt-link class="navbar-item" to="/de" id="link-client-options"
             >Client options</nuxt-link
           >
+          <nuxt-link
+            id="link-subscriptions"
+            class="navbar-item"
+            to="/subscriptions"
+            >Subscriptions</nuxt-link
+          >
           <div class="navbar-item">
             <button class="button is-white" @click="initState">
               Init default state

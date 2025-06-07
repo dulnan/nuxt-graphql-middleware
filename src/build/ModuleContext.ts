@@ -47,6 +47,14 @@ export class ModuleContext {
   }
 
   /**
+   * Force downloading of schema and update GraphQL state.
+   */
+  public async updateSchema(): Promise<void> {
+    await this.schemaProvider.loadSchema({ forceDownload: true })
+    await this.collector.updateSchema(this.schemaProvider.getSchema())
+  }
+
+  /**
    * Add an additional static document.
    *
    * @param identifier - The unique identifier for your document.

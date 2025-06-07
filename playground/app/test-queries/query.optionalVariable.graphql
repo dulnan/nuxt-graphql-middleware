@@ -1,0 +1,3 @@
+query optionalVariable($value: Int = 10) {
+  returnSameValue(value: $value)
+}

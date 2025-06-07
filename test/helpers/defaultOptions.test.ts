@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { defaultOptions } from '../../src/build/helpers'
+import { defaultOptions } from '~/src/build/helpers'
 
 describe('defaultOptions', () => {
   test('Provides sane defaults', () => {

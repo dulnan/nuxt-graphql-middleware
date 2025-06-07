@@ -3,7 +3,7 @@ import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
 
 export function performRequest<T>(
-  operation: string,
+  operation: 'query' | 'mutation',
   operationName: string,
   method: 'get' | 'post',
   options: FetchOptions,
