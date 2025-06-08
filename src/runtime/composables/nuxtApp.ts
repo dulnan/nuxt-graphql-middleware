@@ -11,12 +11,8 @@ import {
   importMetaClient,
 } from '#nuxt-graphql-middleware/config'
 import type { RequestCacheOptions } from './../types'
-import { encodeVariables } from '../helpers/queryEncoding'
-import {
-  encodeContext,
-  getOrCreateClientCache,
-  sortQueryParams,
-} from '../helpers/composables'
+import { encodeVariables, sortQueryParams } from '../helpers/queryEncoding'
+import { encodeContext, getOrCreateClientCache } from '../helpers/composables'
 import { OPERATION_HASH_PREFIX } from '../settings'
 
 export function performRequest<T>(

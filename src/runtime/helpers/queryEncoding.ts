@@ -79,10 +79,10 @@ function filterValidKeys(
 export function decodeVariables(
   query: Record<string, any>,
   validKeys?: string[],
-) {
+): Record<string, any> {
   try {
     if (query.__variables && typeof query.__variables === 'string') {
-      return JSON.parse(query.__variables)
+      return sortQueryParams(JSON.parse(query.__variables))
     }
   } catch {
     // Noop.
@@ -134,5 +134,21 @@ export function decodeVariables(
     }
   }
 
-  return result
+  return sortQueryParams(result)
+}
+
+/**
+ * Sort an object defining query params alphabetically.
+ */
+export function sortQueryParams(
+  obj: Record<string, string>,
+): Record<string, string> {
+  const sortedKeys = Object.keys(obj).sort()
+  const sortedObj: Record<string, string> = {}
+
+  for (const key of sortedKeys) {
+    sortedObj[key] = obj[key]!
+  }
+
+  return sortedObj
 }

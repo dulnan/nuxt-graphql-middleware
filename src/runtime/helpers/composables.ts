@@ -113,22 +113,6 @@ export function encodeContext(
   )
 }
 
-/**
- * Sort an object defining query params alphabetically.
- */
-export function sortQueryParams(
-  obj: Record<string, string>,
-): Record<string, string> {
-  const sortedKeys = Object.keys(obj).sort()
-  const sortedObj: Record<string, string> = {}
-
-  for (const key of sortedKeys) {
-    sortedObj[key] = obj[key]!
-  }
-
-  return sortedObj
-}
-
 export function getOrCreateClientCache(
   app: NuxtApp,
   config: AppConfig,

@@ -12,9 +12,9 @@ export default defineGeneratorTemplate(
       .reduce<Record<string, string[]>>((acc, collectedOperation) => {
         const node: OperationDefinitionNode = collectedOperation.node
         const operationName = collectedOperation.graphqlName
-        const variables = (node.variableDefinitions || []).map(
-          (v) => v.variable.name.value,
-        )
+        const variables = (node.variableDefinitions || [])
+          .map((v) => v.variable.name.value)
+          .sort()
         acc[operationName] = variables
         return acc
       }, {})
