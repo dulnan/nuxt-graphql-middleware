@@ -1,3 +1,4 @@
-query returnSameValue($value: Int!) {
-  returnSameValue(value: $value)
+query returnSameValue($value: Int!, $vary: String) {
+  returnSameValue(value: $value, vary: $vary)
+  returnRandomNumber
 }

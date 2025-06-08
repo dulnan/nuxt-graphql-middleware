@@ -50,6 +50,11 @@ export function performRequest<T>(
    * The cache options set on the composable.
    */
   cacheOptions: RequestCacheOptions,
+
+  /**
+   * The async data key.
+   */
+  asyncDataKey?: string,
 ): Promise<GraphqlResponse<T>> {
   const state = useGraphqlState()
   const app = useNuxtApp()
@@ -175,7 +180,7 @@ export function performRequest<T>(
     app.$graphqlCache &&
     clientCacheEnabledAtBuild
   ) {
-    app.$graphqlCache.set(cacheKey, promise)
+    app.$graphqlCache.set(cacheKey, promise, asyncDataKey)
   }
 
   return promise

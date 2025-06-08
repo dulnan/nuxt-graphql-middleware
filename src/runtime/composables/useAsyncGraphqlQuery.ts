@@ -168,6 +168,9 @@ export function useAsyncGraphqlQuery<
     return `useAsyncGraphqlQuery:${name}:${hash(vars)}`
   })
 
+  // Store the previous key so that we can invlidate it.
+  let prevKey = ''
+
   const config = useAppConfig()
   const app = useNuxtApp()
 
@@ -202,14 +205,23 @@ export function useAsyncGraphqlQuery<
       asyncDataOptions.getCachedData = function (key, app, ctx) {
         if (ctx.cause === 'initial') {
           return app.payload.data[key] ?? app.$graphqlCache?.get(key)
+        } else if (
+          ctx.cause === 'refresh:manual' ||
+          ctx.cause === 'refresh:hook'
+        ) {
+          if (app.$graphqlCache) {
+            app.$graphqlCache.purgeAsyncDataKey(key)
+            app.$graphqlCache.purgeAsyncDataKey(prevKey)
+          }
         }
       }
     }
   }
 
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
-    asyncDataKey,
+    asyncDataKey.value,
     () => {
+      prevKey = asyncDataKey.value
       const globalClientContext =
         clientOptions && clientOptions.buildClientContext
           ? clientOptions.buildClientContext()
@@ -223,6 +235,7 @@ export function useAsyncGraphqlQuery<
         globalClientContext,
         asyncDataOptions.clientContext || {},
         asyncDataOptions.graphqlCaching || {},
+        asyncDataKey.value,
       )
     },
     asyncDataOptions as any,

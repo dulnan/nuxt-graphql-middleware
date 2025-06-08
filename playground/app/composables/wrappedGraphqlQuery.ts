@@ -11,6 +11,7 @@ export async function useWrappedGraphqlQuery(
     default: function () {
       return {
         returnSameValue: 0,
+        returnRandomNumber: 0,
       }
     },
     graphqlCaching: {

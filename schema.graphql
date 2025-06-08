@@ -56,8 +56,11 @@ type Query {
   getSubmissions: [FormSubmission]
   getText(text: String!): String!
 
+  """Returns a random number."""
+  returnRandomNumber: Int!
+
   """Returns the same value."""
-  returnSameValue(value: Int!): Int!
+  returnSameValue(value: Int!, vary: String): Int!
 
   """Test the client options."""
   testClientOptions(path: String!): TestClientOptions

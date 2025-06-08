@@ -5,17 +5,16 @@
  * Once that number is reached, the cache item used the least is removed.
  */
 export class GraphqlMiddlewareCache {
-  cache: Record<string, unknown>
-  keys: string[]
+  cache: Record<string, unknown> = {}
+  asyncDataKeyMap: Record<string, string[]> = {}
+  keys: string[] = []
   maxSize: number
 
   constructor(maxSize: number = 100) {
-    this.cache = {}
-    this.keys = []
     this.maxSize = maxSize
   }
 
-  set(key: string, value: unknown): void {
+  set(key: string, value: unknown, asyncDataKey?: string): void {
     if (Object.prototype.hasOwnProperty.call(this.cache, key)) {
       // Key already exists, remove it from the current position
       // because it will be pushed to the end of the array below.
@@ -29,6 +28,8 @@ export class GraphqlMiddlewareCache {
       if (oldestKey !== undefined) {
         // eslint-disable-next-line
         delete this.cache[oldestKey]
+        // eslint-disable-next-line
+        delete this.asyncDataKeyMap[oldestKey]
       }
     }
 
@@ -37,6 +38,19 @@ export class GraphqlMiddlewareCache {
 
     // Add the key to the end to mark it as the most recently used.
     this.keys.push(key)
+
+    if (asyncDataKey) {
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          this.asyncDataKeyMap,
+          asyncDataKey,
+        )
+      ) {
+        this.asyncDataKeyMap[asyncDataKey] = []
+      }
+
+      this.asyncDataKeyMap[asyncDataKey]!.push(key)
+    }
   }
 
   get<T>(key: string): T | undefined {
@@ -60,6 +74,16 @@ export class GraphqlMiddlewareCache {
   purge() {
     this.cache = {}
     this.keys = []
+    this.asyncDataKeyMap = {}
+  }
+
+  purgeAsyncDataKey(asyncDataKey: string) {
+    const keys = this.asyncDataKeyMap[asyncDataKey]
+    if (keys && keys.length) {
+      keys.forEach((key) => {
+        this.remove(key)
+      })
+    }
   }
 
   remove(key: string) {

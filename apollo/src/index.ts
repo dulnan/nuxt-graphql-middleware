@@ -201,7 +201,12 @@ const typeDefs = `#graphql
     """
     Returns the same value.
     """
-    returnSameValue(value: Int!): Int!
+    returnSameValue(value: Int!, vary: String): Int!
+
+    """
+    Returns a random number.
+    """
+    returnRandomNumber: Int!
   }
 
   type UploadedFile {
@@ -304,7 +309,14 @@ const resolvers = {
       }
     },
     returnSameValue: (_parent: any, args: any, context: any) => {
-      return args.value
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(args.value)
+        }, 500)
+      })
+    },
+    returnRandomNumber: () => {
+      return Math.round(Math.random() * 100000000)
     },
   },
   User: {
