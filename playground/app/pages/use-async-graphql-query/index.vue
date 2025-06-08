@@ -20,7 +20,7 @@
             <td id="normal-value">{{ data?.returnSameValue }}</td>
           </tr>
           <tr>
-            <td ></td>
+            <td></td>
             <td id="wrapped-random">{{ dataWrapped.returnRandomNumber }}</td>
             <td id="normal-random">{{ data?.returnRandomNumber }}</td>
           </tr>
