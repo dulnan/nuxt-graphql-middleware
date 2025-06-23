@@ -158,7 +158,7 @@ export function performRequest<T>(
       },
     ),
   ).then((v) => {
-    if (import.meta.dev && v.errors?.length) {
+    if (import.meta.dev && v?.errors?.length) {
       app.callHook('nuxt-graphql-middleware:errors', {
         operation,
         operationName,
