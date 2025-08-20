@@ -1,7 +1,7 @@
 describe('Mutations', () => {
   it('deletes a user through a mutation', () => {
     cy.initState()
-    cy.visit('/')
+    cy.visit('/').waitForHydration()
     cy.get('table tbody tr')
       .first()
       .should('contain.text', 'mhonatsch0@constantcontact.com')
@@ -22,7 +22,7 @@ describe('Mutations', () => {
     const description = 'This is a cypress test user.'
 
     cy.initState()
-    cy.visit('/user/add')
+    cy.visit('/user/add').waitForHydration()
 
     cy.get('#firstName').clear().type(firstName)
     cy.get('#lastName').clear().type(lastName)
@@ -37,7 +37,7 @@ describe('Mutations', () => {
     cy.get('.hero').should('contain.text', description)
     cy.get('.section .container').should('contain.text', email)
 
-    cy.visit('/')
+    cy.visit('/').waitForHydration()
     cy.get('table tbody tr').should('have.lengthOf', 41)
     cy.get('table').should('contain.text', email)
   })

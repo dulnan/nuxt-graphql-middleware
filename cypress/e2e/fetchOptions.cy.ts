@@ -1,7 +1,7 @@
 describe('Fetch options', () => {
   it('should be set and passed correctly', () => {
     cy.initState()
-    cy.visit('/fetch-options')
+    cy.visit('/fetch-options').waitForHydration()
 
     cy.get('#fetch-options-graphql-client').should(
       'have.text',

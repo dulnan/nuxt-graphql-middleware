@@ -1,6 +1,6 @@
 describe('useGraphqlState', () => {
   it('should not have a persistent state', () => {
-    cy.visit('/state')
+    cy.visit('/state').waitForHydration()
     let first = ''
     cy.get('#graphql-state-value')
       .first()
@@ -8,7 +8,7 @@ describe('useGraphqlState', () => {
         first = el.text()
       })
 
-    cy.visit('/state')
+    cy.visit('/state').waitForHydration()
 
     cy.get('#graphql-state-value')
       .first()
