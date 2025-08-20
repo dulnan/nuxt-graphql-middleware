@@ -28,8 +28,9 @@ export { serverOptions }
 import type { GraphqlMiddlewareServerOptions } from '${helper.paths.runtimeTypes}'
 import serverOptionsImport from '${resolvedPathRelative}'
 
-export type GraphqlResponseAdditions =
-  typeof serverOptionsImport extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
+type AdditionsFromServerOptions = typeof serverOptionsImport extends GraphqlMiddlewareServerOptions<infer R, any, any> ? R : {}
+
+export type GraphqlResponseAdditions = Omit<AdditionsFromServerOptions, 'data' | 'errors'>
 
 declare export const serverOptions: GraphqlMiddlewareServerOptions
 `
