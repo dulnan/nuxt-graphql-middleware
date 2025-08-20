@@ -7,13 +7,13 @@ describe('useAsyncGraphqlQuery', () => {
     cy.get('#normal-value').should('have.text', '0')
 
     cy.get('#increment').click()
-    cy.wait(700)
+    cy.wait(1500)
     cy.get('#value').should('have.text', '1')
     cy.get('#wrapped-value').should('have.text', '1')
     cy.get('#normal-value').should('have.text', '1')
 
     cy.get('#refresh').click()
-    cy.wait(700)
+    cy.wait(1500)
     // Value should remain the same.
     cy.get('#value').should('have.text', '1')
     cy.get('#wrapped-value').should('have.text', '1')
@@ -24,7 +24,7 @@ describe('useAsyncGraphqlQuery', () => {
       .invoke('text')
       .then((text) => {
         cy.get('#refresh').click()
-        cy.wait(700)
+        cy.wait(1500)
         cy.get('#wrapped-random').should('not.eq', text)
       })
 
@@ -33,7 +33,7 @@ describe('useAsyncGraphqlQuery', () => {
       .invoke('text')
       .then((text) => {
         cy.get('#refresh').click()
-        cy.wait(700)
+        cy.wait(1500)
         cy.get('#normal-random').should('not.eq', text)
       })
   })
