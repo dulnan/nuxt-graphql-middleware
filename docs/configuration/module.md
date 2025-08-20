@@ -34,7 +34,7 @@ const autoImportPatterns = [
 > `optional` **clientCache**: `object`
 
 Defined in:
-[options.ts:180](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L180)
+[options.ts:185](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L185)
 
 Client caching configuration.
 
@@ -42,9 +42,29 @@ Client caching configuration.
 
 > `optional` **enabled**: `boolean`
 
+Whether client caching should be enabled.
+
+Note that if you set this to false during build, the cache will not be available
+at all. If you intend to enable/disable it using app config at runtime, it
+_must_ be enabled at build!
+
+##### Default
+
+```ts
+false
+```
+
 ### maxSize?
 
 > `optional` **maxSize**: `number`
+
+The maximum number of cache entries.
+
+##### Default
+
+```ts
+100
+```
 
 ---
 
@@ -53,7 +73,7 @@ Client caching configuration.
 > `optional` **codegenConfig**: `GeneratorOptions`
 
 Defined in:
-[options.ts:139](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L139)
+[options.ts:142](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L142)
 
 Options for graphql-typescript-deluxe code generator.
 
@@ -68,7 +88,7 @@ Options for graphql-typescript-deluxe code generator.
 > `optional` **codegenSchemaConfig**: `object`
 
 Defined in:
-[options.ts:144](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L144)
+[options.ts:147](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L147)
 
 Configuration for graphql-codegen when downloading the schema.
 
@@ -128,9 +148,15 @@ false
 > `optional` **devtools**: `boolean`
 
 Defined in:
-[options.ts:175](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L175)
+[options.ts:180](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L180)
 
 Enable Nuxt DevTools integration.
+
+### Default
+
+```ts
+true
+```
 
 ---
 
@@ -173,7 +199,7 @@ const documents = [
 > `optional` **downloadSchema**: `boolean`
 
 Defined in:
-[options.ts:105](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L105)
+[options.ts:108](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L108)
 
 Download the GraphQL schema and store it on disk.
 
@@ -213,6 +239,45 @@ Displays GraphQL response errors in an overlay in dev mode.
 
 ---
 
+## experimental?
+
+> `optional` **experimental**: `object`
+
+Defined in:
+[options.ts:208](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L208)
+
+Experimental features.
+
+### improvedQueryParamEncoding?
+
+> `optional` **improvedQueryParamEncoding**: `boolean`
+
+Enables improved encoding for GraphQL query param encoding.
+
+If enabled, query variables that are non-strings such as numbers or booleans are
+encoded as strings, with a prefix in their name to indicate the type.
+
+For example, given this object definining query variables:
+
+```
+{
+  name: 'John',
+  age: 35,
+  isUser: false
+}
+```
+
+This would be encoded as:
+
+```
+name=John&n:age=35&b:isUser=false
+```
+
+This only works for flat primitive values. Nested objects or arrays are still
+encoded using the \_\_variables fallback where all variables are JSON encoded.
+
+---
+
 ## graphqlConfigFilePath?
 
 > `optional` **graphqlConfigFilePath**: `string`
@@ -234,14 +299,17 @@ the module.
 
 ---
 
-## graphqlEndpoint
+## graphqlEndpoint?
 
-> **graphqlEndpoint**: `string`
+> `optional` **graphqlEndpoint**: `string`
 
 Defined in:
-[options.ts:96](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L96)
+[options.ts:99](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L99)
 
 The URL of the GraphQL server.
+
+If not provided, the module will use the
+NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_ENDPOINT environment variable during dev mode.
 
 For the runtime execution you can provide a method that determines the endpoint
 during runtime. See the server/graphqlMiddleware.serverOptions.ts documentation
@@ -272,7 +340,7 @@ true
 > `optional` **logOnlyErrors**: `boolean`
 
 Defined in:
-[options.ts:132](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L132)
+[options.ts:135](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L135)
 
 Logs only errors.
 
@@ -286,7 +354,7 @@ operations. If false, all operations are logged, including valid ones.
 > `optional` **schemaPath**: `string`
 
 Defined in:
-[options.ts:115](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L115)
+[options.ts:118](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L118)
 
 Path to the GraphQL schema file.
 
@@ -307,7 +375,7 @@ order to generate types.
 > `optional` **serverApiPrefix**: `string`
 
 Defined in:
-[options.ts:124](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L124)
+[options.ts:127](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L127)
 
 The prefix for the server route.
 
