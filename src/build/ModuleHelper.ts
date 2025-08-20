@@ -89,7 +89,12 @@ export class ModuleHelper {
     const isModuleBuild =
       process.env.PLAYGROUND_MODULE_BUILD === 'true' && nuxt.options._prepare
 
-    const mergedOptions = defu({}, options, defaultOptions)
+    const mergedOptions = defu(
+      {},
+      options,
+      defaultOptions,
+    ) as RequiredModuleOptions
+
     // Add sane default for the autoImportPatterns option.
     // We don't want to add them to the default options, because defu would
     // merge the array with the array provided by the user.
@@ -110,6 +115,17 @@ export class ModuleHelper {
         '~~/playground/**/*.{gql,graphql}',
         '!node_modules',
       ]
+    }
+
+    if (!mergedOptions.graphqlEndpoint) {
+      const graphqlEndpoint =
+        process.env.NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_ENDPOINT
+      if (!graphqlEndpoint) {
+        throw new Error(
+          'Missing GraphQL endpoint in module build. Please either provide the endpoint via "graphqlMiddleware.graphqlEndpoint" in nuxt.config.ts or via "NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_ENDPOINT" environment variable.',
+        )
+      }
+      mergedOptions.graphqlEndpoint = graphqlEndpoint
     }
 
     // Gather all aliases for each layer.
