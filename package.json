@@ -72,7 +72,7 @@
     "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/schema-ast": "^4.1.0",
     "@graphql-tools/utils": "^10.8.6",
-    "@nuxt/devtools-kit": "^2.3.1",
+    "@nuxt/devtools-kit": "^2.6.2",
     "graphql-typescript-deluxe": "^0.0.14",
     "minisearch": "^7.1.2",
     "picocolors": "^1.1.1"
@@ -80,7 +80,7 @@
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.8",
     "@nuxt/devtools": "^2.4.0",
-    "@nuxt/devtools-ui-kit": "^2.4.0",
+    "@nuxt/devtools-ui-kit": "^2.6.2",
     "@nuxt/eslint": "^1.2.0",
     "@nuxt/kit": "^4.0.3",
     "@nuxt/module-builder": "^1.0.1",
