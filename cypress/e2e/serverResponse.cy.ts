@@ -9,11 +9,9 @@ describe('GraphQL server response', () => {
 
   it('should pass set-cookie header from the GraphQL server to the response', () => {
     cy.clearCookies()
-    cy.visit('/')
-    cy.visit('/fetch-options')
-    cy.wait(400)
+    cy.visit('/').waitForHydration()
+    cy.visit('/fetch-options').waitForHydration()
     cy.get('a.navbar-item').first().click()
-    cy.wait(400)
     cy.getCookie('foobar').should('exist')
   })
 

@@ -15,7 +15,6 @@ import { hash } from 'ohash'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { RequestCacheOptions } from './../types'
 import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
-import type { DefaultAsyncDataValue } from 'nuxt/app/defaults'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'
 import { importMetaClient } from '#nuxt-graphql-middleware/config'
 
@@ -24,7 +23,7 @@ type AsyncGraphqlQueryOptions<
   ResT,
   DataT = ResT,
   PickKeys extends KeysOf<DataT> = KeysOf<DataT>,
-  DefaultT = DefaultAsyncDataValue,
+  DefaultT = undefined,
 > = AsyncDataOptions<ResT, DataT, PickKeys, DefaultT> & {
   /**
    * Control how the GraphQL response can be cached.

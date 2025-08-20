@@ -1,7 +1,7 @@
 describe('Mutations with file uploads', () => {
   it('correctly saves a single file', () => {
     cy.initState()
-    cy.visit('/test-upload')
+    cy.visit('/test-upload').waitForHydration()
     cy.fixture('check.svg', null).as('check-svg')
     cy.get('#file-single')
       .selectFile('@check-svg')
@@ -19,6 +19,7 @@ describe('Mutations with file uploads', () => {
   it('correctly saves multiple files', () => {
     cy.initState()
     cy.visit('/test-upload/contact')
+      .waitForHydration()
       .wait(1000)
       .then(() => {
         cy.fixture('one.txt', null).as('one')
