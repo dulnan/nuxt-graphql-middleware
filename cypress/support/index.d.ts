@@ -8,6 +8,8 @@ declare namespace Cypress {
      * @example cy.initState()
      */
 
-    initState(): Chainable<Element>
+    initState(): Chainable<Response<any>>
+
+    waitForHydration(): Chainable<boolean>
   }
 }
