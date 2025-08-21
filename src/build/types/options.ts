@@ -89,11 +89,14 @@ export interface ModuleOptions {
   /**
    * The URL of the GraphQL server.
    *
+   * If not provided, the module will use the NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_ENDPOINT
+   * environment variable during dev mode.
+   *
    * For the runtime execution you can provide a method that determines the endpoint
    * during runtime. See the server/graphqlMiddleware.serverOptions.ts documentation
    * for more information.
    */
-  graphqlEndpoint: string
+  graphqlEndpoint?: string
 
   /**
    * Download the GraphQL schema and store it on disk.

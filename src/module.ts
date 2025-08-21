@@ -50,7 +50,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     nuxt.options.runtimeConfig.graphqlMiddleware = {
-      graphqlEndpoint: helper.options.graphqlEndpoint || '',
+      graphqlEndpoint: helper.options.graphqlEndpoint,
     }
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))

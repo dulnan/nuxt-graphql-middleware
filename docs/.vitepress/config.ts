@@ -95,6 +95,10 @@ export default withMermaid({
             link: '/configuration/module',
           },
           {
+            text: 'Runtime Config',
+            link: '/configuration/runtime-config',
+          },
+          {
             text: 'Server Options',
             link: '/configuration/server-options',
           },
