@@ -73,7 +73,7 @@
     "@graphql-codegen/schema-ast": "^4.1.0",
     "@graphql-tools/utils": "^10.8.6",
     "@nuxt/devtools-kit": "^2.6.2",
-    "graphql-typescript-deluxe": "^0.0.14",
+    "graphql-typescript-deluxe": "^0.0.15",
     "minisearch": "^7.1.2",
     "picocolors": "^1.1.1"
   },
