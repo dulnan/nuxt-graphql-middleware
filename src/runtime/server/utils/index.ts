@@ -12,9 +12,10 @@ export function performRequest<T>(
     ...options,
     method,
   }).then((v) => {
-    return {
-      data: v.data,
-      errors: v.errors || [],
-    }
+    // Make sure we get at least "data" and "errors" properties in the end.
+    return Object.assign({}, v, {
+      data: v?.data,
+      errors: v?.errors ?? [],
+    })
   })
 }
