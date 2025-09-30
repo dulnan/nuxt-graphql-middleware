@@ -1,0 +1,10 @@
+query usersPaginated($limit: Int, $offset: Int) {
+  usersPaginated(limit: $limit, offset: $offset) {
+    users {
+      ...user
+    }
+    totalCount
+    offset
+    limit
+  }
+}
