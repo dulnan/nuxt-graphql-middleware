@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="ngm-root">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

@@ -16,5 +16,25 @@ module.exports = {
         '*, ::before, ::after': ':root',
       },
     },
+    // Prefix all selectors to scope styles to .ngm-root
+    'postcss-prefix-selector': {
+      prefix: '.ngm-root',
+      transform: (prefix, selector) => {
+        if (selector === ':root' || selector === 'html' || selector === 'body')
+          return '.ngm-root'
+        if (selector.startsWith('.ngm-root')) return selector
+        return `${prefix} ${selector}`
+      },
+    },
+    // Minify
+    cssnano: {
+      preset: [
+        'default',
+        {
+          discardComments: { removeAll: true },
+          normalizeWhitespace: true,
+        },
+      ],
+    },
   },
 }
