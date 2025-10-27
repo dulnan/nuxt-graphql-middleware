@@ -42,6 +42,12 @@
           <nuxt-link class="navbar-item" to="/de" id="link-client-options"
             >Client options</nuxt-link
           >
+          <nuxt-link
+            class="navbar-item"
+            to="/use-async-graphql-query"
+            id="link-use-async-graphql-query"
+            >useAsyncGraphqlQuery</nuxt-link
+          >
           <div class="navbar-item">
             <button class="button is-white" @click="initState">
               Init default state

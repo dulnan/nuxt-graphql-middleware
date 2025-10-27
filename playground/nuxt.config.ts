@@ -51,6 +51,10 @@ export default defineNuxtConfig({
   graphqlMiddleware,
   ssr: true,
 
+  app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+  },
+
   hooks: {
     'nuxt-graphql-middleware:init': (ctx) => {
       ctx.addDocument(
