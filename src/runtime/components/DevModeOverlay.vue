@@ -1,5 +1,5 @@
 <template>
-  <div v-if="groups.length" id="nuxt-graphql-middleware">
+  <div v-if="groups.length" id="nuxt-graphql-middleware" class="ngm-root">
     <div id="nuxt-graphql-middleware-errors">
       <div
         id="nuxt-graphql-middleware-errors-background"

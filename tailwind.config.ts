@@ -5,6 +5,7 @@ import {
 } from 'tailwindcss-scoped-preflight'
 
 const config: Config = {
+  important: '.ngm-root',
   content: ['./src/runtime/components/*.vue'],
   theme: {
     extend: {},
