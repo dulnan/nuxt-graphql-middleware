@@ -7,6 +7,10 @@ type Cacheability = {
   maxAge: number
 }
 
+async function dummyPromise(): Promise<null> {
+  return Promise.resolve(null)
+}
+
 // Passing our custom properties on the GraphQL response as a generic.
 export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
   graphqlEndpoint(event, operation, operationName) {
@@ -40,7 +44,7 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
     return { headers }
   },
 
-  onServerResponse(event, graphqlResponse) {
+  async onServerResponse(event, graphqlResponse) {
     // Set a static header.
     event.node.res.setHeader('x-nuxt-custom-header', 'A custom header value')
 
@@ -54,7 +58,9 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
       throw createError({ statusCode: 500 })
     }
 
-    // Return the GraphQL response as is.
+    // This is just here so that the method is async to test type checking.
+    await dummyPromise()
+
     return {
       data: graphqlResponse._data.data,
       errors: graphqlResponse._data.errors,
