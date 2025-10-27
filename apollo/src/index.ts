@@ -8,7 +8,7 @@ import bodyParser from 'body-parser'
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs'
 import GraphQLUpload, { FileUpload } from 'graphql-upload/GraphQLUpload.mjs'
 import { GraphQLError } from 'graphql'
-import data from './data.json' assert { type: 'json' }
+import data from './data.json' with { type: 'json' }
 import type { Readable } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -130,6 +130,28 @@ const typeDefs = `#graphql
     triggerError: Boolean
   }
 
+  type UsersResult {
+    """
+    List of users for the current page.
+    """
+    users: [User!]!
+
+    """
+    Total number of users available.
+    """
+    totalCount: Int!
+
+    """
+    Current page offset.
+    """
+    offset: Int!
+
+    """
+    Current page limit.
+    """
+    limit: Int!
+  }
+
   input UserData {
     firstName: String!
     lastName: String!
@@ -158,6 +180,11 @@ const typeDefs = `#graphql
     Get all users.
     """
     users: [User!]!
+
+    """
+    Get users with pagination metadata.
+    """
+    usersPaginated(limit: Int, offset: Int): UsersResult!
 
     """
     Load a user by ID.
@@ -261,6 +288,32 @@ const resolvers = {
   Query: {
     users: () => {
       return users
+    },
+    usersPaginated: (_: any, args: any) => {
+      console.log('UsersPaginated query called with args:', args)
+      let result = [...users] // Create a copy to avoid mutating the original array
+      const totalCount = users.length
+      const offset = args.offset || 0
+      const limit = args.limit || result.length
+
+      // Apply offset first, then limit
+      if (offset > 0) {
+        result = result.slice(offset)
+      }
+      if (limit > 0) {
+        result = result.slice(0, limit)
+      }
+
+      console.log(
+        `Returning ${result.length} users (offset: ${offset}, limit: ${limit}, total: ${totalCount})`,
+      )
+
+      return {
+        users: result,
+        totalCount: totalCount,
+        offset: offset,
+        limit: limit,
+      }
     },
     getCurrentTime: () => {
       return new Date()
