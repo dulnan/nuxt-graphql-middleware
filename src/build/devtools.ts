@@ -20,6 +20,7 @@ export function setupDevToolsUI(nuxt: Nuxt, clientPath: string) {
   // In local development, start a separate Nuxt Server and proxy to serve the client
   else {
     nuxt.hook('vite:extendConfig', (config) => {
+      // @ts-expect-error Marked as readonly but can be undefined.
       config.server = config.server || {}
       config.server.proxy = config.server.proxy || {}
       config.server.proxy[DEVTOOLS_UI_ROUTE] = {

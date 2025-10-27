@@ -133,7 +133,7 @@ export type GraphqlMiddlewareOnServerResponseMethod<
   operation?: string | null,
   operationName?: string | null,
   context?: GraphqlMiddlewareRequestContext<C> | null,
-) => T | Promise<T>
+) => NoInfer<T> | NoInfer<Promise<T>>
 
 export type GraphqlMiddlewareOnServerErrorMethod<C extends ContextType> = (
   event: H3Event,

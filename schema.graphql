@@ -73,6 +73,9 @@ type Query {
 
   """Get all users."""
   users: [User!]!
+
+  """Get users with pagination metadata."""
+  usersPaginated(limit: Int, offset: Int): UsersResult!
 }
 
 type TestClientOptions {
@@ -127,4 +130,18 @@ input UserData {
   email: String!
   firstName: String!
   lastName: String!
+}
+
+type UsersResult {
+  """Current page limit."""
+  limit: Int!
+
+  """Current page offset."""
+  offset: Int!
+
+  """Total number of users available."""
+  totalCount: Int!
+
+  """List of users for the current page."""
+  users: [User!]!
 }

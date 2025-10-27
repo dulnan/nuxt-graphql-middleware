@@ -155,7 +155,7 @@ export default defineNuxtPlugin({
             return
           }
 
-          const cookie = headers.getSetCookie()
+          const cookies = headers.getSetCookie()
 
           // Append all cookies to the response.
           for (const cookie of cookies) {
