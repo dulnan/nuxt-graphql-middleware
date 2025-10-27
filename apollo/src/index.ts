@@ -8,13 +8,7 @@ import bodyParser from 'body-parser'
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs'
 import GraphQLUpload, { FileUpload } from 'graphql-upload/GraphQLUpload.mjs'
 import { GraphQLError } from 'graphql'
-import { readFileSync } from 'fs'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-const data = JSON.parse(readFileSync(join(__dirname, 'data.json'), 'utf8'))
+import data from './data.json' with { type: 'json' }
 import type { Readable } from 'stream'
 import { v4 as uuidv4 } from 'uuid'
 
