@@ -72,7 +72,10 @@ export function createMcpDevHandler(
 
       // Schema tools
       case 'schema-get-type':
-        return handleGetSchemaType(schemaProvider.getSchema(), requireName(body))
+        return handleGetSchemaType(
+          schemaProvider.getSchema(),
+          requireName(body),
+        )
 
       case 'schema-get-type-definition':
         return handleGetSchemaTypeDefinition(

@@ -5,7 +5,10 @@ export const GetSchemaTypeDefinitionResponseSchema = z.object({
     .string()
     .nullable()
     .describe('The full SDL definition of the type'),
-  error: z.string().optional().describe('Error message if the type was not found'),
+  error: z
+    .string()
+    .optional()
+    .describe('Error message if the type was not found'),
 })
 
 export const getSchemaTypeDefinitionOutputSchema = {

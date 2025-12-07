@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { defineMcpTool } from '#imports'
 import { serverApiPrefix } from '#nuxt-graphql-middleware/helpers'
 import { getDevServerUrl, structuredResult } from './../utils'
-import { GraphqlServerResponse } from '~/src/runtime/types'
+import type { GraphqlServerResponse } from '~/src/runtime/types'
 
 const GraphqlErrorSchema = z.object({
   message: z.string().describe('The error message'),

@@ -1,5 +1,6 @@
 import type { ModuleTemplate } from './defineTemplate'
 import ClientOptions from './definitions/client-options'
+import Docs from './definitions/docs'
 import Config from './definitions/config'
 import Documents from './definitions/documents'
 import GraphqlConfig from './definitions/graphql.config'
@@ -18,6 +19,7 @@ import Sources from './definitions/sources'
 export const TEMPLATES: ModuleTemplate[] = [
   ClientOptions,
   Config,
+  Docs,
   Documents,
   GraphqlConfig,
   Helpers,

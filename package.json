@@ -34,7 +34,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "docs/composables",
+    "docs/configuration"
   ],
   "license": "MIT",
   "scripts": {

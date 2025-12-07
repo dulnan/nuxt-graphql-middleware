@@ -24,6 +24,9 @@ import { validateDocumentTool } from './tools/validateDocument'
 // Execution tools.
 import { executeGraphqlTool } from './tools/executeGraphql'
 
+// Resources.
+import docsResource from './resources/docs'
+
 export default defineMcpHandler({
   name: 'nuxt-graphql-middleware',
   version: '1.0.0',
@@ -53,5 +56,6 @@ export default defineMcpHandler({
     // Execution tools.
     executeGraphqlTool,
   ],
+  resources: [docsResource],
   browserRedirect: '/',
 })

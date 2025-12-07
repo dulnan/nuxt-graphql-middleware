@@ -53,7 +53,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Expose dev server URL for MCP tools (dev only).
     const devServerUrl = helper.isDev
       ? `http://${nuxt.options.devServer.host || 'localhost'}:${nuxt.options.devServer.port || 3000}`
-      : undefined
+      : ''
 
     nuxt.options.runtimeConfig.graphqlMiddleware = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
