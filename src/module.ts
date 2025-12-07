@@ -145,37 +145,54 @@ export default defineNuxtModule<ModuleOptions>({
       await collector.init()
     })
 
+    // =========================================================================
+    // Dev Mode
+    // =========================================================================
+
+    if (helper.isDev) {
+      const devModeHandler = new DevModeHandler(
+        nuxt,
+        schemaProvider,
+        collector,
+        helper,
+      )
+      devModeHandler.init()
+    }
+
+    // =========================================================================
+    // MCP
+    // =========================================================================
+    const isPlayground = process.env.PLAYGROUND_MODULE_BUILD
+
+    // Only relevant for the playground.
+    if (isPlayground) {
+      await installModule('@nuxtjs/mcp-toolkit')
+    }
+
+    const mcpToolkitInstalled = nuxt.options.modules.some(
+      (v) => v === '@nuxtjs/mcp-toolkit',
+    )
+
+    if (!mcpToolkitInstalled) {
+      return
+    }
+
+    // @ts-ignore The types are somehow not available in the playground build.
     nuxt.hook('mcp:definitions:paths', (paths) => {
       const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
       paths.handlers ||= []
       paths.handlers.push(mcpPath)
     })
 
-    if (process.env.PLAYGROUND_MODULE_BUILD) {
-      await installModule('@nuxtjs/mcp-toolkit')
-    }
-
     // MCP dev server handler - expose module data to MCP tools.
     addDevServerHandler({
       route: '/__nuxt_graphql_middleware/mcp',
-      handler: createMcpDevHandler(collector, schemaProvider.getSchema()),
+      handler: createMcpDevHandler(collector, schemaProvider),
     })
 
-    // =========================================================================
-    // Dev Mode
-    // =========================================================================
-
-    if (!helper.isDev) {
-      return
+    if (helper.isDev) {
+      helper.addServerHandler('doRequest', '/do-request', 'post')
     }
-
-    const devModeHandler = new DevModeHandler(
-      nuxt,
-      schemaProvider,
-      collector,
-      helper,
-    )
-    devModeHandler.init()
   },
 })
 

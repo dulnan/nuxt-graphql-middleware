@@ -1,6 +1,6 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import type { GraphQLSchema } from 'graphql'
 import type { Collector } from '../Collector'
+import type { SchemaProvider } from '../SchemaProvider'
 
 // Import handlers
 import { handleListOperations } from './listOperations/handler'
@@ -32,7 +32,7 @@ function requireName(body: Record<string, unknown>): string {
 
 export function createMcpDevHandler(
   collector: Collector,
-  schema: GraphQLSchema,
+  schemaProvider: SchemaProvider,
 ) {
   return defineEventHandler(async (event) => {
     const body = await readBody<Record<string, unknown>>(event)
@@ -71,33 +71,42 @@ export function createMcpDevHandler(
 
       // Schema tools
       case 'schema-get-type':
-        return handleGetSchemaType(schema, requireName(body))
+        return handleGetSchemaType(schemaProvider.getSchema(), requireName(body))
 
       case 'schema-list-types':
         return handleListSchemaTypes(
-          schema,
+          schemaProvider.getSchema(),
           body.kind as SchemaTypeKindFilter | undefined,
         )
 
       case 'schema-get-interface-implementors':
-        return handleGetTypesImplementingInterface(schema, requireName(body))
+        return handleGetTypesImplementingInterface(
+          schemaProvider.getSchema(),
+          requireName(body),
+        )
 
       case 'schema-get-union-members':
-        return handleGetUnionMembers(schema, requireName(body))
+        return handleGetUnionMembers(
+          schemaProvider.getSchema(),
+          requireName(body),
+        )
 
       case 'schema-get-type-usage':
-        return handleGetTypeUsage(schema, requireName(body))
+        return handleGetTypeUsage(schemaProvider.getSchema(), requireName(body))
 
       case 'operations-get-field-usage':
         return handleGetFieldUsage(
           collector,
-          schema,
+          schemaProvider.getSchema(),
           body.typeName as string,
           body.fieldName as string,
         )
 
       case 'schema-validate-document':
-        return handleValidateDocument(schema, body.document as string)
+        return handleValidateDocument(
+          schemaProvider.getSchema(),
+          body.document as string,
+        )
 
       default:
         throw createError({
