@@ -95,6 +95,8 @@ export class Collector {
       mappedOptions.output.buildTypeDocFilePath = (filePath: string) => {
         if (filePath.startsWith('/')) {
           return this.filePathToBuildRelative(filePath)
+        } else if (filePath.startsWith('hook:')) {
+          return './../nuxt-graphql-middleware/hook-documents.graphql'
         }
 
         return filePath
@@ -125,6 +127,10 @@ export class Collector {
   private filePathToSourceRelative(filePath: string): string {
     if (filePath.startsWith('/')) {
       return './' + relative(process.cwd(), filePath)
+    } else if (filePath.startsWith('hook:')) {
+      const hookPathAbsolute =
+        this.helper.paths.moduleBuildDir + '/hook-documents.graphql'
+      return './' + relative(process.cwd(), hookPathAbsolute)
     }
 
     return filePath
