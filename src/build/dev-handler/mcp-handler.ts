@@ -11,6 +11,7 @@ import { handleGetFragment } from './getFragment/handler'
 import { handleGetFragmentSource } from './getFragmentSource/handler'
 import { handleGetFragmentsForType } from './getFragmentsForType/handler'
 import { handleGetSchemaType } from './getSchemaType/handler'
+import { handleGetSchemaTypeDefinition } from './getSchemaTypeDefinition/handler'
 import { handleListSchemaTypes } from './listSchemaTypes/handler'
 import { handleGetTypesImplementingInterface } from './getTypesImplementingInterface/handler'
 import { handleGetUnionMembers } from './getUnionMembers/handler'
@@ -72,6 +73,12 @@ export function createMcpDevHandler(
       // Schema tools
       case 'schema-get-type':
         return handleGetSchemaType(schemaProvider.getSchema(), requireName(body))
+
+      case 'schema-get-type-definition':
+        return handleGetSchemaTypeDefinition(
+          schemaProvider.getSchema(),
+          requireName(body),
+        )
 
       case 'schema-list-types':
         return handleListSchemaTypes(

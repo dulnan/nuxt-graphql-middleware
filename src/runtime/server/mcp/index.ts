@@ -13,6 +13,7 @@ import { getFragmentsForTypeTool } from './tools/getFragmentsForType'
 
 // Schema tools.
 import { getSchemaTypeTool } from './tools/getSchemaType'
+import { getSchemaTypeDefinitionTool } from './tools/getSchemaTypeDefinition'
 import { listSchemaTypesTool } from './tools/listSchemaTypes'
 import { getTypesImplementingInterfaceTool } from './tools/getTypesImplementingInterface'
 import { getUnionMembersTool } from './tools/getUnionMembers'
@@ -41,6 +42,7 @@ export default defineMcpHandler({
 
     // Schema tools.
     getSchemaTypeTool,
+    getSchemaTypeDefinitionTool,
     listSchemaTypesTool,
     getTypesImplementingInterfaceTool,
     getUnionMembersTool,
