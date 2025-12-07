@@ -39,16 +39,16 @@
   "license": "MIT",
   "scripts": {
     "prepack": "npm run styles:build && nuxt-module-build build && npm run client:build",
-    "dev": "nuxi dev playground --trace-warnings",
-    "dev:layers": "nuxi dev playground-layers --trace-warnings",
-    "debug": "nuxi dev playground --inspect",
-    "dev:build": "nuxi build playground",
+    "dev": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --trace-warnings",
+    "dev:layers": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground-layers --trace-warnings",
+    "debug": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --inspect",
+    "dev:build": "PLAYGROUND_MODULE_BUILD=true nuxi build playground",
     "dev:layers:build": "nuxi build playground-layers",
     "dev:prepare": "PLAYGROUND_MODULE_BUILD=true nuxt-module-build build --stub && PLAYGROUND_MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground-layers && nuxi prepare playground",
     "dev:start": "node ./playground/.output/server/index.mjs",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",
-    "typecheck": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p src/runtime/server/mcp && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs --port 5000",
@@ -85,6 +85,7 @@
     "@nuxt/kit": "^4.2.0",
     "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^4.2.0",
+    "@nuxtjs/mcp-toolkit": "^0.5.1",
     "@types/micromatch": "^4.0.9",
     "cypress": "^13.12.0",
     "cypress-wait-until": "^3.0.2",
@@ -109,6 +110,7 @@
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^1.6.0",
-    "vue-tsc": "^2.2.12"
+    "vue-tsc": "^2.2.12",
+    "zod": "^4.1.13"
   }
 }

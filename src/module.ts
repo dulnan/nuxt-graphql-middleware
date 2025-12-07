@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule } from '@nuxt/kit'
+import { defineNuxtModule, installModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './build/helpers'
 import { Collector } from './build/Collector'
@@ -137,6 +137,16 @@ export default defineNuxtModule<ModuleOptions>({
       // Initalise the documents.
       await collector.init()
     })
+
+    nuxt.hook('mcp:definitions:paths', (foo) => {
+      const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
+      foo.handlers ||= []
+      foo.handlers.push(mcpPath)
+    })
+
+    if (process.env.PLAYGROUND_MODULE_BUILD) {
+      await installModule('@nuxtjs/mcp-toolkit')
+    }
 
     // =========================================================================
     // Dev Mode

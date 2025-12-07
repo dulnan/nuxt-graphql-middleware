@@ -46,6 +46,7 @@ export default defineNuxtConfig({
     graphqlMiddlewareModule as any,
     '@nuxt/devtools',
     '@nuxt/eslint',
+    '@nuxtjs/mcp-toolkit',
     './modules/playground-module',
   ],
   graphqlMiddleware,
@@ -83,6 +84,15 @@ query queryFromHook {
   typescript: {
     typeCheck: 'build',
     strict: true,
+  },
+  nitro: {
+    typescript: {
+      tsConfig: {
+        include: [
+          '../src/runtime/server/mcp'
+        ]
+      }
+    }
   },
 
   compatibilityDate: '2024-09-14',
