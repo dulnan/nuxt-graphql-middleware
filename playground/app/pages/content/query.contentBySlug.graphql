@@ -1,0 +1,19 @@
+query contentBySlug($slug: String!) {
+  contentBySlug(slug: $slug) {
+    __typename
+    ...contentBase
+    ... on Article {
+      excerpt
+      body
+      category
+    }
+    ... on BlogPost {
+      content
+      tags
+    }
+    ... on Page {
+      content
+      template
+    }
+  }
+}

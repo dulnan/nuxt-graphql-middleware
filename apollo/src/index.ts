@@ -60,10 +60,118 @@ type FormSubmission = {
   documents: FormSubmissionDocument[]
 }
 
+// Content types for CMS-style interface demo
+type ContentBase = {
+  id: string
+  title: string
+  slug: string
+  publishedAt: string | null
+  authorId: number
+}
+
+type Article = ContentBase & {
+  __typename: 'Article'
+  excerpt: string
+  body: string
+  category: string
+}
+
+type BlogPost = ContentBase & {
+  __typename: 'BlogPost'
+  content: string
+  tags: string[]
+}
+
+type Page = ContentBase & {
+  __typename: 'Page'
+  content: string
+  template: string
+}
+
+type Content = Article | BlogPost | Page
+
 let users = []
 let idIncrement = 0
 let files: UploadedFile[] = []
 let formSubmissions: FormSubmission[] = []
+
+// Dummy content data
+const articles: Article[] = [
+  {
+    __typename: 'Article',
+    id: 'article-1',
+    title: 'Understanding GraphQL Interfaces',
+    slug: 'understanding-graphql-interfaces',
+    publishedAt: '2024-01-15T10:00:00Z',
+    authorId: 1,
+    excerpt: 'Learn how interfaces work in GraphQL schemas.',
+    body: 'GraphQL interfaces are an abstract type that includes a set of fields that a type must include to implement the interface...',
+    category: 'Technology',
+  },
+  {
+    __typename: 'Article',
+    id: 'article-2',
+    title: 'Building Modern Web Applications',
+    slug: 'building-modern-web-applications',
+    publishedAt: '2024-02-20T14:30:00Z',
+    authorId: 2,
+    excerpt: 'A comprehensive guide to modern web development.',
+    body: 'Modern web applications require a combination of frontend frameworks, backend APIs, and proper architecture...',
+    category: 'Development',
+  },
+]
+
+const blogPosts: BlogPost[] = [
+  {
+    __typename: 'BlogPost',
+    id: 'blog-1',
+    title: 'My Journey with Nuxt',
+    slug: 'my-journey-with-nuxt',
+    publishedAt: '2024-03-01T09:00:00Z',
+    authorId: 1,
+    content:
+      'I started using Nuxt about two years ago and it has transformed how I build Vue applications...',
+    tags: ['nuxt', 'vue', 'javascript'],
+  },
+  {
+    __typename: 'BlogPost',
+    id: 'blog-2',
+    title: 'Tips for Better Code Reviews',
+    slug: 'tips-for-better-code-reviews',
+    publishedAt: null, // Draft
+    authorId: 3,
+    content:
+      'Code reviews are essential for maintaining code quality. Here are my top tips...',
+    tags: ['best-practices', 'teamwork'],
+  },
+]
+
+const pages: Page[] = [
+  {
+    __typename: 'Page',
+    id: 'page-1',
+    title: 'About Us',
+    slug: 'about',
+    publishedAt: '2023-01-01T00:00:00Z',
+    authorId: 1,
+    content: 'We are a team of passionate developers building great software.',
+    template: 'default',
+  },
+  {
+    __typename: 'Page',
+    id: 'page-2',
+    title: 'Contact',
+    slug: 'contact',
+    publishedAt: '2023-01-01T00:00:00Z',
+    authorId: 2,
+    content: 'Get in touch with us at contact@example.com',
+    template: 'contact',
+  },
+]
+
+function getAllContent(): Content[] {
+  return [...articles, ...blogPosts, ...pages]
+}
 
 function initState() {
   users = [...data]
@@ -85,6 +193,109 @@ const typeDefs = `#graphql
     phone
     email
   }
+
+  """
+  Base interface for all content types in the CMS.
+  """
+  interface Content {
+    """
+    Unique identifier for the content.
+    """
+    id: ID!
+
+    """
+    The title of the content.
+    """
+    title: String!
+
+    """
+    URL-friendly slug.
+    """
+    slug: String!
+
+    """
+    When the content was published. Null if draft.
+    """
+    publishedAt: String
+
+    """
+    The author of the content.
+    """
+    author: User
+  }
+
+  """
+  A long-form article with excerpt and category.
+  """
+  type Article implements Content {
+    id: ID!
+    title: String!
+    slug: String!
+    publishedAt: String
+    author: User
+
+    """
+    Short excerpt for previews.
+    """
+    excerpt: String!
+
+    """
+    Full article body.
+    """
+    body: String!
+
+    """
+    Article category.
+    """
+    category: String!
+  }
+
+  """
+  A blog post with tags.
+  """
+  type BlogPost implements Content {
+    id: ID!
+    title: String!
+    slug: String!
+    publishedAt: String
+    author: User
+
+    """
+    The blog post content.
+    """
+    content: String!
+
+    """
+    Tags for categorization.
+    """
+    tags: [String!]!
+  }
+
+  """
+  A static page with a template.
+  """
+  type Page implements Content {
+    id: ID!
+    title: String!
+    slug: String!
+    publishedAt: String
+    author: User
+
+    """
+    The page content.
+    """
+    content: String!
+
+    """
+    Template to use for rendering.
+    """
+    template: String!
+  }
+
+  """
+  Union type for search results.
+  """
+  union SearchResult = User | Article | BlogPost | Page
 
   type User {
     """
@@ -234,6 +445,36 @@ const typeDefs = `#graphql
     Returns a random number.
     """
     returnRandomNumber: Int!
+
+    """
+    Get all content items (articles, blog posts, pages).
+    """
+    allContent: [Content!]!
+
+    """
+    Get all articles.
+    """
+    articles: [Article!]!
+
+    """
+    Get all blog posts.
+    """
+    blogPosts: [BlogPost!]!
+
+    """
+    Get all pages.
+    """
+    pages: [Page!]!
+
+    """
+    Get content by slug.
+    """
+    contentBySlug(slug: String!): Content
+
+    """
+    Search across all content types and users.
+    """
+    search(query: String!): [SearchResult!]!
   }
 
   type UploadedFile {
@@ -371,7 +612,93 @@ const resolvers = {
     returnRandomNumber: () => {
       return Math.round(Math.random() * 100000000)
     },
+
+    // Content queries
+    allContent: () => {
+      return getAllContent()
+    },
+    articles: () => {
+      return articles
+    },
+    blogPosts: () => {
+      return blogPosts
+    },
+    pages: () => {
+      return pages
+    },
+    contentBySlug: (_: any, args: { slug: string }) => {
+      return getAllContent().find((c) => c.slug === args.slug) || null
+    },
+    search: (_: any, args: { query: string }) => {
+      const q = args.query.toLowerCase()
+      const results: (Content | (typeof users)[0])[] = []
+
+      // Search in content
+      for (const content of getAllContent()) {
+        if (
+          content.title.toLowerCase().includes(q) ||
+          content.slug.toLowerCase().includes(q)
+        ) {
+          results.push(content)
+        }
+      }
+
+      // Search in users
+      for (const user of users) {
+        if (
+          user.firstName.toLowerCase().includes(q) ||
+          user.lastName.toLowerCase().includes(q) ||
+          user.email.toLowerCase().includes(q)
+        ) {
+          results.push(user)
+        }
+      }
+
+      return results
+    },
   },
+
+  // Interface type resolver
+  Content: {
+    __resolveType(obj: Content) {
+      return obj.__typename
+    },
+    author: (parent: Content) => {
+      return users.find((u) => u.id === parent.authorId) || null
+    },
+  },
+
+  // Union type resolver
+  SearchResult: {
+    __resolveType(obj: any) {
+      if (obj.__typename) {
+        return obj.__typename
+      }
+      // Users don't have __typename, but have email
+      if (obj.email) {
+        return 'User'
+      }
+      return null
+    },
+  },
+
+  // Type-specific author resolvers
+  Article: {
+    author: (parent: Article) => {
+      return users.find((u) => u.id === parent.authorId) || null
+    },
+  },
+  BlogPost: {
+    author: (parent: BlogPost) => {
+      return users.find((u) => u.id === parent.authorId) || null
+    },
+  },
+  Page: {
+    author: (parent: Page) => {
+      return users.find((u) => u.id === parent.authorId) || null
+    },
+  },
+
   User: {
     friends: () => {
       return []

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, installModule } from '@nuxt/kit'
+import { addDevServerHandler, defineNuxtModule, installModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './build/helpers'
 import { Collector } from './build/Collector'
@@ -12,6 +12,7 @@ import { ModuleContext } from './build/ModuleContext'
 import type { OperationResponseError } from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
+import { createMcpDevHandler } from './build/dev-handler/mcp-handler'
 
 export type { ModuleOptions }
 
@@ -49,8 +50,14 @@ export default defineNuxtModule<ModuleOptions>({
       clientCacheMaxSize: helper.options.clientCache?.maxSize ?? 100,
     }
 
+    // Expose dev server URL for MCP tools (dev only).
+    const devServerUrl = helper.isDev
+      ? `http://${nuxt.options.devServer.host || 'localhost'}:${nuxt.options.devServer.port || 3000}`
+      : undefined
+
     nuxt.options.runtimeConfig.graphqlMiddleware = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
+      devServerUrl,
     }
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))
@@ -138,15 +145,21 @@ export default defineNuxtModule<ModuleOptions>({
       await collector.init()
     })
 
-    nuxt.hook('mcp:definitions:paths', (foo) => {
+    nuxt.hook('mcp:definitions:paths', (paths) => {
       const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
-      foo.handlers ||= []
-      foo.handlers.push(mcpPath)
+      paths.handlers ||= []
+      paths.handlers.push(mcpPath)
     })
 
     if (process.env.PLAYGROUND_MODULE_BUILD) {
       await installModule('@nuxtjs/mcp-toolkit')
     }
+
+    // MCP dev server handler - expose module data to MCP tools.
+    addDevServerHandler({
+      route: '/__nuxt_graphql_middleware/mcp',
+      handler: createMcpDevHandler(collector, schemaProvider.getSchema()),
+    })
 
     // =========================================================================
     // Dev Mode

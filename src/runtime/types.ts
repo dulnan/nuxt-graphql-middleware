@@ -353,4 +353,6 @@ export type GraphqlMiddlewareServerOptions<
 
 export type GraphqlMiddlewareRuntimeConfig = {
   graphqlEndpoint?: string
+  /** Dev server URL for MCP tools (dev only). */
+  devServerUrl?: string
 }

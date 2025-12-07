@@ -1,3 +1,54 @@
+"""A long-form article with excerpt and category."""
+type Article implements Content {
+  author: User
+
+  """Full article body."""
+  body: String!
+
+  """Article category."""
+  category: String!
+
+  """Short excerpt for previews."""
+  excerpt: String!
+  id: ID!
+  publishedAt: String
+  slug: String!
+  title: String!
+}
+
+"""A blog post with tags."""
+type BlogPost implements Content {
+  author: User
+
+  """The blog post content."""
+  content: String!
+  id: ID!
+  publishedAt: String
+  slug: String!
+
+  """Tags for categorization."""
+  tags: [String!]!
+  title: String!
+}
+
+"""Base interface for all content types in the CMS."""
+interface Content {
+  """The author of the content."""
+  author: User
+
+  """Unique identifier for the content."""
+  id: ID!
+
+  """When the content was published. Null if draft."""
+  publishedAt: String
+
+  """URL-friendly slug."""
+  slug: String!
+
+  """The title of the content."""
+  title: String!
+}
+
 type DataForLayer {
   text: String
 }
@@ -39,7 +90,33 @@ type Mutation {
   uploadFile(file: Upload): Boolean!
 }
 
+"""A static page with a template."""
+type Page implements Content {
+  author: User
+
+  """The page content."""
+  content: String!
+  id: ID!
+  publishedAt: String
+  slug: String!
+
+  """Template to use for rendering."""
+  template: String!
+  title: String!
+}
+
 type Query {
+  """Get all content items (articles, blog posts, pages)."""
+  allContent: [Content!]!
+
+  """Get all articles."""
+  articles: [Article!]!
+
+  """Get all blog posts."""
+  blogPosts: [BlogPost!]!
+
+  """Get content by slug."""
+  contentBySlug(slug: String!): Content
   dataForLayer: DataForLayer
   foobar: String
 
@@ -56,11 +133,17 @@ type Query {
   getSubmissions: [FormSubmission]
   getText(text: String!): String!
 
+  """Get all pages."""
+  pages: [Page!]!
+
   """Returns a random number."""
   returnRandomNumber: Int!
 
   """Returns the same value."""
   returnSameValue(value: Int!, vary: String): Int!
+
+  """Search across all content types and users."""
+  search(query: String!): [SearchResult!]!
 
   """Test the client options."""
   testClientOptions(path: String!): TestClientOptions
@@ -77,6 +160,9 @@ type Query {
   """Get users with pagination metadata."""
   usersPaginated(limit: Int, offset: Int): UsersResult!
 }
+
+"""Union type for search results."""
+union SearchResult = Article | BlogPost | Page | User
 
 type TestClientOptions {
   language: String

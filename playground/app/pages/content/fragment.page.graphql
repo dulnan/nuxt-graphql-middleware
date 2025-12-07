@@ -1,0 +1,13 @@
+fragment page on Page {
+  id
+  title
+  slug
+  publishedAt
+  author {
+    id
+    firstName
+    lastName
+  }
+  content
+  template
+}

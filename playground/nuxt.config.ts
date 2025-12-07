@@ -88,11 +88,9 @@ query queryFromHook {
   nitro: {
     typescript: {
       tsConfig: {
-        include: [
-          '../src/runtime/server/mcp'
-        ]
-      }
-    }
+        include: ['../src/runtime/server/mcp'],
+      },
+    },
   },
 
   compatibilityDate: '2024-09-14',
