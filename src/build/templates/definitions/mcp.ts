@@ -81,6 +81,11 @@ export default defineStaticTemplate(
   (helper) => {
     const mcpServerRoute =
       helper.options.mcp.route ?? '/mcp/nuxt-graphql-middleware'
+
+    const devServerUrl = helper.isDev
+      ? `http://${helper.nuxt.options.devServer.host || 'localhost'}:${helper.nuxt.options.devServer.port || 3000}`
+      : ''
+
     const docsDir = helper.resolvers.module.resolve('../docs')
 
     const entries: string[] = []
@@ -111,12 +116,14 @@ export default defineStaticTemplate(
     }
     return `
 export const mcpServerRoute = ${JSON.stringify(mcpServerRoute)}
+export const devServerUrl = ${JSON.stringify(devServerUrl)}
 export const docs = [\n${entries.join(',\n')}\n]
 `
   },
   () => {
     return `
 declare export const mcpServerRoute: string
+declare export const devServerUrl: string
 
 export type Doc = {
   uri: string

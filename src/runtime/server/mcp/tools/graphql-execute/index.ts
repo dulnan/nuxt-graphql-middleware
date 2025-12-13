@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
 import { serverApiPrefix } from '#nuxt-graphql-middleware/helpers'
-import { getDevServerUrl, structuredResult } from './../../utils'
+import { devServerUrl } from '#nuxt-graphql-middleware/mcp'
+import { structuredResult } from './../../utils'
 import type { GraphqlServerResponse } from '~/src/runtime/types'
 
 const GraphqlErrorSchema = z.object({
@@ -83,11 +84,10 @@ export const executeGraphqlTool = defineMcpTool({
   outputSchema: executeGraphqlOutputSchema,
   handler: async ({ document, variables, operationName }) => {
     try {
-      const baseUrl = getDevServerUrl()
       const response = await $fetch<{
         data?: Record<string, unknown> | null
         errors?: Array<{ message: string }>
-      }>(`${baseUrl}${serverApiPrefix}/do-request`, {
+      }>(`${devServerUrl}${serverApiPrefix}/do-request`, {
         method: 'POST',
         body: {
           document,

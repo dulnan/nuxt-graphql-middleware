@@ -50,14 +50,8 @@ export default defineNuxtModule<ModuleOptions>({
       clientCacheMaxSize: helper.options.clientCache?.maxSize ?? 100,
     }
 
-    // Expose dev server URL for MCP tools (dev only).
-    const devServerUrl = helper.isDev
-      ? `http://${nuxt.options.devServer.host || 'localhost'}:${nuxt.options.devServer.port || 3000}`
-      : ''
-
     nuxt.options.runtimeConfig.graphqlMiddleware = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
-      devServerUrl,
     }
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))
