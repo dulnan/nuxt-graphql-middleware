@@ -19,6 +19,8 @@ A GraphQL client for Nuxt 3.
 - Super fast **TypeScript code generation** using
   **[graphql-typescript-deluxe](https://github.com/dulnan/graphql-typescript-deluxe)**
 - **HMR** for all GraphQL files
+- **[MCP integration](https://nuxt-graphql-middleware.dulnan.net/features/mcp)**
+  to expose schema and operations to AI assistants
 - Optional **Client side caching** for query operations
 - Modify **request headers**, responses and handle errors
 - Integration with **[Nuxt DevTools](https://devtools.nuxtjs.org)**
