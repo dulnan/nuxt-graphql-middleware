@@ -74,6 +74,7 @@ export default withMermaid({
       {
         text: 'Features',
         items: [
+          { text: 'MCP Integration', link: '/features/mcp' },
           { text: 'Caching', link: '/features/caching' },
           { text: 'Auto Import', link: '/features/auto-import' },
           { text: 'Fragments', link: '/features/fragments' },

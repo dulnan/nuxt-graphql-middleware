@@ -1,0 +1,14 @@
+fragment article on Article {
+  id
+  title
+  slug
+  publishedAt
+  author {
+    id
+    firstName
+    lastName
+  }
+  excerpt
+  body
+  category
+}

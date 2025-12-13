@@ -34,21 +34,23 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "docs/composables",
+    "docs/configuration"
   ],
   "license": "MIT",
   "scripts": {
     "prepack": "npm run styles:build && nuxt-module-build build && npm run client:build",
-    "dev": "nuxi dev playground --trace-warnings",
-    "dev:layers": "nuxi dev playground-layers --trace-warnings",
-    "debug": "nuxi dev playground --inspect",
-    "dev:build": "nuxi build playground",
+    "dev": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --trace-warnings",
+    "dev:layers": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground-layers --trace-warnings",
+    "debug": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --inspect",
+    "dev:build": "PLAYGROUND_MODULE_BUILD=true nuxi build playground",
     "dev:layers:build": "nuxi build playground-layers",
     "dev:prepare": "PLAYGROUND_MODULE_BUILD=true nuxt-module-build build --stub && PLAYGROUND_MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground-layers && nuxi prepare playground",
     "dev:start": "node ./playground/.output/server/index.mjs",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",
-    "typecheck": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p src/runtime/server/mcp && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs --port 5000",
@@ -58,10 +60,10 @@
     "cypress:open": "cypress open --e2e",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
-    "test": "vitest",
+    "test": "vitest --no-file-parallelism",
     "test:debug": "vitest --inspect --no-file-parallelism",
-    "test:ci": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --no-file-parallelism",
+    "test:coverage": "vitest run --coverage --no-file-parallelism",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "styles:build": "postcss ./css/index.css -o ./src/runtime/css/output.css",
@@ -77,14 +79,25 @@
     "minisearch": "^7.1.2",
     "picocolors": "^1.1.1"
   },
+  "peerDependencies": {
+    "@nuxtjs/mcp-toolkit": "^0.5.2"
+  },
+  "peerDependenciesMeta": {
+    "@nuxtjs/mcp-toolkit": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.8",
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "@nuxt/devtools": "^2.4.0",
     "@nuxt/devtools-ui-kit": "^2.6.2",
     "@nuxt/eslint": "^1.2.0",
     "@nuxt/kit": "^4.2.0",
     "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^4.2.0",
+    "@nuxt/test-utils": "^3.21.0",
+    "@nuxtjs/mcp-toolkit": "^0.5.2",
     "@types/micromatch": "^4.0.9",
     "cypress": "^13.12.0",
     "cypress-wait-until": "^3.0.2",
@@ -108,7 +121,8 @@
     "typedoc-vitepress-theme": "^1.1.2",
     "vitepress": "^1.6.3",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "^1.6.0",
-    "vue-tsc": "^2.2.12"
+    "vitest": "^3.2.4",
+    "vue-tsc": "^2.2.12",
+    "zod": "^4.1.13"
   }
 }

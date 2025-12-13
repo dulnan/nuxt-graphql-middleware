@@ -32,6 +32,7 @@ export default defineBuildConfig({
     'micromatch',
     '@clack/core',
     'is-unicode-supported',
+    'zod',
   ],
   replace: {
     'process.env.PLAYGROUND_MODULE_BUILD': 'undefined',

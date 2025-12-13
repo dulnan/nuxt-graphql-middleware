@@ -54,7 +54,7 @@ export default defineGraphqlServerOptions<{ __cacheability?: Cacheability }>({
       event.node.res.setHeader('set-cookie', setCookie)
     }
 
-    if (!graphqlResponse._data?.data) {
+    if (!graphqlResponse._data) {
       throw createError({ statusCode: 500 })
     }
 

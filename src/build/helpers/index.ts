@@ -23,6 +23,9 @@ export const defaultOptions: ModuleOptions = {
     enabled: false,
     maxSize: 100,
   },
+  mcp: {
+    enabled: false,
+  },
 }
 
 /**

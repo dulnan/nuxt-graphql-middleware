@@ -1,0 +1,11 @@
+fragment contentBase on Content {
+  id
+  title
+  slug
+  publishedAt
+  author {
+    id
+    firstName
+    lastName
+  }
+}

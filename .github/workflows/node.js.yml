@@ -55,11 +55,11 @@ jobs:
 
       - name: Run vitest
         run: |
-          npm run dev:build
           npm run test:ci
 
       - name: Start dev server
         run: |
+          npm run dev:build
           npm run dev:start &
 
       - name: Run cypress E2E tests

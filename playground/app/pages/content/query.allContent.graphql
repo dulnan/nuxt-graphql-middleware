@@ -1,0 +1,18 @@
+query allContent {
+  allContent {
+    __typename
+    ...contentBase
+    ... on Article {
+      excerpt
+      category
+    }
+    ... on BlogPost {
+      content
+      tags
+    }
+    ... on Page {
+      content
+      template
+    }
+  }
+}

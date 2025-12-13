@@ -1,0 +1,13 @@
+fragment blogPost on BlogPost {
+  id
+  title
+  slug
+  publishedAt
+  author {
+    id
+    firstName
+    lastName
+  }
+  content
+  tags
+}

@@ -35,4 +35,9 @@ features:
     details:
       Easily prevent arbitrary querying on your GraphQL server by just hiding it
       from public access.
+  - title: MCP Integration
+    icon: 🤖
+    details:
+      Expose your GraphQL schema and operations to AI assistants via the Model
+      Context Protocol.
 ---

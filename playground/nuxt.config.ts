@@ -6,7 +6,11 @@ const IS_DEV = process.env.NODE_ENV === 'development'
 const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
   downloadSchema: IS_DEV,
-  autoImportPatterns: ['~/**/*.{graphql,gql}', '!queryFromDisk.graphql'],
+  autoImportPatterns: [
+    '~/**/*.{graphql,gql}',
+    '!queryFromDisk.graphql',
+    '~~/graphql/*.graphql',
+  ],
   schemaPath: './../schema.graphql',
   graphqlConfigFilePath: '../graphql.config.ts',
   codegenConfig: {},
@@ -39,6 +43,10 @@ const graphqlMiddleware: ModuleOptions = {
   experimental: {
     improvedQueryParamEncoding: true,
   },
+
+  mcp: {
+    enabled: true,
+  },
 }
 
 export default defineNuxtConfig({
@@ -46,6 +54,7 @@ export default defineNuxtConfig({
     graphqlMiddlewareModule as any,
     '@nuxt/devtools',
     '@nuxt/eslint',
+    '@nuxtjs/mcp-toolkit',
     './modules/playground-module',
   ],
   graphqlMiddleware,
@@ -83,6 +92,13 @@ query queryFromHook {
   typescript: {
     typeCheck: 'build',
     strict: true,
+  },
+  nitro: {
+    typescript: {
+      tsConfig: {
+        include: ['../src/runtime/server/mcp'],
+      },
+    },
   },
 
   compatibilityDate: '2024-09-14',
