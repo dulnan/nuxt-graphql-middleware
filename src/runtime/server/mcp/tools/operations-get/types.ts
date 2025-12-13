@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CollectorOperationSchema } from '../listOperations/types'
+import { CollectorOperationSchema } from '../operations-list/types'
 
 export const GetOperationResponseSchema = z.object({
   operation: CollectorOperationSchema.nullable(),

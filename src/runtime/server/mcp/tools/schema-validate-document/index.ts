@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   validateDocumentOutputSchema,
   type ValidateDocumentResponse,
-} from '../../../../build/dev-handler/validateDocument/types'
+} from './types'
 
 export const validateDocumentTool = defineMcpTool({
   name: 'schema-validate-document',

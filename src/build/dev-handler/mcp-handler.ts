@@ -18,7 +18,7 @@ import { handleGetUnionMembers } from './getUnionMembers/handler'
 import { handleGetTypeUsage } from './getTypeUsage/handler'
 import { handleGetFieldUsage } from './getFieldUsage/handler'
 import { handleValidateDocument } from './validateDocument/handler'
-import type { SchemaTypeKindFilter } from './listSchemaTypes/types'
+import type { SchemaTypeKindFilter } from '../../runtime/server/mcp/tools/schema-list-types/types'
 
 function requireName(body: Record<string, unknown>): string {
   const name = body.name as string | undefined

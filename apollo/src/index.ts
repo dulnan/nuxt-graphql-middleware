@@ -338,6 +338,11 @@ const typeDefs = `#graphql
     """
     meansOfContact: MeansOfContact
 
+    """
+    Number of articles written by the user.
+    """
+    articleCount: Int!
+
     triggerError: Boolean
   }
 
@@ -702,6 +707,9 @@ const resolvers = {
   User: {
     friends: () => {
       return []
+    },
+    articleCount: (parent: { id: number }) => {
+      return articles.filter((article) => article.authorId === parent.id).length
     },
     triggerError: () => {
       throw new GraphQLError(

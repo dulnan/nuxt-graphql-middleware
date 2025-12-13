@@ -18,8 +18,8 @@ import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
 import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
-import type { CollectorOperation } from './dev-handler/listOperations/types'
-import type { FragmentInfo } from './dev-handler/getFragmentsForType/types'
+import type { CollectorOperation } from '../runtime/server/mcp/tools/operations-list/types'
+import type { FragmentInfo } from '../runtime/server/mcp/tools/fragments-list-for-type/types'
 
 export type { CollectorOperation, FragmentInfo }
 

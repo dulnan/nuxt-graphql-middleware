@@ -184,6 +184,9 @@ type UploadedFile {
 }
 
 type User {
+  """Number of articles written by the user."""
+  articleCount: Int!
+
   """Date of birth as YYYY-MM-DD."""
   dateOfBirth: String
 

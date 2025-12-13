@@ -1,8 +1,8 @@
-// Types for MCP tools
+// Types for MCP tools - re-exported from runtime folder
 export type {
   ListOperationsResponse,
   CollectorOperation,
-} from './listOperations/types'
+} from '../../runtime/server/mcp/tools/operations-list/types'
 
 export type {
   GetSchemaTypeResponse,
@@ -10,40 +10,40 @@ export type {
   SchemaTypeField,
   SchemaTypeEnumValue,
   SchemaTypeKind,
-} from './getSchemaType/types'
+} from '../../runtime/server/mcp/tools/schema-get-type/types'
 
 export type {
   GetFragmentsForTypeResponse,
   FragmentInfo,
-} from './getFragmentsForType/types'
+} from '../../runtime/server/mcp/tools/fragments-list-for-type/types'
 
-export type { GetOperationResponse } from './getOperation/types'
+export type { GetOperationResponse } from '../../runtime/server/mcp/tools/operations-get/types'
 
-export type { GetOperationSourceResponse } from './getOperationSource/types'
+export type { GetOperationSourceResponse } from '../../runtime/server/mcp/tools/operations-get-source/types'
 
-export type { ListFragmentsResponse } from './listFragments/types'
+export type { ListFragmentsResponse } from '../../runtime/server/mcp/tools/fragments-list/types'
 
-export type { GetFragmentResponse } from './getFragment/types'
+export type { GetFragmentResponse } from '../../runtime/server/mcp/tools/fragments-get/types'
 
-export type { GetFragmentSourceResponse } from './getFragmentSource/types'
+export type { GetFragmentSourceResponse } from '../../runtime/server/mcp/tools/fragments-get-source/types'
 
 export type {
   ListSchemaTypesResponse,
   SchemaTypeSummary,
   SchemaTypeKindFilter,
-} from './listSchemaTypes/types'
+} from '../../runtime/server/mcp/tools/schema-list-types/types'
 
 export type {
   GetTypesImplementingInterfaceResponse,
   ImplementingType,
-} from './getTypesImplementingInterface/types'
+} from '../../runtime/server/mcp/tools/schema-get-interface-implementors/types'
 
 export type {
   GetUnionMembersResponse,
   UnionMember,
-} from './getUnionMembers/types'
+} from '../../runtime/server/mcp/tools/schema-get-union-members/types'
 
 export type {
   GetTypeUsageResponse,
   TypeUsageLocation,
-} from './getTypeUsage/types'
+} from '../../runtime/server/mcp/tools/schema-get-type-usage/types'

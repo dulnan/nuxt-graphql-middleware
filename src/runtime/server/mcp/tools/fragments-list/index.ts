@@ -1,9 +1,9 @@
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   listFragmentsOutputSchema,
   type ListFragmentsResponse,
-} from '../../../../build/dev-handler/listFragments/types'
+} from './types'
 
 export const listFragmentsTool = defineMcpTool({
   name: 'fragments-list',

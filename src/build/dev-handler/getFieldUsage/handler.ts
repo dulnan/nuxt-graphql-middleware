@@ -8,7 +8,7 @@ import {
   visitWithTypeInfo,
 } from 'graphql'
 import type { Collector } from '../../Collector'
-import type { GetFieldUsageResponse, FieldUsageLocation } from './types'
+import type { GetFieldUsageResponse, FieldUsageLocation } from '../../../runtime/server/mcp/tools/operations-get-field-usage/types'
 
 export function handleGetFieldUsage(
   collector: Collector,

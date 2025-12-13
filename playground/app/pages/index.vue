@@ -31,6 +31,12 @@
                   <nuxt-link :to="'/user/' + user.id" class="button is-small"
                     >View Details</nuxt-link
                   >
+                  <nuxt-link
+                    v-if="user.articleCount > 0"
+                    :to="'/user/' + user.id + '/content'"
+                    class="button is-small is-info"
+                    >View Content</nuxt-link
+                  >
                   <button
                     class="button is-danger is-small"
                     @click="deleteUser(user.id)"

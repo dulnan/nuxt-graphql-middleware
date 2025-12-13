@@ -17,7 +17,7 @@ import type {
   SchemaTypeField,
   SchemaTypeInfo,
   GetSchemaTypeResponse,
-} from './types'
+} from '../../../runtime/server/mcp/tools/schema-get-type/types'
 
 function formatType(type: GraphQLType): string {
   return type.toString()

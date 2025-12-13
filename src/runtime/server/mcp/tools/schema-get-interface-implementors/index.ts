@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   getTypesImplementingInterfaceOutputSchema,
   type GetTypesImplementingInterfaceResponse,
-} from '../../../../build/dev-handler/getTypesImplementingInterface/types'
+} from './types'
 
 export const getTypesImplementingInterfaceTool = defineMcpTool({
   name: 'schema-get-interface-implementors',

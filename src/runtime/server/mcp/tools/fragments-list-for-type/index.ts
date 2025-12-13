@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   getFragmentsForTypeOutputSchema,
   type GetFragmentsForTypeResponse,
-} from '../../../../build/dev-handler/getFragmentsForType/types'
+} from './types'
 
 export const getFragmentsForTypeTool = defineMcpTool({
   name: 'fragments-list-for-type',

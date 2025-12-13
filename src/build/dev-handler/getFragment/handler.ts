@@ -1,5 +1,5 @@
 import type { Collector } from '../../Collector'
-import type { GetFragmentResponse } from './types'
+import type { GetFragmentResponse } from '../../../runtime/server/mcp/tools/fragments-get/types'
 
 export function handleGetFragment(
   collector: Collector,

@@ -1,5 +1,5 @@
 import type { Collector } from '../../Collector'
-import type { GetOperationResponse } from './types'
+import type { GetOperationResponse } from '../../../runtime/server/mcp/tools/operations-get/types'
 
 export function handleGetOperation(
   collector: Collector,

@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   getSchemaTypeOutputSchema,
   type GetSchemaTypeResponse,
-} from '../../../../build/dev-handler/getSchemaType/types'
+} from './types'
 
 export const getSchemaTypeTool = defineMcpTool({
   name: 'schema-get-type',

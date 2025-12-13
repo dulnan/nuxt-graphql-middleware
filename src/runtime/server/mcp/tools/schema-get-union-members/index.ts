@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   getUnionMembersOutputSchema,
   type GetUnionMembersResponse,
-} from '../../../../build/dev-handler/getUnionMembers/types'
+} from './types'
 
 export const getUnionMembersTool = defineMcpTool({
   name: 'schema-get-union-members',

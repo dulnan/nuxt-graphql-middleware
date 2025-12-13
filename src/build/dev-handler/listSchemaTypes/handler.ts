@@ -12,7 +12,7 @@ import type {
   SchemaTypeKindFilter,
   SchemaTypeSummary,
   ListSchemaTypesResponse,
-} from './types'
+} from '../../../runtime/server/mcp/tools/schema-list-types/types'
 
 function getTypeKind(type: GraphQLNamedType): SchemaTypeKindFilter | null {
   if (isObjectType(type)) return 'OBJECT'

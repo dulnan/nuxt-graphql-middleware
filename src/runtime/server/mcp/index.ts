@@ -1,28 +1,28 @@
 import { defineMcpHandler } from '#imports'
 
 // Operation tools.
-import { listOperationsTool } from './tools/listOperations'
-import { getOperationTool } from './tools/getOperation'
-import { getOperationSourceTool } from './tools/getOperationSource'
+import { listOperationsTool } from './tools/operations-list'
+import { getOperationTool } from './tools/operations-get'
+import { getOperationSourceTool } from './tools/operations-get-source'
+import { getFieldUsageTool } from './tools/operations-get-field-usage'
 
 // Fragment tools.
-import { listFragmentsTool } from './tools/listFragments'
-import { getFragmentTool } from './tools/getFragment'
-import { getFragmentSourceTool } from './tools/getFragmentSource'
-import { getFragmentsForTypeTool } from './tools/getFragmentsForType'
+import { listFragmentsTool } from './tools/fragments-list'
+import { getFragmentTool } from './tools/fragments-get'
+import { getFragmentSourceTool } from './tools/fragments-get-source'
+import { getFragmentsForTypeTool } from './tools/fragments-list-for-type'
 
 // Schema tools.
-import { getSchemaTypeTool } from './tools/getSchemaType'
-import { getSchemaTypeDefinitionTool } from './tools/getSchemaTypeDefinition'
-import { listSchemaTypesTool } from './tools/listSchemaTypes'
-import { getTypesImplementingInterfaceTool } from './tools/getTypesImplementingInterface'
-import { getUnionMembersTool } from './tools/getUnionMembers'
-import { getTypeUsageTool } from './tools/getTypeUsage'
-import { getFieldUsageTool } from './tools/getFieldUsage'
-import { validateDocumentTool } from './tools/validateDocument'
+import { getSchemaTypeTool } from './tools/schema-get-type'
+import { getSchemaTypeDefinitionTool } from './tools/schema-get-type-definition'
+import { listSchemaTypesTool } from './tools/schema-list-types'
+import { getTypesImplementingInterfaceTool } from './tools/schema-get-interface-implementors'
+import { getUnionMembersTool } from './tools/schema-get-union-members'
+import { getTypeUsageTool } from './tools/schema-get-type-usage'
+import { validateDocumentTool } from './tools/schema-validate-document'
 
 // Execution tools.
-import { executeGraphqlTool } from './tools/executeGraphql'
+import { executeGraphqlTool } from './tools/graphql-execute'
 
 // Resources.
 import docsResource from './resources/docs'
@@ -36,6 +36,7 @@ export default defineMcpHandler({
     listOperationsTool,
     getOperationTool,
     getOperationSourceTool,
+    getFieldUsageTool,
 
     // Fragment tools.
     listFragmentsTool,
@@ -50,7 +51,6 @@ export default defineMcpHandler({
     getTypesImplementingInterfaceTool,
     getUnionMembersTool,
     getTypeUsageTool,
-    getFieldUsageTool,
     validateDocumentTool,
 
     // Execution tools.

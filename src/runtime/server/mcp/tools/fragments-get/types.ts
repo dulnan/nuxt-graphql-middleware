@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FragmentInfoSchema } from '../getFragmentsForType/types'
+import { FragmentInfoSchema } from '../fragments-list-for-type/types'
 
 export const GetFragmentResponseSchema = z.object({
   fragment: FragmentInfoSchema.nullable(),

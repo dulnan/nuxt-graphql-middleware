@@ -1,5 +1,5 @@
 import { type GraphQLSchema, printType } from 'graphql'
-import type { GetSchemaTypeDefinitionResponse } from './types'
+import type { GetSchemaTypeDefinitionResponse } from '../../../runtime/server/mcp/tools/schema-get-type-definition/types'
 
 export function handleGetSchemaTypeDefinition(
   schema: GraphQLSchema,

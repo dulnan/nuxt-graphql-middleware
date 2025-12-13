@@ -1,10 +1,10 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   getOperationOutputSchema,
   type GetOperationResponse,
-} from '../../../../build/dev-handler/getOperation/types'
+} from './types'
 
 export const getOperationTool = defineMcpTool({
   name: 'operations-get',

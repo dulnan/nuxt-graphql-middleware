@@ -1,5 +1,5 @@
 import { isUnionType, type GraphQLSchema } from 'graphql'
-import type { GetUnionMembersResponse } from './types'
+import type { GetUnionMembersResponse } from '../../../runtime/server/mcp/tools/schema-get-union-members/types'
 
 export function handleGetUnionMembers(
   schema: GraphQLSchema,

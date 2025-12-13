@@ -1,5 +1,5 @@
 import { isInterfaceType, type GraphQLSchema } from 'graphql'
-import type { GetTypesImplementingInterfaceResponse } from './types'
+import type { GetTypesImplementingInterfaceResponse } from '../../../runtime/server/mcp/tools/schema-get-interface-implementors/types'
 
 export function handleGetTypesImplementingInterface(
   schema: GraphQLSchema,

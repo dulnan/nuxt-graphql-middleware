@@ -1,9 +1,9 @@
 import { defineMcpTool } from '#imports'
-import { fetchFromMcpHandler, structuredResult } from './../utils'
+import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   listOperationsOutputSchema,
   type ListOperationsResponse,
-} from '../../../../build/dev-handler/listOperations/types'
+} from './types'
 
 export const listOperationsTool = defineMcpTool({
   name: 'operations-list',

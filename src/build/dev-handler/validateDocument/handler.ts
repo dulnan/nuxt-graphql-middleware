@@ -1,7 +1,7 @@
 import { parse, Source } from 'graphql'
 import { validateGraphQlDocuments } from '@graphql-tools/utils'
 import type { GraphQLSchema } from 'graphql'
-import type { ValidateDocumentResponse } from './types'
+import type { ValidateDocumentResponse } from '../../../runtime/server/mcp/tools/schema-validate-document/types'
 
 export function handleValidateDocument(
   schema: GraphQLSchema,

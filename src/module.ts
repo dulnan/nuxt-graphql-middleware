@@ -131,21 +131,6 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     // =========================================================================
-    // Build
-    // =========================================================================
-
-    helper.applyBuildConfig()
-
-    // This is called once all modules have been initialised.
-    nuxt.hooks.hookOnce('modules:done', async () => {
-      // Let other modules add additional documents.
-      await nuxt.hooks.callHook('nuxt-graphql-middleware:init', moduleContext)
-
-      // Initalise the documents.
-      await collector.init()
-    })
-
-    // =========================================================================
     // Dev Mode
     // =========================================================================
 
@@ -173,26 +158,39 @@ export default defineNuxtModule<ModuleOptions>({
       (v) => v === '@nuxtjs/mcp-toolkit',
     )
 
-    if (!mcpToolkitInstalled) {
-      return
+    if (mcpToolkitInstalled) {
+      // @ts-ignore The types are somehow not available in the playground build.
+      nuxt.hook('mcp:definitions:paths', (paths) => {
+        const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
+        paths.handlers ||= []
+        paths.handlers.push(mcpPath)
+      })
+
+      // MCP dev server handler - expose module data to MCP tools.
+      addDevServerHandler({
+        route: '/__nuxt_graphql_middleware/mcp',
+        handler: createMcpDevHandler(collector, schemaProvider),
+      })
+
+      if (helper.isDev) {
+        helper.addServerHandler('doRequest', '/do-request', 'post')
+      }
     }
 
-    // @ts-ignore The types are somehow not available in the playground build.
-    nuxt.hook('mcp:definitions:paths', (paths) => {
-      const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
-      paths.handlers ||= []
-      paths.handlers.push(mcpPath)
+    // =========================================================================
+    // Build
+    // =========================================================================
+
+    // This is called once all modules have been initialised.
+    nuxt.hooks.hookOnce('modules:done', async () => {
+      // Let other modules add additional documents.
+      await nuxt.hooks.callHook('nuxt-graphql-middleware:init', moduleContext)
+
+      // Initalise the documents.
+      await collector.init()
     })
 
-    // MCP dev server handler - expose module data to MCP tools.
-    addDevServerHandler({
-      route: '/__nuxt_graphql_middleware/mcp',
-      handler: createMcpDevHandler(collector, schemaProvider),
-    })
-
-    if (helper.isDev) {
-      helper.addServerHandler('doRequest', '/do-request', 'post')
-    }
+    helper.applyBuildConfig()
   },
 })
 
