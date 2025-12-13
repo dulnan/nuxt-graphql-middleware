@@ -79,6 +79,14 @@
     "minisearch": "^7.1.2",
     "picocolors": "^1.1.1"
   },
+  "peerDependencies": {
+    "@nuxtjs/mcp-toolkit": "^0.5.2"
+  },
+  "peerDependenciesMeta": {
+    "@nuxtjs/mcp-toolkit": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@iconify-json/carbon": "^1.2.8",
     "@nuxt/devtools": "^2.4.0",
