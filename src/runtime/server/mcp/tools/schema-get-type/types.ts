@@ -55,7 +55,7 @@ export const GetSchemaTypeResponseSchema = z.object({
 })
 
 export const getSchemaTypeOutputSchema = {
-  name: z.string().describe('Type name'),
+  name: z.string().optional().describe('Type name'),
   kind: SchemaTypeKindSchema.optional().describe('The kind of GraphQL type'),
   description: z.string().nullable().optional().describe('Type description'),
   fields: z
