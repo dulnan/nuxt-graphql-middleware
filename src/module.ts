@@ -152,7 +152,7 @@ export default defineNuxtModule<ModuleOptions>({
       (v) => v === '@nuxtjs/mcp-toolkit',
     )
 
-    if (mcpToolkitInstalled && helper.options.mcp.enabled) {
+    if (helper.isDev && mcpToolkitInstalled && helper.options.mcp.enabled) {
       // @ts-ignore The types are somehow not available in the playground build.
       nuxt.hook('mcp:definitions:paths', (paths) => {
         const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
@@ -166,9 +166,7 @@ export default defineNuxtModule<ModuleOptions>({
         handler: createMcpDevHandler(collector, schemaProvider),
       })
 
-      if (helper.isDev) {
-        helper.addServerHandler('doRequest', '/do-request', 'post')
-      }
+      helper.addServerHandler('doRequest', '/do-request', 'post')
     }
 
     // =========================================================================
