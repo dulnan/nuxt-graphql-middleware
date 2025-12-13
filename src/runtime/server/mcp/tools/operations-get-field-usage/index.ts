@@ -1,10 +1,7 @@
 import { z } from 'zod'
 import { defineMcpTool } from '#imports'
 import { fetchFromMcpHandler, structuredResult } from './../../utils'
-import {
-  getFieldUsageOutputSchema,
-  type GetFieldUsageResponse,
-} from './types'
+import { getFieldUsageOutputSchema, type GetFieldUsageResponse } from './types'
 
 export const getFieldUsageTool = defineMcpTool({
   name: 'operations-get-field-usage',

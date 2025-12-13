@@ -39,6 +39,10 @@ const graphqlMiddleware: ModuleOptions = {
   experimental: {
     improvedQueryParamEncoding: true,
   },
+
+  mcp: {
+    enabled: true,
+  },
 }
 
 export default defineNuxtConfig({

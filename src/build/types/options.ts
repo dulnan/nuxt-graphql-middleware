@@ -235,4 +235,21 @@ export interface ModuleOptions {
      */
     improvedQueryParamEncoding?: boolean
   }
+
+  /**
+   * Configuration for the @nuxtjs/mcp-toolkit integration.
+   */
+  mcp?: {
+    /**
+     * Whether the MCP integration should be enabled.
+     */
+    enabled: boolean
+
+    /**
+     * The route of the MCP server.
+     *
+     * @default /mcp/nuxt-graphql-middleware
+     */
+    route?: string
+  }
 }

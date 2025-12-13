@@ -1,4 +1,5 @@
 import { defineMcpHandler } from '#imports'
+import { mcpServerRoute } from '#nuxt-graphql-middleware/mcp'
 
 // Operation tools.
 import { listOperationsTool } from './tools/operations-list'
@@ -30,7 +31,7 @@ import docsResource from './resources/docs'
 export default defineMcpHandler({
   name: 'nuxt-graphql-middleware',
   version: '1.0.0',
-  route: '/mcp/nuxt-graphql-middleware',
+  route: mcpServerRoute,
   tools: [
     // Operation tools.
     listOperationsTool,

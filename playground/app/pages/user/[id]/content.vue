@@ -1,7 +1,10 @@
 <template>
   <div>
     <Title>Content by User {{ route.params.id }}</Title>
-    <Hero :title="`Content by User ${route.params.id}`" lead="All content created by this user" />
+    <Hero
+      :title="`Content by User ${route.params.id}`"
+      lead="All content created by this user"
+    />
 
     <div class="section">
       <div class="container">
@@ -26,7 +29,9 @@
           <div v-else-if="item.__typename === 'BlogPost' && 'tags' in item">
             <p>{{ item.content }}</p>
             <div class="tags">
-              <span v-for="tag in item.tags" :key="tag" class="tag is-info">{{ tag }}</span>
+              <span v-for="tag in item.tags" :key="tag" class="tag is-info">{{
+                tag
+              }}</span>
             </div>
           </div>
 
@@ -35,7 +40,10 @@
             <span class="tag is-warning">Template: {{ item.template }}</span>
           </div>
 
-          <NuxtLink :to="`/content/${item.slug}`" class="button is-small is-link mt-3">
+          <NuxtLink
+            :to="`/content/${item.slug}`"
+            class="button is-small is-link mt-3"
+          >
             View
           </NuxtLink>
         </div>
@@ -59,7 +67,7 @@ const userContent = computed(() => {
     return []
   }
   return data.value.data.allContent.filter(
-    (item) => item.author?.id?.toString() === userId.value
+    (item) => item.author?.id?.toString() === userId.value,
   )
 })
 </script>

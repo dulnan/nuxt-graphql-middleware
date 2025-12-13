@@ -74,11 +74,13 @@ const DOCS = [
 ]
 
 /**
- * Template that generates a module exporting documentation as an array of objects.
+ * Configuration for the MCP integration.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/docs' },
+  { path: 'nuxt-graphql-middleware/mcp' },
   (helper) => {
+    const mcpServerRoute =
+      helper.options.mcp.route ?? '/mcp/nuxt-graphql-middleware'
     const docsDir = helper.resolvers.module.resolve('../docs')
 
     const entries: string[] = []
@@ -107,15 +109,23 @@ export default defineStaticTemplate(
   }`)
       }
     }
-
-    return `export const docs = [\n${entries.join(',\n')}\n]`
+    return `
+export const mcpServerRoute = ${JSON.stringify(mcpServerRoute)}
+export const docs = [\n${entries.join(',\n')}\n]
+`
   },
   () => {
-    return `export const docs: Array<{
+    return `
+declare export const mcpServerRoute: string
+
+export type Doc = {
   uri: string
   name: string
   description: string
   content: string
-}>`
+}
+
+declare export const docs: Doc[]
+`
   },
 )

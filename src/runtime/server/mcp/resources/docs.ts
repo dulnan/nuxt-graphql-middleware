@@ -1,7 +1,7 @@
 import { defineMcpResource } from '#imports'
 import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { Variables } from '@modelcontextprotocol/sdk/shared/uriTemplate.js'
-import { docs } from '#nuxt-graphql-middleware/docs'
+import { docs } from '#nuxt-graphql-middleware/mcp'
 
 export default defineMcpResource({
   name: 'docs',

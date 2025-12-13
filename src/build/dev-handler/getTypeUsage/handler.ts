@@ -7,7 +7,10 @@ import {
   type GraphQLSchema,
   type GraphQLType,
 } from 'graphql'
-import type { TypeUsageLocation, GetTypeUsageResponse } from '../../../runtime/server/mcp/tools/schema-get-type-usage/types'
+import type {
+  TypeUsageLocation,
+  GetTypeUsageResponse,
+} from '../../../runtime/server/mcp/tools/schema-get-type-usage/types'
 
 /**
  * Gets the named type from a potentially wrapped type (NonNull, List).
