@@ -28,7 +28,6 @@ const FragmentMcpSchema = z.object({
   filePath: z
     .string()
     .describe('Path to the file relative to the project root'),
-  source: z.string().describe('The GraphQL source code of the fragment'),
   dependencies: z
     .array(z.string())
     .describe('Names of other fragments this fragment depends on'),

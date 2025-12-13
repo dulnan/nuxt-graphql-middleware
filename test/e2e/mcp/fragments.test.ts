@@ -66,7 +66,7 @@ describe('MCP Fragments Tools', async () => {
   })
 
   describe('fragments-get', () => {
-    it('should get details for a specific fragment', async () => {
+    it('should get details for a specific fragment (without source)', async () => {
       const client = await ensureMcpClient()
       if (!client) {
         return
@@ -102,12 +102,14 @@ describe('MCP Fragments Tools', async () => {
         name: string
         typeName: string
         filePath: string
-        source: string
+        dependencies: string[]
       }
 
+      // fragments-get returns metadata only, no source
       expect(structured.name).toBe(fragmentName)
       expect(structured.typeName).toBeDefined()
-      expect(structured.source).toContain('fragment')
+      expect(structured.filePath).toBeDefined()
+      expect(structured.dependencies).toBeInstanceOf(Array)
     })
 
     it('should return error for non-existent fragment', async () => {
@@ -155,6 +157,46 @@ describe('MCP Fragments Tools', async () => {
       const result = await client.callTool({
         name: 'fragments-get-source',
         arguments: { fragmentName },
+      })
+
+      expect(result).toBeDefined()
+      expect(result.structuredContent).toBeDefined()
+
+      const structured = result.structuredContent as {
+        source: string
+      }
+
+      expect(structured.source).toContain('fragment')
+      expect(structured.source).toContain(fragmentName)
+    })
+
+    it('should include dependencies when includeDependencies is true', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      // Find a fragment that has dependencies
+      const listResult = await client.callTool({
+        name: 'fragments-list',
+        arguments: {},
+      })
+
+      const listStructured = listResult.structuredContent as {
+        count: number
+        fragments: Array<{ name: string }>
+      }
+
+      if (listStructured.count === 0) {
+        return
+      }
+
+      const fragmentName = listStructured.fragments[0].name
+
+      // Get with includeDependencies
+      const result = await client.callTool({
+        name: 'fragments-get-source',
+        arguments: { fragmentName, includeDependencies: true },
       })
 
       expect(result).toBeDefined()

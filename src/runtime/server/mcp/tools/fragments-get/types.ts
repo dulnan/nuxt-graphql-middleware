@@ -16,10 +16,6 @@ export const getFragmentOutputSchema = {
     .string()
     .optional()
     .describe('Path to the file containing the fragment'),
-  source: z
-    .string()
-    .optional()
-    .describe('The GraphQL source code of the fragment'),
   dependencies: z
     .array(z.string())
     .optional()

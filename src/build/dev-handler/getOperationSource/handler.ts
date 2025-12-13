@@ -4,6 +4,7 @@ import type { GetOperationSourceResponse } from '../../../runtime/server/mcp/too
 export function handleGetOperationSource(
   collector: Collector,
   name: string,
+  includeDependencies: boolean = false,
 ): GetOperationSourceResponse {
   const operations = collector.getOperations()
   const operation = operations.find((op) => op.name === name)
@@ -12,5 +13,7 @@ export function handleGetOperationSource(
     return { source: null, error: `Operation "${name}" not found` }
   }
 
-  return { source: operation.source }
+  // Return source or sourceFull based on includeDependencies flag.
+  const source = includeDependencies ? operation.sourceFull : operation.source
+  return { source }
 }

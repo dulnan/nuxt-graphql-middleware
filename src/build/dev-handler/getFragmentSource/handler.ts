@@ -4,6 +4,7 @@ import type { GetFragmentSourceResponse } from '../../../runtime/server/mcp/tool
 export function handleGetFragmentSource(
   collector: Collector,
   name: string,
+  includeDependencies: boolean = false,
 ): GetFragmentSourceResponse {
   const fragment = collector.getFragment(name)
 
@@ -11,5 +12,7 @@ export function handleGetFragmentSource(
     return { source: null, error: `Fragment "${name}" not found` }
   }
 
-  return { source: fragment.source }
+  // Return source or sourceFull based on includeDependencies flag.
+  const source = includeDependencies ? fragment.sourceFull : fragment.source
+  return { source }
 }

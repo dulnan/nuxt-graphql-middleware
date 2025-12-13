@@ -34,10 +34,6 @@ export const getOperationOutputSchema = {
     .string()
     .optional()
     .describe('TypeScript type name for the operation response'),
-  source: z
-    .string()
-    .optional()
-    .describe('The GraphQL source code of the operation'),
   error: z.string().optional().describe('Error message if operation not found'),
 }
 

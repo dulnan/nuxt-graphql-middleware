@@ -7,7 +7,7 @@ export const getOperationTool = defineMcpTool({
   name: 'operations-get',
   title: 'Get Operation',
   description:
-    'Get detailed information about a specific GraphQL operation (query or mutation). Returns the operation name, type, file path, variable requirements, TypeScript type names, and full GraphQL source code.',
+    'Get detailed information about a specific GraphQL operation (query or mutation). Returns the operation name, type, file path, variable requirements, and TypeScript type names. Use operations-get-source to get the GraphQL source code.',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -41,7 +41,6 @@ export const getOperationTool = defineMcpTool({
       needsVariables: op.needsVariables,
       variablesTypeName: op.variablesTypeName,
       responseTypeName: op.responseTypeName,
-      source: op.source,
     })
   },
 })

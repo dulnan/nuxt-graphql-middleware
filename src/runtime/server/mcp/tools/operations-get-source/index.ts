@@ -10,7 +10,7 @@ export const getOperationSourceTool = defineMcpTool({
   name: 'operations-get-source',
   title: 'Get Operation Source',
   description:
-    'Get the raw GraphQL source code of an operation. Returns the full GraphQL query or mutation including any inlined fragment definitions.',
+    'Get the raw GraphQL source code of an operation. By default returns just the operation source. Set includeDependencies to true to include all fragment definitions the operation depends on.',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -23,12 +23,22 @@ export const getOperationSourceTool = defineMcpTool({
       .describe(
         'The name of the GraphQL operation to get the source for (e.g., "getUsers", "createPost")',
       ),
+    includeDependencies: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        'If true, includes all fragment definitions the operation depends on. Default is false.',
+      ),
   },
   outputSchema: getOperationSourceOutputSchema,
-  handler: async ({ operationName }) => {
+  handler: async ({ operationName, includeDependencies }) => {
     const response = await fetchFromMcpHandler<GetOperationSourceResponse>(
       'operations-get-source',
-      { name: operationName },
+      {
+        name: operationName,
+        includeDependencies: includeDependencies ?? false,
+      },
     )
 
     if (response.error) {

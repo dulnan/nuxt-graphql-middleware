@@ -55,7 +55,11 @@ export function createMcpDevHandler(
         return handleGetOperation(collector, requireName(body))
 
       case 'operations-get-source':
-        return handleGetOperationSource(collector, requireName(body))
+        return handleGetOperationSource(
+          collector,
+          requireName(body),
+          body.includeDependencies as boolean | undefined,
+        )
 
       // Fragment tools
       case 'fragments-list':
@@ -65,7 +69,11 @@ export function createMcpDevHandler(
         return handleGetFragment(collector, requireName(body))
 
       case 'fragments-get-source':
-        return handleGetFragmentSource(collector, requireName(body))
+        return handleGetFragmentSource(
+          collector,
+          requireName(body),
+          body.includeDependencies as boolean | undefined,
+        )
 
       case 'fragments-list-for-type':
         return handleGetFragmentsForType(collector, requireName(body))

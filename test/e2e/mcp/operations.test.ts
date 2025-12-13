@@ -149,7 +149,7 @@ describe('MCP Operations Tools', async () => {
   })
 
   describe('operations-get', () => {
-    it('should get full details for users query', async () => {
+    it('should get full details for users query (without source)', async () => {
       const client = await ensureMcpClient()
       if (!client) {
         return
@@ -168,34 +168,19 @@ describe('MCP Operations Tools', async () => {
         needsVariables: boolean
         variablesTypeName: string
         responseTypeName: string
-        source: string
       }
 
-      expect(structured.name).toBe('users')
-      expect(structured.type).toBe('query')
-      expect(structured.filePath).toBe('./app/pages/userList.graphql')
-      expect(structured.hasVariables).toBe(false)
-      expect(structured.needsVariables).toBe(false)
-      expect(structured.variablesTypeName).toBe('UsersQueryVariables')
-      expect(structured.responseTypeName).toBe('UsersQuery')
-      expect(structured.source).toMatchInlineSnapshot(`
-        "query users {
-          users {
-            ...user
-          }
-
-          # asdfasdfa
-        }fragment user on User {
-          id
-          firstName
-          lastName
-          email
-          description
-          dateOfBirth
-          description
-          meansOfContact
-          articleCount
-        }"
+      // operations-get returns metadata only, no source
+      expect(structured).toMatchInlineSnapshot(`
+        {
+          "filePath": "./app/pages/userList.graphql",
+          "hasVariables": false,
+          "name": "users",
+          "needsVariables": false,
+          "responseTypeName": "UsersQuery",
+          "type": "query",
+          "variablesTypeName": "UsersQueryVariables",
+        }
       `)
     })
 
@@ -243,7 +228,7 @@ describe('MCP Operations Tools', async () => {
   })
 
   describe('operations-get-source', () => {
-    it('should get the exact GraphQL source', async () => {
+    it('should get just the operation source by default', async () => {
       const client = await ensureMcpClient()
       if (!client) {
         return
@@ -258,6 +243,9 @@ describe('MCP Operations Tools', async () => {
         source: string
       }
 
+      // By default, should only contain the operation, not fragment definitions
+      expect(structured.source).toContain('...user')
+      expect(structured.source).not.toContain('fragment user on User')
       expect(structured.source).toMatchInlineSnapshot(`
         "query users {
           users {
@@ -265,37 +253,26 @@ describe('MCP Operations Tools', async () => {
           }
 
           # asdfasdfa
-        }fragment user on User {
-          id
-          firstName
-          lastName
-          email
-          description
-          dateOfBirth
-          description
-          meansOfContact
-          articleCount
         }"
       `)
     })
 
-    it('should include fragment definitions in source', async () => {
+    it('should include fragment definitions when includeDependencies is true', async () => {
       const client = await ensureMcpClient()
       if (!client) {
         return
       }
 
-      // The users query uses a fragment
       const result = await client.callTool({
         name: 'operations-get-source',
-        arguments: { operationName: 'users' },
+        arguments: { operationName: 'users', includeDependencies: true },
       })
 
       const structured = result.structuredContent as {
         source: string
       }
 
-      // Should contain fragment spread and fragment definition
+      // With includeDependencies, should contain both operation and fragment
       expect(structured.source).toContain('...user')
       expect(structured.source).toContain('fragment user on User')
     })

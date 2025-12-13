@@ -7,7 +7,7 @@ export const getFragmentTool = defineMcpTool({
   name: 'fragments-get',
   title: 'Get Fragment',
   description:
-    'Get detailed information about a specific GraphQL fragment. Returns the fragment name, the type it is defined on, file path, source code, and dependencies on other fragments.',
+    'Get detailed information about a specific GraphQL fragment. Returns the fragment name, the type it is defined on, file path, and dependencies on other fragments. Use fragments-get-source to get the GraphQL source code.',
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -35,7 +35,6 @@ export const getFragmentTool = defineMcpTool({
       name: frag.name,
       typeName: frag.typeName,
       filePath: frag.relativeFilePath,
-      source: frag.source,
       dependencies: frag.dependencies,
     })
   },

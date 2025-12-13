@@ -18,10 +18,9 @@ import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
 import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
-import type { CollectorOperation } from '../runtime/server/mcp/tools/operations-list/types'
-import type { FragmentInfo } from '../runtime/server/mcp/tools/fragments-list-for-type/types'
+import type { CollectorOperation, CollectorFragment } from './types/collector'
 
-export type { CollectorOperation, FragmentInfo }
+export type { CollectorOperation, CollectorFragment }
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -78,7 +77,7 @@ export class Collector {
   /**
    * Fragments with full metadata for MCP tools.
    */
-  private fragments: FragmentInfo[] = []
+  private fragments: CollectorFragment[] = []
 
   private isInitialised = false
 
@@ -256,12 +255,16 @@ export class Collector {
     // Build operations and fragments metadata for MCP tools (dev only).
     if (this.helper.isDev) {
       this.operations = operations.map((op) => {
-        const fragments = op
+        // Build fragment dependencies for sourceFull.
+        const fragmentDeps = op
           .getGraphQLFragmentDependencies()
           .map((name) => fragmentMap.get(name) || '')
-          .join('\n\n')
-        const source =
-          (operationSourceMap.get(op.graphqlName) || '') + fragments
+          .join('\n')
+
+        // source is just the operation itself.
+        const source = operationSourceMap.get(op.graphqlName) || ''
+        // sourceFull includes all fragment dependencies.
+        const sourceFull = [source, fragmentDeps].join('\n')
 
         return {
           name: op.graphqlName,
@@ -273,19 +276,33 @@ export class Collector {
           variablesTypeName: op.variablesTypeName,
           responseTypeName: op.typeName,
           source,
+          sourceFull,
         }
       })
 
       // Build fragments metadata.
       const outputFragments = output.getFragments()
-      this.fragments = outputFragments.map((frag) => ({
-        name: frag.node.name.value,
-        typeName: frag.node.typeCondition.name.value,
-        filePath: frag.filePath,
-        relativeFilePath: this.filePathToSourceRelative(frag.filePath),
-        source: fragmentMap.get(frag.node.name.value) || '',
-        dependencies: frag.getGraphQLFragmentDependencies(),
-      }))
+      this.fragments = outputFragments.map((frag) => {
+        // source is just this fragment itself.
+        const source = fragmentMap.get(frag.node.name.value) || ''
+        // Build fragment dependencies for sourceFull.
+        const fragmentDeps = frag
+          .getGraphQLFragmentDependencies()
+          .map((name) => fragmentMap.get(name) || '')
+          .join('\n')
+        // sourceFull includes all dependencies.
+        const sourceFull = [source, fragmentDeps].join('\n')
+
+        return {
+          name: frag.node.name.value,
+          typeName: frag.node.typeCondition.name.value,
+          filePath: frag.filePath,
+          relativeFilePath: this.filePathToSourceRelative(frag.filePath),
+          source,
+          sourceFull,
+          dependencies: frag.getGraphQLFragmentDependencies(),
+        }
+      })
     }
 
     if (this.helper.isDev) {
@@ -303,7 +320,7 @@ export class Collector {
           const fragmentDepdendencies = code
             .getGraphQLFragmentDependencies()
             .map((name) => fragmentMap.get(name) || '')
-            .join('\n\n')
+            .join('\n')
           this.rpcItems.set(id, {
             id,
             timestamp: code.timestamp,
@@ -682,21 +699,21 @@ export class Collector {
   /**
    * Get all fragments for a specific GraphQL type (for MCP tools).
    */
-  public getFragmentsForType(typeName: string): FragmentInfo[] {
+  public getFragmentsForType(typeName: string): CollectorFragment[] {
     return this.fragments.filter((frag) => frag.typeName === typeName)
   }
 
   /**
    * Get all fragments (for MCP tools).
    */
-  public getFragments(): FragmentInfo[] {
+  public getFragments(): CollectorFragment[] {
     return this.fragments
   }
 
   /**
    * Get a fragment by name (for MCP tools).
    */
-  public getFragment(name: string): FragmentInfo | undefined {
+  public getFragment(name: string): CollectorFragment | undefined {
     return this.fragments.find((frag) => frag.name === name)
   }
 }
