@@ -4,6 +4,11 @@ export default withMermaid({
   base: (process.env.BASE_URL as `/${string}/` | undefined) || '/',
   title: 'Nuxt GraphQL Middleware',
   lang: 'en',
+  vite: {
+    css: {
+      postcss: {},
+    },
+  },
   description:
     'Expose GraphQL queries and mutations as fully typed API endpoints.',
   transformHead: (ctx) => {
