@@ -6,6 +6,7 @@ import { listOperationsTool } from './tools/operations-list'
 import { getOperationTool } from './tools/operations-get'
 import { getOperationSourceTool } from './tools/operations-get-source'
 import { getFieldUsageTool } from './tools/operations-get-field-usage'
+import { executeOperationTool } from './tools/operations-execute'
 
 // Fragment tools.
 import { listFragmentsTool } from './tools/fragments-list'
@@ -56,6 +57,7 @@ export default defineMcpHandler({
 
     // Execution tools.
     executeGraphqlTool,
+    executeOperationTool,
   ],
   resources: [docsResource],
   browserRedirect: '/',

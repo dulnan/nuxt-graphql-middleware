@@ -224,9 +224,10 @@ The MCP integration exposes the following tools to AI assistants:
 
 ### Execution
 
-| Tool              | Description                                                            |
-| ----------------- | ---------------------------------------------------------------------- |
-| `graphql-execute` | Execute an arbitrary GraphQL operation against the configured endpoint |
+| Tool                 | Description                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `graphql-execute`    | Execute an arbitrary GraphQL document against the configured endpoint |
+| `operations-execute` | Execute an existing operation by name via the middleware              |
 
 ## Resources
 

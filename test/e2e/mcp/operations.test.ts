@@ -277,4 +277,130 @@ describe('MCP Operations Tools', async () => {
       expect(structured.source).toContain('fragment user on User')
     })
   })
+
+  describe('operations-execute', () => {
+    it('should execute a query without variables', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-execute',
+        arguments: {
+          type: 'query',
+          name: 'users',
+        },
+      })
+
+      const structured = result.structuredContent as {
+        data: { users: Array<{ id: string }> } | null
+        errors?: Array<{ message: string }>
+      }
+
+      expect(structured.data).toBeDefined()
+      expect(structured.data?.users).toBeInstanceOf(Array)
+      expect(structured.data?.users.length).toBeGreaterThan(0)
+      expect(structured.errors).toBeUndefined()
+    })
+
+    it('should execute a query with variables', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-execute',
+        arguments: {
+          type: 'query',
+          name: 'userById',
+          variables: { id: '1' },
+        },
+      })
+
+      const structured = result.structuredContent as {
+        data: { userById: { id: string } | null } | null
+        errors?: Array<{ message: string }>
+      }
+
+      expect(structured.data).toBeDefined()
+      expect(structured.data?.userById).toBeDefined()
+      // ID is returned as number from GraphQL
+      expect(String(structured.data?.userById?.id)).toBe('1')
+      expect(structured.errors).toBeUndefined()
+    })
+
+    it('should execute a mutation', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-execute',
+        arguments: {
+          type: 'mutation',
+          name: 'initState',
+        },
+      })
+
+      const structured = result.structuredContent as {
+        data: { initState: boolean } | null
+        errors?: Array<{ message: string }>
+      }
+
+      expect(structured.data).toBeDefined()
+      expect(structured.data?.initState).toBe(true)
+      expect(structured.errors).toBeUndefined()
+    })
+
+    it('should return error for non-existent operation', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-execute',
+        arguments: {
+          type: 'query',
+          name: 'nonExistentQuery',
+        },
+      })
+
+      const structured = result.structuredContent as {
+        data: null
+        errors?: Array<{ message: string }>
+      }
+
+      // Non-existent operation returns null data
+      // The middleware returns a 404 which is handled gracefully
+      expect(structured.data).toBeNull()
+    })
+
+    it('should handle GraphQL errors in response', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-execute',
+        arguments: {
+          type: 'query',
+          name: 'getError',
+        },
+      })
+
+      const structured = result.structuredContent as {
+        data: null
+        errors?: Array<{ message: string }>
+      }
+
+      expect(structured.errors).toBeDefined()
+      expect(structured.errors!.length).toBeGreaterThan(0)
+      expect(structured.errors![0].message).toContain('Something is wrong')
+    })
+  })
 })

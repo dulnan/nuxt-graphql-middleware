@@ -8,11 +8,11 @@ import {
   extractErrorResponse,
 } from './../../utils'
 
-export const executeGraphqlTool = defineMcpTool({
-  name: 'graphql-execute',
-  title: 'Execute GraphQL',
+export const executeOperationTool = defineMcpTool({
+  name: 'operations-execute',
+  title: 'Execute Operation',
   description:
-    'Execute an arbitrary GraphQL operation (query or mutation) against the configured GraphQL endpoint. This sends a real request to the GraphQL server and returns the response. Use this to test queries, fetch data, or perform mutations.',
+    'Execute an existing GraphQL operation (query or mutation) by name via the middleware. This sends a real request through the configured middleware and returns the response. Use this to test existing operations or fetch data.',
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -20,36 +20,45 @@ export const executeGraphqlTool = defineMcpTool({
     openWorldHint: true,
   },
   inputSchema: {
-    document: z
+    type: z
+      .enum(['query', 'mutation'])
+      .describe('The type of operation to execute'),
+    name: z
       .string()
       .describe(
-        'The GraphQL document (query or mutation) to execute. Must be a valid GraphQL operation.',
+        'The name of the GraphQL operation to execute (e.g., "getUsers", "createPost")',
       ),
     variables: z
       .record(z.string(), z.unknown())
       .optional()
       .describe('Optional variables to pass to the GraphQL operation'),
-    operationName: z
-      .string()
-      .optional()
-      .describe(
-        'Optional operation name if the document contains multiple operations',
-      ),
   },
   outputSchema: graphqlExecutionOutputSchema,
-  handler: async ({ document, variables, operationName }) => {
+  handler: async ({ type, name, variables }) => {
+    const isQuery = type === 'query'
+    const method = isQuery ? 'GET' : 'POST'
+    const endpoint = `${devServerUrl}${serverApiPrefix}/${type}/${name}`
+
     try {
+      const fetchOptions: Record<string, unknown> = {
+        method,
+      }
+
+      if (isQuery && variables && Object.keys(variables).length > 0) {
+        // For queries, encode variables as query params
+        // Use __variables for complex types to ensure proper handling
+        fetchOptions.params = {
+          __variables: JSON.stringify(variables),
+        }
+      } else if (!isQuery && variables) {
+        // For mutations, send variables in the body
+        fetchOptions.body = variables
+      }
+
       const response = await $fetch<{
         data?: Record<string, unknown> | null
         errors?: Array<{ message: string }>
-      }>(`${devServerUrl}${serverApiPrefix}/do-request`, {
-        method: 'POST',
-        body: {
-          document,
-          variables,
-          operationName,
-        },
-      })
+      }>(endpoint, fetchOptions)
 
       return structuredResult({
         data: response?.data ?? null,

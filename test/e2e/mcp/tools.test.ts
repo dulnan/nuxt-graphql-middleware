@@ -39,6 +39,7 @@ describe('MCP Tools Discovery', async () => {
     expect(toolNames).toContain('operations-get')
     expect(toolNames).toContain('operations-get-source')
     expect(toolNames).toContain('operations-get-field-usage')
+    expect(toolNames).toContain('operations-execute')
   })
 
   it('should include all expected fragment tools', async () => {
