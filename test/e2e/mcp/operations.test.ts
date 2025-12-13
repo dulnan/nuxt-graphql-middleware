@@ -30,7 +30,7 @@ describe('MCP Operations Tools', async () => {
         .map((op) => `${op.type}:${op.name}`)
         .sort()
 
-      expect(structured.count).toMatchInlineSnapshot(`34`)
+      expect(structured.count).toMatchInlineSnapshot(`35`)
       expect(operationNames).toMatchInlineSnapshot(`
         [
           "mutation:addUser",
@@ -47,6 +47,7 @@ describe('MCP Operations Tools', async () => {
           "query:fetchOptions",
           "query:fetchOptionsComposable",
           "query:foobar",
+          "query:foobarTest",
           "query:getCurrentTime",
           "query:getError",
           "query:getSubmissions",

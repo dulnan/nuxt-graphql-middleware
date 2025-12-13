@@ -6,7 +6,11 @@ const IS_DEV = process.env.NODE_ENV === 'development'
 const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
   downloadSchema: IS_DEV,
-  autoImportPatterns: ['~/**/*.{graphql,gql}', '!queryFromDisk.graphql'],
+  autoImportPatterns: [
+    '~/**/*.{graphql,gql}',
+    '!queryFromDisk.graphql',
+    '~~/graphql/*.graphql',
+  ],
   schemaPath: './../schema.graphql',
   graphqlConfigFilePath: '../graphql.config.ts',
   codegenConfig: {},
