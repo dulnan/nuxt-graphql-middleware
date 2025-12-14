@@ -123,6 +123,7 @@ export function createMcpDevHandler(
       case 'schema-validate-document':
         return handleValidateDocument(
           schemaProvider.getSchema(),
+          collector,
           body.document as string,
         )
 
