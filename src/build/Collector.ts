@@ -232,7 +232,9 @@ export class Collector {
         this.operationTimestamps.set(operation.graphqlName, operation.timestamp)
       }
 
-      const shouldLog = errors.length || !this.helper.options.logOnlyErrors
+      const shouldLog =
+        errors.length ||
+        (!this.helper.isPrepare && !this.helper.options.logOnlyErrors)
 
       if (shouldLog) {
         logEntries.push(this.operationToLogEntry(operation, errors))
@@ -459,7 +461,9 @@ export class Collector {
       }
 
       await this.buildState()
-      logger.success('All GraphQL documents are valid.')
+      if (!this.helper.isPrepare) {
+        logger.success('All GraphQL documents are valid.')
+      }
     } catch (e) {
       this.logError(e)
 

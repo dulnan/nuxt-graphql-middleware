@@ -244,7 +244,9 @@ export class ModuleHelper {
       }
     }
 
-    logger.info('No graphqlMiddleware.serverOptions file found.')
+    if (!this.isPrepare) {
+      logger.info('No graphqlMiddleware.serverOptions file found.')
+    }
     return null
   }
 

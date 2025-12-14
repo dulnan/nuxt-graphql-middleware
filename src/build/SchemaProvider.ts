@@ -69,7 +69,11 @@ export class SchemaProvider {
       )
       throw new Error('Missing GraphQL schema.')
     }
-    logger.info(`Loading GraphQL schema from disk: ${this.helper.paths.schema}`)
+    if (!this.helper.isPrepare) {
+      logger.info(
+        `Loading GraphQL schema from disk: ${this.helper.paths.schema}`,
+      )
+    }
     return await fs.readFile(this.helper.paths.schema).then((v) => v.toString())
   }
 
