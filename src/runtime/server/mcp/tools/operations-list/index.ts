@@ -3,6 +3,7 @@ import { defineMcpTool } from '#imports'
 import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
   listOperationsOutputSchema,
+  OperationTypeFilterSchema,
   type ListOperationsResponse,
 } from './types'
 
@@ -24,12 +25,15 @@ export const listOperationsTool = defineMcpTool({
       .describe(
         'Optional filter to match operation names. Can be a plain string for substring matching or a regex pattern (e.g., "^get" to match names starting with "get")',
       ),
+    type: OperationTypeFilterSchema.optional().describe(
+      'Optional filter by operation type: "query" or "mutation"',
+    ),
   },
   outputSchema: listOperationsOutputSchema,
-  handler: async ({ nameFilter }) => {
+  handler: async ({ nameFilter, type }) => {
     const response = await fetchFromMcpHandler<ListOperationsResponse>(
       'operations-list',
-      { nameFilter },
+      { nameFilter, type },
     )
 
     const summary = response.operations.map((op) => ({

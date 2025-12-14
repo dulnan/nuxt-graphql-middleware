@@ -23,6 +23,7 @@ import { handleGetComposableExamples } from './vue-graphql-composable-example/ha
 import { handleGetServerUtilsExamples } from './nitro-graphql-server-utils-example/handler'
 import { handleGetModuleConfig } from './module-get-config/handler'
 import type { SchemaTypeKindFilter } from '../../runtime/server/mcp/tools/schema-list-types/types'
+import type { OperationTypeFilter } from '../../runtime/server/mcp/tools/operations-list/types'
 
 function requireName(body: Record<string, unknown>): string {
   const name = body.name as string | undefined
@@ -57,6 +58,7 @@ export function createMcpDevHandler(
         return handleListOperations(
           collector,
           body.nameFilter as string | undefined,
+          body.type as OperationTypeFilter | undefined,
         )
 
       case 'operations-get':

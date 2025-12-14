@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+export const OperationTypeFilterSchema = z.enum(['query', 'mutation'])
+export type OperationTypeFilter = z.infer<typeof OperationTypeFilterSchema>
+
 // Internal schema with both absolute and relative paths
 export const CollectorOperationSchema = z.object({
   name: z.string().describe('The GraphQL operation name'),
