@@ -1,9 +1,6 @@
 import { defineMcpTool } from '#imports'
 import { fetchFromMcpHandler, structuredResult } from './../../utils'
-import {
-  moduleConfigOutputSchema,
-  type GetModuleConfigResponse,
-} from './types'
+import { moduleConfigOutputSchema, type GetModuleConfigResponse } from './types'
 
 export const moduleGetConfigTool = defineMcpTool({
   name: 'module-get-config',

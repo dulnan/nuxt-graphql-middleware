@@ -75,12 +75,6 @@ query queryFromHook {
 `,
       )
     },
-    'nuxt-graphql-middleware:build': (ctx) => {
-      const fragments = ctx.output.getFragments()
-      fragments.forEach((v) => {
-        console.log(v.node.name.value)
-      })
-    },
   },
 
   imports: {

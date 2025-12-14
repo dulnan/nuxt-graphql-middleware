@@ -140,13 +140,13 @@ Returns the same object as
 
 ```typescript
 const {
-  data,     // Ref<T | undefined> - The response data
-  pending,  // Ref<boolean> - Loading state
-  error,    // Ref<Error | undefined> - Error if request failed
-  status,   // Ref<'idle' | 'pending' | 'success' | 'error'>
-  refresh,  // () => Promise<void> - Manually refetch data
-  execute,  // () => Promise<void> - Same as refresh
-  clear,    // () => void - Clear data and error
+  data, // Ref<T | undefined> - The response data
+  pending, // Ref<boolean> - Loading state
+  error, // Ref<Error | undefined> - Error if request failed
+  status, // Ref<'idle' | 'pending' | 'success' | 'error'>
+  refresh, // () => Promise<void> - Manually refetch data
+  execute, // () => Promise<void> - Same as refresh
+  clear, // () => void - Clear data and error
 } = await useAsyncGraphqlQuery('users')
 ```
 
@@ -253,9 +253,7 @@ function nextPage() {
 ```typescript
 const userId = ref<string | null>(null)
 
-const variables = computed(() =>
-  userId.value ? { id: userId.value } : null,
-)
+const variables = computed(() => (userId.value ? { id: userId.value } : null))
 
 const { data } = await useAsyncGraphqlQuery('userById', variables, {
   // Don't fetch until we have a userId
@@ -301,14 +299,14 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
 
 ## Comparison with useGraphqlQuery
 
-| Feature | useAsyncGraphqlQuery | useGraphqlQuery |
-| --- | --- | --- |
-| SSR Support | ✅ Built-in | ✅ When wrapped in useAsyncData |
-| Reactive Variables | ✅ Automatic refetch | ❌ Manual handling required |
-| Returns | AsyncData object | Promise with response |
-| Use in Callbacks | ❌ Not recommended | ✅ Works anywhere |
-| Caching | ✅ With useAsyncData | ✅ With graphqlCaching option |
-| HMR Refresh | ✅ Automatic | ❌ Manual |
+| Feature            | useAsyncGraphqlQuery | useGraphqlQuery                 |
+| ------------------ | -------------------- | ------------------------------- |
+| SSR Support        | ✅ Built-in          | ✅ When wrapped in useAsyncData |
+| Reactive Variables | ✅ Automatic refetch | ❌ Manual handling required     |
+| Returns            | AsyncData object     | Promise with response           |
+| Use in Callbacks   | ❌ Not recommended   | ✅ Works anywhere               |
+| Caching            | ✅ With useAsyncData | ✅ With graphqlCaching option   |
+| HMR Refresh        | ✅ Automatic         | ❌ Manual                       |
 
 Choose `useAsyncGraphqlQuery` for page-level data fetching with SSR support.
 Choose `useGraphqlQuery` for imperative fetching in event handlers, plugins, or
