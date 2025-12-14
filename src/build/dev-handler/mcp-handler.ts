@@ -49,7 +49,10 @@ export function createMcpDevHandler(
     switch (tool) {
       // Operation tools
       case 'operations-list':
-        return handleListOperations(collector)
+        return handleListOperations(
+          collector,
+          body.nameFilter as string | undefined,
+        )
 
       case 'operations-get':
         return handleGetOperation(collector, requireName(body))
@@ -63,7 +66,10 @@ export function createMcpDevHandler(
 
       // Fragment tools
       case 'fragments-list':
-        return handleListFragments(collector)
+        return handleListFragments(
+          collector,
+          body.nameFilter as string | undefined,
+        )
 
       case 'fragments-get':
         return handleGetFragment(collector, requireName(body))

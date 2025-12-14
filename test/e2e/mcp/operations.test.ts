@@ -147,6 +147,124 @@ describe('MCP Operations Tools', async () => {
         }
       `)
     })
+
+    it('should filter operations by substring', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-list',
+        arguments: { nameFilter: 'user' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        operations: Array<{ name: string }>
+      }
+
+      // All returned operations should contain "user" in their name (case-sensitive)
+      for (const op of structured.operations) {
+        expect(op.name).toContain('user')
+      }
+
+      const operationNames = structured.operations.map((op) => op.name).sort()
+      expect(operationNames).toMatchInlineSnapshot(`
+        [
+          "userById",
+          "users",
+          "usersFromConfig",
+          "usersPaginated",
+        ]
+      `)
+    })
+
+    it('should filter operations by regex pattern', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      // Filter operations starting with "get"
+      const result = await client.callTool({
+        name: 'operations-list',
+        arguments: { nameFilter: '^get' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        operations: Array<{ name: string }>
+      }
+
+      // All returned operations should start with "get"
+      for (const op of structured.operations) {
+        expect(op.name).toMatch(/^get/)
+      }
+
+      const operationNames = structured.operations.map((op) => op.name).sort()
+      expect(operationNames).toMatchInlineSnapshot(`
+        [
+          "getCurrentTime",
+          "getError",
+          "getSubmissions",
+        ]
+      `)
+    })
+
+    it('should filter operations by regex pattern ending with User', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      // Filter operations ending with "User"
+      const result = await client.callTool({
+        name: 'operations-list',
+        arguments: { nameFilter: 'User$' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        operations: Array<{ name: string; type: string }>
+      }
+
+      // All returned operations should end with "User"
+      for (const op of structured.operations) {
+        expect(op.name).toMatch(/User$/)
+      }
+
+      const operationNames = structured.operations
+        .map((op) => `${op.type}:${op.name}`)
+        .sort()
+      expect(operationNames).toMatchInlineSnapshot(`
+        [
+          "mutation:addUser",
+          "mutation:deleteUser",
+          "query:contentByUser",
+        ]
+      `)
+    })
+
+    it('should return empty list when filter matches nothing', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'operations-list',
+        arguments: { nameFilter: 'nonExistentPattern12345' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        operations: Array<{ name: string }>
+      }
+
+      expect(structured.count).toBe(0)
+      expect(structured.operations).toEqual([])
+    })
   })
 
   describe('operations-get', () => {

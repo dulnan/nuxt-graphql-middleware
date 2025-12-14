@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { defineMcpTool } from '#imports'
 import { fetchFromMcpHandler, structuredResult } from './../../utils'
 import {
@@ -16,10 +17,20 @@ export const listOperationsTool = defineMcpTool({
     idempotentHint: true,
     openWorldHint: false,
   },
+  inputSchema: {
+    nameFilter: z
+      .string()
+      .optional()
+      .describe(
+        'Optional filter to match operation names. Can be a plain string for substring matching or a regex pattern (e.g., "^get" to match names starting with "get")',
+      ),
+  },
   outputSchema: listOperationsOutputSchema,
-  handler: async () => {
-    const response =
-      await fetchFromMcpHandler<ListOperationsResponse>('operations-list')
+  handler: async ({ nameFilter }) => {
+    const response = await fetchFromMcpHandler<ListOperationsResponse>(
+      'operations-list',
+      { nameFilter },
+    )
 
     const summary = response.operations.map((op) => ({
       name: op.name,

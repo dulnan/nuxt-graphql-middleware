@@ -63,6 +63,120 @@ describe('MCP Fragments Tools', async () => {
         expect(firstFragment.filePath).toBeDefined()
       }
     })
+
+    it('should filter fragments by substring', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'fragments-list',
+        arguments: { nameFilter: 'user' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        fragments: Array<{ name: string }>
+      }
+
+      // All returned fragments should contain "user" in their name (case-sensitive)
+      for (const frag of structured.fragments) {
+        expect(frag.name).toContain('user')
+      }
+
+      const fragmentNames = structured.fragments.map((f) => f.name).sort()
+      expect(fragmentNames).toMatchInlineSnapshot(`
+        [
+          "user",
+          "userFromModule",
+        ]
+      `)
+    })
+
+    it('should filter fragments by regex pattern', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      // Filter fragments starting with "depth"
+      const result = await client.callTool({
+        name: 'fragments-list',
+        arguments: { nameFilter: '^depth' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        fragments: Array<{ name: string }>
+      }
+
+      // All returned fragments should start with "depth"
+      for (const frag of structured.fragments) {
+        expect(frag.name).toMatch(/^depth/)
+      }
+
+      const fragmentNames = structured.fragments.map((f) => f.name).sort()
+      expect(fragmentNames).toMatchInlineSnapshot(`
+        [
+          "depthOneQuery",
+          "depthOneUser",
+          "depthTwoUser",
+        ]
+      `)
+    })
+
+    it('should filter fragments by regex pattern ending with specific suffix', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      // Filter fragments ending with "User"
+      const result = await client.callTool({
+        name: 'fragments-list',
+        arguments: { nameFilter: 'User$' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        fragments: Array<{ name: string; typeName: string }>
+      }
+
+      // All returned fragments should end with "User"
+      for (const frag of structured.fragments) {
+        expect(frag.name).toMatch(/User$/)
+      }
+
+      const fragmentNames = structured.fragments.map((f) => f.name).sort()
+      expect(fragmentNames).toMatchInlineSnapshot(`
+        [
+          "depthOneUser",
+          "depthTwoUser",
+          "foobarUser",
+        ]
+      `)
+    })
+
+    it('should return empty list when filter matches nothing', async () => {
+      const client = await ensureMcpClient()
+      if (!client) {
+        return
+      }
+
+      const result = await client.callTool({
+        name: 'fragments-list',
+        arguments: { nameFilter: 'nonExistentPattern12345' },
+      })
+
+      const structured = result.structuredContent as {
+        count: number
+        fragments: Array<{ name: string }>
+      }
+
+      expect(structured.count).toBe(0)
+      expect(structured.fragments).toEqual([])
+    })
   })
 
   describe('fragments-get', () => {
