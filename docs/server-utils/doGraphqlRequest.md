@@ -23,11 +23,11 @@ function doGraphqlRequest(
 
 ### Parameters
 
-| Parameter | Type                                | Description                                                                                       |
-| --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| body      | `RequestBody`                       | The GraphQL request body containing the query, variables, and optional operation name             |
-| context   | `GraphqlMiddlewareRequestContext`   | Optional client context to pass to server options methods                                         |
-| event     | `H3Event`                           | Optional H3 event. If not provided, the util will try to get the event using `useEvent()`         |
+| Parameter | Type                              | Description                                                                               |
+| --------- | --------------------------------- | ----------------------------------------------------------------------------------------- |
+| body      | `RequestBody`                     | The GraphQL request body containing the query, variables, and optional operation name     |
+| context   | `GraphqlMiddlewareRequestContext` | Optional client context to pass to server options methods                                 |
+| event     | `H3Event`                         | Optional H3 event. If not provided, the util will try to get the event using `useEvent()` |
 
 ### RequestBody
 

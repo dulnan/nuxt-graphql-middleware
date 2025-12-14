@@ -229,6 +229,19 @@ The MCP integration exposes the following tools to AI assistants:
 | `graphql-execute`    | Execute an arbitrary GraphQL document against the configured endpoint |
 | `operations-execute` | Execute an existing operation by name via the middleware              |
 
+### Code Examples
+
+| Tool                                 | Description                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `vue-graphql-composable-example`     | Generate Vue composable usage examples for a GraphQL operation                           |
+| `nitro-graphql-server-utils-example` | Generate Nitro server utils usage examples for a GraphQL operation                       |
+
+### Module
+
+| Tool                | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| `module-get-config` | Get internal module configuration (paths, auto-import patterns) |
+
 ## Resources
 
 The MCP server also exposes documentation resources that AI assistants can read
@@ -261,3 +274,10 @@ new GraphQL queries and mutations that follow your project's patterns.
 
 Use `schema-validate-document` to validate GraphQL documents before committing
 them to your codebase.
+
+### Usage Examples
+
+Use `vue-graphql-composable-example` and `nitro-graphql-server-utils-example` to
+generate code examples showing how to use a specific GraphQL operation with the
+module's composables or server utilities. This helps AI assistants provide
+accurate, copy-pasteable code snippets that follow the module's patterns.
