@@ -141,7 +141,7 @@ export class SchemaProvider {
     forceDownload?: boolean
     forceDisk?: boolean
   }) {
-    if (opts?.forceDisk) {
+    if (opts?.forceDisk || this.helper.isPrepare) {
       this.schemaContent = await this.loadSchemaFromDisk()
     } else if (this.helper.options.downloadSchema || opts?.forceDownload) {
       this.schemaContent = await this.downloadSchema()

@@ -73,6 +73,7 @@ export class ModuleHelper {
   public readonly paths: ModuleHelperPaths
 
   public readonly isDev: boolean
+  public readonly isPrepare: boolean
 
   public readonly options: RequiredModuleOptions
 
@@ -86,8 +87,9 @@ export class ModuleHelper {
     moduleUrl: string,
     options: ModuleOptions,
   ) {
+    this.isPrepare = nuxt.options._prepare
     const isModuleBuild =
-      process.env.PLAYGROUND_MODULE_BUILD === 'true' && nuxt.options._prepare
+      process.env.PLAYGROUND_MODULE_BUILD === 'true' && this.isPrepare
 
     const mergedOptions = defu(
       {},
