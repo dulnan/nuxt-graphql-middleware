@@ -18,6 +18,7 @@ import { handleGetUnionMembers } from './getUnionMembers/handler'
 import { handleGetTypeUsage } from './getTypeUsage/handler'
 import { handleGetFieldUsage } from './getFieldUsage/handler'
 import { handleValidateDocument } from './validateDocument/handler'
+import { handleGetComposableExamples } from './getComposableExamples/handler'
 import type { SchemaTypeKindFilter } from '../../runtime/server/mcp/tools/schema-list-types/types'
 
 function requireName(body: Record<string, unknown>): string {
@@ -131,6 +132,14 @@ export function createMcpDevHandler(
           schemaProvider.getSchema(),
           collector,
           body.document as string,
+        )
+
+      // Composable examples tool
+      case 'vue-graphql-composable-example':
+        return handleGetComposableExamples(
+          collector,
+          schemaProvider.getSchema(),
+          requireName(body),
         )
 
       default:
