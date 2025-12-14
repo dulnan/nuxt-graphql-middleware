@@ -163,7 +163,7 @@ export default defineNuxtModule<ModuleOptions>({
       // MCP dev server handler - expose module data to MCP tools.
       addDevServerHandler({
         route: '/__nuxt_graphql_middleware/mcp',
-        handler: createMcpDevHandler(collector, schemaProvider),
+        handler: createMcpDevHandler(collector, schemaProvider, helper),
       })
 
       helper.addServerHandler('doRequest', '/do-request', 'post')

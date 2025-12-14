@@ -1,6 +1,7 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import type { Collector } from '../Collector'
 import type { SchemaProvider } from '../SchemaProvider'
+import type { ModuleHelper } from '../ModuleHelper'
 
 // Import handlers
 import { handleListOperations } from './listOperations/handler'
@@ -19,6 +20,7 @@ import { handleGetTypeUsage } from './getTypeUsage/handler'
 import { handleGetFieldUsage } from './getFieldUsage/handler'
 import { handleValidateDocument } from './validateDocument/handler'
 import { handleGetComposableExamples } from './getComposableExamples/handler'
+import { handleGetModuleConfig } from './getModuleConfig/handler'
 import type { SchemaTypeKindFilter } from '../../runtime/server/mcp/tools/schema-list-types/types'
 
 function requireName(body: Record<string, unknown>): string {
@@ -35,6 +37,7 @@ function requireName(body: Record<string, unknown>): string {
 export function createMcpDevHandler(
   collector: Collector,
   schemaProvider: SchemaProvider,
+  helper: ModuleHelper,
 ) {
   return defineEventHandler(async (event) => {
     const body = await readBody<Record<string, unknown>>(event)
@@ -141,6 +144,10 @@ export function createMcpDevHandler(
           schemaProvider.getSchema(),
           requireName(body),
         )
+
+      // Module config tool
+      case 'module-get-config':
+        return handleGetModuleConfig(helper)
 
       default:
         throw createError({

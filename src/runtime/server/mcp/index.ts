@@ -29,6 +29,9 @@ import { executeGraphqlTool } from './tools/graphql-execute'
 // Example generation tools.
 import { vueGraphqlComposableExampleTool } from './tools/vue-graphql-composable-example'
 
+// Module tools.
+import { moduleGetConfigTool } from './tools/module-get-config'
+
 // Resources.
 import docsResource from './resources/docs'
 
@@ -64,6 +67,9 @@ export default defineMcpHandler({
 
     // Example generation tools.
     vueGraphqlComposableExampleTool,
+
+    // Module tools.
+    moduleGetConfigTool,
   ],
   resources: [docsResource],
   browserRedirect: '/',
