@@ -91,6 +91,10 @@ export default withMermaid({
             text: 'useGraphqlMutation',
             link: '/server-utils/useGraphqlMutation',
           },
+          {
+            text: 'doGraphqlRequest',
+            link: '/server-utils/doGraphqlRequest',
+          },
         ],
       },
       {

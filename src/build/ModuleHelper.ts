@@ -19,6 +19,12 @@ import { defaultOptions, fileExists, logger, validateOptions } from './helpers'
 import micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
 import type { StaticTemplate } from './templates/defineTemplate'
+import {
+  COMPOSABLES,
+  SERVER_UTILS,
+  type ComposableName,
+  type ServerUtilName,
+} from './imports'
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
@@ -403,18 +409,28 @@ ${content.trim()}`
     })
   }
 
-  public addComposable(name: string) {
+  public addComposable(name: ComposableName) {
+    const composable = COMPOSABLES[name]
     addImports({
       from: this.resolvers.module.resolve('./runtime/composables/' + name),
       name,
+      meta: {
+        description: composable.description,
+        docsUrl: composable.docsUrl,
+      },
     })
   }
 
-  public addServerUtil(name: string) {
+  public addServerUtil(name: ServerUtilName) {
+    const serverUtil = SERVER_UTILS[name]
     addServerImports([
       {
         from: this.resolvers.module.resolve('./runtime/server/utils/' + name),
         name,
+        meta: {
+          description: serverUtil.description,
+          docsUrl: serverUtil.docsUrl,
+        },
       },
     ])
   }

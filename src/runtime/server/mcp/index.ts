@@ -28,6 +28,7 @@ import { executeGraphqlTool } from './tools/graphql-execute'
 
 // Example generation tools.
 import { vueGraphqlComposableExampleTool } from './tools/vue-graphql-composable-example'
+import { nitroGraphqlServerUtilsExampleTool } from './tools/nitro-graphql-server-utils-example'
 
 // Module tools.
 import { moduleGetConfigTool } from './tools/module-get-config'
@@ -67,6 +68,7 @@ export default defineMcpHandler({
 
     // Example generation tools.
     vueGraphqlComposableExampleTool,
+    nitroGraphqlServerUtilsExampleTool,
 
     // Module tools.
     moduleGetConfigTool,

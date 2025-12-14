@@ -51,7 +51,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // data is reactive, data.value is UsersQuery | undefined
         console.log(data.value)",
-            "description": "useAsyncGraphqlQuery: SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
+            "description": "SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useAsyncGraphqlQuery.html",
           },
           {
@@ -59,7 +59,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // response.data is UsersQuery | undefined
         console.log(response.data)",
-            "description": "useGraphqlQuery: Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
+            "description": "Perform a GraphQL query via the middleware. Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useGraphqlQuery.html",
           },
         ]
@@ -123,7 +123,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // data is reactive, data.value is UserByIdQuery | undefined
         console.log(data.value)",
-            "description": "useAsyncGraphqlQuery: SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
+            "description": "SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useAsyncGraphqlQuery.html",
           },
           {
@@ -131,7 +131,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // response.data is UserByIdQuery | undefined
         console.log(response.data)",
-            "description": "useGraphqlQuery: Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
+            "description": "Perform a GraphQL query via the middleware. Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useGraphqlQuery.html",
           },
         ]
@@ -181,7 +181,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // response.data is AddUserMutation | undefined
         console.log(response.data)",
-            "description": "useGraphqlMutation: Returns a promise. Can be used anywhere - in components, plugins, other composables, or event handlers.",
+            "description": "Perform a GraphQL mutation via the middleware. Returns a promise. Can be used anywhere - in components, plugins, other composables, or event handlers.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useGraphqlMutation.html",
           },
         ]
@@ -275,7 +275,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // data is reactive, data.value is UsersPaginatedQuery | undefined
         console.log(data.value)",
-            "description": "useAsyncGraphqlQuery: SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
+            "description": "SSR-compatible, reactive data fetching. Must be called at the root of a component setup or inside another composable. Same limitations as useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useAsyncGraphqlQuery.html",
           },
           {
@@ -283,7 +283,7 @@ describe('MCP Vue GraphQL Composable Examples Tool', async () => {
 
         // response.data is UsersPaginatedQuery | undefined
         console.log(response.data)",
-            "description": "useGraphqlQuery: Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
+            "description": "Perform a GraphQL query via the middleware. Returns a promise. Can be used anywhere - in components, plugins, other composables, event handlers, or inside useAsyncData.",
             "documentationUrl": "https://nuxt-graphql-middleware.dulnan.net/composables/useGraphqlQuery.html",
           },
         ]

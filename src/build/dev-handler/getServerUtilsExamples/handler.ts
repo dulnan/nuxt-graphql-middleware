@@ -9,11 +9,11 @@ import {
 } from 'graphql'
 import type { Collector } from '../../Collector'
 import type {
-  GetComposableExamplesResponse,
-  ComposableExample,
+  GetServerUtilExamplesResponse,
+  ServerUtilExample,
   ImportEntry,
-} from '../../../runtime/server/mcp/tools/vue-graphql-composable-example/types'
-import { COMPOSABLES } from '../../imports'
+} from '../../../runtime/server/mcp/tools/nitro-graphql-server-utils-example/types'
+import { SERVER_UTILS } from '../../imports'
 
 /**
  * Generate a mock value for a GraphQL type.
@@ -194,16 +194,15 @@ function buildImports(
 }
 
 /**
- * Generate composable usage examples for an operation.
+ * Generate server util usage examples for an operation.
  */
 function generateExamples(
   operationName: string,
   operationType: 'query' | 'mutation',
   variables: Array<{ name: string; type: string; mockValue: string }>,
-  variablesTypeName: string,
   responseTypeName: string,
-): ComposableExample[] {
-  const examples: ComposableExample[] = []
+): ServerUtilExample[] {
+  const examples: ServerUtilExample[] = []
 
   // Build variables object string
   const hasVariables = variables.length > 0
@@ -211,111 +210,85 @@ function generateExamples(
     ? `{ ${variables.map((v) => `${v.name}: ${v.mockValue}`).join(', ')} }`
     : ''
 
-  // Build reactive variables object (indented for inside computed)
-  const variablesObjectIndented = hasVariables
-    ? `{\n    ${variables.map((v) => `${v.name}: ${v.mockValue}`).join(',\n    ')},\n  }`
-    : ''
-
   if (operationType === 'query') {
-    const transformDescription = `// The type of "graphqlResponse.data" is ${responseTypeName}. Prepare the data here before returning it.`
-    // useAsyncGraphqlQuery example with reactive variables and transform
+    // useGraphqlQuery example for queries
     if (hasVariables) {
       examples.push({
-        description: COMPOSABLES.useAsyncGraphqlQuery.description,
-        documentationUrl: COMPOSABLES.useAsyncGraphqlQuery.docsUrl,
-        code: `import type { ${variablesTypeName} } from '#graphql-operations'
+        description: SERVER_UTILS.useGraphqlQuery.description,
+        documentationUrl: SERVER_UTILS.useGraphqlQuery.docsUrl,
+        code: `export default defineEventHandler(async (event) => {
+  const response = await useGraphqlQuery('${operationName}', ${variablesObject})
 
-const variables = computed<${variablesTypeName}>(() => {
-  return ${variablesObjectIndented}
-})
-
-const { data } = await useAsyncGraphqlQuery(
-  '${operationName}',
-  variables,
-  // Same options as useAsyncData.
-  {
-    transform: function (graphqlResponse) {
-      // ${transformDescription}
-      return graphqlResponse.data
-    },
-  },
-)
-
-// data is reactive, data.value is ${responseTypeName} | undefined
-console.log(data.value)`,
+  // response.data is ${responseTypeName} | undefined
+  return response.data
+})`,
       })
     } else {
       examples.push({
-        description: COMPOSABLES.useAsyncGraphqlQuery.description,
-        documentationUrl: COMPOSABLES.useAsyncGraphqlQuery.docsUrl,
-        code: `const { data } = await useAsyncGraphqlQuery(
-  '${operationName}',
-  null,
-  // Same options as useAsyncData.
-  {
-    transform: function (graphqlResponse) {
-      // ${transformDescription}
-      return graphqlResponse.data
-    },
-  },
-)
+        description: SERVER_UTILS.useGraphqlQuery.description,
+        documentationUrl: SERVER_UTILS.useGraphqlQuery.docsUrl,
+        code: `export default defineEventHandler(async (event) => {
+  const response = await useGraphqlQuery('${operationName}')
 
-// data is reactive, data.value is ${responseTypeName} | undefined
-console.log(data.value)`,
-      })
-    }
-
-    // useGraphqlQuery example (non-async)
-    if (hasVariables) {
-      examples.push({
-        description: COMPOSABLES.useGraphqlQuery.description,
-        documentationUrl: COMPOSABLES.useGraphqlQuery.docsUrl,
-        code: `const response = await useGraphqlQuery('${operationName}', ${variablesObject})
-
-// response.data is ${responseTypeName} | undefined
-console.log(response.data)`,
-      })
-    } else {
-      examples.push({
-        description: COMPOSABLES.useGraphqlQuery.description,
-        documentationUrl: COMPOSABLES.useGraphqlQuery.docsUrl,
-        code: `const response = await useGraphqlQuery('${operationName}')
-
-// response.data is ${responseTypeName} | undefined
-console.log(response.data)`,
+  // response.data is ${responseTypeName} | undefined
+  return response.data
+})`,
       })
     }
   } else {
-    // Mutation examples
+    // useGraphqlMutation example for mutations
     if (hasVariables) {
       examples.push({
-        description: COMPOSABLES.useGraphqlMutation.description,
-        documentationUrl: COMPOSABLES.useGraphqlMutation.docsUrl,
-        code: `const response = await useGraphqlMutation('${operationName}', ${variablesObject})
+        description: SERVER_UTILS.useGraphqlMutation.description,
+        documentationUrl: SERVER_UTILS.useGraphqlMutation.docsUrl,
+        code: `export default defineEventHandler(async (event) => {
+  const response = await useGraphqlMutation('${operationName}', ${variablesObject})
 
-// response.data is ${responseTypeName} | undefined
-console.log(response.data)`,
+  // response.data is ${responseTypeName} | undefined
+  return response.data
+})`,
       })
     } else {
       examples.push({
-        description: COMPOSABLES.useGraphqlMutation.description,
-        documentationUrl: COMPOSABLES.useGraphqlMutation.docsUrl,
-        code: `const response = await useGraphqlMutation('${operationName}')
+        description: SERVER_UTILS.useGraphqlMutation.description,
+        documentationUrl: SERVER_UTILS.useGraphqlMutation.docsUrl,
+        code: `export default defineEventHandler(async (event) => {
+  const response = await useGraphqlMutation('${operationName}')
 
-// response.data is ${responseTypeName} | undefined
-console.log(response.data)`,
+  // response.data is ${responseTypeName} | undefined
+  return response.data
+})`,
       })
     }
   }
 
+  // Add doGraphqlRequest example (works for both queries and mutations)
+  examples.push({
+    description: SERVER_UTILS.doGraphqlRequest.description,
+    documentationUrl: SERVER_UTILS.doGraphqlRequest.docsUrl,
+    code: `export default defineEventHandler(async (event) => {
+  // Use doGraphqlRequest for raw GraphQL requests with custom query strings
+  const response = await doGraphqlRequest({
+    query: \`
+      ${operationType} ${operationName}${hasVariables ? `(${variables.map((v) => `$${v.name}: ${v.type}`).join(', ')})` : ''} {
+        # Your query fields here
+      }
+    \`,${hasVariables ? `\n    variables: ${variablesObject},` : ''}
+    operationName: '${operationName}',
+  })
+
+  return response.data
+})`,
+  })
+
   return examples
 }
 
-export function handleGetComposableExamples(
+export function handleGetServerUtilsExamples(
   collector: Collector,
   schema: GraphQLSchema,
   operationName: string,
-): GetComposableExamplesResponse {
+): GetServerUtilExamplesResponse {
   const operations = collector.getOperations()
   const operation = operations.find((op) => op.name === operationName)
 
@@ -330,7 +303,6 @@ export function handleGetComposableExamples(
     operationName,
     operation.type,
     variables,
-    operation.variablesTypeName,
     operation.responseTypeName,
   )
 

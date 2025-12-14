@@ -20,6 +20,7 @@ import { handleGetTypeUsage } from './getTypeUsage/handler'
 import { handleGetFieldUsage } from './getFieldUsage/handler'
 import { handleValidateDocument } from './validateDocument/handler'
 import { handleGetComposableExamples } from './getComposableExamples/handler'
+import { handleGetServerUtilsExamples } from './getServerUtilsExamples/handler'
 import { handleGetModuleConfig } from './getModuleConfig/handler'
 import type { SchemaTypeKindFilter } from '../../runtime/server/mcp/tools/schema-list-types/types'
 
@@ -140,6 +141,14 @@ export function createMcpDevHandler(
       // Composable examples tool
       case 'vue-graphql-composable-example':
         return handleGetComposableExamples(
+          collector,
+          schemaProvider.getSchema(),
+          requireName(body),
+        )
+
+      // Server utils examples tool
+      case 'nitro-graphql-server-utils-example':
+        return handleGetServerUtilsExamples(
           collector,
           schemaProvider.getSchema(),
           requireName(body),
