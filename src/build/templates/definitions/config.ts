@@ -18,10 +18,10 @@ export const importMetaClient = import.meta.client
   },
   () => {
     return `
-declare export const experimentalQueryParamEncoding: boolean
-declare export const clientCacheEnabledAtBuild: boolean
-declare export const importMetaServer: boolean
-declare export const importMetaClient: boolean
+export declare const experimentalQueryParamEncoding: boolean
+export declare const clientCacheEnabledAtBuild: boolean
+export declare const importMetaServer: boolean
+export declare const importMetaClient: boolean
 `
   },
 )
