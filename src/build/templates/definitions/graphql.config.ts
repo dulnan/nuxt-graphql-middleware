@@ -53,9 +53,9 @@ import type { IGraphQLProject } from 'graphql-config'
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
-const config: WithRequired<IGraphQLProject, 'schema' | 'documents'>;
+declare const config: WithRequired<IGraphQLProject, 'schema' | 'documents'>
 
-export default config;
+export default config
 `
   },
 )

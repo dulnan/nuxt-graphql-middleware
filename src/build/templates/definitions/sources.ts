@@ -24,6 +24,6 @@ export const operationSources = {
 `
   },
   () => {
-    return `export const operationSources: Record<string, string>`
+    return `export declare const operationSources: Record<string, string>`
   },
 )

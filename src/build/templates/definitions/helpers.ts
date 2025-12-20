@@ -13,7 +13,7 @@ export function getEndpoint(operation, operationName) {
 `
   },
   () => {
-    return `export const serverApiPrefix: string;
-export function getEndpoint(operation: string, operationName: string): string`
+    return `export declare const serverApiPrefix: string
+export declare function getEndpoint(operation: string, operationName: string): string`
   },
 )

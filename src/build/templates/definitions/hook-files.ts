@@ -22,5 +22,7 @@ export default defineGeneratorTemplate(
 
     return `export const hookFiles = ${JSON.stringify(files, null, 2)}`
   },
-  null,
+  () => {
+    return `export declare const hookFiles: string[]`
+  },
 )
