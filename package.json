@@ -70,20 +70,36 @@
     "styles:watch": "postcss ./css/index.css -o ./src/runtime/css/output.css --watch"
   },
   "dependencies": {
+    "@clack/core": "^0.4.2",
     "@clack/prompts": "^0.11.0",
     "@graphql-codegen/cli": "^6.1.0",
     "@graphql-codegen/schema-ast": "^5.0.0",
+    "@graphql-tools/load": "^8.1.0",
     "@graphql-tools/utils": "^10.11.0",
     "@nuxt/devtools-kit": "^3.1.1",
     "graphql-typescript-deluxe": "^0.1.0",
+    "is-unicode-supported": "^2.1.0",
+    "micromatch": "^4.0.8",
     "picocolors": "^1.1.1",
     "sirv": "^3.0.2"
   },
   "peerDependencies": {
-    "@nuxtjs/mcp-toolkit": "^0.5.2"
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@nuxtjs/mcp-toolkit": "^0.5.2",
+    "graphql": "^16.0.0",
+    "zod": "^3.0.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
     "@nuxtjs/mcp-toolkit": {
+      "optional": true
+    },
+    "graphql": {
+      "optional": false
+    },
+    "zod": {
       "optional": true
     }
   },
@@ -103,6 +119,7 @@
     "cypress-wait-until": "^3.0.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-prettier": "^5.5.4",
     "mermaid": "^11.12.2",
     "minisearch": "^7.2.0",
@@ -124,6 +141,6 @@
     "vitepress-plugin-mermaid": "^2.0.17",
     "vitest": "^3.2.4",
     "vue-tsc": "^3.1.8",
-    "zod": "^4.1.13"
+    "zod": "^4.0.0"
   }
 }
