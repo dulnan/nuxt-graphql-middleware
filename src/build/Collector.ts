@@ -16,7 +16,7 @@ import type { RpcItem } from './types/rpc'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
-import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
+import { addServerTemplate, addTemplate } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
 import type { CollectorOperation, CollectorFragment } from './types/collector'
 
@@ -659,17 +659,9 @@ export class Collector {
 
     if (template.buildTypes) {
       const path = template.options.path
-      const filename = (template.options.path + '.d.ts') as any
-      addTypeTemplate(
-        {
-          filename,
-          write: true,
-          getContents: () => this.getTemplate(path, 'types'),
-        },
-        {
-          nuxt: true,
-          nitro: true,
-        },
+      const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
+      this.helper.registerTypeTemplate(filename, () =>
+        this.getTemplate(path, 'types'),
       )
     }
   }

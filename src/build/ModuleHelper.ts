@@ -4,7 +4,6 @@ import {
   addServerHandler,
   addServerImports,
   addTemplate,
-  addTypeTemplate,
   createResolver,
   resolveAlias,
   resolveFiles,
@@ -386,13 +385,39 @@ ${content.trim()}`
         template.options.path,
         template.buildTypes(this),
       )
-      const filename = template.options.path + '.d.ts'
-      addTypeTemplate({
-        filename: filename as `${string}.d.ts`,
-        write: true,
-        getContents: () => content,
-      })
+      const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
+      this.registerTypeTemplate(filename, () => content)
     }
+  }
+
+  /**
+   * Register a type template without adding to globalTypeFiles.
+   *
+   * Uses addTemplate instead of addTypeTemplate to avoid Vue compiler-sfc
+   * issue where exported types from globalTypeFiles cannot be resolved.
+   * @see https://github.com/nuxt/nuxt/issues/33694
+   */
+  public registerTypeTemplate(
+    filename: `${string}.d.ts`,
+    getContents: () => string,
+  ) {
+    const resolvedTemplate = addTemplate({
+      filename,
+      write: true,
+      getContents,
+    })
+
+    // Manually register type references (what addTypeTemplate does),
+    // but without adding to globalTypeFiles which breaks Vue's compiler-sfc.
+    this.nuxt.hook('prepare:types', (payload) => {
+      payload.references ||= []
+      payload.references.push({ path: resolvedTemplate.dst })
+    })
+
+    this.nuxt.hook('nitro:prepare:types', (payload) => {
+      payload.references ||= []
+      payload.references.push({ path: resolvedTemplate.dst })
+    })
   }
 
   public addPlugin(name: string) {
