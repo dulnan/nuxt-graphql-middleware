@@ -1,5 +1,9 @@
 import { defineMcpHandler } from '#imports'
-import { mcpServerRoute } from '#nuxt-graphql-middleware/mcp'
+import type { McpToolDefinition } from '@nuxtjs/mcp-toolkit'
+import {
+  mcpServerRoute,
+  includeComposables,
+} from '#nuxt-graphql-middleware/mcp'
 
 // Operation tools.
 import { listOperationsTool } from './tools/operations-list'
@@ -36,43 +40,47 @@ import { moduleGetConfigTool } from './tools/module-get-config'
 // Resources.
 import docsResource from './resources/docs'
 
+const tools: McpToolDefinition<any, any>[] = [
+  // Operation tools.
+  listOperationsTool,
+  getOperationTool,
+  getOperationSourceTool,
+  getFieldUsageTool,
+
+  // Fragment tools.
+  listFragmentsTool,
+  getFragmentTool,
+  getFragmentSourceTool,
+  getFragmentsForTypeTool,
+
+  // Schema tools.
+  getSchemaTypeTool,
+  getSchemaTypeDefinitionTool,
+  listSchemaTypesTool,
+  getTypesImplementingInterfaceTool,
+  getUnionMembersTool,
+  getTypeUsageTool,
+  validateDocumentTool,
+
+  // Execution tools.
+  executeGraphqlTool,
+  executeOperationTool,
+
+  // Module tools.
+  moduleGetConfigTool,
+]
+
+// Example generation tools, only include if actually added.
+if (includeComposables) {
+  tools.push(vueGraphqlComposableExampleTool)
+  tools.push(nitroGraphqlServerUtilsExampleTool)
+}
+
 export default defineMcpHandler({
   name: 'nuxt-graphql-middleware',
   version: '1.0.0',
   route: mcpServerRoute,
-  tools: [
-    // Operation tools.
-    listOperationsTool,
-    getOperationTool,
-    getOperationSourceTool,
-    getFieldUsageTool,
-
-    // Fragment tools.
-    listFragmentsTool,
-    getFragmentTool,
-    getFragmentSourceTool,
-    getFragmentsForTypeTool,
-
-    // Schema tools.
-    getSchemaTypeTool,
-    getSchemaTypeDefinitionTool,
-    listSchemaTypesTool,
-    getTypesImplementingInterfaceTool,
-    getUnionMembersTool,
-    getTypeUsageTool,
-    validateDocumentTool,
-
-    // Execution tools.
-    executeGraphqlTool,
-    executeOperationTool,
-
-    // Example generation tools.
-    vueGraphqlComposableExampleTool,
-    nitroGraphqlServerUtilsExampleTool,
-
-    // Module tools.
-    moduleGetConfigTool,
-  ],
+  tools,
   resources: [docsResource],
   browserRedirect: '/',
 })

@@ -114,9 +114,11 @@ export default defineStaticTemplate(
   }`)
       }
     }
+    const includeComposables = !!helper.options.includeComposables
     return `
 export const mcpServerRoute = ${JSON.stringify(mcpServerRoute)}
 export const devServerUrl = ${JSON.stringify(devServerUrl)}
+export const includeComposables = ${JSON.stringify(includeComposables)}
 export const docs = [\n${entries.join(',\n')}\n]
 `
   },
@@ -124,6 +126,7 @@ export const docs = [\n${entries.join(',\n')}\n]
     return `
 export declare const mcpServerRoute: string
 export declare const devServerUrl: string
+export declare const includeComposables: boolean
 
 export type Doc = {
   uri: string

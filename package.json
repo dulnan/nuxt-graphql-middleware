@@ -50,7 +50,7 @@
     "dev:start": "node ./playground/.output/server/index.mjs",
     "client:build": "nuxi generate client",
     "client:dev": "nuxi dev client --port 3300",
-    "typecheck": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit && vue-tsc --noEmit -p src/runtime/server && cd playground && vue-tsc --noEmit && cd ../playground-layers && vue-tsc --noEmit",
     "docs:dev": "vitepress dev docs --port 5000",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs --port 5000",

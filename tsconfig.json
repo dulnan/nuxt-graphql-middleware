@@ -8,6 +8,6 @@
     "playground",
     "client",
     "playground-layers",
-    "src/runtime/server/mcp"
+    "src/runtime/server"
   ]
 }
