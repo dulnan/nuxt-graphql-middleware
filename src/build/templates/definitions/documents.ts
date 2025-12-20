@@ -4,7 +4,11 @@ import { defineGeneratorTemplate } from './../defineTemplate'
  * Exports a single opject containing the compiled queries and mutations.
  */
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/documents', virtual: true },
+  {
+    path: 'nuxt-graphql-middleware/documents',
+    virtual: true,
+    context: 'nitro',
+  },
   (output, helper) => {
     return output
       .getOperationsFile({

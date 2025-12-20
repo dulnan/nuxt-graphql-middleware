@@ -660,8 +660,10 @@ export class Collector {
     if (template.buildTypes) {
       const path = template.options.path
       const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
-      this.helper.registerTypeTemplate(filename, () =>
-        this.getTemplate(path, 'types'),
+      this.helper.registerTypeTemplate(
+        filename,
+        () => this.getTemplate(path, 'types'),
+        template.options.context,
       )
     }
   }

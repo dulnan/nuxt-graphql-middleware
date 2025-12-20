@@ -77,7 +77,7 @@ const DOCS = [
  * Configuration for the MCP integration.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/mcp' },
+  { path: 'nuxt-graphql-middleware/mcp', context: 'nitro' },
   (helper) => {
     const mcpServerRoute =
       helper.options.mcp.route ?? '/mcp/nuxt-graphql-middleware'

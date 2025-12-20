@@ -2,7 +2,7 @@ import { defineStaticTemplate } from './../defineTemplate'
 import { relative, join } from 'pathe'
 
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/graphql.config' },
+  { path: 'nuxt-graphql-middleware/graphql.config', context: 'nuxt' },
   (helper) => {
     const patterns = helper.options.autoImportPatterns || []
     const configPath = helper.resolvers.root.resolve(

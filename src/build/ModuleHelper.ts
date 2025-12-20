@@ -386,7 +386,11 @@ ${content.trim()}`
         template.buildTypes(this),
       )
       const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
-      this.registerTypeTemplate(filename, () => content)
+      this.registerTypeTemplate(
+        filename,
+        () => content,
+        template.options.context,
+      )
     }
   }
 
@@ -400,6 +404,7 @@ ${content.trim()}`
   public registerTypeTemplate(
     filename: `${string}.d.ts`,
     getContents: () => string,
+    context: 'nuxt' | 'nitro' | 'both',
   ) {
     const resolvedTemplate = addTemplate({
       filename,
@@ -407,17 +412,24 @@ ${content.trim()}`
       getContents,
     })
 
+    const forNuxt = context === 'nuxt' || context === 'both'
+    const forNitro = context === 'nitro' || context === 'both'
+
     // Manually register type references (what addTypeTemplate does),
     // but without adding to globalTypeFiles which breaks Vue's compiler-sfc.
-    this.nuxt.hook('prepare:types', (payload) => {
-      payload.references ||= []
-      payload.references.push({ path: resolvedTemplate.dst })
-    })
+    if (forNuxt) {
+      this.nuxt.hook('prepare:types', (payload) => {
+        payload.references ||= []
+        payload.references.push({ path: resolvedTemplate.dst })
+      })
+    }
 
-    this.nuxt.hook('nitro:prepare:types', (payload) => {
-      payload.references ||= []
-      payload.references.push({ path: resolvedTemplate.dst })
-    })
+    if (forNitro) {
+      this.nuxt.hook('nitro:prepare:types', (payload) => {
+        payload.references ||= []
+        payload.references.push({ path: resolvedTemplate.dst })
+      })
+    }
   }
 
   public addPlugin(name: string) {

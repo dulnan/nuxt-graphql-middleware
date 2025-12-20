@@ -4,7 +4,7 @@ import { defineStaticTemplate } from './../defineTemplate'
  * Imports and exports the user's server options file.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/server-options' },
+  { path: 'nuxt-graphql-middleware/server-options', context: 'both' },
   (helper) => {
     const resolvedPathRelative = helper.paths.serverOptions
       ? helper.toModuleBuildRelative(helper.paths.serverOptions)

@@ -8,6 +8,7 @@ export default defineGeneratorTemplate(
   {
     path: 'nuxt-graphql-middleware/hook-files',
     virtual: false,
+    context: 'nuxt',
   },
   (_output, helper, collector) => {
     const configPath = helper.resolvers.root.resolve(

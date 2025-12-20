@@ -4,7 +4,7 @@ import { defineGeneratorTemplate } from './../defineTemplate'
  * Template for the middleware response types.
  */
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/response' },
+  { path: 'nuxt-graphql-middleware/response', context: 'both' },
   null,
   (output, helper) => {
     const operations = output.getCollectedOperations()

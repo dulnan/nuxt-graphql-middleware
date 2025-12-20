@@ -4,6 +4,7 @@ import type { Collector } from '../Collector'
 
 type TemplateOptions = {
   path: string
+  context: 'nuxt' | 'nitro' | 'both'
   virtual?: boolean
   isFullPath?: boolean
 }

@@ -2,7 +2,7 @@ import { relative } from 'pathe'
 import { defineGeneratorTemplate } from './../defineTemplate'
 
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/sources' },
+  { path: 'nuxt-graphql-middleware/sources', context: 'nuxt' },
   (output, helper) => {
     const operations = output.getCollectedOperations()
     const srcDir = helper.paths.root

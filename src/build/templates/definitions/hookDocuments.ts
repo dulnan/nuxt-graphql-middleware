@@ -8,6 +8,7 @@ export default defineGeneratorTemplate(
     path: 'nuxt-graphql-middleware/hook-documents.graphql',
     virtual: false,
     isFullPath: true,
+    context: 'nuxt',
   },
   (_output, _helper, collector) => {
     return collector
