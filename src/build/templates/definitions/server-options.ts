@@ -32,7 +32,7 @@ type AdditionsFromServerOptions = typeof serverOptionsImport extends GraphqlMidd
 
 export type GraphqlResponseAdditions = Omit<AdditionsFromServerOptions, 'data' | 'errors'>
 
-declare export const serverOptions: GraphqlMiddlewareServerOptions
+export declare const serverOptions: GraphqlMiddlewareServerOptions
 `
     }
 
@@ -40,7 +40,7 @@ declare export const serverOptions: GraphqlMiddlewareServerOptions
     return `
 import type { GraphqlMiddlewareServerOptions } from '${helper.paths.runtimeTypes}'
 
-declare export const serverOptions: GraphqlMiddlewareServerOptions
+export declare const serverOptions: GraphqlMiddlewareServerOptions
 
 export type GraphqlResponseAdditions = object
 `

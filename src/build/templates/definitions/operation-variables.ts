@@ -23,7 +23,7 @@ export default defineGeneratorTemplate(
   },
   () => {
     return `
-declare export const operationVariables: Record<string, string[]>
+export declare const operationVariables: Record<string, string[]>
 `
   },
 )
