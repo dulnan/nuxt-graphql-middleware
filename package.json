@@ -2,21 +2,46 @@
   "name": "nuxt-graphql-middleware",
   "version": "5.2.3",
   "description": "Module to perform GraphQL requests as a server middleware.",
+  "author": "Jan Hug <me@dulnan.net>",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dulnan/nuxt-graphql-middleware.git"
   },
+  "homepage": "https://nuxt-graphql-middleware.dulnan.net",
+  "bugs": {
+    "url": "https://github.com/dulnan/nuxt-graphql-middleware/issues"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "graphql",
+    "middleware",
+    "typescript",
+    "codegen",
+    "ssr"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
     },
-    "./utils": "./dist/utils.mjs",
-    "./client-options": "./dist/client-options.mjs",
-    "./server-options": "./dist/server-options.mjs"
+    "./utils": {
+      "types": "./dist/utils.d.mts",
+      "import": "./dist/utils.mjs"
+    },
+    "./client-options": {
+      "types": "./dist/client-options.d.mts",
+      "import": "./dist/client-options.mjs"
+    },
+    "./server-options": {
+      "types": "./dist/server-options.d.mts",
+      "import": "./dist/server-options.mjs"
+    }
   },
   "main": "./dist/module.mjs",
+  "types": "./dist/types.d.mts",
   "typesVersions": {
     "*": {
       ".": [
@@ -38,7 +63,9 @@
     "docs/composables",
     "docs/configuration"
   ],
-  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "prepack": "npm run styles:build && nuxt-module-build build && npm run client:build",
     "dev": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --trace-warnings",
@@ -95,9 +122,6 @@
     },
     "@nuxtjs/mcp-toolkit": {
       "optional": true
-    },
-    "graphql": {
-      "optional": false
     },
     "zod": {
       "optional": true
