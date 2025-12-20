@@ -122,8 +122,8 @@ export const docs = [\n${entries.join(',\n')}\n]
   },
   () => {
     return `
-declare export const mcpServerRoute: string
-declare export const devServerUrl: string
+export declare const mcpServerRoute: string
+export declare const devServerUrl: string
 
 export type Doc = {
   uri: string
@@ -132,7 +132,7 @@ export type Doc = {
   content: string
 }
 
-declare export const docs: Doc[]
+export declare const docs: Doc[]
 `
   },
 )

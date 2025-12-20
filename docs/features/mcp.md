@@ -231,15 +231,15 @@ The MCP integration exposes the following tools to AI assistants:
 
 ### Code Examples
 
-| Tool                                 | Description                                                                              |
-| ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| `vue-graphql-composable-example`     | Generate Vue composable usage examples for a GraphQL operation                           |
-| `nitro-graphql-server-utils-example` | Generate Nitro server utils usage examples for a GraphQL operation                       |
+| Tool                                 | Description                                                        |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| `vue-graphql-composable-example`     | Generate Vue composable usage examples for a GraphQL operation     |
+| `nitro-graphql-server-utils-example` | Generate Nitro server utils usage examples for a GraphQL operation |
 
 ### Module
 
-| Tool                | Description                                                    |
-| ------------------- | -------------------------------------------------------------- |
+| Tool                | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
 | `module-get-config` | Get internal module configuration (paths, auto-import patterns) |
 
 ## Resources
