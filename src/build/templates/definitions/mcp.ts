@@ -88,30 +88,23 @@ export default defineStaticTemplate(
 
     const docsDir = helper.resolvers.module.resolve('../docs')
 
-    const entries: string[] = []
+    const entries: Record<string, string>[] = []
 
     // Only generate docs in dev mode.
-    if (helper.isDev) {
+    if (helper.isDev || helper.isPrepare) {
       for (const doc of DOCS) {
         const filePath = join(docsDir, doc.file)
-        let content = ''
         try {
-          const raw = readFileSync(filePath, 'utf-8')
-          // Escape backticks and backslashes for template literal
-          content = raw
-            .replace(/\\/g, '\\\\')
-            .replace(/`/g, '\\`')
-            .replace(/\$\{/g, '\\${')
+          const content = readFileSync(filePath, 'utf-8')
+          entries.push({
+            uri: `docs://${doc.path}`,
+            name: doc.name,
+            description: doc.description,
+            content,
+          })
         } catch {
-          // Empty content if file not found
+          // Noop.
         }
-
-        entries.push(`  {
-    uri: 'docs://${doc.path}',
-    name: '${doc.name}',
-    description: '${doc.description}',
-    content: \`${content}\`
-  }`)
       }
     }
     const includeComposables = !!helper.options.includeComposables
@@ -119,7 +112,7 @@ export default defineStaticTemplate(
 export const mcpServerRoute = ${JSON.stringify(mcpServerRoute)}
 export const devServerUrl = ${JSON.stringify(devServerUrl)}
 export const includeComposables = ${JSON.stringify(includeComposables)}
-export const docs = [\n${entries.join(',\n')}\n]
+export const docs = ${JSON.stringify(entries, null, 2)}
 `
   },
   () => {
