@@ -3,6 +3,32 @@
 The module generates several templates in a `nuxt-graphql-middleware` folder in
 your build directory (usually `.nuxt`).
 
+## `config`
+
+**Alias: `#nuxt-graphql-middleware/config`**
+
+Static module configuration values determined at build time.
+
+### Exports
+
+#### `experimentalQueryParamEncoding: boolean`
+
+Whether the experimental query param encoding is enabled.
+
+#### `clientCacheEnabledAtBuild: boolean`
+
+Whether the client cache was enabled at build time.
+
+#### `importMetaServer: boolean`
+
+Equivalent to `import.meta.server`.
+
+#### `importMetaClient: boolean`
+
+Equivalent to `import.meta.client`.
+
+---
+
 ## `client-options`
 
 **Alias: `#nuxt-graphql-middleware/client-options`**
@@ -72,6 +98,32 @@ export const documents = {
 The [`graphql.config.ts`](https://the-guild.dev/graphql/config/docs/user/usage)
 file you can extend from to add GraphQL LSP support in your IDE.
 
+## `graphql-operations`
+
+**Alias: `#graphql-operations`**
+
+Contains the generated TypeScript types for all GraphQL operations, including
+response types, variable types, enums, and input types.
+
+This is the main output from the `graphql-typescript-deluxe` code generator.
+
+### Exports
+
+All generated types from your GraphQL schema and operations, for example:
+
+```typescript
+import type {
+  UsersQuery,
+  UsersQueryVariables,
+  AddUserMutation,
+  AddUserMutationVariables,
+  MeansOfContact, // enum
+  UserData, // input type
+} from '#graphql-operations'
+```
+
+---
+
 ## `helpers`
 
 **Alias: `#nuxt-graphql-middleware/helpers`**
@@ -96,6 +148,74 @@ const path = getEndpoint('query', 'loadUsers')
 console.log(path)
 // Logs: /api/graphql_middleware/query/loadUsers
 ```
+
+---
+
+## `hook-documents`
+
+**Alias not available.**
+
+A generated `.graphql` file containing all GraphQL documents that were added via
+the `nuxt-graphql-middleware:init` hook using `addDocument()`.
+
+This file is useful for GraphQL LSP support in your IDE, as it includes
+documents that are not in regular `.graphql` files.
+
+The file is generated at `nuxt-graphql-middleware/hook-documents.graphql`.
+
+---
+
+## `hook-files`
+
+**Alias: `#nuxt-graphql-middleware/hook-files`**
+
+Contains an array of file paths that were added via the
+`nuxt-graphql-middleware:init` hook using `addFile()`.
+
+### Exports
+
+#### `hookFiles: string[]`
+
+An array of relative file paths added via hooks.
+
+```js
+export const hookFiles = ['./node_modules/some-lib/queries.graphql']
+```
+
+---
+
+## `mcp`
+
+**Alias: `#nuxt-graphql-middleware/mcp`**
+
+Configuration for the MCP (Model Context Protocol) integration. Only populated
+when MCP is enabled.
+
+### Exports
+
+#### `mcpServerRoute: string`
+
+The configured route for the MCP server.
+
+#### `devServerUrl: string`
+
+The dev server URL (only available in dev mode).
+
+#### `docs: Doc[]`
+
+An array of documentation entries for MCP resources (only populated in dev
+mode).
+
+```typescript
+type Doc = {
+  uri: string
+  name: string
+  description: string
+  content: string
+}
+```
+
+---
 
 ## `nitro`
 

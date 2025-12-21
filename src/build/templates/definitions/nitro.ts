@@ -5,7 +5,7 @@ import { defineGeneratorTemplate } from './../defineTemplate'
  * Types for the generated endpoints.
  */
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/nitro' },
+  { path: 'nuxt-graphql-middleware/nitro', context: 'nitro' },
   null,
   (output, helper) => {
     const operations = output.getCollectedOperations()

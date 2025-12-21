@@ -4,7 +4,6 @@ import {
   addServerHandler,
   addServerImports,
   addTemplate,
-  addTypeTemplate,
   createResolver,
   resolveAlias,
   resolveFiles,
@@ -19,6 +18,12 @@ import { defaultOptions, fileExists, logger, validateOptions } from './helpers'
 import micromatch from 'micromatch'
 import { ConsolePrompt } from './ConsolePrompt'
 import type { StaticTemplate } from './templates/defineTemplate'
+import {
+  COMPOSABLES,
+  SERVER_UTILS,
+  type ComposableName,
+  type ServerUtilName,
+} from './imports'
 
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
@@ -73,6 +78,7 @@ export class ModuleHelper {
   public readonly paths: ModuleHelperPaths
 
   public readonly isDev: boolean
+  public readonly isPrepare: boolean
 
   public readonly options: RequiredModuleOptions
 
@@ -86,8 +92,9 @@ export class ModuleHelper {
     moduleUrl: string,
     options: ModuleOptions,
   ) {
+    this.isPrepare = nuxt.options._prepare
     const isModuleBuild =
-      process.env.PLAYGROUND_MODULE_BUILD === 'true' && nuxt.options._prepare
+      process.env.PLAYGROUND_MODULE_BUILD === 'true' && this.isPrepare
 
     const mergedOptions = defu(
       {},
@@ -242,7 +249,9 @@ export class ModuleHelper {
       }
     }
 
-    logger.info('No graphqlMiddleware.serverOptions file found.')
+    if (!this.isPrepare) {
+      logger.info('No graphqlMiddleware.serverOptions file found.')
+    }
     return null
   }
 
@@ -376,11 +385,49 @@ ${content.trim()}`
         template.options.path,
         template.buildTypes(this),
       )
-      const filename = template.options.path + '.d.ts'
-      addTypeTemplate({
-        filename: filename as `${string}.d.ts`,
-        write: true,
-        getContents: () => content,
+      const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
+      this.registerTypeTemplate(
+        filename,
+        () => content,
+        template.options.context,
+      )
+    }
+  }
+
+  /**
+   * Register a type template without adding to globalTypeFiles.
+   *
+   * Uses addTemplate instead of addTypeTemplate to avoid Vue compiler-sfc
+   * issue where exported types from globalTypeFiles cannot be resolved.
+   * @see https://github.com/nuxt/nuxt/issues/33694
+   */
+  public registerTypeTemplate(
+    filename: `${string}.d.ts`,
+    getContents: () => string,
+    context: 'nuxt' | 'nitro' | 'both',
+  ) {
+    const resolvedTemplate = addTemplate({
+      filename,
+      write: true,
+      getContents,
+    })
+
+    const forNuxt = context === 'nuxt' || context === 'both'
+    const forNitro = context === 'nitro' || context === 'both'
+
+    // Manually register type references (what addTypeTemplate does),
+    // but without adding to globalTypeFiles which breaks Vue's compiler-sfc.
+    if (forNuxt) {
+      this.nuxt.hook('prepare:types', (payload) => {
+        payload.references ||= []
+        payload.references.push({ path: resolvedTemplate.dst })
+      })
+    }
+
+    if (forNitro) {
+      this.nuxt.hook('nitro:prepare:types', (payload) => {
+        payload.references ||= []
+        payload.references.push({ path: resolvedTemplate.dst })
       })
     }
   }
@@ -399,18 +446,28 @@ ${content.trim()}`
     })
   }
 
-  public addComposable(name: string) {
+  public addComposable(name: ComposableName) {
+    const composable = COMPOSABLES[name]
     addImports({
       from: this.resolvers.module.resolve('./runtime/composables/' + name),
       name,
+      meta: {
+        description: composable.description,
+        docsUrl: composable.docsUrl,
+      },
     })
   }
 
-  public addServerUtil(name: string) {
+  public addServerUtil(name: ServerUtilName) {
+    const serverUtil = SERVER_UTILS[name]
     addServerImports([
       {
         from: this.resolvers.module.resolve('./runtime/server/utils/' + name),
         name,
+        meta: {
+          description: serverUtil.description,
+          docsUrl: serverUtil.docsUrl,
+        },
       },
     ])
   }

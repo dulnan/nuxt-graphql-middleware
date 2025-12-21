@@ -13,33 +13,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.id">
-              <td>
-                {{ user.id }}
-              </td>
-              <td>
-                <nuxt-link :to="'/user/' + user.id">
-                  {{ user.firstName }}
-                  {{ user.lastName }}
-                </nuxt-link>
-              </td>
-              <td>
-                {{ user.email }}
-              </td>
-              <td class="has-text-right">
-                <div class="buttons is-right">
-                  <nuxt-link :to="'/user/' + user.id" class="button is-small"
-                    >View Details</nuxt-link
-                  >
-                  <button
-                    class="button is-danger is-small"
-                    @click="deleteUser(user.id)"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
+            <UserRow
+              v-for="user in users"
+              :key="user.id"
+              v-bind="user"
+              @refresh="refresh"
+            />
           </tbody>
         </table>
       </div>
@@ -48,9 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { useGraphqlMutation, useNuxtApp, useAsyncGraphqlQuery } from '#imports'
-
-const app = useNuxtApp()
+import { useAsyncGraphqlQuery } from '#imports'
 
 const { data: users, refresh } = await useAsyncGraphqlQuery('users', null, {
   transform: (v) => v.data.users,
@@ -61,16 +38,4 @@ const { data: users, refresh } = await useAsyncGraphqlQuery('users', null, {
     return []
   },
 })
-
-function purgeCache() {
-  if (app.$graphqlCache) {
-    app.$graphqlCache.purge()
-  }
-}
-
-async function deleteUser(id: number) {
-  await useGraphqlMutation('deleteUser', { id })
-  purgeCache()
-  await refresh()
-}
 </script>

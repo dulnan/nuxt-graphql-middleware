@@ -2,21 +2,46 @@
   "name": "nuxt-graphql-middleware",
   "version": "5.2.3",
   "description": "Module to perform GraphQL requests as a server middleware.",
+  "author": "Jan Hug <me@dulnan.net>",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dulnan/nuxt-graphql-middleware.git"
   },
+  "homepage": "https://nuxt-graphql-middleware.dulnan.net",
+  "bugs": {
+    "url": "https://github.com/dulnan/nuxt-graphql-middleware/issues"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "graphql",
+    "middleware",
+    "typescript",
+    "codegen",
+    "ssr"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/types.d.mts",
       "import": "./dist/module.mjs"
     },
-    "./utils": "./dist/utils.mjs",
-    "./client-options": "./dist/client-options.mjs",
-    "./server-options": "./dist/server-options.mjs"
+    "./utils": {
+      "types": "./dist/utils.d.mts",
+      "import": "./dist/utils.mjs"
+    },
+    "./client-options": {
+      "types": "./dist/client-options.d.mts",
+      "import": "./dist/client-options.mjs"
+    },
+    "./server-options": {
+      "types": "./dist/server-options.d.mts",
+      "import": "./dist/server-options.mjs"
+    }
   },
   "main": "./dist/module.mjs",
+  "types": "./dist/types.d.mts",
   "typesVersions": {
     "*": {
       ".": [
@@ -34,15 +59,19 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "docs/composables",
+    "docs/configuration"
   ],
-  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "prepack": "npm run styles:build && nuxt-module-build build && npm run client:build",
-    "dev": "nuxi dev playground --trace-warnings",
-    "dev:layers": "nuxi dev playground-layers --trace-warnings",
-    "debug": "nuxi dev playground --inspect",
-    "dev:build": "nuxi build playground",
+    "dev": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --trace-warnings",
+    "dev:layers": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground-layers --trace-warnings",
+    "debug": "PLAYGROUND_MODULE_BUILD=true nuxi dev playground --inspect",
+    "dev:build": "PLAYGROUND_MODULE_BUILD=true nuxi build playground",
     "dev:layers:build": "nuxi build playground-layers",
     "dev:prepare": "PLAYGROUND_MODULE_BUILD=true nuxt-module-build build --stub && PLAYGROUND_MODULE_BUILD=true nuxt-module-build prepare && nuxi prepare playground-layers && nuxi prepare playground",
     "dev:start": "node ./playground/.output/server/index.mjs",
@@ -58,57 +87,85 @@
     "cypress:open": "cypress open --e2e",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
-    "test": "vitest",
+    "test": "vitest --no-file-parallelism",
     "test:debug": "vitest --inspect --no-file-parallelism",
-    "test:ci": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --no-file-parallelism",
+    "test:coverage": "vitest run --coverage --no-file-parallelism",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "styles:build": "postcss ./css/index.css -o ./src/runtime/css/output.css",
     "styles:watch": "postcss ./css/index.css -o ./src/runtime/css/output.css --watch"
   },
   "dependencies": {
-    "@clack/prompts": "^0.10.0",
-    "@graphql-codegen/cli": "^5.0.5",
-    "@graphql-codegen/schema-ast": "^4.1.0",
-    "@graphql-tools/utils": "^10.8.6",
-    "@nuxt/devtools-kit": "^2.6.2",
-    "graphql-typescript-deluxe": "^0.0.15",
-    "minisearch": "^7.1.2",
-    "picocolors": "^1.1.1"
+    "@clack/core": "^0.4.2",
+    "@clack/prompts": "^0.11.0",
+    "@graphql-codegen/cli": "^6.1.0",
+    "@graphql-codegen/schema-ast": "^5.0.0",
+    "@graphql-tools/load": "^8.1.0",
+    "@graphql-tools/utils": "^10.11.0",
+    "@nuxt/devtools-kit": "^3.1.1",
+    "graphql-typescript-deluxe": "^0.1.0",
+    "is-unicode-supported": "^2.1.0",
+    "micromatch": "^4.0.8",
+    "picocolors": "^1.1.1",
+    "sirv": "^3.0.2"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@nuxtjs/mcp-toolkit": "^0.5.2",
+    "graphql": "^16.0.0",
+    "zod": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    },
+    "@nuxtjs/mcp-toolkit": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@iconify-json/carbon": "^1.2.8",
-    "@nuxt/devtools": "^2.4.0",
-    "@nuxt/devtools-ui-kit": "^2.6.2",
-    "@nuxt/eslint": "^1.2.0",
-    "@nuxt/kit": "^4.2.0",
-    "@nuxt/module-builder": "^1.0.1",
-    "@nuxt/schema": "^4.2.0",
-    "@types/micromatch": "^4.0.9",
-    "cypress": "^13.12.0",
+    "commander": "^13.1.0",
+    "@iconify-json/carbon": "^1.2.15",
+    "@modelcontextprotocol/sdk": "^1.24.3",
+    "@nuxt/devtools": "^3.1.1",
+    "@nuxt/devtools-ui-kit": "^3.1.1",
+    "@nuxt/eslint": "^1.12.1",
+    "@nuxt/kit": "^4.2.2",
+    "@nuxt/module-builder": "^1.0.2",
+    "@nuxt/schema": "^4.2.2",
+    "@nuxt/test-utils": "^3.21.0",
+    "@nuxtjs/mcp-toolkit": "^0.5.2",
+    "@types/micromatch": "^4.0.10",
+    "cypress": "^15.7.1",
     "cypress-wait-until": "^3.0.2",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.3",
-    "mermaid": "^11.5.0",
-    "nuxt": "^4.2.0",
-    "postcss": "^8.5.3",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "mermaid": "^11.12.2",
+    "minisearch": "^7.2.0",
+    "nuxt": "^4.2.2",
+    "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
-    "postcss-import": "^16.1.0",
+    "postcss-import": "^16.1.1",
     "postcss-nested-import": "^1.3.0",
     "postcss-prefix-selector": "^2.1.1",
     "postcss-replace": "^2.0.1",
     "postcss-url": "^10.1.3",
-    "prettier": "^3.5.3",
+    "prettier": "^3.7.4",
     "tailwindcss": "^3.4.17",
-    "tailwindcss-scoped-preflight": "^3.4.10",
-    "typedoc": "^0.28.1",
-    "typedoc-plugin-markdown": "^4.6.1",
+    "tailwindcss-scoped-preflight": "^3.5.4",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typedoc-vitepress-theme": "^1.1.2",
-    "vitepress": "^1.6.3",
+    "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "^1.6.0",
-    "vue-tsc": "^2.2.12"
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.1.8",
+    "zod": "^4.0.0"
   }
 }

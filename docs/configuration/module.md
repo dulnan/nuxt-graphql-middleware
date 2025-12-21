@@ -370,6 +370,35 @@ order to generate types.
 
 ---
 
+## mcp?
+
+> `optional` **mcp**: `object`
+
+Defined in:
+[options.ts:242](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L242)
+
+Configuration for the @nuxtjs/mcp-toolkit integration.
+
+### enabled
+
+> **enabled**: `boolean`
+
+Whether the MCP integration should be enabled.
+
+### route?
+
+> `optional` **route**: `string`
+
+The route of the MCP server.
+
+##### Default
+
+```ts
+'/mcp/nuxt-graphql-middleware'
+```
+
+---
+
 ## serverApiPrefix?
 
 > `optional` **serverApiPrefix**: `string`

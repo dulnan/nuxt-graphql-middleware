@@ -5,7 +5,7 @@ import type { OperationDefinitionNode } from 'graphql'
  * Returns information about a query operation's variables.
  */
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/operation-variables' },
+  { path: 'nuxt-graphql-middleware/operation-variables', context: 'nitro' },
   (output) => {
     const operations = output
       .getCollectedOperations()

@@ -4,7 +4,7 @@ import { defineStaticTemplate } from './../defineTemplate'
  * Imports and exports the user's client options file.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/client-options' },
+  { path: 'nuxt-graphql-middleware/client-options', context: 'both' },
   (helper) => {
     if (helper.paths.clientOptions) {
       const pathRelative = helper.toModuleBuildRelative(

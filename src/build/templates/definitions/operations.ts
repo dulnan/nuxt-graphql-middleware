@@ -4,7 +4,7 @@ import { defineGeneratorTemplate } from './../defineTemplate'
  * Contains the JS (enums).
  */
 export default defineGeneratorTemplate(
-  { path: 'graphql-operations/index' },
+  { path: 'graphql-operations/index', context: 'both' },
   (output) => {
     const typesFile = output.getOperations('js')
     return typesFile.getSource()

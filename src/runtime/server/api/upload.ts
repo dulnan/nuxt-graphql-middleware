@@ -79,6 +79,8 @@ export default defineEventHandler(async (event) => {
     if (!file.name) {
       return throwError('Missing name for file: ' + file.filename)
     }
+
+    // @ts-ignore Wrongly complains here.
     const blob = new Blob([file.data])
     formData.append(file.name, blob, file.filename)
   }

@@ -5,7 +5,11 @@ import { hash } from 'ohash'
  * Exports a single opject containing the compiled queries and mutations.
  */
 export default defineGeneratorTemplate(
-  { path: 'nuxt-graphql-middleware/operation-hashes', virtual: true },
+  {
+    path: 'nuxt-graphql-middleware/operation-hashes',
+    virtual: true,
+    context: 'nuxt',
+  },
   (output, helper) => {
     // In dev mode we don't need to generate the operation hashes.
     if (helper.isDev) {

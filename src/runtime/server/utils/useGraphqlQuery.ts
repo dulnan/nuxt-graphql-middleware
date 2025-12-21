@@ -4,7 +4,7 @@ import {
   type QueryObjectArgs,
   type GetQueryResult,
   encodeContext,
-} from './../../helpers/composables'
+} from './../../helpers/shared-types'
 import { encodeVariables } from './../../helpers/queryEncoding'
 import { performRequest } from '.'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'

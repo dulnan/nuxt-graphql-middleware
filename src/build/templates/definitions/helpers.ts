@@ -4,7 +4,7 @@ import { defineStaticTemplate } from './../defineTemplate'
  * Configuration template.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/helpers' },
+  { path: 'nuxt-graphql-middleware/helpers', context: 'both' },
   (helper) => {
     return `export const serverApiPrefix = '${helper.options.serverApiPrefix}'
 export function getEndpoint(operation, operationName) {
@@ -13,7 +13,7 @@ export function getEndpoint(operation, operationName) {
 `
   },
   () => {
-    return `export const serverApiPrefix: string;
-export function getEndpoint(operation: string, operationName: string): string`
+    return `export declare const serverApiPrefix: string
+export declare function getEndpoint(operation: string, operationName: string): string`
   },
 )

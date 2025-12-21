@@ -14,6 +14,7 @@ import OperationVariables from './definitions/operation-variables'
 import Response from './definitions/response'
 import ServerOptions from './definitions/server-options'
 import Sources from './definitions/sources'
+import MCP from './definitions/mcp'
 
 export const TEMPLATES: ModuleTemplate[] = [
   ClientOptions,
@@ -31,4 +32,5 @@ export const TEMPLATES: ModuleTemplate[] = [
   Response,
   ServerOptions,
   Sources,
+  MCP,
 ]

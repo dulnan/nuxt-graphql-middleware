@@ -16,8 +16,11 @@ import type { RpcItem } from './types/rpc'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
-import { addServerTemplate, addTemplate, addTypeTemplate } from '@nuxt/kit'
+import { addServerTemplate, addTemplate } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
+import type { CollectorOperation, CollectorFragment } from './types/collector'
+
+export type { CollectorOperation, CollectorFragment }
 
 export type CollectorWatchEventResult = {
   hasChanged: boolean
@@ -66,6 +69,16 @@ export class Collector {
    */
   private templateResult: Map<string, string> = new Map()
 
+  /**
+   * Operations with full metadata for MCP tools.
+   */
+  private operations: CollectorOperation[] = []
+
+  /**
+   * Fragments with full metadata for MCP tools.
+   */
+  private fragments: CollectorFragment[] = []
+
   private isInitialised = false
 
   constructor(
@@ -81,6 +94,8 @@ export class Collector {
       mappedOptions.output.buildTypeDocFilePath = (filePath: string) => {
         if (filePath.startsWith('/')) {
           return this.filePathToBuildRelative(filePath)
+        } else if (filePath.startsWith('hook:')) {
+          return './../nuxt-graphql-middleware/hook-documents.graphql'
         }
 
         return filePath
@@ -111,6 +126,10 @@ export class Collector {
   private filePathToSourceRelative(filePath: string): string {
     if (filePath.startsWith('/')) {
       return './' + relative(process.cwd(), filePath)
+    } else if (filePath.startsWith('hook:')) {
+      const hookPathAbsolute =
+        this.helper.paths.moduleBuildDir + '/hook-documents.graphql'
+      return './' + relative(process.cwd(), hookPathAbsolute)
     }
 
     return filePath
@@ -213,7 +232,9 @@ export class Collector {
         this.operationTimestamps.set(operation.graphqlName, operation.timestamp)
       }
 
-      const shouldLog = errors.length || !this.helper.options.logOnlyErrors
+      const shouldLog =
+        errors.length ||
+        (!this.helper.isPrepare && !this.helper.options.logOnlyErrors)
 
       if (shouldLog) {
         logEntries.push(this.operationToLogEntry(operation, errors))
@@ -233,6 +254,59 @@ export class Collector {
 
     await this.helper.nuxt.callHook('nuxt-graphql-middleware:build', { output })
 
+    // Build operations and fragments metadata for MCP tools (dev only).
+    if (this.helper.isDev) {
+      this.operations = operations.map((op) => {
+        // Build fragment dependencies for sourceFull.
+        const fragmentDeps = op
+          .getGraphQLFragmentDependencies()
+          .map((name) => fragmentMap.get(name) || '')
+          .join('\n')
+
+        // source is just the operation itself.
+        const source = operationSourceMap.get(op.graphqlName) || ''
+        // sourceFull includes all fragment dependencies.
+        const sourceFull = [source, fragmentDeps].join('\n')
+
+        return {
+          name: op.graphqlName,
+          type: op.operationType as 'query' | 'mutation',
+          filePath: op.filePath,
+          relativeFilePath: this.filePathToSourceRelative(op.filePath),
+          hasVariables: op.hasVariables,
+          needsVariables: op.needsVariables,
+          variablesTypeName: op.variablesTypeName,
+          responseTypeName: op.typeName,
+          source,
+          sourceFull,
+        }
+      })
+
+      // Build fragments metadata.
+      const outputFragments = output.getFragments()
+      this.fragments = outputFragments.map((frag) => {
+        // source is just this fragment itself.
+        const source = fragmentMap.get(frag.node.name.value) || ''
+        // Build fragment dependencies for sourceFull.
+        const fragmentDeps = frag
+          .getGraphQLFragmentDependencies()
+          .map((name) => fragmentMap.get(name) || '')
+          .join('\n')
+        // sourceFull includes all dependencies.
+        const sourceFull = [source, fragmentDeps].join('\n')
+
+        return {
+          name: frag.node.name.value,
+          typeName: frag.node.typeCondition.name.value,
+          filePath: frag.filePath,
+          relativeFilePath: this.filePathToSourceRelative(frag.filePath),
+          source,
+          sourceFull,
+          dependencies: frag.getGraphQLFragmentDependencies(),
+        }
+      })
+    }
+
     if (this.helper.isDev) {
       for (const code of generatedCode) {
         const id = `${code.identifier}_${code.graphqlName}`
@@ -248,7 +322,7 @@ export class Collector {
           const fragmentDepdendencies = code
             .getGraphQLFragmentDependencies()
             .map((name) => fragmentMap.get(name) || '')
-            .join('\n\n')
+            .join('\n')
           this.rpcItems.set(id, {
             id,
             timestamp: code.timestamp,
@@ -387,7 +461,9 @@ export class Collector {
       }
 
       await this.buildState()
-      logger.success('All GraphQL documents are valid.')
+      if (!this.helper.isPrepare) {
+        logger.success('All GraphQL documents are valid.')
+      }
     } catch (e) {
       this.logError(e)
 
@@ -583,17 +659,11 @@ export class Collector {
 
     if (template.buildTypes) {
       const path = template.options.path
-      const filename = (template.options.path + '.d.ts') as any
-      addTypeTemplate(
-        {
-          filename,
-          write: true,
-          getContents: () => this.getTemplate(path, 'types'),
-        },
-        {
-          nuxt: true,
-          nitro: true,
-        },
+      const filename = (template.options.path + '.d.ts') as `${string}.d.ts`
+      this.helper.registerTypeTemplate(
+        filename,
+        () => this.getTemplate(path, 'types'),
+        template.options.context,
       )
     }
   }
@@ -615,5 +685,33 @@ export class Collector {
    */
   public getHookFiles(): string[] {
     return [...this.hookFiles.values()]
+  }
+
+  /**
+   * Get all operations with metadata (for MCP tools).
+   */
+  public getOperations(): CollectorOperation[] {
+    return this.operations
+  }
+
+  /**
+   * Get all fragments for a specific GraphQL type (for MCP tools).
+   */
+  public getFragmentsForType(typeName: string): CollectorFragment[] {
+    return this.fragments.filter((frag) => frag.typeName === typeName)
+  }
+
+  /**
+   * Get all fragments (for MCP tools).
+   */
+  public getFragments(): CollectorFragment[] {
+    return this.fragments
+  }
+
+  /**
+   * Get a fragment by name (for MCP tools).
+   */
+  public getFragment(name: string): CollectorFragment | undefined {
+    return this.fragments.find((frag) => frag.name === name)
   }
 }

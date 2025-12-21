@@ -14,6 +14,27 @@
       <div id="navbarBasicExample" class="navbar-menu">
         <div class="navbar-start">
           <nuxt-link class="navbar-item" to="/emails">All emails</nuxt-link>
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">Content</a>
+            <div class="navbar-dropdown">
+              <nuxt-link class="navbar-item" to="/content"
+                >All Content</nuxt-link
+              >
+              <nuxt-link class="navbar-item" to="/content/articles"
+                >Articles</nuxt-link
+              >
+              <nuxt-link class="navbar-item" to="/content/blog-posts"
+                >Blog Posts</nuxt-link
+              >
+              <nuxt-link class="navbar-item" to="/content/pages"
+                >Pages</nuxt-link
+              >
+              <hr class="navbar-divider" />
+              <nuxt-link class="navbar-item" to="/content/search"
+                >Search</nuxt-link
+              >
+            </div>
+          </div>
           <nuxt-link class="navbar-item" to="/fetch-options"
             >Fetch options</nuxt-link
           >

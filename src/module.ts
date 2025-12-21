@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule } from '@nuxt/kit'
+import { addDevServerHandler, defineNuxtModule, installModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
 import { defaultOptions } from './build/helpers'
 import { Collector } from './build/Collector'
@@ -12,6 +12,7 @@ import { ModuleContext } from './build/ModuleContext'
 import type { OperationResponseError } from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
+import { createMcpDevHandler } from './build/dev-handler/mcp-handler'
 
 export type { ModuleOptions }
 
@@ -124,10 +125,53 @@ export default defineNuxtModule<ModuleOptions>({
     })
 
     // =========================================================================
-    // Build
+    // Dev Mode
     // =========================================================================
 
-    helper.applyBuildConfig()
+    if (helper.isDev) {
+      const devModeHandler = new DevModeHandler(
+        nuxt,
+        schemaProvider,
+        collector,
+        helper,
+      )
+      devModeHandler.init()
+    }
+
+    // =========================================================================
+    // MCP
+    // =========================================================================
+    const isPlayground = process.env.PLAYGROUND_MODULE_BUILD
+
+    // Only relevant for the playground.
+    if (isPlayground) {
+      await installModule('@nuxtjs/mcp-toolkit')
+    }
+
+    const mcpToolkitInstalled = nuxt.options.modules.some(
+      (v) => v === '@nuxtjs/mcp-toolkit',
+    )
+
+    if (helper.isDev && mcpToolkitInstalled && helper.options.mcp.enabled) {
+      // @ts-ignore The types are somehow not available in the playground build.
+      nuxt.hook('mcp:definitions:paths', (paths) => {
+        const mcpPath = helper.resolvers.module.resolve('./runtime/server/mcp')
+        paths.handlers ||= []
+        paths.handlers.push(mcpPath)
+      })
+
+      // MCP dev server handler - expose module data to MCP tools.
+      addDevServerHandler({
+        route: '/__nuxt_graphql_middleware/mcp',
+        handler: createMcpDevHandler(collector, schemaProvider, helper),
+      })
+
+      helper.addServerHandler('doRequest', '/do-request', 'post')
+    }
+
+    // =========================================================================
+    // Build
+    // =========================================================================
 
     // This is called once all modules have been initialised.
     nuxt.hooks.hookOnce('modules:done', async () => {
@@ -138,21 +182,7 @@ export default defineNuxtModule<ModuleOptions>({
       await collector.init()
     })
 
-    // =========================================================================
-    // Dev Mode
-    // =========================================================================
-
-    if (!helper.isDev) {
-      return
-    }
-
-    const devModeHandler = new DevModeHandler(
-      nuxt,
-      schemaProvider,
-      collector,
-      helper,
-    )
-    devModeHandler.init()
+    helper.applyBuildConfig()
   },
 })
 

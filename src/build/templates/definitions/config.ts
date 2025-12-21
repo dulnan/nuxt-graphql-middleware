@@ -4,7 +4,7 @@ import { defineStaticTemplate } from './../defineTemplate'
  * Static module configuration.
  */
 export default defineStaticTemplate(
-  { path: 'nuxt-graphql-middleware/config' },
+  { path: 'nuxt-graphql-middleware/config', context: 'both' },
   (helper) => {
     const experimentalQueryParamEncoding =
       !!helper.options.experimental.improvedQueryParamEncoding

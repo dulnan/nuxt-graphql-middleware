@@ -1,0 +1,24 @@
+query contentByUser {
+  allContent {
+    __typename
+    id
+    title
+    slug
+    publishedAt
+    author {
+      id
+    }
+    ... on Article {
+      excerpt
+      category
+    }
+    ... on BlogPost {
+      content
+      tags
+    }
+    ... on Page {
+      content
+      template
+    }
+  }
+}

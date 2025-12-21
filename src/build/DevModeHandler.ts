@@ -6,7 +6,9 @@ import type { BirpcGroup } from 'birpc'
 import type { ClientFunctions, ServerFunctions } from './types/rpc'
 import type { Nitro } from 'nitropack'
 import type { ViteDevServer, WebSocketServer } from 'vite'
+import { dirname } from 'node:path'
 import { useNitro } from '@nuxt/kit'
+import { relative } from 'pathe'
 import { logger } from './helpers'
 import { setupDevToolsUI } from './devtools'
 import { extendServerRpc, onDevToolsInitialized } from '@nuxt/devtools-kit'
@@ -37,6 +39,14 @@ export class DevModeHandler {
       this.onViteServerCreated.bind(this),
     )
     this.nuxt.hook('builder:watch', this.onBuilderWatch.bind(this))
+
+    // The additional paths that need to be watched by Nuxt.
+    // Without this, GraphQL documents that are not in the "app" folder will
+    // not update if changed.
+    // Not sure if this is a bug or expected behaviour.
+    // @see https://github.com/nuxt/nuxt/issues/33827
+    const additionalFoldersToWatch = this.getAdditionalWatchFolders()
+    this.helper.nuxt.options.watch.push(...additionalFoldersToWatch)
 
     if (this.helper.options.devtools) {
       const clientPath = this.helper.resolvers.module.resolve('./client')
@@ -189,5 +199,45 @@ export class DevModeHandler {
       event: 'nuxt-graphql-middleware:reload',
       data: { operations },
     })
+  }
+
+  /**
+   * Get additional folders that need to be watched.
+   */
+  private getAdditionalWatchFolders(): string[] {
+    const folders = new Set<string>()
+    const srcDir = this.helper.nuxt.options.srcDir
+    const rootDir = this.helper.nuxt.options.rootDir
+
+    for (const pattern of this.helper.options.autoImportPatterns) {
+      // Skip negation patterns.
+      if (pattern.startsWith('!')) {
+        continue
+      }
+
+      // Find first glob character position.
+      const match = pattern.match(/[*?{[]/)
+      if (!match || match.index === undefined) {
+        // No glob characters, use dirname of the pattern.
+        folders.add(dirname(pattern))
+      } else {
+        // Get path before glob and extract its dirname.
+        const pathBeforeGlob = pattern.slice(0, match.index)
+        const folder = pathBeforeGlob.endsWith('/')
+          ? pathBeforeGlob.slice(0, -1)
+          : dirname(pathBeforeGlob)
+        if (folder && folder !== '.') {
+          folders.add(folder)
+        }
+      }
+    }
+
+    return [...folders]
+      .filter((folder) => {
+        return !folder.startsWith(srcDir) && folder !== rootDir
+      })
+      .map((folder) => {
+        return relative(srcDir, folder)
+      })
   }
 }

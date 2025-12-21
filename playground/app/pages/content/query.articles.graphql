@@ -1,0 +1,5 @@
+query articles {
+  articles {
+    ...article
+  }
+}

@@ -175,6 +175,6 @@ export function onServerError(
   throw createError({
     statusCode: 500,
     statusMessage: "Couldn't execute GraphQL query: " + message,
-    data: error && 'message' in error ? error.message : error,
+    data: error.response?._data,
   })
 }

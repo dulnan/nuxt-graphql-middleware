@@ -15,6 +15,7 @@ export const defaultOptions: ModuleOptions = {
   documents: [],
   devtools: true,
   errorOverlay: true,
+  logOnlyErrors: true,
   graphqlConfigFilePath: './graphql.config.ts',
   experimental: {
     improvedQueryParamEncoding: false,
@@ -22,6 +23,9 @@ export const defaultOptions: ModuleOptions = {
   clientCache: {
     enabled: false,
     maxSize: 100,
+  },
+  mcp: {
+    enabled: false,
   },
 }
 

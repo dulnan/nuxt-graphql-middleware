@@ -7,4 +7,5 @@ fragment user on User {
   dateOfBirth
   description
   meansOfContact
+  articleCount
 }
