@@ -17,7 +17,7 @@
               v-for="user in users"
               :key="user.id"
               v-bind="user"
-              @refres="refresh"
+              @refresh="refresh"
             />
           </tbody>
         </table>
