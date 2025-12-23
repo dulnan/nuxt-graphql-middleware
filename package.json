@@ -1,6 +1,6 @@
 {
   "name": "nuxt-graphql-middleware",
-  "version": "5.3.0",
+  "version": "5.3.1",
   "description": "Module to perform GraphQL requests as a server middleware.",
   "author": "Jan Hug <me@dulnan.net>",
   "license": "MIT",
@@ -128,7 +128,6 @@
     }
   },
   "devDependencies": {
-    "commander": "^13.1.0",
     "@iconify-json/carbon": "^1.2.15",
     "@modelcontextprotocol/sdk": "^1.24.3",
     "@nuxt/devtools": "^3.1.1",
@@ -140,6 +139,7 @@
     "@nuxt/test-utils": "^3.21.0",
     "@nuxtjs/mcp-toolkit": "^0.5.2",
     "@types/micromatch": "^4.0.10",
+    "commander": "^13.1.0",
     "cypress": "^15.7.1",
     "cypress-wait-until": "^3.0.2",
     "eslint": "^9.39.2",
