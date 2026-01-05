@@ -16,14 +16,12 @@ Add the module to your Nuxt config and provide the basic configuration.
 // ./nuxt.config.ts
 import { defineNuxtConfig } from 'nuxt'
 
-const IS_DEV = process.env.NODE_ENV === 'development'
-
 export default defineNuxtConfig({
   modules: ['nuxt-graphql-middleware'],
 
   graphqlMiddleware: {
     graphqlEndpoint: 'https://example.com/graphql',
-    downloadSchema: IS_DEV,
+    downloadSchema: 'dev-only',
   },
 })
 ```

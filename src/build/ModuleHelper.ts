@@ -93,6 +93,8 @@ export class ModuleHelper {
     options: ModuleOptions,
   ) {
     this.isPrepare = nuxt.options._prepare
+    this.isDev = nuxt.options.dev
+
     const isModuleBuild =
       process.env.PLAYGROUND_MODULE_BUILD === 'true' && this.isPrepare
 
@@ -183,7 +185,6 @@ export class ModuleHelper {
       validateOptions(this.options)
     }
 
-    this.isDev = nuxt.options.dev
     this.resolvers = {
       module: createResolver(moduleUrl),
       server: createResolver(nuxt.options.serverDir),
@@ -213,6 +214,17 @@ export class ModuleHelper {
     )
 
     this.paths.serverOptions = this.findServerOptions()
+  }
+
+  /**
+   * Whether the schema should be downloaded.
+   */
+  public shouldDownloadSchema(): boolean {
+    if (this.options.downloadSchema === 'dev-only') {
+      return this.isDev
+    }
+
+    return this.options.downloadSchema
   }
 
   /**
