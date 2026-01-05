@@ -41,7 +41,7 @@ export class SchemaProvider {
     if (
       this.helper.isDev &&
       hasSchemaOnDisk &&
-      this.helper.options.downloadSchema
+      this.helper.shouldDownloadSchema()
     ) {
       const shouldUseFromDisk = await this.helper.prompt.confirm(
         'Do you want to continue with the previously downloaded schema from disk?',
@@ -145,9 +145,9 @@ export class SchemaProvider {
     forceDownload?: boolean
     forceDisk?: boolean
   }) {
-    if (opts?.forceDisk || this.helper.isPrepare) {
+    if (opts?.forceDisk) {
       this.schemaContent = await this.loadSchemaFromDisk()
-    } else if (this.helper.options.downloadSchema || opts?.forceDownload) {
+    } else if (this.helper.shouldDownloadSchema() || opts?.forceDownload) {
       this.schemaContent = await this.downloadSchema()
     } else {
       this.schemaContent = await this.loadSchemaFromDisk()

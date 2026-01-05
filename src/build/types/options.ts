@@ -99,13 +99,16 @@ export interface ModuleOptions {
   graphqlEndpoint?: string
 
   /**
-   * Download the GraphQL schema and store it on disk.
+   * Whether to download the GraphQL schema and store it on disk.
    *
-   * Usually you'll want to only enable this during dev mode.
+   * - `false`      The GraphQL schema must exist on disk for the module to work.
+   * - `true`       The GraphQL schema will be downloaded and stored on disk.
+   * - `'dev-only'` When running `npm run dev` the schema is downloaded,
+   *              otherwise it is read from disk.
    *
    * @default true
    */
-  downloadSchema?: boolean
+  downloadSchema?: boolean | 'dev-only'
 
   /**
    * Path to the GraphQL schema file.

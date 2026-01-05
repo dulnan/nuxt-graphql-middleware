@@ -1,11 +1,10 @@
 import { defineNuxtConfig } from 'nuxt/config'
 import graphqlMiddlewareModule from './../src/module'
 import type { ModuleOptions } from '../src/build/types/options'
-const IS_DEV = process.env.NODE_ENV === 'development'
 
 const graphqlMiddleware: ModuleOptions = {
   graphqlEndpoint: 'http://localhost:4000',
-  downloadSchema: IS_DEV,
+  downloadSchema: 'dev-only',
   autoImportPatterns: [
     '~/**/*.{graphql,gql}',
     '!queryFromDisk.graphql',
