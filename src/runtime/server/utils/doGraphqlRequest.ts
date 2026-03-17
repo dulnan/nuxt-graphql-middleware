@@ -54,7 +54,7 @@ export async function doGraphqlRequest(
     runtimeConfig,
     serverOptions,
     event,
-    null,
+    operation,
     operationName,
     context || null,
   )
@@ -63,8 +63,8 @@ export async function doGraphqlRequest(
   const fetchOptions = await getFetchOptions(
     serverOptions,
     event,
-    null,
-    body.operationName || null,
+    operation,
+    operationName,
     context,
   )
 
