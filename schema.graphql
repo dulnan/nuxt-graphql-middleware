@@ -90,6 +90,27 @@ type Mutation {
   uploadFile(file: Upload): Boolean!
 }
 
+type NewsEntityQueryResult {
+  items: [NewsItem]
+}
+
+type NewsItem {
+  date: String
+  lead: String
+  organizationId: String!
+  title: String
+  url: NewsUrl
+}
+
+type NewsUrl {
+  path: String
+}
+
+type Organization {
+  id: String!
+  name: String!
+}
+
 """A static page with a template."""
 type Page implements Content {
   author: User
@@ -132,6 +153,12 @@ type Query {
   """Get all submissions."""
   getSubmissions: [FormSubmission]
   getText(text: String!): String!
+
+  """
+  Get news items, optionally filtered by organization IDs.
+  Returns all news if ouIds is null.
+  """
+  newsEntityQuery(limit: Int, ouIds: [String]): NewsEntityQueryResult!
 
   """Get all pages."""
   pages: [Page!]!
