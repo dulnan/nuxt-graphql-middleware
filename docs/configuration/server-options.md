@@ -21,6 +21,14 @@ export default defineGraphqlServerOptions({
 
 :::
 
+### Nuxt Layers
+
+The server options file is also discovered from
+[Nuxt layers](https://nuxt.com/docs/getting-started/layers). The module checks
+all layers in order, starting with the main app. The first layer that contains a
+`graphqlMiddleware.serverOptions` file wins — options from multiple layers are
+**not** merged.
+
 ## doGraphqlRequest
 
 Provide a custom method that performs the request to the GraphQL server. It
