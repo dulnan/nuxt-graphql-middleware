@@ -34,6 +34,14 @@ export default defineGraphqlClientOptions({})
 
 :::
 
+### Nuxt Layers
+
+The client options file is also discovered from
+[Nuxt layers](https://nuxt.com/docs/getting-started/layers). The module checks
+all layers in order, starting with the main app. The first layer that contains a
+`graphqlMiddleware.clientOptions` file wins — options from multiple layers are
+**not** merged.
+
 ## Defining Client Context
 
 Implement the `buildClientContext()` method to return an object with string

@@ -59,19 +59,11 @@ const graphqlEndpointCalls: Array<{
 vi.mock('#nuxt-graphql-middleware/server-options', () => {
   return {
     serverOptions: {
-      serverFetchOptions: (
-        _event: any,
-        operation: any,
-        operationName: any,
-      ) => {
+      serverFetchOptions: (_event: any, operation: any, operationName: any) => {
         serverFetchOptionsCalls.push({ operation, operationName })
         return {}
       },
-      graphqlEndpoint: (
-        _event: any,
-        operation: any,
-        operationName: any,
-      ) => {
+      graphqlEndpoint: (_event: any, operation: any, operationName: any) => {
         graphqlEndpointCalls.push({ operation, operationName })
         return 'http://localhost/graphql'
       },
@@ -99,9 +91,8 @@ describe('doGraphqlRequest', () => {
     serverFetchOptionsCalls.length = 0
     graphqlEndpointCalls.length = 0
 
-    const { doGraphqlRequest } = await import(
-      './../../../src/runtime/server/utils/doGraphqlRequest'
-    )
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
 
     await doGraphqlRequest(
       {
@@ -129,9 +120,8 @@ describe('doGraphqlRequest', () => {
     serverFetchOptionsCalls.length = 0
     graphqlEndpointCalls.length = 0
 
-    const { doGraphqlRequest } = await import(
-      './../../../src/runtime/server/utils/doGraphqlRequest'
-    )
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
 
     await doGraphqlRequest(
       {

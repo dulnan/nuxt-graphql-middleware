@@ -228,17 +228,32 @@ export class ModuleHelper {
   }
 
   /**
-   * Find the path to the graphqlMiddleware.serverOptions.ts file.
+   * Find a file across all Nuxt layers. The first layer (main app) takes
+   * precedence over extended layers.
    */
-  private findServerOptions(): string | null {
-    // Look for the file in the server directory.
-    const newPath = this.resolvers.server.resolve(
-      'graphqlMiddleware.serverOptions',
-    )
-    const serverPath = fileExists(newPath)
+  private findInLayers(
+    fileName: string,
+    getDir: (layer: (typeof this.nuxt.options._layers)[number]) => string,
+  ): string | null {
+    for (const layer of this.nuxt.options._layers) {
+      const dir = getDir(layer)
+      const resolver = createResolver(dir)
+      const found = fileExists(resolver.resolve(fileName))
+      if (found) {
+        return found
+      }
+    }
+    return null
+  }
 
-    if (serverPath) {
-      return serverPath
+  private findServerOptions(): string | null {
+    const found = this.findInLayers(
+      'graphqlMiddleware.serverOptions',
+      (layer) => layer.config.serverDir ?? layer.config.rootDir + '/server',
+    )
+
+    if (found) {
+      return found
     }
 
     // Check for previous locations of the server options file that are not
@@ -268,15 +283,10 @@ export class ModuleHelper {
   }
 
   private findClientOptions(): string | null {
-    const clientOptionsPath = this.resolvers.app.resolve(
+    return this.findInLayers(
       'graphqlMiddleware.clientOptions',
+      (layer) => layer.config.appDir ?? layer.config.srcDir,
     )
-
-    if (fileExists(clientOptionsPath)) {
-      return clientOptionsPath
-    }
-
-    return null
   }
 
   /**

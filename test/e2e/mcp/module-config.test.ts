@@ -131,7 +131,7 @@ describe('MCP Module Config Tool', async () => {
 
       expect(structured.paths).toMatchInlineSnapshot(`
         {
-          "clientOptions": "./app/graphqlMiddleware.clientOptions",
+          "clientOptions": "./app/graphqlMiddleware.clientOptions.ts",
           "documentTypes": ".nuxt/graphql-operations/index.d.ts",
           "runtimeTypes": "../../../src/runtime/types.ts",
           "schema": "../schema.graphql",
