@@ -10,13 +10,7 @@ import {
   clientOptions,
   type GraphqlClientContext,
 } from '#nuxt-graphql-middleware/client-options'
-import {
-  useAsyncData,
-  useAppConfig,
-  useNuxtApp,
-  useId,
-  computed,
-} from '#imports'
+import { useAsyncData, useAppConfig, useNuxtApp, computed } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { RequestCacheOptions } from './../types'
@@ -168,47 +162,26 @@ export function useAsyncGraphqlQuery<
 > {
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
-  const id = useId()
-
-  // Cache key based on query name + variables only (shared across instances).
-  // Used for the GraphQL client cache so different component instances or
-  // remounted components can reuse cached responses.
-  const cacheKey = computed(() => {
+  const asyncDataKey = computed(() => {
     const vars = isRef(variables) ? variables.value : variables
     return `useAsyncGraphqlQuery:${name}:${hash(vars)}`
   })
 
-  // useAsyncData key includes a unique instance ID to prevent Nuxt from
-  // deduplicating multiple component instances that use the same query with
-  // the same initial variables.
-  const asyncDataKey = computed(() => {
-    return `${cacheKey.value}:${id}`
-  })
-
-  // Store the previous cache key so that we can invalidate it.
-  let prevCacheKey = ''
+  // Store the previous key so that we can invlidate it.
+  let prevKey = ''
 
   const config = useAppConfig()
   const app = useNuxtApp()
 
   if (importMetaClient) {
-    // If the variables are reactive, watch them client side.
-    if (variables && isRef(variables)) {
-      if (!asyncDataOptions.watch) {
-        asyncDataOptions.watch = []
-      }
-
-      asyncDataOptions.watch.push(variables)
-    }
-
     if (asyncDataOptions.graphqlCaching?.client && app.isHydrating) {
       const cache = getOrCreateClientCache(app, config)
       if (cache) {
-        // Store the initial payload in our GraphQL cache using the shared
-        // cache key so it can be looked up by other instances or after remount.
+        // Store the initial payload in our GraphQL cache.
+        const key = asyncDataKey.value
         const payload = app.payload.data[asyncDataKey.value]
         if (payload) {
-          cache.set(cacheKey.value, payload, asyncDataKey.value)
+          cache.set(key, payload)
         }
       }
     }
@@ -221,16 +194,14 @@ export function useAsyncGraphqlQuery<
     ) {
       asyncDataOptions.getCachedData = function (key, app, ctx) {
         if (ctx.cause === 'initial') {
-          // Check payload first (exact key match), then fall back to the
-          // shared GraphQL cache (query + variables based key).
-          return app.payload.data[key] ?? app.$graphqlCache?.get(cacheKey.value)
+          return app.payload.data[key] ?? app.$graphqlCache?.get(key)
         } else if (
           ctx.cause === 'refresh:manual' ||
           ctx.cause === 'refresh:hook'
         ) {
           if (app.$graphqlCache) {
             app.$graphqlCache.purgeAsyncDataKey(key)
-            app.$graphqlCache.purgeAsyncDataKey(prevCacheKey)
+            app.$graphqlCache.purgeAsyncDataKey(prevKey)
           }
         }
       }
@@ -238,9 +209,9 @@ export function useAsyncGraphqlQuery<
   }
 
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
-    asyncDataKey.value,
+    asyncDataKey,
     () => {
-      prevCacheKey = cacheKey.value
+      prevKey = asyncDataKey.value
       const globalClientContext =
         clientOptions && clientOptions.buildClientContext
           ? clientOptions.buildClientContext()
@@ -254,7 +225,7 @@ export function useAsyncGraphqlQuery<
         globalClientContext,
         asyncDataOptions.clientContext || {},
         asyncDataOptions.graphqlCaching || {},
-        cacheKey.value,
+        asyncDataKey.value,
       )
     },
     asyncDataOptions as any,

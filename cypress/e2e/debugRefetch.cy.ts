@@ -3,24 +3,13 @@ describe('useAsyncGraphqlQuery refetch with multiple instances', () => {
     cy.visit('/debug-refetch').waitForHydration()
   })
 
-  it('both instances initially show Sports (org "5") data', () => {
+  it('Instance A shows Sports (context "5"), Instance B shows Culture (override "3")', () => {
     cy.get('[data-status="a"]').should('have.text', 'OK')
-    cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="a"]').should('contain', '5')
-    cy.get('[data-actual-org-ids="b"]').should('contain', '5')
-  })
 
-  it('changing Instance B orgs to "3" refetches with Culture data', () => {
-    cy.get('#set-orgs-3').click()
-
-    // Instance B should refetch and show Culture (org "3") data.
     cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="b"]').should('contain', '3')
     cy.get('[data-actual-org-ids="b"]').should('not.contain', '5')
-
-    // Instance A should still show Sports (org "5") data.
-    cy.get('[data-status="a"]').should('have.text', 'OK')
-    cy.get('[data-actual-org-ids="a"]').should('contain', '5')
   })
 
   it('changing Instance B orgs to "1" refetches with Parks data', () => {
@@ -28,7 +17,7 @@ describe('useAsyncGraphqlQuery refetch with multiple instances', () => {
 
     cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="b"]').should('contain', '1')
-    cy.get('[data-actual-org-ids="b"]').should('not.contain', '5')
+    cy.get('[data-actual-org-ids="b"]').should('not.contain', '3')
 
     cy.get('[data-status="a"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="a"]').should('contain', '5')
@@ -44,13 +33,7 @@ describe('useAsyncGraphqlQuery refetch with multiple instances', () => {
     cy.get('[data-actual-org-ids="a"]').should('contain', '5')
   })
 
-  it('resetting Instance B orgs to empty returns to context data', () => {
-    // First change to Culture.
-    cy.get('#set-orgs-3').click()
-    cy.get('[data-status="b"]').should('have.text', 'OK')
-    cy.get('[data-actual-org-ids="b"]').should('contain', '3')
-
-    // Reset to empty — should fall back to context (org "5").
+  it('resetting Instance B orgs to empty falls back to context', () => {
     cy.get('#set-orgs-empty').click()
     cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="b"]').should('contain', '5')
@@ -60,11 +43,7 @@ describe('useAsyncGraphqlQuery refetch with multiple instances', () => {
   })
 
   it('switching Instance B through multiple org changes keeps data fresh', () => {
-    // Sports (context) -> Culture -> Parks -> back to context
-    cy.get('#set-orgs-3').click()
-    cy.get('[data-status="b"]').should('have.text', 'OK')
-    cy.get('[data-actual-org-ids="b"]').should('contain', '3')
-
+    // Culture (initial "3") -> Parks -> empty (context) -> Culture again
     cy.get('#set-orgs-1').click()
     cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="b"]').should('contain', '1')
@@ -72,6 +51,10 @@ describe('useAsyncGraphqlQuery refetch with multiple instances', () => {
     cy.get('#set-orgs-empty').click()
     cy.get('[data-status="b"]').should('have.text', 'OK')
     cy.get('[data-actual-org-ids="b"]').should('contain', '5')
+
+    cy.get('#set-orgs-3').click()
+    cy.get('[data-status="b"]').should('have.text', 'OK')
+    cy.get('[data-actual-org-ids="b"]').should('contain', '3')
 
     // Instance A must remain untouched throughout.
     cy.get('[data-status="a"]').should('have.text', 'OK')

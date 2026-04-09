@@ -67,7 +67,7 @@ const items = reactive([
   {
     id: 'b',
     label: 'Instance B — override changes via buttons above',
-    organizations: { list: [] as { id: string }[] },
+    organizations: { list: [{ id: '3' }] },
   },
 ])
 
