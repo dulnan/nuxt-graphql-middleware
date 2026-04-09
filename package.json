@@ -103,7 +103,7 @@
     "@graphql-codegen/schema-ast": "^5.0.0",
     "@graphql-tools/load": "^8.1.0",
     "@graphql-tools/utils": "^10.11.0",
-    "@nuxt/devtools-kit": "^3.1.1",
+    "@nuxt/devtools-kit": "^3.2.4",
     "graphql-typescript-deluxe": "^0.1.0",
     "is-unicode-supported": "^2.1.0",
     "micromatch": "^4.0.8",

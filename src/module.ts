@@ -206,7 +206,7 @@ declare module 'vite/types/customEvent.d.ts' {
   }
 }
 
-declare module '@nuxt/schema' {
+declare module 'nuxt/schema' {
   interface AppConfig {
     graphqlMiddleware: {
       /**

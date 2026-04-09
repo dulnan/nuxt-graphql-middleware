@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@nuxtjs/mcp-toolkit'],
+  modules: ['@nuxtjs/mcp-toolkit', '@nuxt/devtools'],
   nitro: {
     typescript: {
       tsConfig: {
