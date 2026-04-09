@@ -1,5 +1,6 @@
 import { existsSync } from 'fs'
 import type { Nuxt } from 'nuxt/schema'
+import { addCustomTab } from '@nuxt/devtools-kit'
 
 const DEVTOOLS_UI_ROUTE = '/__nuxt-graphql-middleware'
 const DEVTOOLS_UI_LOCAL_PORT = 3300
@@ -33,19 +34,17 @@ export function setupDevToolsUI(nuxt: Nuxt, clientPath: string) {
     })
   }
 
-  nuxt.hook('devtools:customTabs', (tabs) => {
-    tabs.push({
-      // unique identifier
-      name: 'nuxt-graphql-middleware',
-      // title to display in the tab
-      title: 'GraphQL Middleware',
-      // any icon from Iconify, or a URL to an image
-      icon: 'akar-icons:graphql-fill',
-      // iframe view
-      view: {
-        type: 'iframe',
-        src: DEVTOOLS_UI_ROUTE,
-      },
-    })
+  addCustomTab({
+    // unique identifier
+    name: 'nuxt-graphql-middleware',
+    // title to display in the tab
+    title: 'GraphQL Middleware',
+    // any icon from Iconify, or a URL to an image
+    icon: 'akar-icons:graphql-fill',
+    // iframe view
+    view: {
+      type: 'iframe',
+      src: DEVTOOLS_UI_ROUTE,
+    },
   })
 }

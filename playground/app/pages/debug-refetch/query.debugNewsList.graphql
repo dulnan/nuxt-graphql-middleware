@@ -1,0 +1,13 @@
+query debugNewsList($ouIds: [String], $limit: Int) {
+  newsEntityQuery(ouIds: $ouIds, limit: $limit) {
+    items {
+      title
+      lead
+      url {
+        path
+      }
+      date
+      organizationId
+    }
+  }
+}

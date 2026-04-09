@@ -94,6 +94,7 @@ let users = []
 let idIncrement = 0
 let files: UploadedFile[] = []
 let formSubmissions: FormSubmission[] = []
+let newsQueryCount = 0
 
 // Dummy content data
 const articles: Article[] = [
@@ -166,6 +167,73 @@ const pages: Page[] = [
     authorId: 2,
     content: 'Get in touch with us at contact@example.com',
     template: 'contact',
+  },
+]
+
+// News mock data (org IDs: 1=Parks, 2=Roads, 3=Culture, 5=Sports)
+const newsItems = [
+  {
+    title: 'City Park Gets New Playground',
+    lead: 'A modern playground opens next month.',
+    url: { path: '/news/park-playground' },
+    date: '2026-03-15',
+    organizationId: '1',
+  },
+  {
+    title: 'Community Garden Expansion',
+    lead: 'Fifty new plots available for residents.',
+    url: { path: '/news/garden-expansion' },
+    date: '2026-03-20',
+    organizationId: '1',
+  },
+  {
+    title: 'Main Street Roadwork Begins',
+    lead: 'Expect detours starting April.',
+    url: { path: '/news/roadwork' },
+    date: '2026-04-01',
+    organizationId: '2',
+  },
+  {
+    title: 'New Bike Lane Opens',
+    lead: 'Connecting the north and south districts.',
+    url: { path: '/news/bike-lane' },
+    date: '2026-03-28',
+    organizationId: '2',
+  },
+  {
+    title: 'Annual Culture Night 2026',
+    lead: 'Museums and galleries open late on May 15.',
+    url: { path: '/news/culture-night' },
+    date: '2026-04-05',
+    organizationId: '3',
+  },
+  {
+    title: 'New Art Exhibition Downtown',
+    lead: 'Contemporary works from local artists.',
+    url: { path: '/news/art-exhibition' },
+    date: '2026-04-02',
+    organizationId: '3',
+  },
+  {
+    title: 'Public Pool Season Starts',
+    lead: 'Outdoor pools open May 1st.',
+    url: { path: '/news/pool-season' },
+    date: '2026-04-08',
+    organizationId: '5',
+  },
+  {
+    title: 'Weekend Sports Festival',
+    lead: 'Free activities for all ages at the stadium.',
+    url: { path: '/news/sports-festival' },
+    date: '2026-03-25',
+    organizationId: '5',
+  },
+  {
+    title: 'Youth Soccer Tournament',
+    lead: 'Local teams compete for the cup.',
+    url: { path: '/news/soccer-tournament' },
+    date: '2026-04-06',
+    organizationId: '5',
   },
 ]
 
@@ -390,6 +458,27 @@ const typeDefs = `#graphql
     languageFromPath: String
   }
 
+  type Organization {
+    id: String!
+    name: String!
+  }
+
+  type NewsUrl {
+    path: String
+  }
+
+  type NewsItem {
+    title: String
+    lead: String
+    url: NewsUrl
+    date: String
+    organizationId: String!
+  }
+
+  type NewsEntityQueryResult {
+    items: [NewsItem]
+  }
+
   type Query {
     foobar: String
     """
@@ -480,6 +569,12 @@ const typeDefs = `#graphql
     Search across all content types and users.
     """
     search(query: String!): [SearchResult!]!
+
+    """
+    Get news items, optionally filtered by organization IDs.
+    Returns all news if ouIds is null.
+    """
+    newsEntityQuery(ouIds: [String], limit: Int): NewsEntityQueryResult!
   }
 
   type UploadedFile {
@@ -661,6 +756,22 @@ const resolvers = {
 
       return results
     },
+    newsEntityQuery: (
+      _: any,
+      args: { ouIds?: string[] | null; limit?: number | null },
+    ) => {
+      newsQueryCount++
+      let items = [...newsItems]
+      if (args.ouIds && args.ouIds.length > 0) {
+        items = items.filter((item) =>
+          args.ouIds!.includes(item.organizationId),
+        )
+      }
+      if (args.limit && args.limit > 0) {
+        items = items.slice(0, args.limit)
+      }
+      return { items }
+    },
   },
 
   // Interface type resolver
@@ -821,6 +932,12 @@ const server = new ApolloServer({
   ],
 })
 await server.start()
+
+app.get('/news-query-count', cors(), (_req, res) => {
+  const count = newsQueryCount
+  newsQueryCount = 0
+  res.json({ count })
+})
 
 app.use(
   '/',

@@ -138,6 +138,23 @@ export function performRequest<T>(
     }
   }
 
+  // During SSR, deduplicate identical concurrent requests. Multiple
+  // useAsyncData instances with different keys but the same query and
+  // variables would otherwise each trigger their own $fetch call.
+  const ssrDedupeKey = !importMetaClient
+    ? `${operation}:${operationName}:${hash(params)}`
+    : undefined
+
+  if (ssrDedupeKey) {
+    if (!app._graphqlSsrPromises) {
+      app._graphqlSsrPromises = {}
+    }
+    const existing = app._graphqlSsrPromises[ssrDedupeKey]
+    if (existing) {
+      return existing as Promise<GraphqlResponse<T>>
+    }
+  }
+
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     Object.assign(
@@ -183,11 +200,16 @@ export function performRequest<T>(
     app.$graphqlCache.set(cacheKey, promise, asyncDataKey)
   }
 
+  if (ssrDedupeKey && app._graphqlSsrPromises) {
+    app._graphqlSsrPromises[ssrDedupeKey] = promise
+  }
+
   return promise
 }
 
 declare module '#app' {
   interface NuxtApp {
     $graphqlCache?: GraphqlMiddlewareCache
+    _graphqlSsrPromises?: Record<string, Promise<unknown>>
   }
 }
