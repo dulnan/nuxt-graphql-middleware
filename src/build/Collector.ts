@@ -381,6 +381,7 @@ export class Collector {
   public async init(): Promise<void> {
     try {
       await this.initDocuments()
+      this.isInitialised = true
     } catch {
       if (this.helper.isDev) {
         const shouldRevalidate = await this.helper.prompt.confirm(
@@ -390,7 +391,6 @@ export class Collector {
         if (shouldRevalidate === 'yes') {
           await this.reset()
           await this.init()
-          this.isInitialised = true
           return
         }
       }
