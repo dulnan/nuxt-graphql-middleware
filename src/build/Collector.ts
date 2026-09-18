@@ -1,6 +1,12 @@
 import { basename } from 'node:path'
 import { relative } from 'pathe'
-import { parse, type GraphQLSchema, type GraphQLError, Source } from 'graphql'
+import {
+  parse,
+  type DocumentNode,
+  type GraphQLSchema,
+  type GraphQLError,
+  Source,
+} from 'graphql'
 import {
   FieldNotFoundError,
   FragmentNotFoundError,
@@ -81,6 +87,17 @@ export class Collector {
 
   private isInitialised = false
 
+  /**
+   * The definition keys (kind:name) currently synced to the generator, per
+   * file path.
+   */
+  private syncedDefinitionKeys = new Map<string, string>()
+
+  /**
+   * File paths whose contents have changed since the last generator sync.
+   */
+  private dirtyFiles = new Set<string>()
+
   constructor(
     private schema: GraphQLSchema,
     private helper: ModuleHelper,
@@ -107,9 +124,118 @@ export class Collector {
 
   public async reset() {
     this.files.clear()
+    this.syncedDefinitionKeys.clear()
+    this.dirtyFiles.clear()
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
+  }
+
+  /**
+   * Determine the Nuxt layer priority of a file.
+   *
+   * Lower value = higher priority. The app/project layer is index 0, extended
+   * layers follow in the order they are defined. Documents provided via hooks
+   * get the highest priority. Files that can't be matched to a layer get the
+   * lowest priority.
+   */
+  private getLayerPriority(filePath: string): number {
+    if (filePath.startsWith('hook:')) {
+      return -1
+    }
+    const layers = this.helper.nuxt.options._layers || []
+    let priority = layers.length
+    let longestMatch = -1
+    for (let i = 0; i < layers.length; i++) {
+      const config = layers[i]!.config || {}
+      const dirs = [config.srcDir, config.rootDir, layers[i]!.cwd]
+      for (const dir of dirs) {
+        if (!dir) {
+          continue
+        }
+        const prefix = dir.endsWith('/') ? dir : dir + '/'
+        if (filePath.startsWith(prefix) && dir.length > longestMatch) {
+          priority = i
+          longestMatch = dir.length
+        }
+      }
+    }
+    return priority
+  }
+
+  /**
+   * Sync all collected files to the generator, resolving cross-layer
+   * definition collisions: when multiple files define a fragment or operation
+   * with the same name, the definition from the highest-priority Nuxt layer
+   * (the app/project first, then extended layers in order) wins and the
+   * shadowed definitions are excluded from the documents passed to the
+   * generator. This makes it possible to override a fragment or operation
+   * from a layer in the app or in a higher-priority layer. Definitions with
+   * the same layer priority are left untouched (existing behaviour).
+   */
+  private syncGenerator(): void {
+    const owners = new Map<string, { priority: number }>()
+    for (const [filePath, file] of this.files) {
+      const priority = this.getLayerPriority(filePath)
+      for (const def of file.parsed.definitions) {
+        if (
+          def.kind !== 'FragmentDefinition' &&
+          def.kind !== 'OperationDefinition'
+        ) {
+          continue
+        }
+        const name = def.name?.value
+        if (!name) {
+          continue
+        }
+        const key = def.kind + ':' + name
+        const owner = owners.get(key)
+        if (!owner || priority < owner.priority) {
+          owners.set(key, { priority })
+        }
+      }
+    }
+
+    for (const [filePath, file] of this.files) {
+      const priority = this.getLayerPriority(filePath)
+      const definitions = file.parsed.definitions.filter((def) => {
+        if (
+          def.kind !== 'FragmentDefinition' &&
+          def.kind !== 'OperationDefinition'
+        ) {
+          return true
+        }
+        const name = def.name?.value
+        if (!name) {
+          return true
+        }
+        const owner = owners.get(def.kind + ':' + name)
+        return !owner || owner.priority >= priority
+      })
+      const keys = definitions
+        .map((def) => def.kind + ':' + ('name' in def ? def.name?.value : ''))
+        .join('|')
+      const previousKeys = this.syncedDefinitionKeys.get(filePath)
+      const documentNode: DocumentNode =
+        definitions.length === file.parsed.definitions.length
+          ? file.parsed
+          : { ...file.parsed, definitions }
+      if (previousKeys === undefined) {
+        this.generator.add({ filePath, documentNode })
+        this.syncedDefinitionKeys.set(filePath, keys)
+      } else if (previousKeys !== keys || this.dirtyFiles.has(filePath)) {
+        this.generator.update({ filePath, documentNode })
+        this.syncedDefinitionKeys.set(filePath, keys)
+      }
+    }
+
+    for (const filePath of [...this.syncedDefinitionKeys.keys()]) {
+      if (!this.files.has(filePath)) {
+        this.generator.remove(filePath)
+        this.syncedDefinitionKeys.delete(filePath)
+      }
+    }
+    this.dirtyFiles.clear()
   }
 
   public async updateSchema(schema: GraphQLSchema) {
@@ -410,10 +536,10 @@ export class Collector {
     const exists = this.hookDocuments.has(fullIdentifier)
     this.hookDocuments.set(fullIdentifier, source)
     if (exists && this.isInitialised) {
-      this.generator.update({
-        filePath: fullIdentifier,
-        document: source,
-      })
+      const file = new CollectedFile(fullIdentifier, source, false)
+      this.files.set(fullIdentifier, file)
+      this.dirtyFiles.add(fullIdentifier)
+      this.syncGenerator()
       await this.buildState()
     }
   }
@@ -440,26 +566,19 @@ export class Collector {
         const filePath = this.helper.paths.nuxtConfig
         const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
         this.files.set(filePath, file)
-        this.generator.add({
-          filePath,
-          documentNode: file.parsed,
-        })
       }
 
       const hookDocuments = [...this.hookDocuments.entries()]
       hookDocuments.forEach(([identifier, source]) => {
         const file = new CollectedFile(identifier, source, false)
         this.files.set(identifier, file)
-        this.generator.add({
-          filePath: identifier,
-          documentNode: file.parsed,
-        })
       })
 
       for (const filePath of this.hookFiles) {
         await this.addFile(filePath)
       }
 
+      this.syncGenerator()
       await this.buildState()
       if (!this.helper.isPrepare) {
         logger.success('All GraphQL documents are valid.')
@@ -483,10 +602,6 @@ export class Collector {
     }
 
     this.files.set(filePath, file)
-    this.generator.add({
-      filePath,
-      documentNode: file.parsed,
-    })
     return file
   }
 
@@ -504,7 +619,11 @@ export class Collector {
       return false
     }
     const result = await this.addFile(filePath)
-    return !!result
+    if (!result) {
+      return false
+    }
+    this.syncGenerator()
+    return true
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
@@ -524,10 +643,8 @@ export class Collector {
       if (!needsUpdate) {
         return false
       }
-      this.generator.update({
-        filePath: filePath,
-        documentNode: file.parsed,
-      })
+      this.dirtyFiles.add(filePath)
+      this.syncGenerator()
     } catch {
       // Error: File is invalid (e.g. empty), so let's remove it.
       return this.handleUnlink(filePath)
@@ -542,7 +659,7 @@ export class Collector {
       return false
     }
     this.files.delete(filePath)
-    this.generator.remove(filePath)
+    this.syncGenerator()
     return true
   }
 
