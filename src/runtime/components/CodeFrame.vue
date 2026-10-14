@@ -7,6 +7,7 @@
         class="nuxt-graphql-middleware-errors-code-line-number"
         :class="{ 'ngm-is-highlighted': l.isHighlighted }"
       >
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-html="l.lineNumber" />
       </div>
     </div>
@@ -17,6 +18,7 @@
         class="nuxt-graphql-middleware-errors-code-code"
         :class="{ 'ngm-is-highlighted': l.isHighlighted }"
       >
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-html="l.code" />
       </div>
     </div>
