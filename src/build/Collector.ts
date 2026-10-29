@@ -467,6 +467,8 @@ export class Collector {
     } catch (e) {
       this.logError(e)
 
+      // The error has already been logged above.
+      // eslint-disable-next-line preserve-caught-error
       throw new Error('GraphQL document validation failed.')
     }
   }
