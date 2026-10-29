@@ -55,6 +55,11 @@ export function performRequest<T>(
    * The async data key.
    */
   asyncDataKey?: string,
+
+  /**
+   * The signal to abort the request, for example from useAsyncData.
+   */
+  signal?: AbortSignal,
 ): Promise<GraphqlResponse<T>> {
   const state = useGraphqlState()
   const app = useNuxtApp()
@@ -156,6 +161,9 @@ export function performRequest<T>(
         method,
         body: operation === 'mutation' ? variablesOrBody : undefined,
       },
+      // Cached requests can be shared by several callers, so they are not
+      // aborted if one of them doesn't need the result anymore.
+      signal && !cacheKey && !fetchOptions.signal ? { signal } : {},
     ),
   ).then((v) => {
     if (import.meta.dev && v?.errors?.length) {
@@ -180,7 +188,16 @@ export function performRequest<T>(
     app.$graphqlCache &&
     clientCacheEnabledAtBuild
   ) {
-    app.$graphqlCache.set(cacheKey, promise, asyncDataKey)
+    const cache = app.$graphqlCache
+    cache.set(cacheKey, promise, asyncDataKey)
+
+    // Failed requests are removed, so that they are performed again the next
+    // time instead of returning the error.
+    promise.catch(() => {
+      if (cache.cache[cacheKey] === promise) {
+        cache.remove(cacheKey)
+      }
+    })
   }
 
   return promise

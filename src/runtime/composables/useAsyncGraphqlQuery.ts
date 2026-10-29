@@ -212,7 +212,7 @@ export function useAsyncGraphqlQuery<
 
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     asyncDataKey,
-    () => {
+    (_app, ctx) => {
       prevKey = asyncDataKey.value
       const globalClientContext =
         clientOptions && clientOptions.buildClientContext
@@ -228,6 +228,9 @@ export function useAsyncGraphqlQuery<
         asyncDataOptions.clientContext || {},
         asyncDataOptions.graphqlCaching || {},
         asyncDataKey.value,
+        // Aborted when the request isn't needed anymore, for example after a
+        // refresh. Older Nuxt versions don't provide a signal.
+        ctx?.signal,
       )
     },
     asyncDataOptions as any,
