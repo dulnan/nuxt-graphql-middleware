@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { setup, url } from '@nuxt/test-utils/e2e'
 import {
@@ -6,10 +7,11 @@ import {
   getMcpClient,
 } from '../helpers/mcp-setup'
 
-// By default @nuxt/test-utils builds into a random directory, while Nuxt
-// still writes the types to playground/.nuxt. Once the test build directory
-// is removed, these types break the type check of later playground builds.
-const buildDir = '.nuxt/test-mcp'
+// A separate build directory for each test file, like @nuxt/test-utils uses
+// by default. The types are written there too: Nuxt otherwise writes them to
+// playground/.nuxt, where they break the type check of later playground builds
+// once the test build directory is removed.
+export const buildDir = `.nuxt/test/${randomUUID().slice(0, 8)}`
 
 export async function setupMcpTests() {
   await setup({
