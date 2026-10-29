@@ -44,9 +44,11 @@ is added:
 /api/graphql_middleware/upload/[name_of_mutation]
 ```
 
-This route expects a `multipart/form-data` request. The
-`useGraphqlUploadMutation` composable makes sure the data is sent in the correct
-format.
+This route expects a `multipart/form-data` request with the
+`x-nuxt-graphql-middleware-upload` header (any value). Requests without the
+header are refused with a 400 status code. The `useGraphqlUploadMutation`
+composable makes sure the data is sent in the correct format and with the
+header.
 
 The server route does not perform any validations on the provided data, for
 example there is no file size limitation. This should be handled separately, for

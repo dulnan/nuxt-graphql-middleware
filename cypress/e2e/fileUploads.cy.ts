@@ -1,4 +1,26 @@
 describe('Mutations with file uploads', () => {
+  it('requires the upload header', () => {
+    const boundary = 'foobar'
+    cy.request({
+      method: 'POST',
+      url: '/api/graphql_middleware/upload/initState',
+      headers: {
+        'content-type': `multipart/form-data; boundary=${boundary}`,
+      },
+      body: [
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="variables"',
+        '',
+        '{}',
+        `--${boundary}--`,
+        '',
+      ].join('\r\n'),
+      failOnStatusCode: false,
+    })
+      .its('status')
+      .should('eq', 400)
+  })
+
   it('correctly saves a single file', () => {
     cy.initState()
     cy.visit('/test-upload').waitForHydration()

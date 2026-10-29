@@ -235,6 +235,9 @@ describe('useGraphqlUploadMutation', () => {
               },
             ],
           },
+          "headers": {
+            "x-nuxt-graphql-middleware-upload": "1",
+          },
           "method": "POST",
           "params": {
             "__gqlc_language": "fr",
@@ -243,6 +246,25 @@ describe('useGraphqlUploadMutation', () => {
         },
       }
     `)
+  })
+
+  test('keeps the headers from the fetch options', async () => {
+    const fromObject = await useGraphqlUploadMutation(
+      'foobar',
+      { stringVar: 'foobar' },
+      { fetchOptions: { headers: { 'X-Custom': 'yes' } } },
+    )
+    const fromHeaders = await useGraphqlUploadMutation(
+      'foobar',
+      { stringVar: 'foobar' },
+      { fetchOptions: { headers: new Headers({ 'X-Custom': 'yes' }) } },
+    )
+    for (const result of [fromObject, fromHeaders]) {
+      expect((result as any).options.headers).toEqual({
+        'x-custom': 'yes',
+        'x-nuxt-graphql-middleware-upload': '1',
+      })
+    }
   })
 })
 

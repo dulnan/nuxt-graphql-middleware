@@ -4,6 +4,7 @@ import {
   getQuery,
   type MultiPartData,
   getRouterParam,
+  getRequestHeader,
 } from 'h3'
 import type { FetchError } from 'ofetch'
 import {
@@ -18,7 +19,7 @@ import {
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
 import { useRuntimeConfig } from '#imports'
-import { GraphqlMiddlewareOperation } from '../../settings'
+import { GraphqlMiddlewareOperation, UPLOAD_HEADER } from '../../settings'
 
 type GraphqlUploadData = {
   variables: Record<string, any>
@@ -47,6 +48,10 @@ export default defineEventHandler(async (event) => {
 
   if (!isValidMutation(operationName)) {
     return throwError('Invalid mutation name.')
+  }
+
+  if (!getRequestHeader(event, UPLOAD_HEADER)) {
+    return throwError(`Missing "${UPLOAD_HEADER}" header.`)
   }
 
   // The GraphQL query document as a string.
