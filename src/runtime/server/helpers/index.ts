@@ -3,6 +3,7 @@ import type { H3Event } from 'h3'
 import {
   createError,
   getRequestHeader,
+  isEvent,
   readRawBody,
   setResponseHeader,
 } from 'h3'
@@ -14,6 +15,7 @@ import type {
 } from './../../types'
 import {
   CLIENT_CONTEXT_PREFIX,
+  SSR_EVENT_KEY,
   type GraphqlMiddlewareOperation,
 } from './../../settings'
 import { documents } from '#nuxt-graphql-middleware/documents'
@@ -126,41 +128,68 @@ export function getFetchOptions(
 }
 
 /**
- * The events whose client closed the connection before the response was sent.
+ * The signals of the events whose connection is watched, so that every event
+ * only gets one listener.
  */
-const clientAbortedEvents = new WeakSet<H3Event>()
+const clientAbortSignals = new WeakMap<H3Event, AbortSignal>()
+
+/**
+ * Get the event whose connection decides whether the client is gone.
+ *
+ * Queries performed by the composables during SSR are made in the same
+ * process, so their connection is never closed. The composables pass the page
+ * request in the fetch context, which Nitro puts on the request.
+ *
+ * Returns nothing if the response might be cached and sent to other clients,
+ * for example with the cache or swr route rules.
+ */
+function getConnectionEvent(event: H3Event): H3Event | undefined {
+  const fetchContext = (
+    event.node?.req as { __unenv__?: Record<string, unknown> } | undefined
+  )?.__unenv__
+  const ssrEvent = fetchContext?.[SSR_EVENT_KEY]
+  const connectionEvent = isEvent(ssrEvent) ? ssrEvent : event
+
+  if (event.context?.cache || connectionEvent.context?.cache) {
+    return
+  }
+
+  return connectionEvent
+}
 
 /**
  * Get a signal that is aborted when the client closes the connection before
  * the response was sent.
  *
  * The request emits "close" once its body was read, so the response is used.
- *
- * Returns nothing if the response might be cached and sent to other clients,
- * for example with the cache or swr route rules.
  */
 export function getClientAbortSignal(
   event: H3Event | null | undefined,
 ): AbortSignal | undefined {
-  const res = event?.node?.res
-  if (
-    !event ||
-    !res ||
-    typeof res.once !== 'function' ||
-    event.context?.cache
-  ) {
+  const connectionEvent = event && getConnectionEvent(event)
+  if (!connectionEvent) {
+    return
+  }
+
+  const existing = clientAbortSignals.get(connectionEvent)
+  if (existing) {
+    return existing
+  }
+
+  const res = connectionEvent.node?.res
+  if (!res || typeof res.once !== 'function') {
     return
   }
 
   const controller = new AbortController()
   res.once('close', () => {
     if (!res.writableEnded) {
-      clientAbortedEvents.add(event)
       controller.abort(
         new DOMException('The client closed the connection.', 'AbortError'),
       )
     }
   })
+  clientAbortSignals.set(connectionEvent, controller.signal)
   return controller.signal
 }
 
@@ -168,7 +197,8 @@ export function getClientAbortSignal(
  * Whether the client closed the connection before the response was sent.
  */
 export function isClientAborted(event: H3Event | null | undefined): boolean {
-  return !!event && clientAbortedEvents.has(event)
+  const connectionEvent = event && getConnectionEvent(event)
+  return !!connectionEvent && !!clientAbortSignals.get(connectionEvent)?.aborted
 }
 
 /**

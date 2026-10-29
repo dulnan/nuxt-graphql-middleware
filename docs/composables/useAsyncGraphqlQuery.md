@@ -228,6 +228,11 @@ aborts its request to the GraphQL server.
 Requests that use the client cache (`graphqlCaching.client`) are not aborted, as
 several callers can share the same cached request.
 
+During SSR, the queries are aborted when the client closes the connection of the
+page, for example when the user leaves before the page has loaded. Queries that
+start after that fail right away. Pages that might be cached, for example with
+the `cache` or `swr` route rules, are rendered completely.
+
 ## Examples
 
 ### Pagination

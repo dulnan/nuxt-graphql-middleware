@@ -9,11 +9,12 @@ import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
 import {
   clientCacheEnabledAtBuild,
   importMetaClient,
+  importMetaServer,
 } from '#nuxt-graphql-middleware/config'
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables, sortQueryParams } from '../helpers/queryEncoding'
 import { encodeContext, getOrCreateClientCache } from '../helpers/composables'
-import { OPERATION_HASH_PREFIX } from '../settings'
+import { OPERATION_HASH_PREFIX, SSR_EVENT_KEY } from '../settings'
 
 export function performRequest<T>(
   /**
@@ -164,6 +165,11 @@ export function performRequest<T>(
       // Cached requests can be shared by several callers, so they are not
       // aborted if one of them doesn't need the result anymore.
       signal && !cacheKey && !fetchOptions.signal ? { signal } : {},
+      // During SSR, pass the page request to the server route, so that it can
+      // abort the query if the client closes the connection.
+      importMetaServer && isQuery && app.ssrContext?.event
+        ? { context: { [SSR_EVENT_KEY]: app.ssrContext.event } }
+        : {},
     ),
   ).then((v) => {
     if (import.meta.dev && v?.errors?.length) {

@@ -1,6 +1,10 @@
 import { EventEmitter } from 'node:events'
 import { vi, describe, expect, test } from 'vitest'
-import { GraphqlMiddlewareOperation } from './../../../../src/runtime/settings'
+import { H3Event } from 'h3'
+import {
+  GraphqlMiddlewareOperation,
+  SSR_EVENT_KEY,
+} from './../../../../src/runtime/settings'
 import {
   queryParamToVariables,
   getEndpoint,
@@ -451,11 +455,62 @@ describe('getClientAbortSignal', () => {
     expect(getClientAbortSignal({ node: { res: {} } } as any)).toBeUndefined()
   })
 
+  test('only adds one listener per event', () => {
+    const event = createEvent(false)
+    const signal = getClientAbortSignal(event)
+    expect(getClientAbortSignal(event)).toBe(signal)
+    expect(event.node.res.listenerCount('close')).toBe(1)
+  })
+
   test('is not used for cached responses', () => {
     const event = createEvent(false)
     event.context = { cache: {} }
     expect(getClientAbortSignal(event)).toBeUndefined()
     event.node.res.emit('close')
     expect(isClientAborted(event)).toBe(false)
+  })
+
+  describe('SSR', () => {
+    function createSsrEvent(pageEvent: H3Event) {
+      const res = Object.assign(new EventEmitter(), { writableEnded: false })
+      const req = { __unenv__: { [SSR_EVENT_KEY]: pageEvent } }
+      return { node: { req, res }, context: {} } as any
+    }
+
+    function createPageEvent() {
+      const res = Object.assign(new EventEmitter(), { writableEnded: false })
+      return new H3Event({ method: 'GET', url: '/' } as any, res as any)
+    }
+
+    test('is aborted if the client closes the connection of the page', () => {
+      const pageEvent = createPageEvent()
+      const event = createSsrEvent(pageEvent)
+      const signal = getClientAbortSignal(event)!
+
+      // The connection of the request made during SSR is never closed.
+      event.node.res.emit('close')
+      expect(signal.aborted).toBe(false)
+
+      pageEvent.node.res.emit('close')
+      expect(signal.aborted).toBe(true)
+      expect(isClientAborted(event)).toBe(true)
+    })
+
+    test('only adds one listener for all requests of a page', () => {
+      const pageEvent = createPageEvent()
+      const first = getClientAbortSignal(createSsrEvent(pageEvent))
+      const second = getClientAbortSignal(createSsrEvent(pageEvent))
+      expect(second).toBe(first)
+      expect(pageEvent.node.res.listenerCount('close')).toBe(1)
+    })
+
+    test('is not used for cached pages', () => {
+      const pageEvent = createPageEvent()
+      pageEvent.context.cache = {}
+      const event = createSsrEvent(pageEvent)
+      expect(getClientAbortSignal(event)).toBeUndefined()
+      pageEvent.node.res.emit('close')
+      expect(isClientAborted(event)).toBe(false)
+    })
   })
 })

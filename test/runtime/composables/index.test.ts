@@ -26,6 +26,7 @@ vi.mock('#nuxt-graphql-middleware/config', () => {
   return {
     clientCacheEnabledAtBuild: true,
     importMetaClient: true,
+    importMetaServer: false,
     experimentalQueryParamEncoding: false,
   }
 })

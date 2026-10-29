@@ -14,3 +14,9 @@ export const OPERATION_HASH_PREFIX = '__gqlh'
  * the middleware doesn't answer.
  */
 export const UPLOAD_HEADER = 'x-nuxt-graphql-middleware-upload'
+
+/**
+ * The key of the page request in the fetch context of queries performed
+ * during SSR.
+ */
+export const SSR_EVENT_KEY = '__nuxtGraphqlMiddlewareSsrEvent'

@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { performRequest } from './../../../src/runtime/composables/nuxtApp'
+import { SSR_EVENT_KEY } from './../../../src/runtime/settings'
 
 const state = vi.hoisted(() => {
   return {
     app: {} as Record<string, any>,
     clientCacheEnabled: false,
+    server: false,
   }
 })
 
@@ -33,8 +35,12 @@ vi.mock('#nuxt-graphql-middleware/helpers', () => {
 vi.mock('#nuxt-graphql-middleware/config', () => {
   return {
     clientCacheEnabledAtBuild: true,
-    importMetaClient: true,
-    importMetaServer: false,
+    get importMetaClient() {
+      return !state.server
+    },
+    get importMetaServer() {
+      return state.server
+    },
     experimentalQueryParamEncoding: false,
   }
 })
@@ -55,9 +61,10 @@ function query(
   signal?: AbortSignal,
   fetchOptions: Record<string, any> = {},
   client = false,
+  operation: 'query' | 'mutation' = 'query',
 ) {
   return performRequest(
-    'query',
+    operation,
     'foobar',
     {},
     fetchOptions,
@@ -73,6 +80,7 @@ describe('performRequest', () => {
   beforeEach(() => {
     state.app = { $graphqlState: { fetchOptions: {} } }
     state.clientCacheEnabled = false
+    state.server = false
     fetchMock.mockClear()
   })
 
@@ -110,5 +118,17 @@ describe('performRequest', () => {
     const result = await query(undefined, {}, true)
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(result.data).toEqual({ foo: 'bar' })
+  })
+
+  test('passes the page request to queries during SSR', async () => {
+    const event = { path: '/' }
+    state.server = true
+    state.app.ssrContext = { event }
+    await query()
+    await query(undefined, {}, false, 'mutation')
+    expect(fetchMock.mock.calls[0]![1].context).toEqual({
+      [SSR_EVENT_KEY]: event,
+    })
+    expect(fetchMock.mock.calls[1]![1].context).toBeUndefined()
   })
 })
