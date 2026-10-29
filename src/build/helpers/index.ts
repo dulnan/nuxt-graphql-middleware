@@ -3,7 +3,8 @@ import { useLogger } from '@nuxt/kit'
 import type { ConsolaInstance } from 'consola'
 import type { ModuleOptions } from '../types/options'
 
-export const logger: ConsolaInstance = useLogger('nuxt-graphql-middleware')
+// Nuxt >= 4.6 types this as NuxtLogger, but it's still a consola instance.
+export const logger = useLogger('nuxt-graphql-middleware') as ConsolaInstance
 
 export const defaultOptions: ModuleOptions = {
   downloadSchema: true,

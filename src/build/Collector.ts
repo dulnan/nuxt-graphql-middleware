@@ -507,6 +507,7 @@ export class Collector {
   public async init(): Promise<void> {
     try {
       await this.initDocuments()
+      this.isInitialised = true
     } catch {
       if (this.helper.isDev) {
         const shouldRevalidate = await this.helper.prompt.confirm(
@@ -516,7 +517,6 @@ export class Collector {
         if (shouldRevalidate === 'yes') {
           await this.reset()
           await this.init()
-          this.isInitialised = true
           return
         }
       }
@@ -586,6 +586,8 @@ export class Collector {
     } catch (e) {
       this.logError(e)
 
+      // The error has already been logged above.
+      // eslint-disable-next-line preserve-caught-error
       throw new Error('GraphQL document validation failed.')
     }
   }

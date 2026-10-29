@@ -8,6 +8,7 @@ code in this repository.
 ### Development Setup
 
 ```sh
+corepack enable npm            # Use the npm version pinned in package.json (once per Node install)
 npm install                    # Install dependencies
 npm run dev:prepare            # Generate types (required before development)
 ```

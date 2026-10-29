@@ -31,6 +31,8 @@ export class SchemaProvider {
       logger.error(error)
       const hasLoaded = await this.loadFromDiskFallback()
       if (!hasLoaded) {
+        // The error has already been logged above.
+        // eslint-disable-next-line preserve-caught-error
         throw new Error('Failed to load GraphQL schema.')
       }
     }

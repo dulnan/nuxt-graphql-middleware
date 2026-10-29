@@ -1,4 +1,5 @@
 {
   "private": true,
-  "name": "nuxt-graphql-middleware-playground"
+  "name": "nuxt-graphql-middleware-playground",
+  "type": "module"
 }

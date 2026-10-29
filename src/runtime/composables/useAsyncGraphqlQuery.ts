@@ -78,6 +78,8 @@ export function useAsyncGraphqlQuery<
   | undefined
 >
 
+// The overloads only differ in the default of DefaultT (like Nuxt's useAsyncData).
+// eslint-disable-next-line @typescript-eslint/unified-signatures
 export function useAsyncGraphqlQuery<
   Name extends keyof Query,
   Operation extends Query[Name] = Query[Name],
