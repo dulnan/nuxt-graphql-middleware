@@ -84,7 +84,7 @@
     "docs:serve": "vitepress serve docs --port 5000",
     "typedoc": "./scripts/typedoc.sh",
     "typedoc:generate": "typedoc --tsconfig tsconfig.typedoc.json",
-    "cypress": "cypress run --e2e",
+    "cypress": "cypress run --e2e --browser chrome",
     "cypress:open": "cypress open --e2e",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
@@ -141,10 +141,10 @@
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/module-builder": "^1.0.3",
     "@nuxt/schema": "^4.6.3",
-    "@nuxt/test-utils": "^3.23.0",
+    "@nuxt/test-utils": "^4.3.4",
     "@nuxtjs/mcp-toolkit": "^0.5.2",
     "@types/micromatch": "^4.0.10",
-    "cypress": "^15.21.1",
+    "cypress": "^16.2.1",
     "cypress-wait-until": "^3.0.2",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
@@ -168,7 +168,7 @@
     "typedoc-vitepress-theme": "^1.1.4",
     "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "vitest": "^3.2.7",
+    "vitest": "^5.0.5",
     "vue-tsc": "^3.3.13",
     "zod": "^4.6.7"
   },
@@ -179,11 +179,11 @@
   },
   "allowScripts": {
     "@parcel/watcher@2.6.0": true,
-    "cypress@15.21.1": true,
     "esbuild@0.28.2": true,
     "esbuild@0.25.12": true,
     "esbuild@0.21.5": true,
     "fsevents@2.3.3": true,
-    "unrs-resolver@1.12.2": true
+    "unrs-resolver@1.12.2": true,
+    "cypress@16.2.1": true
   }
 }
