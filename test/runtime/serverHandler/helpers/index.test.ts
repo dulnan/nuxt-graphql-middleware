@@ -6,6 +6,7 @@ import {
   getFetchOptions,
   onServerError,
   onServerResponse,
+  withTimeout,
 } from './../../../../src/runtime/server/helpers'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
@@ -210,6 +211,31 @@ describe('onServerError', () => {
     expect(result.data).toBeUndefined()
   })
 
+  test.each([
+    [
+      'before the response',
+      {
+        message:
+          '[POST] "http://internal.example:4000/graphql": <no response> The operation was aborted due to timeout',
+        cause: { name: 'TimeoutError' },
+      },
+    ],
+    [
+      'while reading the response',
+      {
+        name: 'TimeoutError',
+        message: 'The operation was aborted due to timeout',
+      },
+    ],
+  ])('responds with a 504 for timeouts %s', (_label, error) => {
+    const result = callDefault(error)
+    expect(result.statusCode).toBe(504)
+    expect(result.statusMessage).toBe(
+      "The GraphQL server didn't respond in time.",
+    )
+    expect(JSON.stringify(result)).not.toContain('internal.example')
+  })
+
   test('handles errors without a response', () => {
     const result = callDefault({
       message:
@@ -308,5 +334,31 @@ describe('onServerResponse', () => {
       'foobar',
       null,
     )
+  })
+})
+
+describe('withTimeout', () => {
+  test('adds a signal with the timeout', async () => {
+    const result = withTimeout({ headers: { foo: 'bar' } }, 20)
+    expect(result.headers).toEqual({ foo: 'bar' })
+    expect(result.signal).toBeInstanceOf(AbortSignal)
+    expect(result.signal!.aborted).toBe(false)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(result.signal!.aborted).toBe(true)
+    expect((result.signal!.reason as Error).name).toBe('TimeoutError')
+  })
+
+  test('does nothing if the timeout is disabled', () => {
+    const options = { headers: { foo: 'bar' } }
+    expect(withTimeout(options, false)).toBe(options)
+    expect(withTimeout(options, undefined)).toBe(options)
+  })
+
+  test.each([
+    ['a timeout', { timeout: 60_000 }],
+    ['a timeout of 0', { timeout: 0 }],
+    ['a signal', { signal: new AbortController().signal }],
+  ])('keeps the fetch options if they have %s', (_label, options) => {
+    expect(withTimeout(options, 20)).toBe(options)
   })
 })

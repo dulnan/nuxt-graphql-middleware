@@ -157,6 +157,30 @@ export default defineGraphqlServerOptions({
 })
 ```
 
+### Example: Longer timeout for a single operation
+
+Requests to the GraphQL server are aborted after the
+[`graphqlServerTimeout`](/configuration/module#graphqlservertimeout) (30 seconds
+by default). A `timeout` (in milliseconds) or `signal` returned here takes
+precedence, and `timeout: 0` disables it.
+
+```typescript
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
+
+export default defineGraphqlServerOptions({
+  serverFetchOptions(event, operation, operationName) {
+    if (operationName === 'importProducts') {
+      return { timeout: 5 * 60 * 1000 }
+    }
+    return {}
+  },
+})
+```
+
+Note that the `timeout` option of ofetch only limits the time until the response
+headers arrive, while the default timeout of the middleware also covers reading
+the response. Use `signal: AbortSignal.timeout(ms)` to limit both.
+
 ## onServerResponse
 
 Handle the response from the GraphQL server.
@@ -228,12 +252,12 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ) => any | Promise<any>
 ```
 
-If no method is provided, the middleware responds with a 500 status code. In
-production the response only contains a generic message and the `errors` of the
-GraphQL server's response, if it is a GraphQL response. The error message, which
-contains the URL of the GraphQL server, is logged on the server. In dev mode the
-response also contains the error message and the whole response of the GraphQL
-server.
+If no method is provided, the middleware responds with a 500 status code, or
+with a 504 if the request timed out. In production the response only contains a
+generic message and the `errors` of the GraphQL server's response, if it is a
+GraphQL response. The error message, which contains the URL of the GraphQL
+server, is logged on the server. In dev mode the response also contains the
+error message and the whole response of the GraphQL server.
 
 ### Example: Always return a 200 status to the clients
 

@@ -111,6 +111,21 @@ export interface ModuleOptions {
   }
 
   /**
+   * The timeout for requests to the GraphQL server in milliseconds.
+   *
+   * Requests that take longer, including reading the response, are aborted and
+   * answered with a 504 status code. Set to `false` to disable it.
+   *
+   * A `timeout` or `signal` returned by the `serverFetchOptions` method of the
+   * server options takes precedence, which allows a different timeout for
+   * single operations. The timeout can be changed at runtime with the
+   * `NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_SERVER_TIMEOUT` environment variable.
+   *
+   * @default 30000
+   */
+  graphqlServerTimeout?: number | false
+
+  /**
    * Enable detailled debugging messages.
    *
    * @default false

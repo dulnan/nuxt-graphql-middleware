@@ -32,3 +32,13 @@ values are in bytes, `false` disables the limit:
 NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION=1048576
 NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD=false
 ```
+
+## GraphQL Server Timeout
+
+Allows you to override the
+[`graphqlServerTimeout`](/configuration/module#graphqlservertimeout) option at
+runtime. The value is in milliseconds, `false` disables the timeout:
+
+```bash
+NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_SERVER_TIMEOUT=60000
+```

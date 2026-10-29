@@ -66,9 +66,10 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeConfig: GraphqlMiddlewareRuntimeConfig = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
       bodySizeLimit: helper.options.bodySizeLimit,
+      graphqlServerTimeout: helper.options.graphqlServerTimeout,
     }
     // The runtime config types are generated from the current values, which
-    // don't include `false` for the limits.
+    // don't include `false` for the limits and the timeout.
     nuxt.options.runtimeConfig.graphqlMiddleware = runtimeConfig as any
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))

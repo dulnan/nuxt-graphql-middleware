@@ -6,6 +6,7 @@ import type { GraphqlMiddlewareRequestContext } from '../../types'
 import {
   getEndpoint,
   getFetchOptions,
+  withTimeout,
   onServerError,
   onServerResponse,
 } from '../helpers'
@@ -60,12 +61,15 @@ export async function doGraphqlRequest(
   )
 
   // Get the fetch options for this request.
-  const fetchOptions = await getFetchOptions(
-    serverOptions,
-    event,
-    operation,
-    operationName,
-    context,
+  const fetchOptions = withTimeout(
+    await getFetchOptions(
+      serverOptions,
+      event,
+      operation,
+      operationName,
+      context,
+    ),
+    runtimeConfig.graphqlServerTimeout,
   )
 
   return $fetch

@@ -357,4 +357,5 @@ export type GraphqlMiddlewareRuntimeConfig = {
     mutation?: number | false
     upload?: number | false
   }
+  graphqlServerTimeout?: number | false
 }

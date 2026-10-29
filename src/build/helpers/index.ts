@@ -40,6 +40,7 @@ export const defaultOptions: ModuleOptions = {
     mutation: 10 * 1024 * 1024,
     upload: 50 * 1024 * 1024,
   },
+  graphqlServerTimeout: 30_000,
   mcp: {
     enabled: false,
   },

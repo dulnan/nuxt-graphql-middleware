@@ -125,6 +125,39 @@ export function getFetchOptions(
   return {}
 }
 
+/**
+ * Add the timeout for the request to the GraphQL server to the fetch options.
+ *
+ * A signal is used instead of the timeout option of ofetch, which only limits
+ * the time until the response headers arrive. Nothing is added if the options
+ * already have a timeout or a signal: ofetch ignores the timeout if there is a
+ * signal.
+ */
+export function withTimeout(
+  fetchOptions: FetchOptions,
+  timeout: number | false | undefined,
+): FetchOptions {
+  if (
+    typeof timeout !== 'number' ||
+    fetchOptions.timeout !== undefined ||
+    fetchOptions.signal
+  ) {
+    return fetchOptions
+  }
+
+  return { ...fetchOptions, signal: AbortSignal.timeout(timeout) }
+}
+
+/**
+ * Whether the request to the GraphQL server was aborted by a timeout.
+ *
+ * Errors while reading the response are not wrapped in a FetchError.
+ */
+function isTimeoutError(error: unknown): boolean {
+  const value = error as { name?: string; cause?: { name?: string } } | null
+  return value?.name === 'TimeoutError' || value?.cause?.name === 'TimeoutError'
+}
+
 export function throwError(statusMessage: string, statusCode = 400): never {
   throw createError({
     statusCode,
@@ -353,10 +386,12 @@ export function onServerError(
   }
   const message = error && 'message' in error ? error.message : ''
   const data = error?.response?._data
+  const isTimeout = isTimeoutError(error)
+  const statusCode = isTimeout ? 504 : 500
 
   if (import.meta.dev) {
     throw createError({
-      statusCode: 500,
+      statusCode,
       statusMessage: "Couldn't execute GraphQL query: " + message,
       data,
     })
@@ -369,8 +404,10 @@ export function onServerError(
     `[nuxt-graphql-middleware] Couldn't execute GraphQL ${operation} "${operationName}": ${message}`,
   )
   throw createError({
-    statusCode: 500,
-    statusMessage: "Couldn't execute GraphQL query.",
+    statusCode,
+    statusMessage: isTimeout
+      ? "The GraphQL server didn't respond in time."
+      : "Couldn't execute GraphQL query.",
     data:
       data && typeof data === 'object' && Array.isArray(data.errors)
         ? { errors: data.errors }
