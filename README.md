@@ -2,7 +2,7 @@
 
 # nuxt-graphql-middleware
 
-A GraphQL client for Nuxt 3.
+A GraphQL client for Nuxt 4.
 
 **[Documentation](https://nuxt-graphql-middleware.dulnan.net)** –
 **[npm](https://www.npmjs.com/package/nuxt-graphql-middleware)** –
