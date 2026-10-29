@@ -75,6 +75,16 @@ export interface ModuleOptions {
   enableFileUploads?: boolean
 
   /**
+   * The name of the GraphQL scalar used for file uploads.
+   *
+   * Only mutations with a variable of this type, directly or in an input type,
+   * can be performed via the upload server endpoint.
+   *
+   * @default 'Upload'
+   */
+  fileUploadScalar?: string
+
+  /**
    * The maximum size of request bodies in bytes.
    *
    * Larger requests are refused with a 413 status code. Set a limit to `false`

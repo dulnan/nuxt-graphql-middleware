@@ -345,6 +345,10 @@ export class Collector {
     this.loggedCollisions = collisions
   }
 
+  public getSchema(): GraphQLSchema {
+    return this.schema
+  }
+
   public async updateSchema(schema: GraphQLSchema) {
     this.schema = schema
     this.generator.updateSchema(schema)

@@ -50,6 +50,12 @@ header are refused with a 400 status code. The `useGraphqlUploadMutation`
 composable makes sure the data is sent in the correct format and with the
 header.
 
+Only mutations with a variable of the `Upload` scalar type, directly or in an
+input type, can be performed via this route. Other mutations are refused with a
+400 status code and are a type error in `useGraphqlUploadMutation`. If your
+schema uses a different name for the scalar, set it with the
+[`fileUploadScalar`](/configuration/module#fileuploadscalar) option.
+
 Requests larger than 50 MB (all files of a request together) are refused with a
 413 status code. The limit can be changed with the
 [`bodySizeLimit.upload`](/configuration/module#bodysizelimit) option. Apart from

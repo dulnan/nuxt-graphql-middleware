@@ -16,6 +16,7 @@ import {
   readMultipartBody,
 } from './../helpers'
 import { documents } from '#nuxt-graphql-middleware/documents'
+import { uploadMutations } from '#nuxt-graphql-middleware/upload-mutations'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
 import { useRuntimeConfig } from '#imports'
 import { GraphqlMiddlewareOperation, UPLOAD_HEADER } from '../../settings'
@@ -61,6 +62,14 @@ export default defineEventHandler(async (event) => {
 
   if (!isValidMutation(operationName)) {
     return throwError('Invalid mutation name.')
+  }
+
+  // Only mutations with file variables can use the higher body size limit of
+  // this route.
+  if (!uploadMutations.includes(operationName)) {
+    return throwError(
+      `The mutation "${operationName}" has no file variables. Use the mutation endpoint instead.`,
+    )
   }
 
   if (!getRequestHeader(event, UPLOAD_HEADER)) {

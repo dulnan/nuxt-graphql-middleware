@@ -382,3 +382,28 @@ query or mutation operation and the value is the "source file" (relative to the
 app root) where the operation was found.
 
 Used internally for the error overlay during development.
+
+## `upload-mutations`
+
+**Alias: `#nuxt-graphql-middleware/upload-mutations`**
+
+Exports the names of the mutations that can be performed via the upload server
+endpoint: Mutations with a variable of the
+[`fileUploadScalar`](/configuration/module#fileuploadscalar) type, directly or
+in an input type. Empty if `enableFileUploads` is disabled.
+
+### Exports
+
+#### `uploadMutations`
+
+```js
+export const uploadMutations = ['submitContactForm', 'uploadAvatar']
+```
+
+#### `UploadMutationName`
+
+The names as a type, used to type `useGraphqlUploadMutation`.
+
+```typescript
+export type UploadMutationName = 'submitContactForm' | 'uploadAvatar'
+```

@@ -8,8 +8,15 @@ vi.mock('#nuxt-graphql-middleware/documents', () => {
     documents: {
       mutation: {
         barfoo: 'Mutation',
+        withoutFiles: 'Mutation without file variables',
       },
     },
+  }
+})
+
+vi.mock('#nuxt-graphql-middleware/upload-mutations', () => {
+  return {
+    uploadMutations: ['barfoo'],
   }
 })
 
@@ -76,13 +83,14 @@ function testHandler(
   headers: Record<string, string>,
   body = buildBody(),
   contentType = `multipart/form-data; boundary=${BOUNDARY}`,
+  name = 'barfoo',
 ) {
   const req: Partial<IncomingMessage> & { body?: Buffer } = {}
   const res: Partial<ServerResponse> = {
     setHeader: vi.fn(),
   }
   req.method = 'POST'
-  req.url = 'http://localhost:3000/api/graphql_middleware/upload/barfoo'
+  req.url = 'http://localhost:3000/api/graphql_middleware/upload/' + name
   req.headers = {
     'content-type': contentType,
     ...headers,
@@ -90,7 +98,7 @@ function testHandler(
   req.body = Buffer.from(body)
   const event = new H3Event(req as any, res as any)
   event.context.params = {
-    name: 'barfoo',
+    name,
   }
   return eventHandler(event)
 }
@@ -122,6 +130,14 @@ describe('upload handler', () => {
   test('Should refuse a request without the upload header', async () => {
     fetchMock.raw.mockClear()
     await expect(testHandler({})).rejects.toMatchObject({ statusCode: 400 })
+    expect(fetchMock.raw).not.toHaveBeenCalled()
+  })
+
+  test('Should refuse a mutation without file variables', async () => {
+    fetchMock.raw.mockClear()
+    await expect(
+      testHandler(UPLOAD_HEADER, buildBody(), undefined, 'withoutFiles'),
+    ).rejects.toMatchObject({ statusCode: 400 })
     expect(fetchMock.raw).not.toHaveBeenCalled()
   })
 

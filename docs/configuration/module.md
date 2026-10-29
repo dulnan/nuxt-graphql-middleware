@@ -34,7 +34,7 @@ const autoImportPatterns = [
 > `optional` **bodySizeLimit**: `object`
 
 Defined in:
-[options.ts:87](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L87)
+[options.ts:97](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L97)
 
 The maximum size of request bodies in bytes.
 
@@ -317,6 +317,26 @@ name=John&n:age=35&b:isUser=false
 
 This only works for flat primitive values. Nested objects or arrays are still
 encoded using the \_\_variables fallback where all variables are JSON encoded.
+
+---
+
+## fileUploadScalar?
+
+> `optional` **fileUploadScalar**: `string`
+
+Defined in:
+[options.ts:85](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L85)
+
+The name of the GraphQL scalar used for file uploads.
+
+Only mutations with a variable of this type, directly or in an input type, can
+be performed via the upload server endpoint.
+
+### Default
+
+```ts
+'Upload'
+```
 
 ---
 

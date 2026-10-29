@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'url'
 import { addDevServerHandler, defineNuxtModule, installModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
-import { defaultOptions } from './build/helpers'
+import { isScalarType } from 'graphql'
+import { defaultOptions, logger } from './build/helpers'
 import { Collector } from './build/Collector'
 import { SchemaProvider } from './build/SchemaProvider'
 import type { ModuleOptions } from './build/types/options'
@@ -38,6 +39,15 @@ export default defineNuxtModule<ModuleOptions>({
 
     const schemaProvider = new SchemaProvider(helper)
     await schemaProvider.init()
+
+    if (helper.options.enableFileUploads) {
+      const scalarName = helper.options.fileUploadScalar
+      if (!isScalarType(schemaProvider.getSchema().getType(scalarName))) {
+        logger.warn(
+          `The GraphQL schema has no "${scalarName}" scalar, so no mutations can be performed via the upload endpoint. Set the "fileUploadScalar" option to the name of the scalar used for file uploads.`,
+        )
+      }
+    }
 
     const collector = new Collector(schemaProvider.getSchema(), helper)
 
