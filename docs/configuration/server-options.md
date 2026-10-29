@@ -173,6 +173,15 @@ type GraphqlMiddlewareOnServerResponseMethod = (
 ) => any | Promise<any>
 ```
 
+If no method is provided, the middleware returns the response of the GraphQL
+server if it is a JSON object. Any other response, for example text or an error
+page from a proxy, is refused with a 502 status code, because it would otherwise
+be sent to the client as HTML. In production the details are logged on the
+server.
+
+If you provide a method, make sure it doesn't return strings from the GraphQL
+server's response: h3 sends strings as HTML.
+
 ### Example: Pass cookie from client to GraphQL server and add custom property
 
 You can provide a generic argument (object) to define custom properties added to

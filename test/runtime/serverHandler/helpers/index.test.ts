@@ -5,6 +5,7 @@ import {
   getEndpoint,
   getFetchOptions,
   onServerError,
+  onServerResponse,
 } from './../../../../src/runtime/server/helpers'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
@@ -235,6 +236,74 @@ describe('onServerError', () => {
     expect(custom).toHaveBeenCalledWith(
       {},
       error,
+      GraphqlMiddlewareOperation.Query,
+      'foobar',
+      null,
+    )
+  })
+})
+
+describe('onServerResponse', () => {
+  function response(data: unknown, contentType = 'application/json') {
+    return {
+      _data: data,
+      headers: new Headers({ 'content-type': contentType }),
+    } as any
+  }
+
+  function callDefault(data: unknown, contentType?: string) {
+    return onServerResponse(
+      {},
+      {} as any,
+      response(data, contentType),
+      GraphqlMiddlewareOperation.Query,
+      'foobar',
+      null,
+    )
+  }
+
+  test('passes on GraphQL responses', () => {
+    const data = { data: { foo: 'bar' }, errors: [] }
+    expect(callDefault(data)).toBe(data)
+    const withoutPrototype = Object.assign(Object.create(null), data)
+    expect(callDefault(withoutPrototype)).toBe(withoutPrototype)
+  })
+
+  test.each([
+    ['text', '<script>alert(1)</script>', 'text/html'],
+    ['an empty body', undefined, 'application/json'],
+    ['null', null, 'application/json'],
+    ['an array', [{ data: {} }], 'application/json'],
+    ['a blob', new Blob(['foo']), 'application/octet-stream'],
+  ])('refuses %s', (_label, data, contentType) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(() => callDefault(data, contentType)).toThrowError(
+      expect.objectContaining({
+        statusCode: 502,
+        statusMessage: 'Invalid response from the GraphQL server.',
+      }),
+    )
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining(`(content type: ${contentType})`),
+    )
+  })
+
+  test('calls the method from the server options', () => {
+    const custom = vi.fn(() => 'custom')
+    const res = response('<html></html>', 'text/html')
+    expect(
+      onServerResponse(
+        { onServerResponse: custom },
+        {} as any,
+        res,
+        GraphqlMiddlewareOperation.Query,
+        'foobar',
+        null,
+      ),
+    ).toBe('custom')
+    expect(custom).toHaveBeenCalledWith(
+      {},
+      res,
       GraphqlMiddlewareOperation.Query,
       'foobar',
       null,

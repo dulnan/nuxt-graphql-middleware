@@ -311,7 +311,24 @@ export function onServerResponse(
     )
   }
 
-  return response._data
+  const data = response._data
+  const prototype =
+    data && typeof data === 'object' ? Object.getPrototypeOf(data) : undefined
+  if (prototype === Object.prototype || prototype === null) {
+    return data
+  }
+
+  // Only GraphQL responses (JSON objects) are passed on. h3 would send other
+  // responses, such as text or an error page from a proxy, as HTML.
+  const details = `Invalid response from the GraphQL server for ${operation} "${operationName}" (content type: ${response.headers?.get('content-type') || 'none'}).`
+  if (import.meta.dev) {
+    throw createError({ statusCode: 502, statusMessage: details })
+  }
+  console.error('[nuxt-graphql-middleware] ' + details)
+  throw createError({
+    statusCode: 502,
+    statusMessage: 'Invalid response from the GraphQL server.',
+  })
 }
 
 /**
