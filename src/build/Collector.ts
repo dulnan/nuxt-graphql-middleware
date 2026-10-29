@@ -1,5 +1,5 @@
 import { basename } from 'node:path'
-import { relative } from 'pathe'
+import { isAbsolute, relative } from 'pathe'
 import {
   parse,
   type DefinitionNode,
@@ -165,7 +165,7 @@ export class Collector {
 
     if (!mappedOptions.output.buildTypeDocFilePath) {
       mappedOptions.output.buildTypeDocFilePath = (filePath: string) => {
-        if (filePath.startsWith('/')) {
+        if (isAbsolute(filePath)) {
           return this.filePathToBuildRelative(filePath)
         } else if (filePath.startsWith('hook:')) {
           return './../nuxt-graphql-middleware/hook-documents.graphql'
@@ -357,7 +357,7 @@ export class Collector {
   }
 
   private filePathToSourceRelative(filePath: string): string {
-    if (filePath.startsWith('/')) {
+    if (isAbsolute(filePath)) {
       return './' + relative(process.cwd(), filePath)
     } else if (filePath.startsWith('hook:')) {
       const hookPathAbsolute =

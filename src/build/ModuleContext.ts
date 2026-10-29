@@ -1,3 +1,4 @@
+import { isAbsolute, normalize } from 'pathe'
 import type { Collector } from './Collector'
 import type { SchemaProvider } from './SchemaProvider'
 import type { GraphQLNamedType, GraphQLSchema } from 'graphql'
@@ -77,7 +78,7 @@ export class ModuleContext {
    * @param filePath - The absolute path to the file.
    */
   public addImportFile(filePath: string): ModuleContext {
-    if (!filePath.startsWith('/')) {
+    if (!isAbsolute(filePath)) {
       throw new Error(
         `The provided file path "${filePath}" must be an absolute path.`,
       )
@@ -89,7 +90,8 @@ export class ModuleContext {
       )
     }
 
-    this.collector.addHookFile(filePath)
+    // Use forward slashes on Windows, like the paths of watcher events.
+    this.collector.addHookFile(normalize(filePath))
     return this
   }
 }
