@@ -1,5 +1,10 @@
 import { describe, it, expect, afterAll } from 'vitest'
-import { setupMcpTests, ensureMcpClient, cleanupMcpTests } from './setup'
+import {
+  setupMcpTests,
+  ensureMcpClient,
+  cleanupMcpTests,
+  buildDir,
+} from './setup'
 
 interface ModulePaths {
   runtimeTypes: string
@@ -129,11 +134,17 @@ describe('MCP Module Config Tool', async () => {
 
       const structured = result.structuredContent as ModuleConfigResponse
 
-      expect(structured.paths).toMatchInlineSnapshot(`
+      expect({
+        ...structured.paths,
+        documentTypes: structured.paths.documentTypes.replace(
+          buildDir,
+          '<buildDir>',
+        ),
+      }).toMatchInlineSnapshot(`
         {
           "clientOptions": "./app/graphqlMiddleware.clientOptions.ts",
-          "documentTypes": ".nuxt/graphql-operations/index.d.ts",
-          "runtimeTypes": "../../../src/runtime/types.ts",
+          "documentTypes": "<buildDir>/graphql-operations/index.d.ts",
+          "runtimeTypes": "../../../../../src/runtime/types.ts",
           "schema": "../schema.graphql",
           "serverOptions": "./server/graphqlMiddleware.serverOptions.ts",
         }
