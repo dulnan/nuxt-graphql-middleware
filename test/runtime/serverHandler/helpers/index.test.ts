@@ -450,4 +450,12 @@ describe('getClientAbortSignal', () => {
     expect(getClientAbortSignal(null)).toBeUndefined()
     expect(getClientAbortSignal({ node: { res: {} } } as any)).toBeUndefined()
   })
+
+  test('is not used for cached responses', () => {
+    const event = createEvent(false)
+    event.context = { cache: {} }
+    expect(getClientAbortSignal(event)).toBeUndefined()
+    event.node.res.emit('close')
+    expect(isClientAborted(event)).toBe(false)
+  })
 })

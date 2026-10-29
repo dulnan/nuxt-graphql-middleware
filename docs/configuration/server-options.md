@@ -184,7 +184,9 @@ Queries are also aborted when the client closes the connection before the
 response is sent, for example because the user left the page. A `signal`
 returned here is combined with that. Mutations and uploads are not aborted when
 the client closes the connection, as some GraphQL servers stop halfway if the
-connection is closed.
+connection is closed. Neither are queries whose response might be cached, for
+example with the `cache` or `swr` route rules, as other clients may get the
+cached response.
 
 ## onServerResponse
 

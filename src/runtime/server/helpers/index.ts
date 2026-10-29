@@ -135,12 +135,20 @@ const clientAbortedEvents = new WeakSet<H3Event>()
  * the response was sent.
  *
  * The request emits "close" once its body was read, so the response is used.
+ *
+ * Returns nothing if the response might be cached and sent to other clients,
+ * for example with the cache or swr route rules.
  */
 export function getClientAbortSignal(
   event: H3Event | null | undefined,
 ): AbortSignal | undefined {
   const res = event?.node?.res
-  if (!event || !res || typeof res.once !== 'function') {
+  if (
+    !event ||
+    !res ||
+    typeof res.once !== 'function' ||
+    event.context?.cache
+  ) {
     return
   }
 
