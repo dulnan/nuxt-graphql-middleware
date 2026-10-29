@@ -75,6 +75,32 @@ export interface ModuleOptions {
   enableFileUploads?: boolean
 
   /**
+   * The maximum size of request bodies in bytes.
+   *
+   * Larger requests are refused with a 413 status code. Set a limit to `false`
+   * to disable it, for example if the web server already limits the size.
+   *
+   * The limits can be changed at runtime with the
+   * `NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION` and
+   * `NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD` environment variables.
+   */
+  bodySizeLimit?: {
+    /**
+     * The limit for mutations.
+     *
+     * @default 10485760 (10 MB)
+     */
+    mutation?: number | false
+
+    /**
+     * The limit for file uploads, including all files of a request.
+     *
+     * @default 52428800 (50 MB)
+     */
+    upload?: number | false
+  }
+
+  /**
    * Enable detailled debugging messages.
    *
    * @default false

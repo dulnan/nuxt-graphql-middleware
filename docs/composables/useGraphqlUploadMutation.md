@@ -50,9 +50,11 @@ header are refused with a 400 status code. The `useGraphqlUploadMutation`
 composable makes sure the data is sent in the correct format and with the
 header.
 
-The server route does not perform any validations on the provided data, for
-example there is no file size limitation. This should be handled separately, for
-example on the web server or by implementing a custom Nitro middleware.
+Requests larger than 50 MB (all files of a request together) are refused with a
+413 status code. The limit can be changed with the
+[`bodySizeLimit.upload`](/configuration/module#bodysizelimit) option. Apart from
+that, the server route does not perform any validations on the files, for
+example of their type. This should be handled by the GraphQL server.
 
 In addition, the route does not save any of the files. It only validates that a
 valid, existing mutation is used. It also makes sure that it's not possible to

@@ -9,7 +9,10 @@ import { ModuleHelper } from './build/ModuleHelper'
 import { TEMPLATES } from './build/templates'
 import { DevModeHandler } from './build/DevModeHandler'
 import { ModuleContext } from './build/ModuleContext'
-import type { OperationResponseError } from './runtime/types'
+import type {
+  GraphqlMiddlewareRuntimeConfig,
+  OperationResponseError,
+} from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
 import { createMcpDevHandler } from './build/dev-handler/mcp-handler'
@@ -50,9 +53,13 @@ export default defineNuxtModule<ModuleOptions>({
       clientCacheMaxSize: helper.options.clientCache?.maxSize ?? 100,
     }
 
-    nuxt.options.runtimeConfig.graphqlMiddleware = {
+    const runtimeConfig: GraphqlMiddlewareRuntimeConfig = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
+      bodySizeLimit: helper.options.bodySizeLimit,
     }
+    // The runtime config types are generated from the current values, which
+    // don't include `false` for the limits.
+    nuxt.options.runtimeConfig.graphqlMiddleware = runtimeConfig as any
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))
     helper.inlineNitroExternals(helper.resolvers.module.resolve('./runtime'))

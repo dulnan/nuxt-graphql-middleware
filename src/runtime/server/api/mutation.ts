@@ -8,6 +8,7 @@ import {
 import { GraphqlMiddlewareOperation } from './../../settings'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { doGraphqlRequest } from '../utils/doGraphqlRequest'
+import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const operationName = getRouterParam(event, 'name')
@@ -18,7 +19,10 @@ export default defineEventHandler(async (event) => {
   const operationDocument = documents.mutation[operationName]
   const queryParams = getQuery(event)
   const context = extractRequestContext(queryParams)
-  const variables = await readJsonBody(event)
+  const variables = await readJsonBody(
+    event,
+    useRuntimeConfig().graphqlMiddleware.bodySizeLimit?.mutation,
+  )
 
   return doGraphqlRequest(
     {

@@ -1,8 +1,6 @@
 import {
   defineEventHandler,
-  readMultipartFormData,
   getQuery,
-  type MultiPartData,
   getRouterParam,
   getRequestHeader,
 } from 'h3'
@@ -15,6 +13,7 @@ import {
   throwError,
   extractRequestContext,
   isValidMutation,
+  readMultipartBody,
 } from './../helpers'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import { serverOptions } from '#nuxt-graphql-middleware/server-options'
@@ -24,22 +23,36 @@ import { GraphqlMiddlewareOperation, UPLOAD_HEADER } from '../../settings'
 type GraphqlUploadData = {
   variables: Record<string, any>
   map: string
-  files: MultiPartData[]
+  files: [name: string, file: File][]
 }
 
-function parseMultipart(data: MultiPartData[]): GraphqlUploadData {
-  const files: MultiPartData[] = data.filter((v) => !!v.filename)
-
-  const variablesData = data
-    .find((v) => v.name === 'variables')
-    ?.data?.toString()
-  if (!variablesData) {
-    throw new Error('Missing variables in form data.')
+function parseFormData(data: FormData): GraphqlUploadData {
+  const variablesData = data.get('variables')
+  if (typeof variablesData !== 'string') {
+    return throwError('Missing variables in form data.')
   }
-  const variables = JSON.parse(variablesData)
-  const map = data.find((v) => v.name === 'map')?.data.toString() || '{}'
 
-  return { files, map, variables }
+  let variables: unknown
+  try {
+    variables = JSON.parse(variablesData)
+  } catch {
+    return throwError('Invalid variables in form data.')
+  }
+  if (!variables || typeof variables !== 'object' || Array.isArray(variables)) {
+    return throwError('Invalid variables in form data.')
+  }
+
+  const mapData = data.get('map')
+  const map = typeof mapData === 'string' ? mapData : '{}'
+
+  const files: [string, File][] = []
+  for (const [name, value] of data) {
+    if (typeof value !== 'string') {
+      files.push([name, value])
+    }
+  }
+
+  return { files, map, variables: variables as Record<string, any> }
 }
 
 export default defineEventHandler(async (event) => {
@@ -57,13 +70,15 @@ export default defineEventHandler(async (event) => {
   // The GraphQL query document as a string.
   const operationDocument = documents.mutation[operationName]
 
-  const multiPartData = await readMultipartFormData(event)
+  // Get the runtime config.
+  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
 
-  if (!multiPartData) {
-    return throwError('Failed to read multi part data.')
-  }
+  const multiPartData = await readMultipartBody(
+    event,
+    runtimeConfig.bodySizeLimit?.upload,
+  )
 
-  const { variables, map, files } = parseMultipart(multiPartData)
+  const { variables, map, files } = parseFormData(multiPartData)
 
   // Build a new FormData object.
   const formData = new FormData()
@@ -80,14 +95,12 @@ export default defineEventHandler(async (event) => {
 
   formData.append('map', map)
 
-  for (const file of files) {
-    if (!file.name) {
-      return throwError('Missing name for file: ' + file.filename)
+  for (const [name, file] of files) {
+    if (!name) {
+      return throwError('Missing name for file: ' + file.name)
     }
 
-    // @ts-ignore Wrongly complains here.
-    const blob = new Blob([file.data])
-    formData.append(file.name, blob, file.filename)
+    formData.append(name, file, file.name)
   }
 
   const queryParams = getQuery(event)
@@ -105,9 +118,6 @@ export default defineEventHandler(async (event) => {
       context,
     })
   }
-
-  // Get the runtime config.
-  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
 
   // Determine the endpoint of the GraphQL server.
   const endpoint = await getEndpoint(

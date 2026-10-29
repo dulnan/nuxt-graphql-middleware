@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import eventHandler from './../../../src/runtime/server/api/upload'
 
@@ -13,12 +13,17 @@ vi.mock('#nuxt-graphql-middleware/documents', () => {
   }
 })
 
+const bodySizeLimit = vi.hoisted(() => {
+  return { upload: false as number | false }
+})
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
       return {
         graphqlMiddleware: {
           graphqlEndpoint: 'http//localhost/graphql',
+          bodySizeLimit,
         },
       }
     },
@@ -47,12 +52,12 @@ vi.stubGlobal('$fetch', fetchMock)
 
 const BOUNDARY = 'foobar'
 
-function testHandler(headers: Record<string, string>) {
-  const body = [
+function buildBody(variables = '{"file":null}') {
+  return [
     `--${BOUNDARY}`,
     'Content-Disposition: form-data; name="variables"',
     '',
-    '{"file":null}',
+    variables,
     `--${BOUNDARY}`,
     'Content-Disposition: form-data; name="map"',
     '',
@@ -65,13 +70,21 @@ function testHandler(headers: Record<string, string>) {
     `--${BOUNDARY}--`,
     '',
   ].join('\r\n')
+}
 
+function testHandler(
+  headers: Record<string, string>,
+  body = buildBody(),
+  contentType = `multipart/form-data; boundary=${BOUNDARY}`,
+) {
   const req: Partial<IncomingMessage> & { body?: Buffer } = {}
-  const res: Partial<ServerResponse> = {}
+  const res: Partial<ServerResponse> = {
+    setHeader: vi.fn(),
+  }
   req.method = 'POST'
   req.url = 'http://localhost:3000/api/graphql_middleware/upload/barfoo'
   req.headers = {
-    'content-type': `multipart/form-data; boundary=${BOUNDARY}`,
+    'content-type': contentType,
     ...headers,
   }
   req.body = Buffer.from(body)
@@ -82,12 +95,16 @@ function testHandler(headers: Record<string, string>) {
   return eventHandler(event)
 }
 
+const UPLOAD_HEADER = { 'x-nuxt-graphql-middleware-upload': '1' }
+
 describe('upload handler', () => {
+  afterEach(() => {
+    bodySizeLimit.upload = false
+  })
+
   test('Should forward the upload', async () => {
     fetchMock.raw.mockClear()
-    const result = await testHandler({
-      'x-nuxt-graphql-middleware-upload': '1',
-    })
+    const result = await testHandler(UPLOAD_HEADER)
     expect(result.endpoint).toBe('http//localhost/graphql')
     const formData = result.options.body as FormData
     expect(JSON.parse(formData.get('operations') as string)).toEqual({
@@ -96,12 +113,64 @@ describe('upload handler', () => {
       operationName: 'barfoo',
     })
     expect(formData.get('map')).toBe('{"0":["variables.file"]}')
-    expect(await (formData.get('0') as File).text()).toBe('Hello')
+    const file = formData.get('0') as File
+    expect(file.name).toBe('test.txt')
+    expect(file.type).toBe('text/plain')
+    expect(await file.text()).toBe('Hello')
   })
 
   test('Should refuse a request without the upload header', async () => {
     fetchMock.raw.mockClear()
     await expect(testHandler({})).rejects.toMatchObject({ statusCode: 400 })
     expect(fetchMock.raw).not.toHaveBeenCalled()
+  })
+
+  test('Should refuse a request that is not multipart', async () => {
+    await expect(
+      testHandler(UPLOAD_HEADER, '{}', 'application/json'),
+    ).rejects.toMatchObject({ statusCode: 400 })
+  })
+
+  test.each([['{"file":'], ['[]'], ['null'], ['"foobar"']])(
+    'Should refuse invalid variables: %s',
+    async (variables) => {
+      await expect(
+        testHandler(UPLOAD_HEADER, buildBody(variables)),
+      ).rejects.toMatchObject({ statusCode: 400 })
+    },
+  )
+
+  test('Should refuse a request without variables', async () => {
+    const body = [
+      `--${BOUNDARY}`,
+      'Content-Disposition: form-data; name="map"',
+      '',
+      '{}',
+      `--${BOUNDARY}--`,
+      '',
+    ].join('\r\n')
+    await expect(testHandler(UPLOAD_HEADER, body)).rejects.toMatchObject({
+      statusCode: 400,
+    })
+  })
+
+  test('Should refuse a request whose content length is too large', async () => {
+    bodySizeLimit.upload = 100
+    await expect(
+      testHandler({ ...UPLOAD_HEADER, 'content-length': '101' }),
+    ).rejects.toMatchObject({ statusCode: 413 })
+  })
+
+  test('Should refuse a body that is too large', async () => {
+    bodySizeLimit.upload = buildBody().length - 1
+    await expect(testHandler(UPLOAD_HEADER)).rejects.toMatchObject({
+      statusCode: 413,
+    })
+  })
+
+  test('Should accept a body up to the limit', async () => {
+    bodySizeLimit.upload = buildBody().length
+    const result = await testHandler(UPLOAD_HEADER)
+    expect(result.options.body).toBeInstanceOf(FormData)
   })
 })

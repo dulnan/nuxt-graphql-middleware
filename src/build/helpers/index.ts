@@ -25,6 +25,10 @@ export const defaultOptions: ModuleOptions = {
     enabled: false,
     maxSize: 100,
   },
+  bodySizeLimit: {
+    mutation: 10 * 1024 * 1024,
+    upload: 50 * 1024 * 1024,
+  },
   mcp: {
     enabled: false,
   },

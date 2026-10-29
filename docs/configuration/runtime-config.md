@@ -21,3 +21,14 @@ This is used to _download the schema_ in **dev mode**. A
 provided by your server options will take precedence when _making GraphQL
 queries_. If no method exists, then the value of the environment variable is
 also used at runtime (e.g. running the Nuxt build).
+
+## Body Size Limit
+
+Allows you to override the
+[`bodySizeLimit`](/configuration/module#bodysizelimit) option at runtime. The
+values are in bytes, `false` disables the limit:
+
+```bash
+NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION=1048576
+NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD=false
+```

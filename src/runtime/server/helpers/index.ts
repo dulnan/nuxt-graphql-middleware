@@ -1,6 +1,11 @@
 import type { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
-import { createError, getRequestHeader, readBody } from 'h3'
+import {
+  createError,
+  getRequestHeader,
+  readRawBody,
+  setResponseHeader,
+} from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type {
   GraphqlMiddlewareRequestContext,
@@ -127,6 +132,100 @@ export function throwError(statusMessage: string, statusCode = 400): never {
   })
 }
 
+function getMediaType(event: H3Event): string {
+  const contentType = getRequestHeader(event, 'content-type') || ''
+  return contentType.split(';')[0]!.trim().toLowerCase()
+}
+
+/**
+ * Refuse the request because its body is too large.
+ *
+ * The connection is closed after the response, so that the server doesn't
+ * keep reading the rest of the body.
+ */
+function throwBodyTooLarge(event: H3Event, limit: number): never {
+  setResponseHeader(event, 'connection', 'close')
+  return throwError(
+    `The request body must not be larger than ${limit} bytes.`,
+    413,
+  )
+}
+
+/**
+ * Read the raw request body, refusing it if it's larger than the limit.
+ */
+export async function readLimitedBody(
+  event: H3Event,
+  limit: number | false | undefined,
+): Promise<Buffer | undefined> {
+  if (typeof limit !== 'number') {
+    return readRawBody(event, false)
+  }
+
+  const contentLength = Number(getRequestHeader(event, 'content-length'))
+  if (contentLength > limit) {
+    return throwBodyTooLarge(event, limit)
+  }
+
+  // Chunked requests have no content length, so the bytes are also counted
+  // while reading. Once there are too many, the request is destroyed, which
+  // stops reading.
+  let size = 0
+  let onTooLarge = () => {}
+  const tooLarge = new Promise<never>((_resolve, reject) => {
+    onTooLarge = () => reject(new Error('Request body too large.'))
+  })
+  const req = event.node.req
+  const onData = (chunk: Buffer) => {
+    size += chunk.length
+    if (size > limit) {
+      req.off('data', onData)
+      req.destroy()
+      onTooLarge()
+    }
+  }
+  const promise = readRawBody(event, false)
+  // Requests whose body was already read, for example by the platform, may
+  // not be streams.
+  const isStream = typeof req.on === 'function'
+  if (isStream) {
+    req.on('data', onData)
+  }
+
+  try {
+    const body = await Promise.race([promise, tooLarge])
+    if (body && body.length > limit) {
+      return throwBodyTooLarge(event, limit)
+    }
+    return body
+  } catch (error) {
+    if (size > limit) {
+      return throwBodyTooLarge(event, limit)
+    }
+    throw error
+  } finally {
+    if (isStream) {
+      req.off('data', onData)
+    }
+  }
+}
+
+/**
+ * Drop keys that would change the prototype of the parsed objects.
+ */
+function dropPrototypeKeys(key: string, value: unknown) {
+  if (
+    key === '__proto__' ||
+    (key === 'constructor' &&
+      value &&
+      typeof value === 'object' &&
+      'prototype' in value)
+  ) {
+    return undefined
+  }
+  return value
+}
+
 /**
  * Read the JSON object from the request body.
  *
@@ -136,26 +235,59 @@ export function throwError(statusMessage: string, statusCode = 400): never {
  */
 export async function readJsonBody(
   event: H3Event,
+  limit: number | false | undefined,
 ): Promise<Record<string, any> | undefined> {
-  const contentType = getRequestHeader(event, 'content-type') || ''
-  const mediaType = contentType.split(';')[0]!.trim().toLowerCase()
-  if (mediaType !== 'application/json') {
+  if (getMediaType(event) !== 'application/json') {
     return throwError(
       'The request body must use the "application/json" content type.',
       415,
     )
   }
 
-  const body = await readBody(event, { strict: true })
-  if (
-    body !== undefined &&
-    body !== null &&
-    (typeof body !== 'object' || Array.isArray(body))
-  ) {
+  const text = (await readLimitedBody(event, limit))?.toString('utf8')
+  if (!text) {
+    return undefined
+  }
+
+  let body: unknown
+  try {
+    body = JSON.parse(text, dropPrototypeKeys)
+  } catch {
+    return throwError('Invalid JSON body.')
+  }
+
+  if (body === null) {
+    return undefined
+  } else if (typeof body !== 'object' || Array.isArray(body)) {
     return throwError('The request body must be a JSON object.')
   }
 
-  return body ?? undefined
+  return body as Record<string, any>
+}
+
+/**
+ * Read the multipart form data from the request body.
+ */
+export async function readMultipartBody(
+  event: H3Event,
+  limit: number | false | undefined,
+): Promise<FormData> {
+  if (getMediaType(event) !== 'multipart/form-data') {
+    return throwError('Failed to read multi part data.')
+  }
+
+  const body = await readLimitedBody(event, limit)
+
+  try {
+    // Uses the same parser as readFormData() from h3. It needs a fraction of
+    // the memory of readMultipartFormData(), which copies every byte into an
+    // array.
+    return await new Response(body as Uint8Array<ArrayBuffer> | undefined, {
+      headers: { 'content-type': getRequestHeader(event, 'content-type')! },
+    }).formData()
+  } catch {
+    return throwError('Failed to read multi part data.')
+  }
 }
 
 /**

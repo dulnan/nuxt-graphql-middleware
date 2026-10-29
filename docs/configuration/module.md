@@ -29,6 +29,48 @@ const autoImportPatterns = [
 
 ---
 
+## bodySizeLimit?
+
+> `optional` **bodySizeLimit**: `object`
+
+Defined in:
+[options.ts:87](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L87)
+
+The maximum size of request bodies in bytes.
+
+Larger requests are refused with a 413 status code. Set a limit to `false` to
+disable it, for example if the web server already limits the size.
+
+The limits can be changed at runtime with the
+`NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION` and
+`NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD` environment variables.
+
+### mutation?
+
+> `optional` **mutation**: `number` \| `false`
+
+The limit for mutations.
+
+##### Default
+
+```ts
+10485760 (10 MB)
+```
+
+### upload?
+
+> `optional` **upload**: `number` \| `false`
+
+The limit for file uploads, including all files of a request.
+
+##### Default
+
+```ts
+52428800 (50 MB)
+```
+
+---
+
 ## clientCache?
 
 > `optional` **clientCache**: `object`
