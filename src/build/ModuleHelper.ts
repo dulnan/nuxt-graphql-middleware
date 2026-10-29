@@ -9,7 +9,7 @@ import {
   resolveFiles,
   type Resolver,
 } from '@nuxt/kit'
-import { relative } from 'pathe'
+import { isAbsolute, relative } from 'pathe'
 import type { RouterMethod } from 'h3'
 import type { Nuxt, ResolvedNuxtTemplate } from 'nuxt/schema'
 import type { ModuleOptions } from './types/options'
@@ -157,7 +157,7 @@ export class ModuleHelper {
 
     mergedOptions.autoImportPatterns = (mergedOptions.autoImportPatterns || [])
       .flatMap((pattern) => {
-        if (pattern.startsWith('!') || pattern.startsWith('/')) {
+        if (pattern.startsWith('!') || isAbsolute(pattern)) {
           // Skip resolving for ignore patterns or absolute paths.
           return pattern
         } else if (pattern.startsWith('~') || pattern.startsWith('@')) {

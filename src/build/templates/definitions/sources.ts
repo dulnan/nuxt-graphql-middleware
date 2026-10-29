@@ -1,4 +1,4 @@
-import { relative } from 'pathe'
+import { isAbsolute, relative } from 'pathe'
 import { defineGeneratorTemplate } from './../defineTemplate'
 
 export default defineGeneratorTemplate(
@@ -9,7 +9,7 @@ export default defineGeneratorTemplate(
     const lines: string[] = []
 
     for (const operation of operations) {
-      const filePath = operation.filePath.startsWith('/')
+      const filePath = isAbsolute(operation.filePath)
         ? relative(srcDir, operation.filePath)
         : operation.filePath
       lines.push(

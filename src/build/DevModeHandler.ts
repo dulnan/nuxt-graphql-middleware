@@ -87,10 +87,9 @@ export class DevModeHandler {
     // Hack: This is supposed to be absolute. But it's not. Sometimes.
     // Let's make sure it's really absolute. We have to assume that the path
     // is actually relative to the source directory. If not, HMR will be
-    // broken.
-    const pathAbsolute = providedFilePath.startsWith('/')
-      ? providedFilePath
-      : this.helper.resolvers.src.resolve(providedFilePath)
+    // broken. Absolute paths are returned as is, but with forward slashes on
+    // Windows.
+    const pathAbsolute = this.helper.resolvers.src.resolve(providedFilePath)
 
     // Skip the GraphQL schema itself.
     if (pathAbsolute === this.helper.paths.schema) {
