@@ -2,9 +2,11 @@ import { basename } from 'node:path'
 import { relative } from 'pathe'
 import {
   parse,
+  type DefinitionNode,
   type DocumentNode,
   type GraphQLSchema,
-  type GraphQLError,
+  GraphQLError,
+  Kind,
   Source,
 } from 'graphql'
 import {
@@ -22,7 +24,7 @@ import type { RpcItem } from './types/rpc'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
-import { addServerTemplate, addTemplate } from '@nuxt/kit'
+import { addServerTemplate, addTemplate, getLayerDirectories } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
 import type { CollectorOperation, CollectorFragment } from './types/collector'
 
@@ -32,6 +34,51 @@ export type CollectorWatchEventResult = {
   hasChanged: boolean
   affectedOperations: string[]
   error?: { message: string }
+}
+
+/**
+ * The priority of documents and files provided via hooks: Below the app, but
+ * above all extended layers.
+ */
+const HOOK_PRIORITY = 0.5
+
+type DefinitionSource = {
+  filePath: string
+  priority: number
+  label: string
+}
+
+/**
+ * Get the key used to detect fragments and operations with the same name.
+ *
+ * Operations are keyed by name only, because the generator requires operation
+ * names to be unique across queries and mutations.
+ */
+function getDefinitionKey(def: DefinitionNode): string | null {
+  if (def.kind === Kind.FRAGMENT_DEFINITION) {
+    return 'fragment:' + def.name.value
+  } else if (def.kind === Kind.OPERATION_DEFINITION && def.name) {
+    return 'operation:' + def.name.value
+  }
+
+  return null
+}
+
+function getDefinitionLabel(def: DefinitionNode): string {
+  if (def.kind === Kind.FRAGMENT_DEFINITION) {
+    return 'fragment ' + def.name.value
+  } else if (def.kind === Kind.OPERATION_DEFINITION) {
+    return def.operation + ' ' + def.name?.value
+  }
+
+  return def.kind
+}
+
+function isSameDefinitions(
+  a: readonly DefinitionNode[],
+  b: readonly DefinitionNode[],
+): boolean {
+  return a.length === b.length && a.every((def, i) => def === b[i])
 }
 
 export class Collector {
@@ -88,15 +135,24 @@ export class Collector {
   private isInitialised = false
 
   /**
-   * The definition keys (kind:name) currently synced to the generator, per
-   * file path.
+   * The parsed document and the definitions of it last passed to the
+   * generator, per file path.
    */
-  private syncedDefinitionKeys = new Map<string, string>()
+  private syncedDocuments = new Map<
+    string,
+    { parsed: DocumentNode; definitions: readonly DefinitionNode[] }
+  >()
 
   /**
-   * File paths whose contents have changed since the last generator sync.
+   * The priority per file path, see getPriority().
    */
-  private dirtyFiles = new Set<string>()
+  private priorities = new Map<string, number>()
+
+  /**
+   * The log message per definition key that is defined more than once, as
+   * logged during the last generator sync.
+   */
+  private loggedCollisions = new Map<string, string>()
 
   constructor(
     private schema: GraphQLSchema,
@@ -124,118 +180,169 @@ export class Collector {
 
   public async reset() {
     this.files.clear()
-    this.syncedDefinitionKeys.clear()
-    this.dirtyFiles.clear()
+    this.syncedDocuments.clear()
+    this.priorities.clear()
+    this.loggedCollisions.clear()
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
   }
 
   /**
-   * Determine the Nuxt layer priority of a file.
+   * Determine the priority of a file. Lower value = higher priority.
    *
-   * Lower value = higher priority. The app/project layer is index 0, extended
-   * layers follow in the order they are defined. Documents provided via hooks
-   * get the highest priority. Files that can't be matched to a layer get the
-   * lowest priority.
+   * Files in the app come first, followed by documents and files provided via
+   * hooks and then the extended layers in the order they are defined. Files
+   * that can't be matched to a layer get the lowest priority.
    */
-  private getLayerPriority(filePath: string): number {
-    if (filePath.startsWith('hook:')) {
-      return -1
+  private getPriority(filePath: string): number {
+    const cached = this.priorities.get(filePath)
+    if (cached !== undefined) {
+      return cached
     }
-    const layers = this.helper.nuxt.options._layers || []
-    let priority = layers.length
-    let longestMatch = -1
-    for (let i = 0; i < layers.length; i++) {
-      const config = layers[i]!.config || {}
-      const dirs = [config.srcDir, config.rootDir, layers[i]!.cwd]
-      for (const dir of dirs) {
-        if (!dir) {
-          continue
+
+    let priority: number
+    if (filePath.startsWith('hook:') || this.hookFiles.has(filePath)) {
+      priority = HOOK_PRIORITY
+    } else {
+      const layers = getLayerDirectories(this.helper.nuxt)
+      priority = layers.length
+      // Layers can be nested inside the app (e.g. ~~/layers/foo), so the
+      // longest matching directory wins.
+      let longestMatch = 0
+      layers.forEach((layer, index) => {
+        for (const dir of [layer.root, layer.app]) {
+          if (filePath.startsWith(dir) && dir.length > longestMatch) {
+            priority = index
+            longestMatch = dir.length
+          }
         }
-        const prefix = dir.endsWith('/') ? dir : dir + '/'
-        if (filePath.startsWith(prefix) && dir.length > longestMatch) {
-          priority = i
-          longestMatch = dir.length
-        }
-      }
+      })
     }
+
+    this.priorities.set(filePath, priority)
     return priority
   }
 
   /**
-   * Sync all collected files to the generator, resolving cross-layer
-   * definition collisions: when multiple files define a fragment or operation
-   * with the same name, the definition from the highest-priority Nuxt layer
-   * (the app/project first, then extended layers in order) wins and the
-   * shadowed definitions are excluded from the documents passed to the
-   * generator. This makes it possible to override a fragment or operation
-   * from a layer in the app or in a higher-priority layer. Definitions with
-   * the same layer priority are left untouched (existing behaviour).
+   * Sync the collected files to the generator.
+   *
+   * When multiple files define a fragment or operation with the same name,
+   * only the definition with the highest priority (see getPriority()) is passed
+   * to the generator. This allows the app to override fragments and operations
+   * of layers. Definitions with the same priority are all passed on and
+   * logged as a warning.
    */
   private syncGenerator(): void {
-    const owners = new Map<string, { priority: number }>()
+    const sourcesByKey = new Map<string, DefinitionSource[]>()
     for (const [filePath, file] of this.files) {
-      const priority = this.getLayerPriority(filePath)
+      const priority = this.getPriority(filePath)
       for (const def of file.parsed.definitions) {
-        if (
-          def.kind !== 'FragmentDefinition' &&
-          def.kind !== 'OperationDefinition'
-        ) {
-          continue
-        }
-        const name = def.name?.value
-        if (!name) {
-          continue
-        }
-        const key = def.kind + ':' + name
-        const owner = owners.get(key)
-        if (!owner || priority < owner.priority) {
-          owners.set(key, { priority })
+        const key = getDefinitionKey(def)
+        if (key) {
+          const sources = sourcesByKey.get(key) || []
+          sources.push({ filePath, priority, label: getDefinitionLabel(def) })
+          sourcesByKey.set(key, sources)
         }
       }
     }
 
+    const ownerPriorities = new Map<string, number>()
+    for (const [key, sources] of sourcesByKey) {
+      ownerPriorities.set(key, Math.min(...sources.map((v) => v.priority)))
+    }
+
+    this.logCollisions(sourcesByKey, ownerPriorities)
+
     for (const [filePath, file] of this.files) {
-      const priority = this.getLayerPriority(filePath)
+      const priority = this.getPriority(filePath)
       const definitions = file.parsed.definitions.filter((def) => {
-        if (
-          def.kind !== 'FragmentDefinition' &&
-          def.kind !== 'OperationDefinition'
-        ) {
-          return true
-        }
-        const name = def.name?.value
-        if (!name) {
-          return true
-        }
-        const owner = owners.get(def.kind + ':' + name)
-        return !owner || owner.priority >= priority
+        const key = getDefinitionKey(def)
+        return !key || ownerPriorities.get(key) === priority
       })
-      const keys = definitions
-        .map((def) => def.kind + ':' + ('name' in def ? def.name?.value : ''))
-        .join('|')
-      const previousKeys = this.syncedDefinitionKeys.get(filePath)
+
+      const synced = this.syncedDocuments.get(filePath)
+      if (
+        synced &&
+        synced.parsed === file.parsed &&
+        isSameDefinitions(synced.definitions, definitions)
+      ) {
+        continue
+      }
+
       const documentNode: DocumentNode =
         definitions.length === file.parsed.definitions.length
           ? file.parsed
           : { ...file.parsed, definitions }
-      if (previousKeys === undefined) {
-        this.generator.add({ filePath, documentNode })
-        this.syncedDefinitionKeys.set(filePath, keys)
-      } else if (previousKeys !== keys || this.dirtyFiles.has(filePath)) {
+
+      if (synced) {
         this.generator.update({ filePath, documentNode })
-        this.syncedDefinitionKeys.set(filePath, keys)
+      } else {
+        this.generator.add({ filePath, documentNode })
+      }
+      this.syncedDocuments.set(filePath, { parsed: file.parsed, definitions })
+    }
+
+    for (const filePath of [...this.syncedDocuments.keys()]) {
+      if (!this.files.has(filePath)) {
+        this.generator.remove(filePath)
+        this.syncedDocuments.delete(filePath)
+      }
+    }
+  }
+
+  /**
+   * Log fragments and operations that are defined in more than one file.
+   *
+   * Only collisions that are new or have changed since the last sync are
+   * logged.
+   */
+  private logCollisions(
+    sourcesByKey: Map<string, DefinitionSource[]>,
+    ownerPriorities: Map<string, number>,
+  ) {
+    const toLabel = (source: DefinitionSource) => {
+      const path = source.filePath.startsWith('hook:')
+        ? source.filePath
+        : this.filePathToSourceRelative(source.filePath)
+      return `${source.label} (${path})`
+    }
+
+    const shouldLogOverrides =
+      !this.helper.isPrepare && !this.helper.options.logOnlyErrors
+
+    const collisions = new Map<string, string>()
+    for (const [key, sources] of sourcesByKey) {
+      if (sources.length < 2) {
+        continue
+      }
+      const priority = ownerPriorities.get(key)
+      const owners = sources.filter((v) => v.priority === priority)
+      const overridden = sources.filter((v) => v.priority !== priority)
+
+      const duplicateMessage =
+        owners.length > 1
+          ? `Multiple GraphQL definitions with the same name, only one of them is used: ${owners.map(toLabel).join(', ')}`
+          : ''
+      const overrideMessage = overridden.length
+        ? `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
+        : ''
+
+      const message = duplicateMessage + overrideMessage
+      collisions.set(key, message)
+      if (this.loggedCollisions.get(key) === message) {
+        continue
+      }
+
+      if (duplicateMessage) {
+        logger.warn(duplicateMessage)
+      }
+      if (overrideMessage && shouldLogOverrides) {
+        logger.info(overrideMessage)
       }
     }
 
-    for (const filePath of [...this.syncedDefinitionKeys.keys()]) {
-      if (!this.files.has(filePath)) {
-        this.generator.remove(filePath)
-        this.syncedDefinitionKeys.delete(filePath)
-      }
-    }
-    this.dirtyFiles.clear()
+    this.loggedCollisions = collisions
   }
 
   public async updateSchema(schema: GraphQLSchema) {
@@ -538,7 +645,6 @@ export class Collector {
     if (exists && this.isInitialised) {
       const file = new CollectedFile(fullIdentifier, source, false)
       this.files.set(fullIdentifier, file)
-      this.dirtyFiles.add(fullIdentifier)
       this.syncGenerator()
       await this.buildState()
     }
@@ -546,6 +652,7 @@ export class Collector {
 
   public addHookFile(filePath: string) {
     this.hookFiles.add(filePath)
+    this.priorities.delete(filePath)
   }
 
   /**
@@ -640,18 +747,28 @@ export class Collector {
       return this.handleAdd(filePath)
     }
 
+    let needsUpdate: boolean
     try {
-      const needsUpdate = await file.update()
-      if (!needsUpdate) {
-        return false
+      needsUpdate = await file.update()
+    } catch (e) {
+      // Report syntax errors, but keep the last valid version of the file.
+      // Removing it would silently activate definitions it overrides.
+      if (e instanceof GraphQLError && file.fileContents.trim()) {
+        throw new Error(
+          `Failed to parse ${this.filePathToSourceRelative(filePath)}: ${e.message}`,
+          { cause: e },
+        )
       }
-      this.dirtyFiles.add(filePath)
-      this.syncGenerator()
-    } catch {
-      // Error: File is invalid (e.g. empty), so let's remove it.
+
+      // The file is empty or can't be read anymore, so let's remove it.
       return this.handleUnlink(filePath)
     }
 
+    if (!needsUpdate) {
+      return false
+    }
+
+    this.syncGenerator()
     return true
   }
 
@@ -666,14 +783,17 @@ export class Collector {
   }
 
   private handleUnlinkDir(folderPath: string): boolean {
+    const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/'
     let anyHasChanged = false
     for (const filePath of [...this.files.keys()]) {
-      if (filePath.startsWith(folderPath)) {
-        const hasChanged = this.handleUnlink(filePath)
-        if (hasChanged) {
-          anyHasChanged = true
-        }
+      if (filePath.startsWith(prefix)) {
+        this.files.delete(filePath)
+        anyHasChanged = true
       }
+    }
+
+    if (anyHasChanged) {
+      this.syncGenerator()
     }
 
     return anyHasChanged

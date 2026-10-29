@@ -331,20 +331,23 @@ export class ModuleHelper {
     // A negated pattern (e.g. "!node_modules") matches every path that does
     // not equal it, which would make every file match. Split the patterns and
     // apply proper include/exclude semantics instead.
-    const positive = this.options.autoImportPatterns.filter(
-      (v) => !v.startsWith('!'),
-    )
-    const negative = this.options.autoImportPatterns
-      .filter((v) => v.startsWith('!'))
-      .map((v) => v.slice(1))
+    const include: string[] = []
+    const exclude: string[] = []
+    for (const pattern of this.options.autoImportPatterns) {
+      if (pattern.startsWith('!')) {
+        // Like getImportPatternFiles(), resolve exclude patterns relative to
+        // the source directory and also exclude everything inside them.
+        const resolved = this.resolvers.src.resolve(pattern.slice(1))
+        exclude.push(resolved, resolved + '/**')
+      } else {
+        include.push(pattern)
+      }
+    }
 
-    if (!micromatch.isMatch(filePath, positive)) {
-      return false
-    }
-    if (negative.length && micromatch.isMatch(filePath, negative)) {
-      return false
-    }
-    return true
+    return (
+      micromatch.isMatch(filePath, include) &&
+      !micromatch.isMatch(filePath, exclude)
+    )
   }
 
   public addAlias(name: string, path: string) {
