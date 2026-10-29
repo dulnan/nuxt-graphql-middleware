@@ -22,7 +22,7 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'graphqlMiddleware',
     version,
     compatibility: {
-      nuxt: '>=3.17.0',
+      nuxt: '>=4.4.0',
     },
   },
   defaults: defaultOptions,
