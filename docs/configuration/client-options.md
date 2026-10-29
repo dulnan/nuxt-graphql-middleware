@@ -100,26 +100,43 @@ Both the `language` and `country` properties we returned in the object in
 ## Using Client Context
 
 On the server you can then access this client context from within all
-[serverOptions](/configuration/server-options) methods:
+[serverOptions](/configuration/server-options) methods.
+
+::: warning
+
+The client context is sent as query parameters, so anyone can set it to any
+value. Treat it like user input and check the values before using them, for
+example in the URL of the GraphQL server or in headers.
+
+:::
 
 ::: code-group
 
 ```typescript [~/server/graphqlMiddleware.serverOptions.ts]
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
 
+const LANGUAGES = ['en', 'de', 'fr']
+const COUNTRIES = ['US', 'DE', 'FR']
+
 export default defineGraphqlServerOptions({
   graphqlEndpoint(event, operation, operationName, context) {
-    // Use the language from the client context.
-    const language = context?.client?.language || 'en'
-    return `http://backend_server/${language}/graphql`
+    // Use the language from the client context. Only known languages are
+    // used, as the value ends up in the URL.
+    const language = context?.client?.language
+    if (language && LANGUAGES.includes(language)) {
+      return `http://backend_server/${language}/graphql`
+    }
+    return 'http://backend_server/en/graphql'
   },
 
   serverFetchOptions: function (event, _operation, operationName, context) {
     // Pass the current country as a header when making a request to the
     // GraphQL server.
+    const country = context?.client?.country
     return {
       headers: {
-        'x-current-country': context.client?.country || 'US',
+        'x-current-country':
+          country && COUNTRIES.includes(country) ? country : 'US',
       },
     }
   },
