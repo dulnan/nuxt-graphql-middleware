@@ -126,26 +126,88 @@ export function getFetchOptions(
 }
 
 /**
- * Add the timeout for the request to the GraphQL server to the fetch options.
+ * The events whose client closed the connection before the response was sent.
+ */
+const clientAbortedEvents = new WeakSet<H3Event>()
+
+/**
+ * Get a signal that is aborted when the client closes the connection before
+ * the response was sent.
+ *
+ * The request emits "close" once its body was read, so the response is used.
+ */
+export function getClientAbortSignal(
+  event: H3Event | null | undefined,
+): AbortSignal | undefined {
+  const res = event?.node?.res
+  if (!event || !res || typeof res.once !== 'function') {
+    return
+  }
+
+  const controller = new AbortController()
+  res.once('close', () => {
+    if (!res.writableEnded) {
+      clientAbortedEvents.add(event)
+      controller.abort(
+        new DOMException('The client closed the connection.', 'AbortError'),
+      )
+    }
+  })
+  return controller.signal
+}
+
+/**
+ * Whether the client closed the connection before the response was sent.
+ */
+export function isClientAborted(event: H3Event | null | undefined): boolean {
+  return !!event && clientAbortedEvents.has(event)
+}
+
+/**
+ * Add the signal for the request to the GraphQL server to the fetch options.
+ *
+ * The signal is aborted after the timeout and, if given, by the client signal.
+ * A timeout or signal from the fetch options replaces the default timeout.
  *
  * A signal is used instead of the timeout option of ofetch, which only limits
- * the time until the response headers arrive. Nothing is added if the options
- * already have a timeout or a signal: ofetch ignores the timeout if there is a
- * signal.
+ * the time until the response headers arrive. ofetch also ignores its timeout
+ * if there is a signal, so a timeout from the fetch options becomes a signal
+ * too.
  */
-export function withTimeout(
+export function withSignal(
   fetchOptions: FetchOptions,
   timeout: number | false | undefined,
+  clientSignal?: AbortSignal,
 ): FetchOptions {
-  if (
-    typeof timeout !== 'number' ||
-    fetchOptions.timeout !== undefined ||
-    fetchOptions.signal
+  const signals: AbortSignal[] = []
+
+  if (fetchOptions.signal) {
+    signals.push(fetchOptions.signal)
+  }
+
+  if (fetchOptions.timeout) {
+    signals.push(AbortSignal.timeout(fetchOptions.timeout))
+  } else if (
+    fetchOptions.timeout === undefined &&
+    !fetchOptions.signal &&
+    typeof timeout === 'number'
   ) {
+    signals.push(AbortSignal.timeout(timeout))
+  }
+
+  if (clientSignal) {
+    signals.push(clientSignal)
+  }
+
+  if (!signals.length) {
     return fetchOptions
   }
 
-  return { ...fetchOptions, signal: AbortSignal.timeout(timeout) }
+  return {
+    ...fetchOptions,
+    timeout: undefined,
+    signal: signals.length === 1 ? signals[0] : AbortSignal.any(signals),
+  }
 }
 
 /**
@@ -384,6 +446,14 @@ export function onServerError(
       context,
     )
   }
+  // Nobody receives the response, so there is nothing to log.
+  if (isClientAborted(event)) {
+    throw createError({
+      statusCode: 499,
+      statusMessage: 'The client closed the connection.',
+    })
+  }
+
   const message = error && 'message' in error ? error.message : ''
   const data = error?.response?._data
   const isTimeout = isTimeoutError(error)

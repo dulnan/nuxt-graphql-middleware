@@ -8,7 +8,7 @@ import type { FetchError } from 'ofetch'
 import {
   getEndpoint,
   getFetchOptions,
-  withTimeout,
+  withSignal,
   onServerResponse,
   onServerError,
   throwError,
@@ -140,7 +140,7 @@ export default defineEventHandler(async (event) => {
   )
 
   // Get the fetch options for this request.
-  const fetchOptions = withTimeout(
+  const fetchOptions = withSignal(
     await getFetchOptions(
       serverOptions,
       event,

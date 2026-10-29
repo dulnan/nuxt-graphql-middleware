@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events'
 import { vi, describe, expect, test } from 'vitest'
 import { GraphqlMiddlewareOperation } from './../../../../src/runtime/settings'
 import {
@@ -6,7 +7,9 @@ import {
   getFetchOptions,
   onServerError,
   onServerResponse,
-  withTimeout,
+  withSignal,
+  getClientAbortSignal,
+  isClientAborted,
 } from './../../../../src/runtime/server/helpers'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
@@ -236,6 +239,30 @@ describe('onServerError', () => {
     expect(JSON.stringify(result)).not.toContain('internal.example')
   })
 
+  test('does not log requests the client aborted', () => {
+    const res = Object.assign(new EventEmitter(), { writableEnded: false })
+    const event = { node: { req: {}, res } } as any
+    getClientAbortSignal(event)
+    res.emit('close')
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleError.mockClear()
+    let result: any
+    try {
+      onServerError(
+        {},
+        event,
+        { message: URL_MESSAGE } as any,
+        GraphqlMiddlewareOperation.Query,
+        'foobar',
+        null,
+      )
+    } catch (e) {
+      result = e
+    }
+    expect(result.statusCode).toBe(499)
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
   test('handles errors without a response', () => {
     const result = callDefault({
       message:
@@ -337,28 +364,90 @@ describe('onServerResponse', () => {
   })
 })
 
-describe('withTimeout', () => {
+describe('withSignal', () => {
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
   test('adds a signal with the timeout', async () => {
-    const result = withTimeout({ headers: { foo: 'bar' } }, 20)
+    const result = withSignal({ headers: { foo: 'bar' } }, 20)
     expect(result.headers).toEqual({ foo: 'bar' })
     expect(result.signal).toBeInstanceOf(AbortSignal)
     expect(result.signal!.aborted).toBe(false)
-    await new Promise((resolve) => setTimeout(resolve, 50))
+    await wait(50)
     expect(result.signal!.aborted).toBe(true)
     expect((result.signal!.reason as Error).name).toBe('TimeoutError')
   })
 
-  test('does nothing if the timeout is disabled', () => {
+  test('does nothing without a timeout or a client signal', () => {
     const options = { headers: { foo: 'bar' } }
-    expect(withTimeout(options, false)).toBe(options)
-    expect(withTimeout(options, undefined)).toBe(options)
+    expect(withSignal(options, false)).toBe(options)
+    expect(withSignal(options, undefined)).toBe(options)
+    expect(withSignal({ timeout: 0 }, 20)).toEqual({ timeout: 0 })
   })
 
-  test.each([
-    ['a timeout', { timeout: 60_000 }],
-    ['a timeout of 0', { timeout: 0 }],
-    ['a signal', { signal: new AbortController().signal }],
-  ])('keeps the fetch options if they have %s', (_label, options) => {
-    expect(withTimeout(options, 20)).toBe(options)
+  test('uses the timeout from the fetch options instead', async () => {
+    const result = withSignal({ timeout: 20 }, 60_000)
+    // ofetch ignores its timeout if there is a signal.
+    expect(result.timeout).toBeUndefined()
+    await wait(50)
+    expect(result.signal!.aborted).toBe(true)
+  })
+
+  test('uses the signal from the fetch options instead', async () => {
+    const controller = new AbortController()
+    const result = withSignal({ signal: controller.signal }, 20)
+    await wait(50)
+    expect(result.signal!.aborted).toBe(false)
+    controller.abort()
+    expect(result.signal!.aborted).toBe(true)
+  })
+
+  test('combines the timeout with the client signal', async () => {
+    const client = new AbortController()
+    const result = withSignal({}, 20, client.signal)
+    expect(result.signal!.aborted).toBe(false)
+    client.abort(new DOMException('Closed', 'AbortError'))
+    expect(result.signal!.aborted).toBe(true)
+    expect((result.signal!.reason as Error).name).toBe('AbortError')
+
+    const timedOut = withSignal({}, 20, new AbortController().signal)
+    await wait(50)
+    expect((timedOut.signal!.reason as Error).name).toBe('TimeoutError')
+  })
+
+  test('uses the client signal if the timeout is disabled', () => {
+    const client = new AbortController()
+    const result = withSignal({ timeout: 0 }, 20, client.signal)
+    expect(result.signal).toBe(client.signal)
+  })
+})
+
+describe('getClientAbortSignal', () => {
+  function createEvent(writableEnded: boolean) {
+    const res = Object.assign(new EventEmitter(), { writableEnded })
+    return { node: { req: {}, res } } as any
+  }
+
+  test('is aborted if the client closes the connection', () => {
+    const event = createEvent(false)
+    const signal = getClientAbortSignal(event)!
+    expect(signal.aborted).toBe(false)
+    expect(isClientAborted(event)).toBe(false)
+    event.node.res.emit('close')
+    expect(signal.aborted).toBe(true)
+    expect((signal.reason as Error).name).toBe('AbortError')
+    expect(isClientAborted(event)).toBe(true)
+  })
+
+  test('is not aborted if the response was sent', () => {
+    const event = createEvent(true)
+    const signal = getClientAbortSignal(event)!
+    event.node.res.emit('close')
+    expect(signal.aborted).toBe(false)
+    expect(isClientAborted(event)).toBe(false)
+  })
+
+  test('handles events without a response stream', () => {
+    expect(getClientAbortSignal(null)).toBeUndefined()
+    expect(getClientAbortSignal({ node: { res: {} } } as any)).toBeUndefined()
   })
 })

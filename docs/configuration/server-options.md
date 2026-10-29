@@ -177,9 +177,14 @@ export default defineGraphqlServerOptions({
 })
 ```
 
-Note that the `timeout` option of ofetch only limits the time until the response
-headers arrive, while the default timeout of the middleware also covers reading
-the response. Use `signal: AbortSignal.timeout(ms)` to limit both.
+Unlike the `timeout` option of ofetch, which only limits the time until the
+response headers arrive, the timeout also covers reading the response.
+
+Queries are also aborted when the client closes the connection before the
+response is sent, for example because the user left the page. A `signal`
+returned here is combined with that. Mutations and uploads are not aborted when
+the client closes the connection, as some GraphQL servers stop halfway if the
+connection is closed.
 
 ## onServerResponse
 

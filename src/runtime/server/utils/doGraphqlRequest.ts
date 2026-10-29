@@ -6,11 +6,12 @@ import type { GraphqlMiddlewareRequestContext } from '../../types'
 import {
   getEndpoint,
   getFetchOptions,
-  withTimeout,
+  withSignal,
+  getClientAbortSignal,
   onServerError,
   onServerResponse,
 } from '../helpers'
-import type { GraphqlMiddlewareOperation } from '../../settings'
+import { GraphqlMiddlewareOperation } from '../../settings'
 
 type RequestBody = {
   query: string
@@ -61,7 +62,7 @@ export async function doGraphqlRequest(
   )
 
   // Get the fetch options for this request.
-  const fetchOptions = withTimeout(
+  const fetchOptions = withSignal(
     await getFetchOptions(
       serverOptions,
       event,
@@ -70,6 +71,12 @@ export async function doGraphqlRequest(
       context,
     ),
     runtimeConfig.graphqlServerTimeout,
+    // Queries are aborted when the client closes the connection. Mutations
+    // are left to finish: Some GraphQL servers stop halfway if the connection
+    // is closed.
+    operation === GraphqlMiddlewareOperation.Query
+      ? getClientAbortSignal(event)
+      : undefined,
   )
 
   return $fetch
