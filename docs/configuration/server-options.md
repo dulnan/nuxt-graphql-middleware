@@ -219,19 +219,29 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ) => any | Promise<any>
 ```
 
+If no method is provided, the middleware responds with a 500 status code. In
+production the response only contains a generic message and the `errors` of the
+GraphQL server's response, if it is a GraphQL response. The error message, which
+contains the URL of the GraphQL server, is logged on the server. In dev mode the
+response also contains the error message and the whole response of the GraphQL
+server.
+
 ### Example: Always return a 200 status to the clients
 
 ```typescript
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
-import type { H3Event } from 'h3'
-import type { FetchError } from 'ofetch'
+import { setResponseHeader } from 'h3'
 
 export default defineGraphqlServerOptions({
   onServerError(event, error, operation, operationName) {
-    event.setHeader('cache-control', 'no-cache')
+    // The message contains the URL of the GraphQL server, so it's only logged.
+    console.error(error.message)
+    setResponseHeader(event, 'cache-control', 'no-cache')
     return {
       data: {},
-      errors: [error.message],
+      errors: [
+        { message: `Couldn't execute ${operation} "${operationName}".` },
+      ],
     }
   },
 })

@@ -4,6 +4,7 @@ import {
   queryParamToVariables,
   getEndpoint,
   getFetchOptions,
+  onServerError,
 } from './../../../../src/runtime/server/helpers'
 
 vi.mock('#nuxt-graphql-middleware/documents', () => {
@@ -160,5 +161,83 @@ describe('getEndpoint', () => {
         'test',
       ),
     ).toThrowError('Failed to determine endpoint for GraphQL server.')
+  })
+})
+
+describe('onServerError', () => {
+  const URL_MESSAGE =
+    '[POST] "http://internal.example:4000/graphql": 400 Bad Request'
+
+  function callDefault(error: any) {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      onServerError(
+        {},
+        {} as any,
+        error,
+        GraphqlMiddlewareOperation.Query,
+        'foobar',
+        null,
+      )
+    } catch (e) {
+      return e as any
+    }
+    throw new Error('onServerError did not throw.')
+  }
+
+  test('only passes on the GraphQL errors of the response', () => {
+    const errors = [{ message: 'Variable "$id" is invalid.' }]
+    const result = callDefault({
+      message: URL_MESSAGE,
+      response: { _data: { errors, debug: { secret: true } } },
+    })
+    expect(result.statusCode).toBe(500)
+    expect(result.statusMessage).toBe("Couldn't execute GraphQL query.")
+    expect(result.data).toEqual({ errors })
+    expect(JSON.stringify(result)).not.toContain('internal.example')
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining(URL_MESSAGE),
+    )
+  })
+
+  test('does not pass on other responses', () => {
+    const result = callDefault({
+      message: URL_MESSAGE,
+      response: { _data: '<html>Bad Gateway</html>' },
+    })
+    expect(result.statusMessage).toBe("Couldn't execute GraphQL query.")
+    expect(result.data).toBeUndefined()
+  })
+
+  test('handles errors without a response', () => {
+    const result = callDefault({
+      message:
+        '[POST] "http://10.0.0.5:8080/graphql": <no response> connect ECONNREFUSED',
+    })
+    expect(result.statusMessage).toBe("Couldn't execute GraphQL query.")
+    expect(result.data).toBeUndefined()
+    expect(JSON.stringify(result)).not.toContain('10.0.0.5')
+  })
+
+  test('calls the method from the server options', () => {
+    const custom = vi.fn(() => ({ data: null, errors: [] }))
+    const error = { message: URL_MESSAGE } as any
+    expect(
+      onServerError(
+        { onServerError: custom },
+        {} as any,
+        error,
+        GraphqlMiddlewareOperation.Query,
+        'foobar',
+        null,
+      ),
+    ).toEqual({ data: null, errors: [] })
+    expect(custom).toHaveBeenCalledWith(
+      {},
+      error,
+      GraphqlMiddlewareOperation.Query,
+      'foobar',
+      null,
+    )
   })
 })

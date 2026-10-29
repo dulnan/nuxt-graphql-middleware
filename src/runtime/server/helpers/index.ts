@@ -335,9 +335,28 @@ export function onServerError(
     )
   }
   const message = error && 'message' in error ? error.message : ''
+  const data = error?.response?._data
+
+  if (import.meta.dev) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Couldn't execute GraphQL query: " + message,
+      data,
+    })
+  }
+
+  // The message contains the URL of the GraphQL server and the response may
+  // contain anything, for example an error page. So only the GraphQL errors
+  // are sent to the client and the message is logged instead.
+  console.error(
+    `[nuxt-graphql-middleware] Couldn't execute GraphQL ${operation} "${operationName}": ${message}`,
+  )
   throw createError({
     statusCode: 500,
-    statusMessage: "Couldn't execute GraphQL query: " + message,
-    data: error.response?._data,
+    statusMessage: "Couldn't execute GraphQL query.",
+    data:
+      data && typeof data === 'object' && Array.isArray(data.errors)
+        ? { errors: data.errors }
+        : undefined,
   })
 }
