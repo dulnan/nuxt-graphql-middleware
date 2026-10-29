@@ -1,7 +1,8 @@
-import { defineEventHandler, getQuery, getRouterParam, readBody } from 'h3'
+import { defineEventHandler, getQuery, getRouterParam } from 'h3'
 import {
   extractRequestContext,
   isValidMutation,
+  readJsonBody,
   throwError,
 } from './../helpers'
 import { GraphqlMiddlewareOperation } from './../../settings'
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const operationDocument = documents.mutation[operationName]
   const queryParams = getQuery(event)
   const context = extractRequestContext(queryParams)
-  const variables = await readBody(event)
+  const variables = await readJsonBody(event)
 
   return doGraphqlRequest(
     {

@@ -1,6 +1,6 @@
 import type { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
-import { createError } from 'h3'
+import { createError, getRequestHeader, readBody } from 'h3'
 import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type {
   GraphqlMiddlewareRequestContext,
@@ -125,6 +125,37 @@ export function throwError(statusMessage: string, statusCode = 400): never {
     statusCode,
     statusMessage,
   })
+}
+
+/**
+ * Read the JSON object from the request body.
+ *
+ * Only requests with the "application/json" content type are accepted. Forms
+ * and text can be sent by browsers from other origins without a CORS
+ * preflight, JSON only after one, which the middleware doesn't answer.
+ */
+export async function readJsonBody(
+  event: H3Event,
+): Promise<Record<string, any> | undefined> {
+  const contentType = getRequestHeader(event, 'content-type') || ''
+  const mediaType = contentType.split(';')[0]!.trim().toLowerCase()
+  if (mediaType !== 'application/json') {
+    return throwError(
+      'The request body must use the "application/json" content type.',
+      415,
+    )
+  }
+
+  const body = await readBody(event, { strict: true })
+  if (
+    body !== undefined &&
+    body !== null &&
+    (typeof body !== 'object' || Array.isArray(body))
+  ) {
+    return throwError('The request body must be a JSON object.')
+  }
+
+  return body ?? undefined
 }
 
 /**

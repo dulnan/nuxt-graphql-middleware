@@ -1,8 +1,9 @@
-import { defineEventHandler, readBody } from 'h3'
+import { defineEventHandler } from 'h3'
 import { doGraphqlRequest } from '../utils/doGraphqlRequest'
+import { readJsonBody } from '../helpers'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const body = await readJsonBody(event)
 
   const { document, variables, operationName } = body || {}
 
