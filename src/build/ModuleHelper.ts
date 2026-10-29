@@ -322,11 +322,31 @@ export class ModuleHelper {
   }
 
   public matchesImportPattern(filePath: string): boolean {
-    // Use micromatch to match using globs, but also check if the file path
-    // exists as a literal string in the patterns array.
+    // Check if the file path exists as a literal string in the patterns array.
+    if (this.options.autoImportPatterns.includes(filePath)) {
+      return true
+    }
+
+    // micromatch.isMatch with an array returns true if *any* pattern matches.
+    // A negated pattern (e.g. "!node_modules") matches every path that does
+    // not equal it, which would make every file match. Split the patterns and
+    // apply proper include/exclude semantics instead.
+    const include: string[] = []
+    const exclude: string[] = []
+    for (const pattern of this.options.autoImportPatterns) {
+      if (pattern.startsWith('!')) {
+        // Like getImportPatternFiles(), resolve exclude patterns relative to
+        // the source directory and also exclude everything inside them.
+        const resolved = this.resolvers.src.resolve(pattern.slice(1))
+        exclude.push(resolved, resolved + '/**')
+      } else {
+        include.push(pattern)
+      }
+    }
+
     return (
-      micromatch.isMatch(filePath, this.options.autoImportPatterns) ||
-      this.options.autoImportPatterns.includes(filePath)
+      micromatch.isMatch(filePath, include) &&
+      !micromatch.isMatch(filePath, exclude)
     )
   }
 

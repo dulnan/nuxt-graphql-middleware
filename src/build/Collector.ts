@@ -1,6 +1,14 @@
 import { basename } from 'node:path'
 import { relative } from 'pathe'
-import { parse, type GraphQLSchema, type GraphQLError, Source } from 'graphql'
+import {
+  parse,
+  type DefinitionNode,
+  type DocumentNode,
+  type GraphQLSchema,
+  GraphQLError,
+  Kind,
+  Source,
+} from 'graphql'
 import {
   FieldNotFoundError,
   FragmentNotFoundError,
@@ -16,7 +24,7 @@ import type { RpcItem } from './types/rpc'
 import { logAllEntries, SYMBOL_CROSS, type LogEntry } from './logging'
 import { CollectedFile } from './CollectedFile'
 import type { ModuleHelper } from './ModuleHelper'
-import { addServerTemplate, addTemplate } from '@nuxt/kit'
+import { addServerTemplate, addTemplate, getLayerDirectories } from '@nuxt/kit'
 import type { GeneratorTemplate } from './templates/defineTemplate'
 import type { CollectorOperation, CollectorFragment } from './types/collector'
 
@@ -26,6 +34,51 @@ export type CollectorWatchEventResult = {
   hasChanged: boolean
   affectedOperations: string[]
   error?: { message: string }
+}
+
+/**
+ * The priority of documents and files provided via hooks: Below the app, but
+ * above all extended layers.
+ */
+const HOOK_PRIORITY = 0.5
+
+type DefinitionSource = {
+  filePath: string
+  priority: number
+  label: string
+}
+
+/**
+ * Get the key used to detect fragments and operations with the same name.
+ *
+ * Operations are keyed by name only, because the generator requires operation
+ * names to be unique across queries and mutations.
+ */
+function getDefinitionKey(def: DefinitionNode): string | null {
+  if (def.kind === Kind.FRAGMENT_DEFINITION) {
+    return 'fragment:' + def.name.value
+  } else if (def.kind === Kind.OPERATION_DEFINITION && def.name) {
+    return 'operation:' + def.name.value
+  }
+
+  return null
+}
+
+function getDefinitionLabel(def: DefinitionNode): string {
+  if (def.kind === Kind.FRAGMENT_DEFINITION) {
+    return 'fragment ' + def.name.value
+  } else if (def.kind === Kind.OPERATION_DEFINITION) {
+    return def.operation + ' ' + def.name?.value
+  }
+
+  return def.kind
+}
+
+function isSameDefinitions(
+  a: readonly DefinitionNode[],
+  b: readonly DefinitionNode[],
+): boolean {
+  return a.length === b.length && a.every((def, i) => def === b[i])
 }
 
 export class Collector {
@@ -81,6 +134,26 @@ export class Collector {
 
   private isInitialised = false
 
+  /**
+   * The parsed document and the definitions of it last passed to the
+   * generator, per file path.
+   */
+  private syncedDocuments = new Map<
+    string,
+    { parsed: DocumentNode; definitions: readonly DefinitionNode[] }
+  >()
+
+  /**
+   * The priority per file path, see getPriority().
+   */
+  private priorities = new Map<string, number>()
+
+  /**
+   * The log message per definition key that is defined more than once, as
+   * logged during the last generator sync.
+   */
+  private loggedCollisions = new Map<string, string>()
+
   constructor(
     private schema: GraphQLSchema,
     private helper: ModuleHelper,
@@ -107,9 +180,169 @@ export class Collector {
 
   public async reset() {
     this.files.clear()
+    this.syncedDocuments.clear()
+    this.priorities.clear()
+    this.loggedCollisions.clear()
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
+  }
+
+  /**
+   * Determine the priority of a file. Lower value = higher priority.
+   *
+   * Files in the app come first, followed by documents and files provided via
+   * hooks and then the extended layers in the order they are defined. Files
+   * that can't be matched to a layer get the lowest priority.
+   */
+  private getPriority(filePath: string): number {
+    const cached = this.priorities.get(filePath)
+    if (cached !== undefined) {
+      return cached
+    }
+
+    let priority: number
+    if (filePath.startsWith('hook:') || this.hookFiles.has(filePath)) {
+      priority = HOOK_PRIORITY
+    } else {
+      const layers = getLayerDirectories(this.helper.nuxt)
+      priority = layers.length
+      // Layers can be nested inside the app (e.g. ~~/layers/foo), so the
+      // longest matching directory wins.
+      let longestMatch = 0
+      layers.forEach((layer, index) => {
+        for (const dir of [layer.root, layer.app]) {
+          if (filePath.startsWith(dir) && dir.length > longestMatch) {
+            priority = index
+            longestMatch = dir.length
+          }
+        }
+      })
+    }
+
+    this.priorities.set(filePath, priority)
+    return priority
+  }
+
+  /**
+   * Sync the collected files to the generator.
+   *
+   * When multiple files define a fragment or operation with the same name,
+   * only the definition with the highest priority (see getPriority()) is passed
+   * to the generator. This allows the app to override fragments and operations
+   * of layers. Definitions with the same priority are all passed on and
+   * logged as a warning.
+   */
+  private syncGenerator(): void {
+    const sourcesByKey = new Map<string, DefinitionSource[]>()
+    for (const [filePath, file] of this.files) {
+      const priority = this.getPriority(filePath)
+      for (const def of file.parsed.definitions) {
+        const key = getDefinitionKey(def)
+        if (key) {
+          const sources = sourcesByKey.get(key) || []
+          sources.push({ filePath, priority, label: getDefinitionLabel(def) })
+          sourcesByKey.set(key, sources)
+        }
+      }
+    }
+
+    const ownerPriorities = new Map<string, number>()
+    for (const [key, sources] of sourcesByKey) {
+      ownerPriorities.set(key, Math.min(...sources.map((v) => v.priority)))
+    }
+
+    this.logCollisions(sourcesByKey, ownerPriorities)
+
+    for (const [filePath, file] of this.files) {
+      const priority = this.getPriority(filePath)
+      const definitions = file.parsed.definitions.filter((def) => {
+        const key = getDefinitionKey(def)
+        return !key || ownerPriorities.get(key) === priority
+      })
+
+      const synced = this.syncedDocuments.get(filePath)
+      if (
+        synced &&
+        synced.parsed === file.parsed &&
+        isSameDefinitions(synced.definitions, definitions)
+      ) {
+        continue
+      }
+
+      const documentNode: DocumentNode =
+        definitions.length === file.parsed.definitions.length
+          ? file.parsed
+          : { ...file.parsed, definitions }
+
+      if (synced) {
+        this.generator.update({ filePath, documentNode })
+      } else {
+        this.generator.add({ filePath, documentNode })
+      }
+      this.syncedDocuments.set(filePath, { parsed: file.parsed, definitions })
+    }
+
+    for (const filePath of [...this.syncedDocuments.keys()]) {
+      if (!this.files.has(filePath)) {
+        this.generator.remove(filePath)
+        this.syncedDocuments.delete(filePath)
+      }
+    }
+  }
+
+  /**
+   * Log fragments and operations that are defined in more than one file.
+   *
+   * Only collisions that are new or have changed since the last sync are
+   * logged.
+   */
+  private logCollisions(
+    sourcesByKey: Map<string, DefinitionSource[]>,
+    ownerPriorities: Map<string, number>,
+  ) {
+    const toLabel = (source: DefinitionSource) => {
+      const path = source.filePath.startsWith('hook:')
+        ? source.filePath
+        : this.filePathToSourceRelative(source.filePath)
+      return `${source.label} (${path})`
+    }
+
+    const shouldLogOverrides =
+      !this.helper.isPrepare && !this.helper.options.logOnlyErrors
+
+    const collisions = new Map<string, string>()
+    for (const [key, sources] of sourcesByKey) {
+      if (sources.length < 2) {
+        continue
+      }
+      const priority = ownerPriorities.get(key)
+      const owners = sources.filter((v) => v.priority === priority)
+      const overridden = sources.filter((v) => v.priority !== priority)
+
+      const duplicateMessage =
+        owners.length > 1
+          ? `Multiple GraphQL definitions with the same name, only one of them is used: ${owners.map(toLabel).join(', ')}`
+          : ''
+      const overrideMessage = overridden.length
+        ? `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
+        : ''
+
+      const message = duplicateMessage + overrideMessage
+      collisions.set(key, message)
+      if (this.loggedCollisions.get(key) === message) {
+        continue
+      }
+
+      if (duplicateMessage) {
+        logger.warn(duplicateMessage)
+      }
+      if (overrideMessage && shouldLogOverrides) {
+        logger.info(overrideMessage)
+      }
+    }
+
+    this.loggedCollisions = collisions
   }
 
   public async updateSchema(schema: GraphQLSchema) {
@@ -410,16 +643,16 @@ export class Collector {
     const exists = this.hookDocuments.has(fullIdentifier)
     this.hookDocuments.set(fullIdentifier, source)
     if (exists && this.isInitialised) {
-      this.generator.update({
-        filePath: fullIdentifier,
-        document: source,
-      })
+      const file = new CollectedFile(fullIdentifier, source, false)
+      this.files.set(fullIdentifier, file)
+      this.syncGenerator()
       await this.buildState()
     }
   }
 
   public addHookFile(filePath: string) {
     this.hookFiles.add(filePath)
+    this.priorities.delete(filePath)
   }
 
   /**
@@ -440,26 +673,19 @@ export class Collector {
         const filePath = this.helper.paths.nuxtConfig
         const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
         this.files.set(filePath, file)
-        this.generator.add({
-          filePath,
-          documentNode: file.parsed,
-        })
       }
 
       const hookDocuments = [...this.hookDocuments.entries()]
       hookDocuments.forEach(([identifier, source]) => {
         const file = new CollectedFile(identifier, source, false)
         this.files.set(identifier, file)
-        this.generator.add({
-          filePath: identifier,
-          documentNode: file.parsed,
-        })
       })
 
       for (const filePath of this.hookFiles) {
         await this.addFile(filePath)
       }
 
+      this.syncGenerator()
       await this.buildState()
       if (!this.helper.isPrepare) {
         logger.success('All GraphQL documents are valid.')
@@ -485,10 +711,6 @@ export class Collector {
     }
 
     this.files.set(filePath, file)
-    this.generator.add({
-      filePath,
-      documentNode: file.parsed,
-    })
     return file
   }
 
@@ -506,7 +728,11 @@ export class Collector {
       return false
     }
     const result = await this.addFile(filePath)
-    return !!result
+    if (!result) {
+      return false
+    }
+    this.syncGenerator()
+    return true
   }
 
   private async handleChange(filePath: string): Promise<boolean> {
@@ -521,20 +747,28 @@ export class Collector {
       return this.handleAdd(filePath)
     }
 
+    let needsUpdate: boolean
     try {
-      const needsUpdate = await file.update()
-      if (!needsUpdate) {
-        return false
+      needsUpdate = await file.update()
+    } catch (e) {
+      // Report syntax errors, but keep the last valid version of the file.
+      // Removing it would silently activate definitions it overrides.
+      if (e instanceof GraphQLError && file.fileContents.trim()) {
+        throw new Error(
+          `Failed to parse ${this.filePathToSourceRelative(filePath)}: ${e.message}`,
+          { cause: e },
+        )
       }
-      this.generator.update({
-        filePath: filePath,
-        documentNode: file.parsed,
-      })
-    } catch {
-      // Error: File is invalid (e.g. empty), so let's remove it.
+
+      // The file is empty or can't be read anymore, so let's remove it.
       return this.handleUnlink(filePath)
     }
 
+    if (!needsUpdate) {
+      return false
+    }
+
+    this.syncGenerator()
     return true
   }
 
@@ -544,19 +778,22 @@ export class Collector {
       return false
     }
     this.files.delete(filePath)
-    this.generator.remove(filePath)
+    this.syncGenerator()
     return true
   }
 
   private handleUnlinkDir(folderPath: string): boolean {
+    const prefix = folderPath.endsWith('/') ? folderPath : folderPath + '/'
     let anyHasChanged = false
     for (const filePath of [...this.files.keys()]) {
-      if (filePath.startsWith(folderPath)) {
-        const hasChanged = this.handleUnlink(filePath)
-        if (hasChanged) {
-          anyHasChanged = true
-        }
+      if (filePath.startsWith(prefix)) {
+        this.files.delete(filePath)
+        anyHasChanged = true
       }
+    }
+
+    if (anyHasChanged) {
+      this.syncGenerator()
     }
 
     return anyHasChanged
