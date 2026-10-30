@@ -16,7 +16,6 @@ import { UPLOAD_HEADER } from '../settings'
  */
 function createFormData(variables: Record<string, any>): FormData {
   const formData = new FormData()
-  formData.append('operations', '{}')
   const map: Record<string, string[]> = {}
   let fileIndex = 0
 

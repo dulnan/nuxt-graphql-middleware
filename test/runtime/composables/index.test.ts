@@ -223,10 +223,6 @@ describe('useGraphqlUploadMutation', () => {
           "body": FormData {
             Symbol(state): [
               {
-                "name": "operations",
-                "value": "{}",
-              },
-              {
                 "name": "variables",
                 "value": "{"stringVar":"foobar"}",
               },

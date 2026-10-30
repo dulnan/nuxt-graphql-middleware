@@ -32,8 +32,20 @@ export async function doGraphqlRequest(
   context: GraphqlMiddlewareRequestContext | null | undefined = null,
   providedEvent: H3Event | null | undefined = null,
 ) {
-  const event = providedEvent ?? useEvent()
+  return sendGraphqlRequest(providedEvent ?? useEvent(), body, context)
+}
 
+/**
+ * Send the request to the GraphQL server.
+ *
+ * For file uploads, the form data is sent instead of the JSON body.
+ */
+export async function sendGraphqlRequest(
+  event: H3Event,
+  body: RequestBody,
+  context: GraphqlMiddlewareRequestContext | null,
+  formData?: FormData,
+) {
   if (serverOptions.doGraphqlRequest) {
     return serverOptions.doGraphqlRequest({
       event,
@@ -41,6 +53,7 @@ export async function doGraphqlRequest(
       operationName: body.operationName,
       operationDocument: body.query,
       variables: body.variables || {},
+      formData,
       context: context || {},
     })
   }
@@ -83,7 +96,7 @@ export async function doGraphqlRequest(
     .raw(endpoint, {
       // @ts-expect-error Not yet been fixed in nitro.
       method: 'POST',
-      body: {
+      body: formData ?? {
         query: body.query,
         variables: body.variables,
         operationName: body.operationName,

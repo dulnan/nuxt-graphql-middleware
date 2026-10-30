@@ -346,7 +346,7 @@ export async function readLimitedBody(
 /**
  * Drop keys that would change the prototype of the parsed objects.
  */
-function dropPrototypeKeys(key: string, value: unknown) {
+export function dropPrototypeKeys(key: string, value: unknown) {
   if (
     key === '__proto__' ||
     (key === 'constructor' &&
