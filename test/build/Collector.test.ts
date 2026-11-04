@@ -138,6 +138,7 @@ describe('Collector', () => {
   })
 
   test('documents and files from hooks rank between the app and layers', async () => {
+    vi.spyOn(logger, 'warn').mockImplementation(() => {})
     const layerQueries = writeFile(
       'layers/base/app/queries.graphql',
       'query fromHookDocument { text }\nquery fromHookFile { text }',
@@ -166,20 +167,110 @@ describe('Collector', () => {
     expect(getOperation(collector, 'fromHookFile')?.filePath).toBe(moduleFile)
   })
 
-  test('duplicates with the same priority are logged as a warning', async () => {
+  test('overriding a definition of a module logs a warning', async () => {
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
+    const moduleFile = writeFile(
+      'node_modules/some-module/fragment.fromModuleFile.graphql',
+      'fragment fromModuleFile on Data { text }',
+    )
     const collector = createCollector([
-      writeFile('app/a.graphql', 'fragment data on Data { text }'),
-      writeFile('app/b.graphql', 'fragment data on Data { other }'),
+      writeFile(
+        'app/fragments.graphql',
+        `fragment fromModuleDocument on Data { other }
+         fragment fromModuleFile on Data { other }
+         fragment fromLayer on Data { other }`,
+      ),
+      writeFile(
+        'layers/base/app/fragments.graphql',
+        `fragment fromLayer on Data { text }
+         fragment overriddenByModule on Data { text }`,
+      ),
     ])
+    collector.addHookDocument(
+      'module',
+      `fragment fromModuleDocument on Data { text }
+       fragment overriddenByModule on Data { other }`,
+    )
+    collector.addHookFile(moduleFile)
     await collector.init()
-    expect(warn).toHaveBeenCalledOnce()
-    expect(warn.mock.calls[0]![0]).toContain('fragment data')
+
+    // Logged even with logOnlyErrors and during prepare, see createCollector().
+    // Overrides of layer definitions are not warned about.
+    expect(warn).toHaveBeenCalledTimes(2)
+    const messages = warn.mock.calls.map((v) => String(v[0]))
+    expect(messages).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('fragment fromModuleDocument (hook:module)'),
+        expect.stringContaining('fragment fromModuleFile (./'),
+      ]),
+    )
 
     // Not logged again when an unrelated file changes.
     const query = writeFile('app/query.graphql', 'query foo { text }')
     await collector.handleWatchEvent('add', query)
-    expect(warn).toHaveBeenCalledOnce()
+    expect(warn).toHaveBeenCalledTimes(2)
+  })
+
+  test('duplicates with the same priority fail', async () => {
+    const error = vi.spyOn(logger, 'error').mockImplementation(() => {})
+    const collector = createCollector([
+      writeFile('app/a.graphql', 'fragment data on Data { text }'),
+      writeFile('app/b.graphql', 'fragment data on Data { other }'),
+    ])
+    await expect(collector.init()).rejects.toThrow()
+    expect(error).toHaveBeenCalledOnce()
+    expect(error.mock.calls[0]![0]).toContain(
+      'Multiple GraphQL definitions with the same name',
+    )
+    expect(error.mock.calls[0]![0]).toContain('fragment data (./')
+  })
+
+  test('definitions of two modules with the same name fail', async () => {
+    const error = vi.spyOn(logger, 'error').mockImplementation(() => {})
+    const moduleFile = writeFile(
+      'node_modules/some-module/fragment.data.graphql',
+      'fragment data on Data { text }',
+    )
+    const collector = createCollector([])
+    collector.addHookDocument('other-module', 'fragment data on Data { other }')
+    collector.addHookFile(moduleFile)
+    await expect(collector.init()).rejects.toThrow()
+    expect(error.mock.calls[0]![0]).toContain(
+      'fragment data (hook:other-module)',
+    )
+  })
+
+  test('a duplicate added during watch is reported until it is fixed', async () => {
+    vi.spyOn(logger, 'error').mockImplementation(() => {})
+    const fragment = writeFile(
+      'app/fragment.data.graphql',
+      'fragment data on Data { text }',
+    )
+    const collector = createCollector([fragment])
+    await collector.init()
+
+    const duplicate = writeFile(
+      'app/fragment.duplicate.graphql',
+      'fragment data on Data { other }',
+    )
+    const result = await collector.handleWatchEvent('add', duplicate)
+    expect(result.error?.message).toContain('fragment data')
+
+    // Still reported when an unrelated file changes.
+    const query = writeFile('app/query.graphql', 'query foo { text }')
+    const unrelated = await collector.handleWatchEvent('add', query)
+    expect(unrelated.error?.message).toContain('fragment data')
+
+    writeFile(
+      'app/fragment.duplicate.graphql',
+      'fragment other on Data { other }',
+    )
+    const fixed = await collector.handleWatchEvent('change', duplicate)
+    expect(fixed.error).toBeUndefined()
+    expect(collector.getFragment('data')?.filePath).toBe(fragment)
+    expect(collector.getFragment('data')?.source).toContain('text')
+    expect(collector.getFragment('other')?.filePath).toBe(duplicate)
+    expect(getOperation(collector, 'foo')).toBeDefined()
   })
 
   test('a syntax error keeps the last valid version of the file', async () => {

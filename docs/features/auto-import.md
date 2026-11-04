@@ -42,8 +42,13 @@ reference the fragment. When names collide, the first one in this list wins:
    [hooks](/configuration/module-hooks)
 3. The extended layers, in the order they are defined
 
-Definitions with the same name in the same layer are not resolved: A warning is
-logged and only one of them is used.
+Definitions with the same name and the same rank fail the build, for example two
+files in the app that define the same fragment, or two modules that add a
+fragment with the same name.
+
+When the app overrides a definition of a module, a warning is logged, because
+the code of the module may rely on the fields of its definition. If the override
+is intended, check whether the module has an option to not add its definition.
 
 ::: info
 

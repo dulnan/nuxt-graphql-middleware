@@ -149,10 +149,10 @@ export class Collector {
   private priorities = new Map<string, number>()
 
   /**
-   * The log message per definition key that is defined more than once, as
-   * logged during the last generator sync.
+   * The log message per overridden definition key, as logged during the last
+   * generator sync.
    */
-  private loggedCollisions = new Map<string, string>()
+  private loggedOverrides = new Map<string, string>()
 
   constructor(
     private schema: GraphQLSchema,
@@ -182,7 +182,7 @@ export class Collector {
     this.files.clear()
     this.syncedDocuments.clear()
     this.priorities.clear()
-    this.loggedCollisions.clear()
+    this.loggedOverrides.clear()
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
@@ -230,8 +230,9 @@ export class Collector {
    * When multiple files define a fragment or operation with the same name,
    * only the definition with the highest priority (see getPriority()) is passed
    * to the generator. This allows the app to override fragments and operations
-   * of layers. Definitions with the same priority are all passed on and
-   * logged as a warning.
+   * of modules and layers. Definitions with the same priority are an error, see
+   * checkCollisions(). In that case nothing is passed to the generator, so it
+   * keeps the last valid state.
    */
   private syncGenerator(): void {
     const sourcesByKey = new Map<string, DefinitionSource[]>()
@@ -252,7 +253,7 @@ export class Collector {
       ownerPriorities.set(key, Math.min(...sources.map((v) => v.priority)))
     }
 
-    this.logCollisions(sourcesByKey, ownerPriorities)
+    this.checkCollisions(sourcesByKey, ownerPriorities)
 
     for (const [filePath, file] of this.files) {
       const priority = this.getPriority(filePath)
@@ -292,12 +293,18 @@ export class Collector {
   }
 
   /**
-   * Log fragments and operations that are defined in more than one file.
+   * Check fragments and operations that are defined in more than one file.
    *
-   * Only collisions that are new or have changed since the last sync are
-   * logged.
+   * Throws when the definitions with the highest priority are in more than one
+   * file, e.g. two files of the app or documents of two modules: The generator
+   * would silently use one of them.
+   *
+   * Overrides are logged, but only when they are new or have changed since the
+   * last sync. Overriding a definition of a layer is the point of layers, so
+   * that is only logged as info. Overriding a definition of a module is logged
+   * as a warning, because the code of the module may rely on its fields.
    */
-  private logCollisions(
+  private checkCollisions(
     sourcesByKey: Map<string, DefinitionSource[]>,
     ownerPriorities: Map<string, number>,
   ) {
@@ -311,38 +318,43 @@ export class Collector {
     const shouldLogOverrides =
       !this.helper.isPrepare && !this.helper.options.logOnlyErrors
 
-    const collisions = new Map<string, string>()
+    const duplicates: string[] = []
+    const overrides = new Map<string, string>()
     for (const [key, sources] of sourcesByKey) {
       if (sources.length < 2) {
         continue
       }
       const priority = ownerPriorities.get(key)
       const owners = sources.filter((v) => v.priority === priority)
-      const overridden = sources.filter((v) => v.priority !== priority)
-
-      const duplicateMessage =
-        owners.length > 1
-          ? `Multiple GraphQL definitions with the same name, only one of them is used: ${owners.map(toLabel).join(', ')}`
-          : ''
-      const overrideMessage = overridden.length
-        ? `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
-        : ''
-
-      const message = duplicateMessage + overrideMessage
-      collisions.set(key, message)
-      if (this.loggedCollisions.get(key) === message) {
+      if (owners.length > 1) {
+        duplicates.push(owners.map(toLabel).join(', '))
         continue
       }
 
-      if (duplicateMessage) {
-        logger.warn(duplicateMessage)
+      const overridden = sources.filter((v) => v.priority !== priority)
+      const message = `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
+      overrides.set(key, message)
+      if (this.loggedOverrides.get(key) === message) {
+        continue
       }
-      if (overrideMessage && shouldLogOverrides) {
-        logger.info(overrideMessage)
+
+      if (overridden.some((v) => v.priority === HOOK_PRIORITY)) {
+        logger.warn(
+          `${message}. The overridden definition is provided by a module, which may rely on its fields. Rename the definition in the app if the override is not intended.`,
+        )
+      } else if (shouldLogOverrides) {
+        logger.info(message)
       }
     }
 
-    this.loggedCollisions = collisions
+    this.loggedOverrides = overrides
+
+    if (duplicates.length) {
+      throw new Error(
+        'Multiple GraphQL definitions with the same name. Rename or remove all but one of them:\n' +
+          duplicates.map((v) => '  - ' + v).join('\n'),
+      )
+    }
   }
 
   public getSchema(): GraphQLSchema {
