@@ -1,4 +1,4 @@
-import { resolve } from 'pathe'
+import { fileURLToPath } from 'node:url'
 
 export default defineNuxtConfig({
   ssr: false,
@@ -6,7 +6,7 @@ export default defineNuxtConfig({
 
   nitro: {
     output: {
-      publicDir: resolve(__dirname, '../dist/client'),
+      publicDir: fileURLToPath(new URL('../dist/client', import.meta.url)),
     },
   },
 
@@ -20,7 +20,7 @@ export default defineNuxtConfig({
 
   vite: {
     server: {
-      hmr: {
+      ws: {
         // Instead of go through proxy, we directly connect real port of the client app
         clientPort: +(process.env.PORT || 3300),
       },

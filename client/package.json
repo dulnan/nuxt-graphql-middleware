@@ -1,4 +1,5 @@
 {
   "private": true,
-  "name": "nuxt-graphql-middleware-client"
+  "name": "nuxt-graphql-middleware-client",
+  "type": "module"
 }
