@@ -75,7 +75,7 @@ export async function sendGraphqlRequest(
   )
 
   // Get the fetch options for this request.
-  const fetchOptions = withSignal(
+  const { fetchOptions, done } = withSignal(
     await getFetchOptions(
       serverOptions,
       event,
@@ -123,4 +123,5 @@ export async function sendGraphqlRequest(
         context,
       )
     })
+    .finally(done)
 }

@@ -23,6 +23,10 @@ vi.mock('#nuxt-graphql-middleware/operation-variables', () => {
   }
 })
 
+const runtimeConfig = vi.hoisted(() => {
+  return { graphqlServerTimeout: false as number | false }
+})
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
@@ -34,7 +38,7 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http://localhost/graphql',
-          graphqlServerTimeout: false,
+          graphqlServerTimeout: runtimeConfig.graphqlServerTimeout,
         },
       }
     },
@@ -173,6 +177,30 @@ describe('doGraphqlRequest', () => {
       statusMessage: 'Invalid response from the GraphQL server.',
     })
     expect(consoleError).toHaveBeenCalledOnce()
+  })
+
+  test('clears the timeout once the request is done', async () => {
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
+    runtimeConfig.graphqlServerTimeout = 20
+    fetchMock.raw.mockClear()
+    try {
+      await doGraphqlRequest(
+        {
+          query: 'mutation TestMutation { test }',
+          variables: {},
+          operation: GraphqlMiddlewareOperation.Mutation,
+          operationName: 'testMutation',
+        },
+        null,
+        createEvent(),
+      )
+    } finally {
+      runtimeConfig.graphqlServerTimeout = false
+    }
+    const signal: AbortSignal = fetchMock.raw.mock.calls[0]![1].signal
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(signal.aborted).toBe(false)
   })
 
   test.each([

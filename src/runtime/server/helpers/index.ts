@@ -228,25 +228,25 @@ export function getBodySizeLimit(
 /**
  * Add the signal for the request to the GraphQL server to the fetch options.
  *
- * The signal is aborted after the timeout and, if given, by the client signal.
- * A timeout or signal from the fetch options replaces the default timeout.
+ * The signal is aborted after the timeout and by the client signal and the
+ * signal from the fetch options, if given. A timeout or signal from the fetch
+ * options replaces the default timeout.
  *
  * A signal is used instead of the timeout option of ofetch, which only limits
  * the time until the response headers arrive. ofetch also ignores its timeout
  * if there is a signal, so a timeout from the fetch options becomes a signal
  * too.
+ *
+ * Call done() once the request is settled: it clears the timer and removes the
+ * listeners from the other signals. AbortSignal.timeout() and AbortSignal.any()
+ * are not used, because Node keeps a signal of AbortSignal.any() with a
+ * timeout in memory until the timer fires, also after the request is done.
  */
 export function withSignal(
   fetchOptions: FetchOptions,
   timeout: number | false | undefined,
   clientSignal?: AbortSignal,
-): FetchOptions {
-  const signals: AbortSignal[] = []
-
-  if (fetchOptions.signal) {
-    signals.push(fetchOptions.signal)
-  }
-
+): { fetchOptions: FetchOptions; done: () => void } {
   const defaultTimeout =
     timeout === undefined
       ? DEFAULT_GRAPHQL_SERVER_TIMEOUT
@@ -270,25 +270,65 @@ export function withSignal(
   } else if (!fetchOptions.signal) {
     ms = defaultTimeout
   }
-  if (ms) {
-    signals.push(AbortSignal.timeout(ms))
-  }
 
-  if (clientSignal) {
-    signals.push(clientSignal)
-  }
+  const signals = [fetchOptions.signal, clientSignal].filter(
+    (v): v is AbortSignal => !!v,
+  )
 
-  if (!signals.length) {
+  // Without a timeout, a single signal can be used as it is.
+  if (!ms && signals.length <= 1) {
+    const signal = signals[0]
+    if (signal) {
+      return {
+        fetchOptions: { ...fetchOptions, timeout: undefined, signal },
+        done: () => {},
+      }
+    }
     // ofetch would still use an invalid timeout, for example -1.
-    return fetchOptions.timeout === undefined
-      ? fetchOptions
-      : { ...fetchOptions, timeout: undefined }
+    return {
+      fetchOptions:
+        fetchOptions.timeout === undefined
+          ? fetchOptions
+          : { ...fetchOptions, timeout: undefined },
+      done: () => {},
+    }
   }
+
+  const controller = new AbortController()
+  const onAbort = (event: Event) => {
+    controller.abort((event.target as AbortSignal).reason)
+  }
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason)
+    } else {
+      signal.addEventListener('abort', onAbort, { once: true })
+    }
+  }
+
+  const timer = ms
+    ? setTimeout(() => {
+        controller.abort(
+          new DOMException(
+            'The operation was aborted due to timeout',
+            'TimeoutError',
+          ),
+        )
+      }, ms)
+    : undefined
 
   return {
-    ...fetchOptions,
-    timeout: undefined,
-    signal: signals.length === 1 ? signals[0] : AbortSignal.any(signals),
+    fetchOptions: {
+      ...fetchOptions,
+      timeout: undefined,
+      signal: controller.signal,
+    },
+    done: () => {
+      clearTimeout(timer)
+      for (const signal of signals) {
+        signal.removeEventListener('abort', onAbort)
+      }
+    },
   }
 }
 
