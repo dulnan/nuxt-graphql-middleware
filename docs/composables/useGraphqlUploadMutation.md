@@ -65,7 +65,8 @@ example of their type. This should be handled by the GraphQL server.
 In addition, the route does not save any of the files. It only validates that a
 valid, existing mutation is used. It also makes sure that it's not possible to
 send arbitrary operations: Every file must be listed in the `map` field, with
-the path of a `null` value in the variables, such as `variables.file`. Requests
-with other files or paths are refused with a 400 status code. The route then
-builds a new request for the GraphQL server, in which the files are named `0`,
-`1`, etc., so that no field names from the request are passed on.
+one or more paths of `null` values in the variables, such as `variables.file`.
+Each path can only be assigned to one file. Requests with other files or paths
+are refused with a 400 status code. The route then builds a new request for the
+GraphQL server, in which the files are named `0`, `1`, etc., so that no field
+names from the request are passed on.

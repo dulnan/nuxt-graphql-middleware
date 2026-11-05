@@ -20,7 +20,7 @@ import { GraphqlMiddlewareOperation, UPLOAD_HEADER } from '../../settings'
 
 type GraphqlUploadData = {
   variables: Record<string, any>
-  files: [path: string, file: File][]
+  files: [paths: string[], file: File][]
 }
 
 function parseJsonObject(value: unknown, name: string): Record<string, any> {
@@ -58,15 +58,17 @@ function isFilePlaceholder(
 /**
  * Get the variables and the files from the form data.
  *
- * The map assigns every file a path in the variables, for example
+ * The map assigns every file one or more paths in the variables, for example
  * { "0": ["variables.file"] }. Only files in the map are accepted, and only
- * for paths that have null as the value in the variables.
+ * for paths that have null as the value in the variables. Every path can only
+ * be assigned once.
  */
 function parseFormData(data: FormData): GraphqlUploadData {
   const variables = parseJsonObject(data.get('variables'), 'variables')
   const map = parseJsonObject(data.get('map'), 'map')
 
-  const files: [string, File][] = []
+  const files: [string[], File][] = []
+  const assignedPaths = new Set<string>()
   for (const [key, paths] of Object.entries(map)) {
     const values = data.getAll(key)
     const file = values[0]
@@ -74,18 +76,25 @@ function parseFormData(data: FormData): GraphqlUploadData {
       return throwError('Invalid file in form data.')
     }
 
-    const path = Array.isArray(paths) && paths.length === 1 ? paths[0] : null
-    const [prefix, ...variablePath] =
-      typeof path === 'string' ? path.split('.') : []
-    if (
-      prefix !== 'variables' ||
-      !variablePath.length ||
-      !isFilePlaceholder(variables, variablePath)
-    ) {
+    if (!Array.isArray(paths) || !paths.length) {
       return throwError('Invalid map in form data.')
     }
 
-    files.push([path, file])
+    for (const path of paths) {
+      const [prefix, ...variablePath] =
+        typeof path === 'string' ? path.split('.') : []
+      if (
+        prefix !== 'variables' ||
+        !variablePath.length ||
+        !isFilePlaceholder(variables, variablePath) ||
+        assignedPaths.has(path)
+      ) {
+        return throwError('Invalid map in form data.')
+      }
+      assignedPaths.add(path)
+    }
+
+    files.push([paths, file])
   }
 
   for (const [key, value] of data) {
@@ -115,8 +124,8 @@ function buildFormData(
   )
 
   const map: Record<string, string[]> = {}
-  files.forEach(([path], index) => {
-    map[index] = [path]
+  files.forEach(([paths], index) => {
+    map[index] = paths
   })
   formData.append('map', JSON.stringify(map))
 

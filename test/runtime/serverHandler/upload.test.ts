@@ -233,6 +233,36 @@ describe('upload handler', () => {
     expect(fetchMock.raw).not.toHaveBeenCalled()
   })
 
+  test('Should forward a file with several paths', async () => {
+    const result = await testHandler(
+      UPLOAD_HEADER,
+      buildBody({
+        variables: '{"a":null,"input":{"b":null}}',
+        map: '{"0":["variables.a","variables.input.b"]}',
+      }),
+    )
+    const formData = result.options.body as FormData
+    expect(JSON.parse(formData.get('map') as string)).toEqual({
+      0: ['variables.a', 'variables.input.b'],
+    })
+    expect(await (formData.get('0') as File).text()).toBe('Hello')
+  })
+
+  test('Should refuse two files for the same path', async () => {
+    fetchMock.raw.mockClear()
+    const body = buildBody({
+      map: '{"0":["variables.file"],"1":["variables.file"]}',
+      files: [
+        { name: '0', value: 'A', filename: 'a.txt' },
+        { name: '1', value: 'B', filename: 'b.txt' },
+      ],
+    })
+    await expect(testHandler(UPLOAD_HEADER, body)).rejects.toMatchObject({
+      statusCode: 400,
+    })
+    expect(fetchMock.raw).not.toHaveBeenCalled()
+  })
+
   test('Should refuse a map for a variable that is not null', async () => {
     await expect(
       testHandler(UPLOAD_HEADER, buildBody({ variables: '{"file":"foo"}' })),
