@@ -83,8 +83,15 @@ mutation trackVisit {
 It is available as a server route here:
 
 ```sh
-curl -X POST http://localhost:3000/api/graphql_middleware/mutations/trackVisit
+curl http://localhost:3000/api/graphql_middleware/mutation/trackVisit \
+  -d '{}' \
+  -H "Content-Type: application/json" \
+  -X POST
 ```
+
+The route only accepts requests with the `application/json` content type and
+refuses all others with a 415 status code. If the mutation has no variables,
+send an empty object.
 
 ## Mutation with variables
 
@@ -102,7 +109,7 @@ mutation addToCart($id: String!) {
 Mutation variables are sent as the request body.
 
 ```sh
-curl http://localhost:3000/api/graphql_middleware/mutations/trackVisit \
+curl http://localhost:3000/api/graphql_middleware/mutation/addToCart \
   -d '{"id":"123"}' \
   -H "Content-Type: application/json" \
   -X POST

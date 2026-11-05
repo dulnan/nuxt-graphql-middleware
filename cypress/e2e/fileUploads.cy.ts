@@ -1,4 +1,37 @@
 describe('Mutations with file uploads', () => {
+  function uploadRequest(name: string, headers: Record<string, string>) {
+    const boundary = 'foobar'
+    return cy.request({
+      method: 'POST',
+      url: '/api/graphql_middleware/upload/' + name,
+      headers: {
+        'content-type': `multipart/form-data; boundary=${boundary}`,
+        ...headers,
+      },
+      body: [
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="variables"',
+        '',
+        '{"file":null}',
+        `--${boundary}--`,
+        '',
+      ].join('\r\n'),
+      failOnStatusCode: false,
+    })
+  }
+
+  it('requires the upload header', () => {
+    uploadRequest('testUpload', {})
+      .its('body.statusMessage')
+      .should('contain', 'x-nuxt-graphql-middleware-upload')
+  })
+
+  it('only accepts mutations with file variables', () => {
+    uploadRequest('initState', { 'x-nuxt-graphql-middleware-upload': '1' })
+      .its('body.statusMessage')
+      .should('contain', 'has no file variables')
+  })
+
   it('correctly saves a single file', () => {
     cy.initState()
     cy.visit('/test-upload').waitForHydration()

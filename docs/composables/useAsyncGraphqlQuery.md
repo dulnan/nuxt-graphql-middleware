@@ -219,6 +219,20 @@ The composable automatically generates a unique key for `useAsyncData` based on:
 This ensures that different variable combinations are cached separately and
 multiple instances don't conflict.
 
+### Aborted Requests
+
+The request is aborted when `useAsyncData` cancels it, for example when it is
+refreshed while a previous request is still running. The middleware then also
+aborts its request to the GraphQL server.
+
+Requests that use the client cache (`graphqlCaching.client`) are not aborted, as
+several callers can share the same cached request.
+
+During SSR, the queries are aborted when the client closes the connection of the
+page, for example when the user leaves before the page has loaded. Queries that
+start after that fail right away. Pages that might be cached, for example with
+the `cache` or `swr` route rules, are rendered completely.
+
 ## Examples
 
 ### Pagination

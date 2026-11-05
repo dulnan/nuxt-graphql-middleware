@@ -46,13 +46,16 @@ type DefinitionSource = {
   filePath: string
   priority: number
   label: string
+  /** The type of an operation, e.g. "query". */
+  operation?: string
 }
 
 /**
  * Get the key used to detect fragments and operations with the same name.
  *
  * Operations are keyed by name only, because the generator requires operation
- * names to be unique across queries and mutations.
+ * names to be unique across queries and mutations. Operations of different
+ * types with the same name are an error, see checkCollisions().
  */
 function getDefinitionKey(def: DefinitionNode): string | null {
   if (def.kind === Kind.FRAGMENT_DEFINITION) {
@@ -149,10 +152,10 @@ export class Collector {
   private priorities = new Map<string, number>()
 
   /**
-   * The log message per definition key that is defined more than once, as
-   * logged during the last generator sync.
+   * The log message per overridden definition key, as logged during the last
+   * generator sync.
    */
-  private loggedCollisions = new Map<string, string>()
+  private loggedOverrides = new Map<string, string>()
 
   constructor(
     private schema: GraphQLSchema,
@@ -182,7 +185,7 @@ export class Collector {
     this.files.clear()
     this.syncedDocuments.clear()
     this.priorities.clear()
-    this.loggedCollisions.clear()
+    this.loggedOverrides.clear()
     this.generator.reset()
     this.operationTimestamps.clear()
     this.rpcItems.clear()
@@ -230,8 +233,10 @@ export class Collector {
    * When multiple files define a fragment or operation with the same name,
    * only the definition with the highest priority (see getPriority()) is passed
    * to the generator. This allows the app to override fragments and operations
-   * of layers. Definitions with the same priority are all passed on and
-   * logged as a warning.
+   * of modules and layers. Definitions with the same priority and operations of
+   * different types with the same name are an error, see checkCollisions(). In
+   * that case nothing is passed to the generator, so it keeps the last valid
+   * state.
    */
   private syncGenerator(): void {
     const sourcesByKey = new Map<string, DefinitionSource[]>()
@@ -241,7 +246,15 @@ export class Collector {
         const key = getDefinitionKey(def)
         if (key) {
           const sources = sourcesByKey.get(key) || []
-          sources.push({ filePath, priority, label: getDefinitionLabel(def) })
+          sources.push({
+            filePath,
+            priority,
+            label: getDefinitionLabel(def),
+            operation:
+              def.kind === Kind.OPERATION_DEFINITION
+                ? def.operation
+                : undefined,
+          })
           sourcesByKey.set(key, sources)
         }
       }
@@ -252,7 +265,7 @@ export class Collector {
       ownerPriorities.set(key, Math.min(...sources.map((v) => v.priority)))
     }
 
-    this.logCollisions(sourcesByKey, ownerPriorities)
+    this.checkCollisions(sourcesByKey, ownerPriorities)
 
     for (const [filePath, file] of this.files) {
       const priority = this.getPriority(filePath)
@@ -292,12 +305,18 @@ export class Collector {
   }
 
   /**
-   * Log fragments and operations that are defined in more than one file.
+   * Check fragments and operations that are defined in more than one file.
    *
-   * Only collisions that are new or have changed since the last sync are
-   * logged.
+   * Throws when the definitions with the highest priority are in more than one
+   * file, e.g. two files of the app or documents of two modules: The generator
+   * would silently use one of them.
+   *
+   * Overrides are logged, but only when they are new or have changed since the
+   * last sync. Overriding a definition of a layer is the point of layers, so
+   * that is only logged as info. Overriding a definition of a module is logged
+   * as a warning, because the code of the module may rely on its fields.
    */
-  private logCollisions(
+  private checkCollisions(
     sourcesByKey: Map<string, DefinitionSource[]>,
     ownerPriorities: Map<string, number>,
   ) {
@@ -311,38 +330,71 @@ export class Collector {
     const shouldLogOverrides =
       !this.helper.isPrepare && !this.helper.options.logOnlyErrors
 
-    const collisions = new Map<string, string>()
+    const duplicates: string[] = []
+    const typeMismatches: string[] = []
+    const overrides = new Map<string, string>()
     for (const [key, sources] of sourcesByKey) {
       if (sources.length < 2) {
         continue
       }
-      const priority = ownerPriorities.get(key)
-      const owners = sources.filter((v) => v.priority === priority)
-      const overridden = sources.filter((v) => v.priority !== priority)
 
-      const duplicateMessage =
-        owners.length > 1
-          ? `Multiple GraphQL definitions with the same name, only one of them is used: ${owners.map(toLabel).join(', ')}`
-          : ''
-      const overrideMessage = overridden.length
-        ? `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
-        : ''
-
-      const message = duplicateMessage + overrideMessage
-      collisions.set(key, message)
-      if (this.loggedCollisions.get(key) === message) {
+      // A query can't replace a mutation, as the code that uses the
+      // operation expects its type. This is most likely a name clash.
+      if (new Set(sources.map((v) => v.operation)).size > 1) {
+        typeMismatches.push(
+          [...sources]
+            .sort((a, b) => a.priority - b.priority)
+            .map(toLabel)
+            .join(', '),
+        )
         continue
       }
 
-      if (duplicateMessage) {
-        logger.warn(duplicateMessage)
+      const priority = ownerPriorities.get(key)
+      const owners = sources.filter((v) => v.priority === priority)
+      if (owners.length > 1) {
+        duplicates.push(owners.map(toLabel).join(', '))
+        continue
       }
-      if (overrideMessage && shouldLogOverrides) {
-        logger.info(overrideMessage)
+
+      const overridden = sources.filter((v) => v.priority !== priority)
+      const message = `${owners.map(toLabel).join(', ')} overrides ${overridden.map(toLabel).join(', ')}`
+      overrides.set(key, message)
+      if (this.loggedOverrides.get(key) === message) {
+        continue
+      }
+
+      if (overridden.some((v) => v.priority === HOOK_PRIORITY)) {
+        logger.warn(
+          `${message}. The overridden definition is provided by a module, which may rely on its fields. Rename the definition in the app if the override is not intended.`,
+        )
+      } else if (shouldLogOverrides) {
+        logger.info(message)
       }
     }
 
-    this.loggedCollisions = collisions
+    this.loggedOverrides = overrides
+
+    const errors: string[] = []
+    if (duplicates.length) {
+      errors.push(
+        'Multiple GraphQL definitions with the same name. Rename or remove all but one of them:\n' +
+          duplicates.map((v) => '  - ' + v).join('\n'),
+      )
+    }
+    if (typeMismatches.length) {
+      errors.push(
+        'Operations with the same name must be of the same type to override each other. Rename one of them:\n' +
+          typeMismatches.map((v) => '  - ' + v).join('\n'),
+      )
+    }
+    if (errors.length) {
+      throw new Error(errors.join('\n\n'))
+    }
+  }
+
+  public getSchema(): GraphQLSchema {
+    return this.schema
   }
 
   public async updateSchema(schema: GraphQLSchema) {
@@ -656,6 +708,54 @@ export class Collector {
   }
 
   /**
+   * Get the documents of the documents option by the nuxt.config file that
+   * defines them.
+   *
+   * Nuxt merges the options of all layers, so the documents of each layer are
+   * taken from its own config. That way they rank as the layer (see
+   * getPriority()). The remaining documents belong to the app: those of the
+   * app's config, whose path Nuxt gives as "nuxt.config", and those from
+   * inline module options.
+   */
+  private getConfigDocuments(): Map<string, string[]> {
+    const remaining = [...this.helper.options.documents]
+    const result = new Map<string, string[]>()
+
+    for (const layer of this.helper.nuxt.options._layers) {
+      const config = layer.config as {
+        graphqlMiddleware?: { documents?: unknown }
+      } | null
+      const documents = config?.graphqlMiddleware?.documents
+      if (
+        !layer.configFile ||
+        !isAbsolute(layer.configFile) ||
+        !Array.isArray(documents)
+      ) {
+        continue
+      }
+
+      // Only documents that are still in the merged options are used.
+      const own: string[] = []
+      for (const document of documents) {
+        const index = remaining.indexOf(document)
+        if (index !== -1) {
+          own.push(...remaining.splice(index, 1))
+        }
+      }
+      if (own.length) {
+        result.set(layer.configFile, own)
+      }
+    }
+
+    if (remaining.length) {
+      const filePath = this.helper.paths.nuxtConfig
+      result.set(filePath, [...(result.get(filePath) ?? []), ...remaining])
+    }
+
+    return result
+  }
+
+  /**
    * Initialise the collector.
    */
   private async initDocuments() {
@@ -667,11 +767,8 @@ export class Collector {
         await this.addFile(filePath)
       }
 
-      const nuxtConfigDocuments = this.helper.options.documents.join('\n\n')
-
-      if (nuxtConfigDocuments.length) {
-        const filePath = this.helper.paths.nuxtConfig
-        const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
+      for (const [filePath, documents] of this.getConfigDocuments()) {
+        const file = new CollectedFile(filePath, documents.join('\n\n'), false)
         this.files.set(filePath, file)
       }
 
@@ -747,24 +844,28 @@ export class Collector {
       return this.handleAdd(filePath)
     }
 
-    let needsUpdate: boolean
+    let result: Awaited<ReturnType<CollectedFile['update']>>
     try {
-      needsUpdate = await file.update()
+      result = await file.update()
     } catch (e) {
       // Report syntax errors, but keep the last valid version of the file.
       // Removing it would silently activate definitions it overrides.
-      if (e instanceof GraphQLError && file.fileContents.trim()) {
+      if (e instanceof GraphQLError) {
         throw new Error(
           `Failed to parse ${this.filePathToSourceRelative(filePath)}: ${e.message}`,
           { cause: e },
         )
       }
 
-      // The file is empty or can't be read anymore, so let's remove it.
+      // The file can't be read anymore, so let's remove it.
       return this.handleUnlink(filePath)
     }
 
-    if (!needsUpdate) {
+    if (result === 'empty') {
+      return this.handleUnlink(filePath)
+    }
+
+    if (result === 'unchanged') {
       return false
     }
 

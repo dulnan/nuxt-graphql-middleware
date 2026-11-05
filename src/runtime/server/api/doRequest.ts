@@ -1,8 +1,16 @@
-import { defineEventHandler, readBody } from 'h3'
+import { defineEventHandler } from 'h3'
 import { doGraphqlRequest } from '../utils/doGraphqlRequest'
+import { getBodySizeLimit, readJsonBody } from '../helpers'
+import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const body = await readJsonBody(
+    event,
+    getBodySizeLimit(
+      useRuntimeConfig().graphqlMiddleware.bodySizeLimit,
+      'mutation',
+    ),
+  )
 
   const { document, variables, operationName } = body || {}
 

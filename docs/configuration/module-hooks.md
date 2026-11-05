@@ -86,6 +86,18 @@ export default defineNuxtModule({
 })
 ```
 
+### Names of Definitions
+
+The app can override a fragment or operation added by a module by defining one
+with the same name (see [Nuxt Layers](/features/auto-import#nuxt-layers)). This
+logs a warning, because the code of the module may rely on the fields of its
+definition. If two modules add a definition with the same name, or the app adds
+an operation of another type with the same name, the build fails.
+
+To avoid accidental collisions, use specific names for the definitions of a
+module, for example prefixed with the name of the module. If the app should be
+able to replace a definition, provide an option to not add it.
+
 ## `nuxt-graphql-middleware:build`
 
 This hook is called whenever the internal state of all GraphQL documents was

@@ -353,4 +353,9 @@ export type GraphqlMiddlewareServerOptions<
 
 export type GraphqlMiddlewareRuntimeConfig = {
   graphqlEndpoint?: string
+  bodySizeLimit?: {
+    mutation?: number | false
+    upload?: number | false
+  }
+  graphqlServerTimeout?: number | false
 }

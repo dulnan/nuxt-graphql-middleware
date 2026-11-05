@@ -44,14 +44,29 @@ is added:
 /api/graphql_middleware/upload/[name_of_mutation]
 ```
 
-This route expects a `multipart/form-data` request. The
-`useGraphqlUploadMutation` composable makes sure the data is sent in the correct
-format.
+This route expects a `multipart/form-data` request with the
+`x-nuxt-graphql-middleware-upload` header (any value). Requests without the
+header are refused with a 400 status code. The `useGraphqlUploadMutation`
+composable makes sure the data is sent in the correct format and with the
+header.
 
-The server route does not perform any validations on the provided data, for
-example there is no file size limitation. This should be handled separately, for
-example on the web server or by implementing a custom Nitro middleware.
+Only mutations with a variable of the `Upload` scalar type, directly or in an
+input type, can be performed via this route. Other mutations are refused with a
+400 status code and are a type error in `useGraphqlUploadMutation`. If your
+schema uses a different name for the scalar, set it with the
+[`fileUploadScalar`](/configuration/module#fileuploadscalar) option.
+
+Requests larger than 50 MB (all files of a request together) are refused with a
+413 status code. The limit can be changed with the
+[`bodySizeLimit.upload`](/configuration/module#bodysizelimit) option. Apart from
+that, the server route does not perform any validations on the files, for
+example of their type. This should be handled by the GraphQL server.
 
 In addition, the route does not save any of the files. It only validates that a
 valid, existing mutation is used. It also makes sure that it's not possible to
-send arbitrary operations.
+send arbitrary operations: Every file must be listed in the `map` field, with
+one or more paths of `null` values in the variables, such as `variables.file`.
+Each path can only be assigned to one file. Requests with other files or paths
+are refused with a 400 status code. The route then builds a new request for the
+GraphQL server, in which the files are named `0`, `1`, etc., so that no field
+names from the request are passed on.

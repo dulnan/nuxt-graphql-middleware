@@ -56,4 +56,4 @@ exports[`defineEventHandler > Should handle an invalid operation 1`] = `
 
 exports[`defineEventHandler > Should handle an invalid query 1`] = `[Error: Invalid query name.]`;
 
-exports[`defineEventHandler > Should handle unexpected errors. 1`] = `[Error: Couldn't execute GraphQL query: Fetch Error]`;
+exports[`defineEventHandler > Should handle unexpected errors. 1`] = `[Error: Couldn't execute GraphQL query.]`;

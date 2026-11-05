@@ -7,15 +7,15 @@ import {
 import { clientOptions } from '#nuxt-graphql-middleware/client-options'
 import { useGraphqlState } from '#imports'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
-import type { Mutation } from '#nuxt-graphql-middleware/operation-types'
+import type { UploadMutationName } from '#nuxt-graphql-middleware/upload-mutations'
 import { getEndpoint } from '#nuxt-graphql-middleware/helpers'
+import { UPLOAD_HEADER } from '../settings'
 
 /**
  * Builds the form data.
  */
 function createFormData(variables: Record<string, any>): FormData {
   const formData = new FormData()
-  formData.append('operations', '{}')
   const map: Record<string, string[]> = {}
   let fileIndex = 0
 
@@ -57,7 +57,7 @@ function createFormData(variables: Record<string, any>): FormData {
  * Performs a GraphQL upload mutation.
  */
 export function useGraphqlUploadMutation<
-  K extends keyof Mutation,
+  K extends UploadMutationName,
   R extends GetMutationResult<K>,
 >(
   ...args: GetMutationArgs<K> | [MutationObjectArgs<K>]
@@ -92,6 +92,13 @@ export function useGraphqlUploadMutation<
     ...overrideClientContext,
   })
 
+  // Like the other fetch options, headers passed to the composable replace the
+  // headers from the state.
+  const headers = new Headers(
+    fetchOptions.headers ?? state?.fetchOptions?.headers,
+  )
+  headers.set(UPLOAD_HEADER, '1')
+
   return $fetch<GraphqlResponse<R>>(getEndpoint('upload', name), {
     ...(state && state.fetchOptions ? (state.fetchOptions as any) : {}),
     ...(fetchOptions || {}),
@@ -99,6 +106,7 @@ export function useGraphqlUploadMutation<
       ...clientContext,
       ...(fetchOptions.params || {}),
     },
+    headers: Object.fromEntries(headers),
     method: 'POST',
     body: formData,
   }).then((v) => {

@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import { H3Event } from 'h3'
 import { GraphqlMiddlewareOperation } from './../../../src/runtime/settings'
@@ -22,6 +23,10 @@ vi.mock('#nuxt-graphql-middleware/operation-variables', () => {
   }
 })
 
+const runtimeConfig = vi.hoisted(() => {
+  return { graphqlServerTimeout: false as number | false }
+})
+
 vi.mock('#imports', () => {
   return {
     useRuntimeConfig: () => {
@@ -33,6 +38,7 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http://localhost/graphql',
+          graphqlServerTimeout: runtimeConfig.graphqlServerTimeout,
         },
       }
     },
@@ -72,10 +78,11 @@ vi.mock('#nuxt-graphql-middleware/server-options', () => {
 })
 
 const fetchMock = {
-  raw: () =>
+  raw: vi.fn((_endpoint: string, _options: any) =>
     Promise.resolve({
       _data: { data: {} },
     }),
+  ),
 }
 
 vi.stubGlobal('$fetch', fetchMock)
@@ -142,4 +149,85 @@ describe('doGraphqlRequest', () => {
     expect(graphqlEndpointCalls[0].operation).toBe('mutation')
     expect(graphqlEndpointCalls[0].operationName).toBe('testMutation')
   })
+
+  test('responds with a 502 if the response is not JSON', async () => {
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
+
+    fetchMock.raw.mockResolvedValueOnce({
+      _data: '<html>Bad Gateway</html>',
+      headers: new Headers({ 'content-type': 'text/html' }),
+    } as any)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleError.mockClear()
+
+    await expect(
+      doGraphqlRequest(
+        {
+          query: 'query TestQuery { test }',
+          variables: {},
+          operation: GraphqlMiddlewareOperation.Query,
+          operationName: 'testQuery',
+        },
+        null,
+        createEvent(),
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      statusMessage: 'Invalid response from the GraphQL server.',
+    })
+    expect(consoleError).toHaveBeenCalledOnce()
+  })
+
+  test('clears the timeout once the request is done', async () => {
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
+    runtimeConfig.graphqlServerTimeout = 20
+    fetchMock.raw.mockClear()
+    try {
+      await doGraphqlRequest(
+        {
+          query: 'mutation TestMutation { test }',
+          variables: {},
+          operation: GraphqlMiddlewareOperation.Mutation,
+          operationName: 'testMutation',
+        },
+        null,
+        createEvent(),
+      )
+    } finally {
+      runtimeConfig.graphqlServerTimeout = false
+    }
+    const signal: AbortSignal = fetchMock.raw.mock.calls[0]![1].signal
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(signal.aborted).toBe(false)
+  })
+
+  test.each([
+    [GraphqlMiddlewareOperation.Query, true],
+    [GraphqlMiddlewareOperation.Mutation, false],
+  ])(
+    'aborts a %s if the client closes the connection: %s',
+    async (operation, aborted) => {
+      const { doGraphqlRequest } =
+        await import('./../../../src/runtime/server/utils/doGraphqlRequest')
+
+      const req = { method: 'GET', url: '/' }
+      const res = Object.assign(new EventEmitter(), { writableEnded: false })
+      const event = new H3Event(req as any, res as any)
+      fetchMock.raw.mockClear()
+
+      await doGraphqlRequest(
+        { query: 'test', variables: {}, operation, operationName: 'test' },
+        null,
+        event,
+      )
+
+      // Without a timeout, mutations get no signal at all.
+      const signal: AbortSignal | undefined =
+        fetchMock.raw.mock.calls[0]![1].signal
+      res.emit('close')
+      expect(signal?.aborted ?? false).toBe(aborted)
+    },
+  )
 })

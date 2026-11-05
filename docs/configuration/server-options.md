@@ -157,6 +157,39 @@ export default defineGraphqlServerOptions({
 })
 ```
 
+### Example: Longer timeout for a single operation
+
+Requests to the GraphQL server are aborted after the
+[`graphqlServerTimeout`](/configuration/module#graphqlservertimeout) (30 seconds
+by default). A `timeout` (in milliseconds) or `signal` returned here takes
+precedence, and `timeout: 0` disables it.
+
+```typescript
+import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
+
+export default defineGraphqlServerOptions({
+  serverFetchOptions(event, operation, operationName) {
+    if (operationName === 'importProducts') {
+      return { timeout: 5 * 60 * 1000 }
+    }
+    return {}
+  },
+})
+```
+
+Unlike the `timeout` option of ofetch, which only limits the time until the
+response headers arrive, the timeout also covers reading the response.
+
+Queries are also aborted when the client closes the connection before the
+response is sent, for example because the user left the page. This includes the
+queries of the composables during SSR, which are aborted when the client closes
+the connection of the page. A `signal` returned here is combined with that.
+Mutations and uploads are not aborted when the client closes the connection, as
+some GraphQL servers stop halfway if the connection is closed. Neither are
+queries whose response, or the page they belong to, might be cached, for example
+with the `cache` or `swr` route rules, as other clients may get the cached
+response.
+
 ## onServerResponse
 
 Handle the response from the GraphQL server.
@@ -172,6 +205,15 @@ type GraphqlMiddlewareOnServerResponseMethod = (
   operationName?: string,
 ) => any | Promise<any>
 ```
+
+If no method is provided, the middleware returns the response of the GraphQL
+server if it is a JSON object. Any other response, for example text or an error
+page from a proxy, is refused with a 502 status code, because it would otherwise
+be sent to the client as HTML. In production the details are logged on the
+server.
+
+If you provide a method, make sure it doesn't return strings from the GraphQL
+server's response: h3 sends strings as HTML.
 
 ### Example: Pass cookie from client to GraphQL server and add custom property
 
@@ -210,6 +252,9 @@ Handle a fetch error from the GraphQL request.
 Note that errors are only thrown for responses that are not status 200-299. See
 https://github.com/unjs/ofetch#%EF%B8%8F-handling-errors for more information.
 
+The method also receives errors thrown by `onServerResponse`, including the 502
+for responses that aren't JSON. These are H3 errors instead of fetch errors.
+
 ```typescript
 type GraphqlMiddlewareOnServerErrorMethod = (
   event: H3Event,
@@ -219,19 +264,30 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ) => any | Promise<any>
 ```
 
+If no method is provided, the middleware responds with a 500 status code, or
+with a 504 if the request timed out. Errors thrown by `onServerResponse` are
+passed on with their status code. In production the response only contains a
+generic message and the `errors` of the GraphQL server's response, if it is a
+GraphQL response. The error message, which contains the URL of the GraphQL
+server, is logged on the server. In dev mode the response also contains the
+error message and the whole response of the GraphQL server.
+
 ### Example: Always return a 200 status to the clients
 
 ```typescript
 import { defineGraphqlServerOptions } from 'nuxt-graphql-middleware/server-options'
-import type { H3Event } from 'h3'
-import type { FetchError } from 'ofetch'
+import { setResponseHeader } from 'h3'
 
 export default defineGraphqlServerOptions({
   onServerError(event, error, operation, operationName) {
-    event.setHeader('cache-control', 'no-cache')
+    // The message contains the URL of the GraphQL server, so it's only logged.
+    console.error(error.message)
+    setResponseHeader(event, 'cache-control', 'no-cache')
     return {
       data: {},
-      errors: [error.message],
+      errors: [
+        { message: `Couldn't execute ${operation} "${operationName}".` },
+      ],
     }
   },
 })

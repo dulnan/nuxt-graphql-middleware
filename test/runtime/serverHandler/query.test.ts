@@ -30,6 +30,7 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http//localhost/graphql',
+          graphqlServerTimeout: false,
         },
       }
     },
@@ -116,6 +117,7 @@ describe('defineEventHandler', () => {
   })
 
   test('Should handle unexpected errors.', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     const result = await testHandler('query', 'foobar', {
       fetchError: true,
     }).catch((e) => e)

@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'url'
 import { addDevServerHandler, defineNuxtModule, installModule } from '@nuxt/kit'
 import { name, version } from '../package.json'
-import { defaultOptions } from './build/helpers'
+import { isScalarType } from 'graphql'
+import { defaultOptions, logger } from './build/helpers'
 import { Collector } from './build/Collector'
 import { SchemaProvider } from './build/SchemaProvider'
 import type { ModuleOptions } from './build/types/options'
@@ -9,7 +10,10 @@ import { ModuleHelper } from './build/ModuleHelper'
 import { TEMPLATES } from './build/templates'
 import { DevModeHandler } from './build/DevModeHandler'
 import { ModuleContext } from './build/ModuleContext'
-import type { OperationResponseError } from './runtime/types'
+import type {
+  GraphqlMiddlewareRuntimeConfig,
+  OperationResponseError,
+} from './runtime/types'
 import type { HookResult } from 'nuxt/schema'
 import type { BuildHookContext } from './build/types/hook'
 import { createMcpDevHandler } from './build/dev-handler/mcp-handler'
@@ -36,6 +40,15 @@ export default defineNuxtModule<ModuleOptions>({
     const schemaProvider = new SchemaProvider(helper)
     await schemaProvider.init()
 
+    if (helper.options.enableFileUploads) {
+      const scalarName = helper.options.fileUploadScalar
+      if (!isScalarType(schemaProvider.getSchema().getType(scalarName))) {
+        logger.warn(
+          `The GraphQL schema has no "${scalarName}" scalar, so no mutations can be performed via the upload endpoint. Set the "fileUploadScalar" option to the name of the scalar used for file uploads.`,
+        )
+      }
+    }
+
     const collector = new Collector(schemaProvider.getSchema(), helper)
 
     const moduleContext = new ModuleContext(schemaProvider, collector)
@@ -50,9 +63,14 @@ export default defineNuxtModule<ModuleOptions>({
       clientCacheMaxSize: helper.options.clientCache?.maxSize ?? 100,
     }
 
-    nuxt.options.runtimeConfig.graphqlMiddleware = {
+    const runtimeConfig: GraphqlMiddlewareRuntimeConfig = {
       graphqlEndpoint: helper.options.graphqlEndpoint,
+      bodySizeLimit: helper.options.bodySizeLimit,
+      graphqlServerTimeout: helper.options.graphqlServerTimeout,
     }
+    // The runtime config types are generated from the current values, which
+    // don't include `false` for the limits and the timeout.
+    nuxt.options.runtimeConfig.graphqlMiddleware = runtimeConfig as any
 
     helper.transpile(fileURLToPath(new URL('./runtime', import.meta.url)))
     helper.inlineNitroExternals(helper.resolvers.module.resolve('./runtime'))

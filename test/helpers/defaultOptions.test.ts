@@ -15,5 +15,9 @@ describe('defaultOptions', () => {
 
     expect(defaultOptions.debug).toBeFalsy()
     expect(defaultOptions.documents?.length).toEqual(0)
+    expect(defaultOptions.bodySizeLimit).toEqual({
+      mutation: 10 * 1024 * 1024,
+      upload: 50 * 1024 * 1024,
+    })
   })
 })

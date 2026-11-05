@@ -75,6 +75,57 @@ export interface ModuleOptions {
   enableFileUploads?: boolean
 
   /**
+   * The name of the GraphQL scalar used for file uploads.
+   *
+   * Only mutations with a variable of this type, directly or in an input type,
+   * can be performed via the upload server endpoint.
+   *
+   * @default 'Upload'
+   */
+  fileUploadScalar?: string
+
+  /**
+   * The maximum size of request bodies in bytes.
+   *
+   * Larger requests are refused with a 413 status code. Set a limit to `false`
+   * or `0` to disable it, for example if the web server already limits the size.
+   *
+   * The limits can be changed at runtime with the
+   * `NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION` and
+   * `NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD` environment variables.
+   */
+  bodySizeLimit?: {
+    /**
+     * The limit for mutations.
+     *
+     * @default 10485760 (10 MB)
+     */
+    mutation?: number | false
+
+    /**
+     * The limit for file uploads, including all files of a request.
+     *
+     * @default 52428800 (50 MB)
+     */
+    upload?: number | false
+  }
+
+  /**
+   * The timeout for requests to the GraphQL server in milliseconds.
+   *
+   * Requests that take longer, including reading the response, are aborted and
+   * answered with a 504 status code. Set to `false` or `0` to disable it.
+   *
+   * A `timeout` or `signal` returned by the `serverFetchOptions` method of the
+   * server options takes precedence, which allows a different timeout for
+   * single operations. The timeout can be changed at runtime with the
+   * `NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_SERVER_TIMEOUT` environment variable.
+   *
+   * @default 30000
+   */
+  graphqlServerTimeout?: number | false
+
+  /**
    * Enable detailled debugging messages.
    *
    * @default false

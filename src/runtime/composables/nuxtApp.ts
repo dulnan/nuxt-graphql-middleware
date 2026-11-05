@@ -9,11 +9,13 @@ import { operationHashes } from '#nuxt-graphql-middleware/operation-hashes'
 import {
   clientCacheEnabledAtBuild,
   importMetaClient,
+  importMetaServer,
 } from '#nuxt-graphql-middleware/config'
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables, sortQueryParams } from '../helpers/queryEncoding'
 import { encodeContext, getOrCreateClientCache } from '../helpers/composables'
-import { OPERATION_HASH_PREFIX } from '../settings'
+import { OPERATION_HASH_PREFIX, SSR_ABORT_SIGNAL_KEY } from '../settings'
+import { getConnectionAbortSignal } from '../helpers/abort'
 
 export function performRequest<T>(
   /**
@@ -55,6 +57,11 @@ export function performRequest<T>(
    * The async data key.
    */
   asyncDataKey?: string,
+
+  /**
+   * The signal to abort the request, for example from useAsyncData.
+   */
+  signal?: AbortSignal,
 ): Promise<GraphqlResponse<T>> {
   const state = useGraphqlState()
   const app = useNuxtApp()
@@ -138,6 +145,11 @@ export function performRequest<T>(
     }
   }
 
+  const ssrAbortSignal =
+    importMetaServer && isQuery
+      ? getConnectionAbortSignal(app.ssrContext?.event)
+      : undefined
+
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     Object.assign(
@@ -156,6 +168,23 @@ export function performRequest<T>(
         method,
         body: operation === 'mutation' ? variablesOrBody : undefined,
       },
+      // Cached requests can be shared by several callers, so they are not
+      // aborted if one of them doesn't need the result anymore.
+      signal && !cacheKey && !fetchOptions.signal ? { signal } : {},
+      // During SSR, pass a signal for the connection of the page to the server
+      // route, so that it can abort the query if the client closes the
+      // connection. The context is not part of the types of ofetch, but
+      // Nitro's local fetch passes it on, so a context from the fetch options
+      // is kept.
+      ssrAbortSignal
+        ? {
+            context: {
+              ...(fetchOptions as { context?: Record<string, unknown> })
+                .context,
+              [SSR_ABORT_SIGNAL_KEY]: ssrAbortSignal,
+            },
+          }
+        : {},
     ),
   ).then((v) => {
     if (import.meta.dev && v?.errors?.length) {
@@ -180,7 +209,16 @@ export function performRequest<T>(
     app.$graphqlCache &&
     clientCacheEnabledAtBuild
   ) {
-    app.$graphqlCache.set(cacheKey, promise, asyncDataKey)
+    const cache = app.$graphqlCache
+    cache.set(cacheKey, promise, asyncDataKey)
+
+    // Failed requests are removed, so that they are performed again the next
+    // time instead of returning the error.
+    promise.catch(() => {
+      if (cache.cache[cacheKey] === promise) {
+        cache.remove(cacheKey)
+      }
+    })
   }
 
   return promise

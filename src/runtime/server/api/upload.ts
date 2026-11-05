@@ -1,152 +1,181 @@
 import {
   defineEventHandler,
-  readMultipartFormData,
   getQuery,
-  type MultiPartData,
   getRouterParam,
+  getRequestHeader,
 } from 'h3'
-import type { FetchError } from 'ofetch'
 import {
-  getEndpoint,
-  getFetchOptions,
-  onServerResponse,
-  onServerError,
+  dropPrototypeKeys,
   throwError,
   extractRequestContext,
   isValidMutation,
+  getBodySizeLimit,
+  readMultipartBody,
 } from './../helpers'
 import { documents } from '#nuxt-graphql-middleware/documents'
-import { serverOptions } from '#nuxt-graphql-middleware/server-options'
+import { uploadMutations } from '#nuxt-graphql-middleware/upload-mutations'
+import { sendGraphqlRequest } from '../utils/doGraphqlRequest'
 import { useRuntimeConfig } from '#imports'
-import { GraphqlMiddlewareOperation } from '../../settings'
+import { GraphqlMiddlewareOperation, UPLOAD_HEADER } from '../../settings'
 
 type GraphqlUploadData = {
   variables: Record<string, any>
-  map: string
-  files: MultiPartData[]
+  files: [paths: string[], file: File][]
 }
 
-function parseMultipart(data: MultiPartData[]): GraphqlUploadData {
-  const files: MultiPartData[] = data.filter((v) => !!v.filename)
-
-  const variablesData = data
-    .find((v) => v.name === 'variables')
-    ?.data?.toString()
-  if (!variablesData) {
-    throw new Error('Missing variables in form data.')
+function parseJsonObject(value: unknown, name: string): Record<string, any> {
+  let result: unknown
+  try {
+    result =
+      typeof value === 'string' ? JSON.parse(value, dropPrototypeKeys) : null
+  } catch {
+    // Handled below.
   }
-  const variables = JSON.parse(variablesData)
-  const map = data.find((v) => v.name === 'map')?.data.toString() || '{}'
+  if (!result || typeof result !== 'object' || Array.isArray(result)) {
+    return throwError(`Missing or invalid ${name} in form data.`)
+  }
+  return result as Record<string, any>
+}
 
-  return { files, map, variables }
+/**
+ * Whether the value at the path in the variables is null, the placeholder for
+ * a file.
+ */
+function isFilePlaceholder(
+  variables: Record<string, any>,
+  path: string[],
+): boolean {
+  let value: unknown = variables
+  for (const key of path) {
+    if (!value || typeof value !== 'object' || !Object.hasOwn(value, key)) {
+      return false
+    }
+    value = (value as Record<string, unknown>)[key]
+  }
+  return value === null
+}
+
+/**
+ * Get the variables and the files from the form data.
+ *
+ * The map assigns every file one or more paths in the variables, for example
+ * { "0": ["variables.file"] }. Only files in the map are accepted, and only
+ * for paths that have null as the value in the variables. Every path can only
+ * be assigned once.
+ */
+function parseFormData(data: FormData): GraphqlUploadData {
+  const variables = parseJsonObject(data.get('variables'), 'variables')
+  const map = parseJsonObject(data.get('map'), 'map')
+
+  const files: [string[], File][] = []
+  const assignedPaths = new Set<string>()
+  for (const [key, paths] of Object.entries(map)) {
+    const values = data.getAll(key)
+    const file = values[0]
+    if (values.length !== 1 || typeof file === 'string' || !file) {
+      return throwError('Invalid file in form data.')
+    }
+
+    if (!Array.isArray(paths) || !paths.length) {
+      return throwError('Invalid map in form data.')
+    }
+
+    for (const path of paths) {
+      const [prefix, ...variablePath] =
+        typeof path === 'string' ? path.split('.') : []
+      if (
+        prefix !== 'variables' ||
+        !variablePath.length ||
+        !isFilePlaceholder(variables, variablePath) ||
+        assignedPaths.has(path)
+      ) {
+        return throwError('Invalid map in form data.')
+      }
+      assignedPaths.add(path)
+    }
+
+    files.push([paths, file])
+  }
+
+  for (const [key, value] of data) {
+    if (typeof value !== 'string' && !Object.hasOwn(map, key)) {
+      return throwError('Invalid file in form data.')
+    }
+  }
+
+  return { variables, files }
+}
+
+/**
+ * Build the form data for the GraphQL server.
+ *
+ * No field names from the request are used, so that the request can't contain
+ * any other fields, such as a second "operations" field.
+ */
+function buildFormData(
+  operationName: string,
+  operationDocument: string,
+  { variables, files }: GraphqlUploadData,
+): FormData {
+  const formData = new FormData()
+  formData.append(
+    'operations',
+    JSON.stringify({ query: operationDocument, variables, operationName }),
+  )
+
+  const map: Record<string, string[]> = {}
+  files.forEach(([paths], index) => {
+    map[index] = paths
+  })
+  formData.append('map', JSON.stringify(map))
+
+  files.forEach(([, file], index) => {
+    // A file without a name would be sent as a text field.
+    formData.append(String(index), file, file.name || 'blob')
+  })
+
+  return formData
 }
 
 export default defineEventHandler(async (event) => {
-  const operation = GraphqlMiddlewareOperation.Mutation
   const operationName = getRouterParam(event, 'name')
 
   if (!isValidMutation(operationName)) {
     return throwError('Invalid mutation name.')
   }
 
-  // The GraphQL query document as a string.
+  // Only mutations with file variables can use the higher body size limit of
+  // this route.
+  if (!uploadMutations.includes(operationName)) {
+    return throwError(
+      `The mutation "${operationName}" has no file variables. Use the mutation endpoint instead.`,
+    )
+  }
+
+  if (!getRequestHeader(event, UPLOAD_HEADER)) {
+    return throwError(`Missing "${UPLOAD_HEADER}" header.`)
+  }
+
+  const multiPartData = await readMultipartBody(
+    event,
+    getBodySizeLimit(
+      useRuntimeConfig().graphqlMiddleware.bodySizeLimit,
+      'upload',
+    ),
+  )
+
+  const data = parseFormData(multiPartData)
   const operationDocument = documents.mutation[operationName]
 
-  const multiPartData = await readMultipartFormData(event)
-
-  if (!multiPartData) {
-    return throwError('Failed to read multi part data.')
-  }
-
-  const { variables, map, files } = parseMultipart(multiPartData)
-
-  // Build a new FormData object.
-  const formData = new FormData()
-
-  // Add the operations.
-  formData.append(
-    'operations',
-    JSON.stringify({
+  return sendGraphqlRequest(
+    event,
+    {
       query: operationDocument,
-      variables,
+      variables: data.variables,
+      operation: GraphqlMiddlewareOperation.Mutation,
       operationName,
-    }),
+    },
+    extractRequestContext(getQuery(event)),
+    buildFormData(operationName, operationDocument, data),
   )
-
-  formData.append('map', map)
-
-  for (const file of files) {
-    if (!file.name) {
-      return throwError('Missing name for file: ' + file.filename)
-    }
-
-    // @ts-ignore Wrongly complains here.
-    const blob = new Blob([file.data])
-    formData.append(file.name, blob, file.filename)
-  }
-
-  const queryParams = getQuery(event)
-  const context = extractRequestContext(queryParams)
-
-  // If a custom request method is provided run it.
-  if (serverOptions.doGraphqlRequest) {
-    return serverOptions.doGraphqlRequest({
-      event,
-      operation,
-      operationName,
-      operationDocument,
-      variables,
-      formData,
-      context,
-    })
-  }
-
-  // Get the runtime config.
-  const runtimeConfig = useRuntimeConfig().graphqlMiddleware
-
-  // Determine the endpoint of the GraphQL server.
-  const endpoint = await getEndpoint(
-    runtimeConfig,
-    serverOptions,
-    event,
-    operation,
-    operationName,
-    context,
-  )
-
-  // Get the fetch options for this request.
-  const fetchOptions = await getFetchOptions(
-    serverOptions,
-    event,
-    operation,
-    operationName,
-    context,
-  )
-
-  return $fetch
-    .raw(endpoint, {
-      ...fetchOptions,
-      method: 'POST',
-      body: formData,
-    })
-    .then((response) => {
-      return onServerResponse(
-        serverOptions,
-        event,
-        response,
-        operation,
-        operationName,
-        context,
-      )
-    })
-    .catch((error: FetchError) => {
-      return onServerError(
-        serverOptions,
-        event,
-        error,
-        operation,
-        operationName,
-        context,
-      )
-    })
 })

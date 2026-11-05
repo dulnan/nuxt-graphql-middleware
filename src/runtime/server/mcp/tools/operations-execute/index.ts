@@ -50,9 +50,10 @@ export const executeOperationTool = defineMcpTool({
         fetchOptions.params = {
           __variables: JSON.stringify(variables),
         }
-      } else if (!isQuery && variables) {
-        // For mutations, send variables in the body
-        fetchOptions.body = variables
+      } else if (!isQuery) {
+        // For mutations, send variables in the body. The mutation route only
+        // accepts JSON, so an empty object is sent if there are no variables.
+        fetchOptions.body = variables || {}
       }
 
       const response = await $fetch<{

@@ -41,4 +41,41 @@ describe('Mutations', () => {
     cy.get('table tbody tr').should('have.lengthOf', 41)
     cy.get('table').should('contain.text', email)
   })
+
+  it('only accepts mutations sent as JSON', () => {
+    const url = '/api/graphql_middleware/mutation/initState'
+
+    cy.request({
+      method: 'POST',
+      url,
+      body: '{}',
+      headers: { 'content-type': 'text/plain;charset=UTF-8' },
+      failOnStatusCode: false,
+    })
+      .its('status')
+      .should('eq', 415)
+
+    cy.request({
+      method: 'POST',
+      url,
+      form: true,
+      body: { foo: 'bar' },
+      failOnStatusCode: false,
+    })
+      .its('status')
+      .should('eq', 415)
+
+    cy.request({ method: 'POST', url, failOnStatusCode: false })
+      .its('status')
+      .should('eq', 415)
+
+    cy.request({
+      method: 'POST',
+      url,
+      body: {},
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+    })
+      .its('body.data.initState')
+      .should('eq', true)
+  })
 })

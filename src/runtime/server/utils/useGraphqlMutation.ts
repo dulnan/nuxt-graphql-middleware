@@ -29,7 +29,9 @@ export function useGraphqlMutation<
 
   return performRequest<R>('mutation', name, 'post', {
     ...fetchOptions,
-    body,
+    // The mutation route only accepts JSON, so an empty object is sent if
+    // there are no variables.
+    body: body || {},
     params: {
       ...encodeContext(clientContext),
       ...(fetchOptions.params || {}),
