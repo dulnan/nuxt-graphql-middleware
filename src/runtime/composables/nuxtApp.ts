@@ -14,7 +14,8 @@ import {
 import type { RequestCacheOptions } from './../types'
 import { encodeVariables, sortQueryParams } from '../helpers/queryEncoding'
 import { encodeContext, getOrCreateClientCache } from '../helpers/composables'
-import { OPERATION_HASH_PREFIX, SSR_EVENT_KEY } from '../settings'
+import { OPERATION_HASH_PREFIX, SSR_ABORT_SIGNAL_KEY } from '../settings'
+import { getConnectionAbortSignal } from '../helpers/abort'
 
 export function performRequest<T>(
   /**
@@ -144,6 +145,11 @@ export function performRequest<T>(
     }
   }
 
+  const ssrAbortSignal =
+    importMetaServer && isQuery
+      ? getConnectionAbortSignal(app.ssrContext?.event)
+      : undefined
+
   const promise = $fetch<GraphqlResponse<T>>(
     getEndpoint(operation, operationName),
     Object.assign(
@@ -165,10 +171,19 @@ export function performRequest<T>(
       // Cached requests can be shared by several callers, so they are not
       // aborted if one of them doesn't need the result anymore.
       signal && !cacheKey && !fetchOptions.signal ? { signal } : {},
-      // During SSR, pass the page request to the server route, so that it can
-      // abort the query if the client closes the connection.
-      importMetaServer && isQuery && app.ssrContext?.event
-        ? { context: { [SSR_EVENT_KEY]: app.ssrContext.event } }
+      // During SSR, pass a signal for the connection of the page to the server
+      // route, so that it can abort the query if the client closes the
+      // connection. The context is not part of the types of ofetch, but
+      // Nitro's local fetch passes it on, so a context from the fetch options
+      // is kept.
+      ssrAbortSignal
+        ? {
+            context: {
+              ...(fetchOptions as { context?: Record<string, unknown> })
+                .context,
+              [SSR_ABORT_SIGNAL_KEY]: ssrAbortSignal,
+            },
+          }
         : {},
     ),
   ).then((v) => {

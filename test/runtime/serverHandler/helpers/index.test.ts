@@ -3,7 +3,7 @@ import { vi, describe, expect, test } from 'vitest'
 import { createError, H3Event } from 'h3'
 import {
   GraphqlMiddlewareOperation,
-  SSR_EVENT_KEY,
+  SSR_ABORT_SIGNAL_KEY,
 } from './../../../../src/runtime/settings'
 import {
   queryParamToVariables,
@@ -527,45 +527,43 @@ describe('getClientAbortSignal', () => {
   })
 
   describe('SSR', () => {
-    function createSsrEvent(pageEvent: H3Event) {
+    function createSsrEvent(
+      signal: unknown,
+      context: Record<string, any> = {},
+    ) {
       const res = Object.assign(new EventEmitter(), { writableEnded: false })
-      const req = { __unenv__: { [SSR_EVENT_KEY]: pageEvent } }
-      return { node: { req, res }, context: {} } as any
+      const req = { __unenv__: { [SSR_ABORT_SIGNAL_KEY]: signal } }
+      return { node: { req, res }, context } as any
     }
 
-    function createPageEvent() {
-      const res = Object.assign(new EventEmitter(), { writableEnded: false })
-      return new H3Event({ method: 'GET', url: '/' } as any, res as any)
-    }
-
-    test('is aborted if the client closes the connection of the page', () => {
-      const pageEvent = createPageEvent()
-      const event = createSsrEvent(pageEvent)
+    test('uses the signal of the page connection from the fetch context', () => {
+      const page = new AbortController()
+      const event = createSsrEvent(page.signal)
       const signal = getClientAbortSignal(event)!
+      expect(signal).toBe(page.signal)
 
       // The connection of the request made during SSR is never closed.
       event.node.res.emit('close')
       expect(signal.aborted).toBe(false)
+      expect(event.node.res.listenerCount('close')).toBe(0)
 
-      pageEvent.node.res.emit('close')
-      expect(signal.aborted).toBe(true)
+      page.abort(new DOMException('Closed', 'AbortError'))
       expect(isClientAborted(event)).toBe(true)
     })
 
-    test('only adds one listener for all requests of a page', () => {
-      const pageEvent = createPageEvent()
-      const first = getClientAbortSignal(createSsrEvent(pageEvent))
-      const second = getClientAbortSignal(createSsrEvent(pageEvent))
-      expect(second).toBe(first)
-      expect(pageEvent.node.res.listenerCount('close')).toBe(1)
+    test('ignores other values in the fetch context', () => {
+      const event = createSsrEvent({ node: { res: new EventEmitter() } })
+      const signal = getClientAbortSignal(event)!
+      // The connection of the request itself is used instead.
+      event.node.res.emit('close')
+      expect(signal.aborted).toBe(true)
     })
 
-    test('is not used for cached pages', () => {
-      const pageEvent = createPageEvent()
-      pageEvent.context.cache = {}
-      const event = createSsrEvent(pageEvent)
+    test('is not used if the response of the route might be cached', () => {
+      const page = new AbortController()
+      const event = createSsrEvent(page.signal, { cache: {} })
       expect(getClientAbortSignal(event)).toBeUndefined()
-      pageEvent.node.res.emit('close')
+      page.abort()
       expect(isClientAborted(event)).toBe(false)
     })
   })

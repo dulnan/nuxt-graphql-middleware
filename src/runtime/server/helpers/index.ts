@@ -4,7 +4,6 @@ import {
   createError,
   getRequestHeader,
   isError,
-  isEvent,
   readRawBody,
   setResponseHeader,
 } from 'h3'
@@ -20,9 +19,13 @@ import {
   DEFAULT_GRAPHQL_SERVER_TIMEOUT,
   isValidLimit,
   MAX_TIMEOUT,
-  SSR_EVENT_KEY,
+  SSR_ABORT_SIGNAL_KEY,
   type GraphqlMiddlewareOperation,
 } from './../../settings'
+import {
+  getConnectionAbortSignal,
+  isConnectionAborted,
+} from './../../helpers/abort'
 import { documents } from '#nuxt-graphql-middleware/documents'
 import type { Mutation, Query } from '#nuxt-graphql-middleware/operation-types'
 
@@ -133,77 +136,45 @@ export function getFetchOptions(
 }
 
 /**
- * The signals of the events whose connection is watched, so that every event
- * only gets one listener.
- */
-const clientAbortSignals = new WeakMap<H3Event, AbortSignal>()
-
-/**
- * Get the event whose connection decides whether the client is gone.
+ * Get the signal for the connection of the page from the fetch context.
  *
  * Queries performed by the composables during SSR are made in the same
- * process, so their connection is never closed. The composables pass the page
- * request in the fetch context, which Nitro puts on the request.
- *
- * Returns nothing if the response might be cached and sent to other clients,
- * for example with the cache or swr route rules.
+ * process, so their own connection is never closed. The composables pass a
+ * signal for the connection of the page in the fetch context instead, which
+ * Nitro puts on the request.
  */
-function getConnectionEvent(event: H3Event): H3Event | undefined {
+function getSsrAbortSignal(event: H3Event): AbortSignal | undefined {
   const fetchContext = (
     event.node?.req as { __unenv__?: Record<string, unknown> } | undefined
   )?.__unenv__
-  const ssrEvent = fetchContext?.[SSR_EVENT_KEY]
-  const connectionEvent = isEvent(ssrEvent) ? ssrEvent : event
-
-  if (event.context?.cache || connectionEvent.context?.cache) {
-    return
-  }
-
-  return connectionEvent
+  const signal = fetchContext?.[SSR_ABORT_SIGNAL_KEY]
+  return signal instanceof AbortSignal ? signal : undefined
 }
 
 /**
  * Get a signal that is aborted when the client closes the connection before
  * the response was sent.
  *
- * The request emits "close" once its body was read, so the response is used.
+ * Returns nothing if the response might be cached and sent to other clients,
+ * for example with the cache or swr route rules.
  */
 export function getClientAbortSignal(
   event: H3Event | null | undefined,
 ): AbortSignal | undefined {
-  const connectionEvent = event && getConnectionEvent(event)
-  if (!connectionEvent) {
+  if (!event || event.context?.cache) {
     return
   }
-
-  const existing = clientAbortSignals.get(connectionEvent)
-  if (existing) {
-    return existing
-  }
-
-  const res = connectionEvent.node?.res
-  if (!res || typeof res.once !== 'function') {
-    return
-  }
-
-  const controller = new AbortController()
-  res.once('close', () => {
-    if (!res.writableEnded) {
-      controller.abort(
-        new DOMException('The client closed the connection.', 'AbortError'),
-      )
-    }
-  })
-  clientAbortSignals.set(connectionEvent, controller.signal)
-  return controller.signal
+  return getSsrAbortSignal(event) ?? getConnectionAbortSignal(event)
 }
 
 /**
  * Whether the client closed the connection before the response was sent.
  */
 export function isClientAborted(event: H3Event | null | undefined): boolean {
-  const connectionEvent = event && getConnectionEvent(event)
-  return !!connectionEvent && !!clientAbortSignals.get(connectionEvent)?.aborted
+  if (!event || event.context?.cache) {
+    return false
+  }
+  return getSsrAbortSignal(event)?.aborted ?? isConnectionAborted(event)
 }
 
 const loggedInvalidLimits = new Set<string>()

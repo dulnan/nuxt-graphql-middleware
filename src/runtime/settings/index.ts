@@ -16,10 +16,10 @@ export const OPERATION_HASH_PREFIX = '__gqlh'
 export const UPLOAD_HEADER = 'x-nuxt-graphql-middleware-upload'
 
 /**
- * The key of the page request in the fetch context of queries performed
- * during SSR.
+ * The key of the signal for the connection of the page in the fetch context of
+ * queries performed during SSR.
  */
-export const SSR_EVENT_KEY = '__nuxtGraphqlMiddlewareSsrEvent'
+export const SSR_ABORT_SIGNAL_KEY = '__nuxtGraphqlMiddlewareSsrAbortSignal'
 
 /**
  * The longest timeout in milliseconds. Node fires longer timers after 1 ms.

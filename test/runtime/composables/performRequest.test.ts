@@ -1,6 +1,7 @@
+import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { performRequest } from './../../../src/runtime/composables/nuxtApp'
-import { SSR_EVENT_KEY } from './../../../src/runtime/settings'
+import { SSR_ABORT_SIGNAL_KEY } from './../../../src/runtime/settings'
 
 const state = vi.hoisted(() => {
   return {
@@ -120,15 +121,55 @@ describe('performRequest', () => {
     expect(result.data).toEqual({ foo: 'bar' })
   })
 
-  test('passes the page request to queries during SSR', async () => {
-    const event = { path: '/' }
+  function createPageEvent(context: Record<string, any> = {}) {
+    const res = Object.assign(new EventEmitter(), { writableEnded: false })
+    return { node: { req: {}, res }, context }
+  }
+
+  test('passes a signal for the connection of the page to queries during SSR', async () => {
+    const event = createPageEvent()
     state.server = true
     state.app.ssrContext = { event }
     await query()
+    await query()
     await query(undefined, {}, false, 'mutation')
+
+    const signal = fetchMock.mock.calls[0]![1].context[SSR_ABORT_SIGNAL_KEY]
+    expect(signal).toBeInstanceOf(AbortSignal)
+    // All queries of a page share one signal.
+    expect(fetchMock.mock.calls[1]![1].context[SSR_ABORT_SIGNAL_KEY]).toBe(
+      signal,
+    )
+    expect(event.node.res.listenerCount('close')).toBe(1)
+    // The event itself is not passed on.
+    expect(Object.values(fetchMock.mock.calls[0]![1].context)).not.toContain(
+      event,
+    )
+    // Mutations are left to finish.
+    expect(fetchMock.mock.calls[2]![1].context).toBeUndefined()
+
+    expect(signal.aborted).toBe(false)
+    event.node.res.emit('close')
+    expect(signal.aborted).toBe(true)
+  })
+
+  test('does not pass a signal for cached pages', async () => {
+    state.server = true
+    state.app.ssrContext = { event: createPageEvent({ cache: {} }) }
+    await query()
+    expect(fetchMock.mock.calls[0]![1].context).toBeUndefined()
+  })
+
+  test('keeps the context of the fetch options during SSR', async () => {
+    state.server = true
+    state.app.ssrContext = { event: createPageEvent() }
+    const context = { foo: 'bar' }
+    await query(undefined, { context })
     expect(fetchMock.mock.calls[0]![1].context).toEqual({
-      [SSR_EVENT_KEY]: event,
+      foo: 'bar',
+      [SSR_ABORT_SIGNAL_KEY]: expect.any(AbortSignal),
     })
-    expect(fetchMock.mock.calls[1]![1].context).toBeUndefined()
+    // The context of the fetch options is not changed.
+    expect(context).toEqual({ foo: 'bar' })
   })
 })
