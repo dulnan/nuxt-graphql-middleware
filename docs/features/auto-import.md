@@ -49,6 +49,10 @@ Definitions with the same name and the same rank fail the build, for example two
 files in the app that define the same fragment, or two modules that add a
 fragment with the same name.
 
+Operations of different types with the same name also fail the build, whatever
+their rank. For example, a `mutation foo` in the app can't override a
+`query foo` of a layer, because the code of the layer performs it as a query.
+
 When the app overrides a definition of a module, a warning is logged, because
 the code of the module may rely on the fields of its definition. If the override
 is intended, check whether the module has an option to not add its definition.

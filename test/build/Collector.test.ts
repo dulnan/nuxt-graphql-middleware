@@ -18,6 +18,10 @@ const schema = buildSchema(`
     text: String
     other: String
   }
+
+  type Mutation {
+    setText(text: String): String
+  }
 `)
 
 let rootDir = ''
@@ -277,6 +281,31 @@ describe('Collector', () => {
     )
     expect(error.mock.calls[0]![0]).toContain('fragment data (./')
   })
+
+  test.each([
+    ['the app and a layer', 'app/mutation.foo.graphql'],
+    ['a layer and the app', 'layers/base/app/mutation.foo.graphql'],
+  ])(
+    'operations of different types with the same name fail: %s',
+    async (_label, mutationPath) => {
+      const error = vi.spyOn(logger, 'error').mockImplementation(() => {})
+      const queryPath = mutationPath.startsWith('app/')
+        ? 'layers/base/app/query.foo.graphql'
+        : 'app/query.foo.graphql'
+      const collector = createCollector([
+        writeFile(queryPath, 'query foo { text }'),
+        writeFile(mutationPath, 'mutation foo { setText(text: "x") }'),
+      ])
+      await expect(collector.init()).rejects.toThrow()
+      expect(error).toHaveBeenCalledOnce()
+      const message = error.mock.calls[0]![0] as string
+      expect(message).toContain(
+        'Operations with the same name must be of the same type',
+      )
+      expect(message).toContain('query foo (./')
+      expect(message).toContain('mutation foo (./')
+    },
+  )
 
   test('definitions of two modules with the same name fail', async () => {
     const error = vi.spyOn(logger, 'error').mockImplementation(() => {})

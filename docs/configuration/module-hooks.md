@@ -91,7 +91,8 @@ export default defineNuxtModule({
 The app can override a fragment or operation added by a module by defining one
 with the same name (see [Nuxt Layers](/features/auto-import#nuxt-layers)). This
 logs a warning, because the code of the module may rely on the fields of its
-definition. If two modules add a definition with the same name, the build fails.
+definition. If two modules add a definition with the same name, or the app adds
+an operation of another type with the same name, the build fails.
 
 To avoid accidental collisions, use specific names for the definitions of a
 module, for example prefixed with the name of the module. If the app should be

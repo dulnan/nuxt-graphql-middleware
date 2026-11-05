@@ -46,13 +46,16 @@ type DefinitionSource = {
   filePath: string
   priority: number
   label: string
+  /** The type of an operation, e.g. "query". */
+  operation?: string
 }
 
 /**
  * Get the key used to detect fragments and operations with the same name.
  *
  * Operations are keyed by name only, because the generator requires operation
- * names to be unique across queries and mutations.
+ * names to be unique across queries and mutations. Operations of different
+ * types with the same name are an error, see checkCollisions().
  */
 function getDefinitionKey(def: DefinitionNode): string | null {
   if (def.kind === Kind.FRAGMENT_DEFINITION) {
@@ -230,9 +233,10 @@ export class Collector {
    * When multiple files define a fragment or operation with the same name,
    * only the definition with the highest priority (see getPriority()) is passed
    * to the generator. This allows the app to override fragments and operations
-   * of modules and layers. Definitions with the same priority are an error, see
-   * checkCollisions(). In that case nothing is passed to the generator, so it
-   * keeps the last valid state.
+   * of modules and layers. Definitions with the same priority and operations of
+   * different types with the same name are an error, see checkCollisions(). In
+   * that case nothing is passed to the generator, so it keeps the last valid
+   * state.
    */
   private syncGenerator(): void {
     const sourcesByKey = new Map<string, DefinitionSource[]>()
@@ -242,7 +246,15 @@ export class Collector {
         const key = getDefinitionKey(def)
         if (key) {
           const sources = sourcesByKey.get(key) || []
-          sources.push({ filePath, priority, label: getDefinitionLabel(def) })
+          sources.push({
+            filePath,
+            priority,
+            label: getDefinitionLabel(def),
+            operation:
+              def.kind === Kind.OPERATION_DEFINITION
+                ? def.operation
+                : undefined,
+          })
           sourcesByKey.set(key, sources)
         }
       }
@@ -319,11 +331,25 @@ export class Collector {
       !this.helper.isPrepare && !this.helper.options.logOnlyErrors
 
     const duplicates: string[] = []
+    const typeMismatches: string[] = []
     const overrides = new Map<string, string>()
     for (const [key, sources] of sourcesByKey) {
       if (sources.length < 2) {
         continue
       }
+
+      // A query can't replace a mutation, as the code that uses the
+      // operation expects its type. This is most likely a name clash.
+      if (new Set(sources.map((v) => v.operation)).size > 1) {
+        typeMismatches.push(
+          [...sources]
+            .sort((a, b) => a.priority - b.priority)
+            .map(toLabel)
+            .join(', '),
+        )
+        continue
+      }
+
       const priority = ownerPriorities.get(key)
       const owners = sources.filter((v) => v.priority === priority)
       if (owners.length > 1) {
@@ -349,11 +375,21 @@ export class Collector {
 
     this.loggedOverrides = overrides
 
+    const errors: string[] = []
     if (duplicates.length) {
-      throw new Error(
+      errors.push(
         'Multiple GraphQL definitions with the same name. Rename or remove all but one of them:\n' +
           duplicates.map((v) => '  - ' + v).join('\n'),
       )
+    }
+    if (typeMismatches.length) {
+      errors.push(
+        'Operations with the same name must be of the same type to override each other. Rename one of them:\n' +
+          typeMismatches.map((v) => '  - ' + v).join('\n'),
+      )
+    }
+    if (errors.length) {
+      throw new Error(errors.join('\n\n'))
     }
   }
 
