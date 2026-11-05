@@ -177,14 +177,20 @@ export function isClientAborted(event: H3Event | null | undefined): boolean {
   return getSsrAbortSignal(event)?.aborted ?? isConnectionAborted(event)
 }
 
+/**
+ * The names of the options with an invalid value that was logged.
+ *
+ * Only the names are kept, because a timeout from the server options can be
+ * different for every request.
+ */
 const loggedInvalidLimits = new Set<string>()
 
 /**
  * Get the value if it is a valid timeout or size limit, else the fallback.
  *
  * The build fails for invalid values in the module options, but environment
- * variables and the server options can set any value at runtime. Invalid
- * values are logged once.
+ * variables and the server options can set any value at runtime. The first
+ * invalid value of each option is logged.
  */
 function getValidLimit(
   name: string,
@@ -196,11 +202,10 @@ function getValidLimit(
     return value
   }
 
-  const key = `${name}: ${String(value)}`
-  if (!loggedInvalidLimits.has(key)) {
-    loggedInvalidLimits.add(key)
+  if (!loggedInvalidLimits.has(name)) {
+    loggedInvalidLimits.add(name)
     console.warn(
-      `[nuxt-graphql-middleware] Invalid ${key}. Using ${fallback} instead.`,
+      `[nuxt-graphql-middleware] Invalid ${name}: ${String(value)}. Using ${fallback} instead.`,
     )
   }
   return fallback

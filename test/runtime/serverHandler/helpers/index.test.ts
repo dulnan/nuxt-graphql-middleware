@@ -410,16 +410,12 @@ describe('withSignal', () => {
   })
 
   test.each([-1, 1.5, 2 ** 31, Infinity, Number.NaN, '1000'])(
-    'uses the default timeout instead of %s and logs it',
+    'uses the default timeout instead of %s',
     (value) => {
-      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      consoleWarn.mockClear()
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
       const result = withSignal({}, value as any)
       expect(result.signal).toBeInstanceOf(AbortSignal)
       expect(result.signal!.aborted).toBe(false)
-      expect(consoleWarn).toHaveBeenCalledWith(
-        `[nuxt-graphql-middleware] Invalid graphqlServerTimeout: ${value}. Using 30000 instead.`,
-      )
     },
   )
 
@@ -436,12 +432,24 @@ describe('withSignal', () => {
     },
   )
 
-  test('logs an invalid value only once', () => {
+  test('logs the first invalid value of each option', async () => {
+    // A fresh module, so that no value was logged yet.
+    vi.resetModules()
+    const helpers = await import('./../../../../src/runtime/server/helpers')
     const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     consoleWarn.mockClear()
-    withSignal({}, -2)
-    withSignal({}, -2)
-    expect(consoleWarn).toHaveBeenCalledOnce()
+    helpers.withSignal({}, -1)
+    helpers.withSignal({}, -2)
+    helpers.withSignal({ timeout: -3 }, 20)
+    helpers.withSignal({ timeout: -4 }, 20)
+    expect(consoleWarn.mock.calls).toEqual([
+      [
+        '[nuxt-graphql-middleware] Invalid graphqlServerTimeout: -1. Using 30000 instead.',
+      ],
+      [
+        '[nuxt-graphql-middleware] Invalid timeout from serverFetchOptions: -3. Using 20 instead.',
+      ],
+    ])
   })
 
   test('uses the timeout from the fetch options instead', async () => {
