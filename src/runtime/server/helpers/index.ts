@@ -16,6 +16,10 @@ import type {
 } from './../../types'
 import {
   CLIENT_CONTEXT_PREFIX,
+  DEFAULT_BODY_SIZE_LIMIT,
+  DEFAULT_GRAPHQL_SERVER_TIMEOUT,
+  isValidLimit,
+  MAX_TIMEOUT,
   SSR_EVENT_KEY,
   type GraphqlMiddlewareOperation,
 } from './../../settings'
@@ -202,6 +206,49 @@ export function isClientAborted(event: H3Event | null | undefined): boolean {
   return !!connectionEvent && !!clientAbortSignals.get(connectionEvent)?.aborted
 }
 
+const loggedInvalidLimits = new Set<string>()
+
+/**
+ * Get the value if it is a valid timeout or size limit, else the fallback.
+ *
+ * The build fails for invalid values in the module options, but environment
+ * variables and the server options can set any value at runtime. Invalid
+ * values are logged once.
+ */
+function getValidLimit(
+  name: string,
+  value: unknown,
+  fallback: number | false,
+  max?: number,
+): number | false {
+  if (isValidLimit(value, max)) {
+    return value
+  }
+
+  const key = `${name}: ${String(value)}`
+  if (!loggedInvalidLimits.has(key)) {
+    loggedInvalidLimits.add(key)
+    console.warn(
+      `[nuxt-graphql-middleware] Invalid ${key}. Using ${fallback} instead.`,
+    )
+  }
+  return fallback
+}
+
+/**
+ * Get the body size limit for mutations or uploads from the runtime config.
+ */
+export function getBodySizeLimit(
+  limits: GraphqlMiddlewareRuntimeConfig['bodySizeLimit'],
+  type: 'mutation' | 'upload',
+): number | false {
+  const value = limits?.[type]
+  const fallback = DEFAULT_BODY_SIZE_LIMIT[type]
+  return value === undefined
+    ? fallback
+    : getValidLimit(`bodySizeLimit.${type}`, value, fallback)
+}
+
 /**
  * Add the signal for the request to the GraphQL server to the fetch options.
  *
@@ -224,14 +271,31 @@ export function withSignal(
     signals.push(fetchOptions.signal)
   }
 
-  if (fetchOptions.timeout) {
-    signals.push(AbortSignal.timeout(fetchOptions.timeout))
-  } else if (
-    fetchOptions.timeout === undefined &&
-    !fetchOptions.signal &&
-    typeof timeout === 'number'
-  ) {
-    signals.push(AbortSignal.timeout(timeout))
+  const defaultTimeout =
+    timeout === undefined
+      ? DEFAULT_GRAPHQL_SERVER_TIMEOUT
+      : getValidLimit(
+          'graphqlServerTimeout',
+          timeout,
+          DEFAULT_GRAPHQL_SERVER_TIMEOUT,
+          MAX_TIMEOUT,
+        )
+
+  // A timeout from the fetch options replaces the default timeout, also if it
+  // disables it. A signal from the fetch options replaces it too.
+  let ms: number | false = false
+  if (fetchOptions.timeout !== undefined) {
+    ms = getValidLimit(
+      'timeout from serverFetchOptions',
+      fetchOptions.timeout,
+      defaultTimeout,
+      MAX_TIMEOUT,
+    )
+  } else if (!fetchOptions.signal) {
+    ms = defaultTimeout
+  }
+  if (ms) {
+    signals.push(AbortSignal.timeout(ms))
   }
 
   if (clientSignal) {
@@ -239,7 +303,10 @@ export function withSignal(
   }
 
   if (!signals.length) {
-    return fetchOptions
+    // ofetch would still use an invalid timeout, for example -1.
+    return fetchOptions.timeout === undefined
+      ? fetchOptions
+      : { ...fetchOptions, timeout: undefined }
   }
 
   return {
@@ -287,12 +354,14 @@ function throwBodyTooLarge(event: H3Event, limit: number): never {
 
 /**
  * Read the raw request body, refusing it if it's larger than the limit.
+ *
+ * 0, false and undefined disable the limit.
  */
 export async function readLimitedBody(
   event: H3Event,
   limit: number | false | undefined,
 ): Promise<Buffer | undefined> {
-  if (typeof limit !== 'number') {
+  if (!limit) {
     return readRawBody(event, false)
   }
 

@@ -20,3 +20,40 @@ export const UPLOAD_HEADER = 'x-nuxt-graphql-middleware-upload'
  * during SSR.
  */
 export const SSR_EVENT_KEY = '__nuxtGraphqlMiddlewareSsrEvent'
+
+/**
+ * The longest timeout in milliseconds. Node fires longer timers after 1 ms.
+ */
+export const MAX_TIMEOUT = 2_147_483_647
+
+/**
+ * The default of the graphqlServerTimeout option, also used at runtime if the
+ * runtime config has an invalid value.
+ */
+export const DEFAULT_GRAPHQL_SERVER_TIMEOUT = 30_000
+
+/**
+ * The defaults of the bodySizeLimit option, also used at runtime if the
+ * runtime config has an invalid value.
+ */
+export const DEFAULT_BODY_SIZE_LIMIT = {
+  mutation: 10 * 1024 * 1024,
+  upload: 50 * 1024 * 1024,
+}
+
+/**
+ * Whether the value is a valid timeout or size limit: false or a whole number
+ * from 0 to max. false and 0 disable the timeout or limit.
+ */
+export function isValidLimit(
+  value: unknown,
+  max: number = Number.MAX_SAFE_INTEGER,
+): value is number | false {
+  return (
+    value === false ||
+    (typeof value === 'number' &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value <= max)
+  )
+}

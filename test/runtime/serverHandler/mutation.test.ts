@@ -29,6 +29,7 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http//localhost/graphql',
+          graphqlServerTimeout: false,
           bodySizeLimit,
         },
       }
@@ -243,16 +244,36 @@ describe('body size limit', () => {
     expect(chunks).toBeLessThan(20)
   })
 
-  test('Should not limit the body if the limit is disabled', async () => {
-    bodySizeLimit.mutation = false
-    const body = JSON.stringify({ text: 'a'.repeat(100_000) })
-    const result = await runHandler('barfoo', {
-      headers: {
-        'content-type': 'application/json',
-        'content-length': String(body.length),
-      },
-      body: Buffer.from(body),
-    })
-    expect(result.options.body.variables.text).toHaveLength(100_000)
+  test.each<number | false>([false, 0])(
+    'Should not limit the body if the limit is %s',
+    async (limit) => {
+      bodySizeLimit.mutation = limit
+      const body = JSON.stringify({ text: 'a'.repeat(100_000) })
+      const result = await runHandler('barfoo', {
+        headers: {
+          'content-type': 'application/json',
+          'content-length': String(body.length),
+        },
+        body: Buffer.from(body),
+      })
+      expect(result.options.body.variables.text).toHaveLength(100_000)
+    },
+  )
+
+  test('Should use the default limit instead of an invalid one', async () => {
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    bodySizeLimit.mutation = -1
+    await expect(
+      runHandler('barfoo', {
+        headers: {
+          'content-type': 'application/json',
+          'content-length': String(10 * 1024 * 1024 + 1),
+        },
+        body: Buffer.from('{}'),
+      }),
+    ).rejects.toMatchObject({ statusCode: 413 })
+    expect(consoleWarn).toHaveBeenCalledWith(
+      '[nuxt-graphql-middleware] Invalid bodySizeLimit.mutation: -1. Using 10485760 instead.',
+    )
   })
 })

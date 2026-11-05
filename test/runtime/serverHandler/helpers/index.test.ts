@@ -395,8 +395,53 @@ describe('withSignal', () => {
   test('does nothing without a timeout or a client signal', () => {
     const options = { headers: { foo: 'bar' } }
     expect(withSignal(options, false)).toBe(options)
-    expect(withSignal(options, undefined)).toBe(options)
-    expect(withSignal({ timeout: 0 }, 20)).toEqual({ timeout: 0 })
+    expect(withSignal(options, 0)).toBe(options)
+  })
+
+  test('uses the default timeout if none is set', () => {
+    const result = withSignal({}, undefined)
+    expect(result.signal).toBeInstanceOf(AbortSignal)
+  })
+
+  test('disables the timeout for 0 in the fetch options', () => {
+    const result = withSignal({ timeout: 0 }, 20)
+    expect(result.signal).toBeUndefined()
+    expect(result.timeout).toBeUndefined()
+  })
+
+  test.each([-1, 1.5, 2 ** 31, Infinity, Number.NaN, '1000'])(
+    'uses the default timeout instead of %s and logs it',
+    (value) => {
+      const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      consoleWarn.mockClear()
+      const result = withSignal({}, value as any)
+      expect(result.signal).toBeInstanceOf(AbortSignal)
+      expect(result.signal!.aborted).toBe(false)
+      expect(consoleWarn).toHaveBeenCalledWith(
+        `[nuxt-graphql-middleware] Invalid graphqlServerTimeout: ${value}. Using 30000 instead.`,
+      )
+    },
+  )
+
+  test.each([-1, 1.5, Number.NaN])(
+    'uses the timeout of the module instead of %s from the fetch options',
+    async (value) => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const result = withSignal({ timeout: value }, 20)
+      // ofetch would abort the request after -1 ms.
+      expect(result.timeout).toBeUndefined()
+      expect(result.signal!.aborted).toBe(false)
+      await wait(50)
+      expect(result.signal!.aborted).toBe(true)
+    },
+  )
+
+  test('logs an invalid value only once', () => {
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    consoleWarn.mockClear()
+    withSignal({}, -2)
+    withSignal({}, -2)
+    expect(consoleWarn).toHaveBeenCalledOnce()
   })
 
   test('uses the timeout from the fetch options instead', async () => {

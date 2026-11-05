@@ -88,7 +88,7 @@ export interface ModuleOptions {
    * The maximum size of request bodies in bytes.
    *
    * Larger requests are refused with a 413 status code. Set a limit to `false`
-   * to disable it, for example if the web server already limits the size.
+   * or `0` to disable it, for example if the web server already limits the size.
    *
    * The limits can be changed at runtime with the
    * `NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION` and
@@ -114,7 +114,7 @@ export interface ModuleOptions {
    * The timeout for requests to the GraphQL server in milliseconds.
    *
    * Requests that take longer, including reading the response, are aborted and
-   * answered with a 504 status code. Set to `false` to disable it.
+   * answered with a 504 status code. Set to `false` or `0` to disable it.
    *
    * A `timeout` or `signal` returned by the `serverFetchOptions` method of the
    * server options takes precedence, which allows a different timeout for

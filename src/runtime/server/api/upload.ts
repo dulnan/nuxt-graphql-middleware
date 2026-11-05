@@ -9,6 +9,7 @@ import {
   throwError,
   extractRequestContext,
   isValidMutation,
+  getBodySizeLimit,
   readMultipartBody,
 } from './../helpers'
 import { documents } from '#nuxt-graphql-middleware/documents'
@@ -148,7 +149,10 @@ export default defineEventHandler(async (event) => {
 
   const multiPartData = await readMultipartBody(
     event,
-    useRuntimeConfig().graphqlMiddleware.bodySizeLimit?.upload,
+    getBodySizeLimit(
+      useRuntimeConfig().graphqlMiddleware.bodySizeLimit,
+      'upload',
+    ),
   )
 
   const data = parseFormData(multiPartData)

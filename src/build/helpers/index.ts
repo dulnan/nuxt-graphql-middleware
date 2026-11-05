@@ -12,6 +12,12 @@ import {
   type OperationDefinitionNode,
 } from 'graphql'
 import type { ModuleOptions } from '../types/options'
+import {
+  DEFAULT_BODY_SIZE_LIMIT,
+  DEFAULT_GRAPHQL_SERVER_TIMEOUT,
+  isValidLimit,
+  MAX_TIMEOUT,
+} from '../../runtime/settings'
 
 // Nuxt >= 4.6 types this as NuxtLogger, but it's still a consola instance.
 export const logger = useLogger('nuxt-graphql-middleware') as ConsolaInstance
@@ -36,11 +42,8 @@ export const defaultOptions: ModuleOptions = {
     maxSize: 100,
   },
   fileUploadScalar: 'Upload',
-  bodySizeLimit: {
-    mutation: 10 * 1024 * 1024,
-    upload: 50 * 1024 * 1024,
-  },
-  graphqlServerTimeout: 30_000,
+  bodySizeLimit: { ...DEFAULT_BODY_SIZE_LIMIT },
+  graphqlServerTimeout: DEFAULT_GRAPHQL_SERVER_TIMEOUT,
   mcp: {
     enabled: false,
   },
@@ -52,6 +55,22 @@ export const defaultOptions: ModuleOptions = {
 export function validateOptions(options: Partial<ModuleOptions>) {
   if (!options.graphqlEndpoint) {
     throw new Error('Missing graphqlEndpoint.')
+  }
+
+  const timeout = options.graphqlServerTimeout
+  if (timeout !== undefined && !isValidLimit(timeout, MAX_TIMEOUT)) {
+    throw new Error(
+      `Invalid graphqlServerTimeout: ${timeout}. Use a whole number of milliseconds up to ${MAX_TIMEOUT}, or false or 0 to disable the timeout.`,
+    )
+  }
+
+  for (const key of ['mutation', 'upload'] as const) {
+    const limit = options.bodySizeLimit?.[key]
+    if (limit !== undefined && !isValidLimit(limit)) {
+      throw new Error(
+        `Invalid bodySizeLimit.${key}: ${limit}. Use a whole number of bytes, or false or 0 to disable the limit.`,
+      )
+    }
   }
 }
 

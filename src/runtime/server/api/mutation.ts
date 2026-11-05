@@ -2,6 +2,7 @@ import { defineEventHandler, getQuery, getRouterParam } from 'h3'
 import {
   extractRequestContext,
   isValidMutation,
+  getBodySizeLimit,
   readJsonBody,
   throwError,
 } from './../helpers'
@@ -21,7 +22,10 @@ export default defineEventHandler(async (event) => {
   const context = extractRequestContext(queryParams)
   const variables = await readJsonBody(
     event,
-    useRuntimeConfig().graphqlMiddleware.bodySizeLimit?.mutation,
+    getBodySizeLimit(
+      useRuntimeConfig().graphqlMiddleware.bodySizeLimit,
+      'mutation',
+    ),
   )
 
   return doGraphqlRequest(

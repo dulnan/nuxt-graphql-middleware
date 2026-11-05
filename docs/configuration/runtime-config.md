@@ -26,7 +26,8 @@ also used at runtime (e.g. running the Nuxt build).
 
 Allows you to override the
 [`bodySizeLimit`](/configuration/module#bodysizelimit) option at runtime. The
-values are in bytes, `false` disables the limit:
+values are in bytes, `false` or `0` disables the limit. Invalid values are
+logged and replaced by the default:
 
 ```bash
 NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_MUTATION=1048576
@@ -37,7 +38,8 @@ NUXT_GRAPHQL_MIDDLEWARE_BODY_SIZE_LIMIT_UPLOAD=false
 
 Allows you to override the
 [`graphqlServerTimeout`](/configuration/module#graphqlservertimeout) option at
-runtime. The value is in milliseconds, `false` disables the timeout:
+runtime. The value is in milliseconds, `false` or `0` disables the timeout.
+Invalid values are logged and replaced by the default:
 
 ```bash
 NUXT_GRAPHQL_MIDDLEWARE_GRAPHQL_SERVER_TIMEOUT=60000

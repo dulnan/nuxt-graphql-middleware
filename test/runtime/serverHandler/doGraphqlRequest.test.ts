@@ -34,6 +34,7 @@ vi.mock('#imports', () => {
         },
         graphqlMiddleware: {
           graphqlEndpoint: 'http://localhost/graphql',
+          graphqlServerTimeout: false,
         },
       }
     },
