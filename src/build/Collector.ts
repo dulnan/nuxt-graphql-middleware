@@ -672,6 +672,54 @@ export class Collector {
   }
 
   /**
+   * Get the documents of the documents option by the nuxt.config file that
+   * defines them.
+   *
+   * Nuxt merges the options of all layers, so the documents of each layer are
+   * taken from its own config. That way they rank as the layer (see
+   * getPriority()). The remaining documents belong to the app: those of the
+   * app's config, whose path Nuxt gives as "nuxt.config", and those from
+   * inline module options.
+   */
+  private getConfigDocuments(): Map<string, string[]> {
+    const remaining = [...this.helper.options.documents]
+    const result = new Map<string, string[]>()
+
+    for (const layer of this.helper.nuxt.options._layers) {
+      const config = layer.config as {
+        graphqlMiddleware?: { documents?: unknown }
+      } | null
+      const documents = config?.graphqlMiddleware?.documents
+      if (
+        !layer.configFile ||
+        !isAbsolute(layer.configFile) ||
+        !Array.isArray(documents)
+      ) {
+        continue
+      }
+
+      // Only documents that are still in the merged options are used.
+      const own: string[] = []
+      for (const document of documents) {
+        const index = remaining.indexOf(document)
+        if (index !== -1) {
+          own.push(...remaining.splice(index, 1))
+        }
+      }
+      if (own.length) {
+        result.set(layer.configFile, own)
+      }
+    }
+
+    if (remaining.length) {
+      const filePath = this.helper.paths.nuxtConfig
+      result.set(filePath, [...(result.get(filePath) ?? []), ...remaining])
+    }
+
+    return result
+  }
+
+  /**
    * Initialise the collector.
    */
   private async initDocuments() {
@@ -683,11 +731,8 @@ export class Collector {
         await this.addFile(filePath)
       }
 
-      const nuxtConfigDocuments = this.helper.options.documents.join('\n\n')
-
-      if (nuxtConfigDocuments.length) {
-        const filePath = this.helper.paths.nuxtConfig
-        const file = new CollectedFile(filePath, nuxtConfigDocuments, false)
+      for (const [filePath, documents] of this.getConfigDocuments()) {
+        const file = new CollectedFile(filePath, documents.join('\n\n'), false)
         this.files.set(filePath, file)
       }
 

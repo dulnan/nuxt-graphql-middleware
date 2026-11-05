@@ -42,6 +42,9 @@ reference the fragment. When names collide, the first one in this list wins:
    [hooks](/configuration/module-hooks)
 3. The extended layers, in the order they are defined
 
+The [`documents`](/configuration/module#documents) option ranks as the
+`nuxt.config` it is set in: the app's or that of a layer.
+
 Definitions with the same name and the same rank fail the build, for example two
 files in the app that define the same fragment, or two modules that add a
 fragment with the same name.

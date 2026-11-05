@@ -32,8 +32,14 @@ function writeFile(path: string, contents: string): string {
 /**
  * Create a collector for an app in rootDir that extends a layer in
  * rootDir/layers/base.
+ *
+ * The documents options of the app and the layer are merged like Nuxt does,
+ * together with documents from inline module options.
  */
-function createCollector(filePaths: string[]): Collector {
+function createCollector(
+  filePaths: string[],
+  documents: { app?: string[]; layer?: string[]; inline?: string[] } = {},
+): Collector {
   const layerDir = join(rootDir, 'layers/base')
   const helper = {
     nuxt: {
@@ -42,16 +48,38 @@ function createCollector(filePaths: string[]): Collector {
         srcDir: join(rootDir, 'app'),
         alias: {},
         _layers: [
-          { cwd: rootDir, config: { rootDir, srcDir: join(rootDir, 'app') } },
+          {
+            cwd: rootDir,
+            // Nuxt gives the config file of the app like this.
+            configFile: 'nuxt.config',
+            config: {
+              rootDir,
+              srcDir: join(rootDir, 'app'),
+              graphqlMiddleware: { documents: documents.app },
+            },
+          },
           {
             cwd: layerDir,
-            config: { rootDir: layerDir, srcDir: join(layerDir, 'app') },
+            configFile: join(layerDir, 'nuxt.config.ts'),
+            config: {
+              rootDir: layerDir,
+              srcDir: join(layerDir, 'app'),
+              graphqlMiddleware: { documents: documents.layer },
+            },
           },
         ],
       },
       callHook: () => Promise.resolve(),
     },
-    options: { codegenConfig: {}, documents: [], logOnlyErrors: true },
+    options: {
+      codegenConfig: {},
+      documents: [
+        ...(documents.app ?? []),
+        ...(documents.layer ?? []),
+        ...(documents.inline ?? []),
+      ],
+      logOnlyErrors: true,
+    },
     paths: {
       nuxtConfig: join(rootDir, 'nuxt.config.ts'),
       moduleBuildDir: join(rootDir, '.nuxt/nuxt-graphql-middleware'),
@@ -135,6 +163,31 @@ describe('Collector', () => {
     writeFile('app/fragment.data.graphql', 'fragment data on Data { other }')
     await collector.handleWatchEvent('add', appFragment)
     expect(collector.getFragment('data')?.filePath).toBe(appFragment)
+  })
+
+  test('documents of the nuxt.config of a layer rank as the layer', async () => {
+    const appFragment = writeFile(
+      'app/fragment.data.graphql',
+      'fragment data on Data { other }',
+    )
+    const collector = createCollector([appFragment], {
+      app: ['query overridable { foobar }'],
+      layer: [
+        'fragment data on Data { text }',
+        'query layerQuery { data { ...data } }\nquery overridable { text }',
+      ],
+      inline: ['query inline { text }'],
+    })
+    await collector.init()
+
+    const appConfig = join(rootDir, 'nuxt.config.ts')
+    const layerConfig = join(rootDir, 'layers/base/nuxt.config.ts')
+    expect(collector.getFragment('data')?.filePath).toBe(appFragment)
+    expect(getOperation(collector, 'overridable')?.filePath).toBe(appConfig)
+    expect(getOperation(collector, 'layerQuery')?.filePath).toBe(layerConfig)
+    expect(getOperation(collector, 'layerQuery')?.sourceFull).toContain('other')
+    // Documents from inline module options can't be matched to a layer.
+    expect(getOperation(collector, 'inline')?.filePath).toBe(appConfig)
   })
 
   test('documents and files from hooks rank between the app and layers', async () => {
