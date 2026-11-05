@@ -24,22 +24,28 @@ export class CollectedFile {
 
   /**
    * If isOnDisk, re-read file contents from disk, then parse it (syntax only).
+   *
+   * Throws for syntax errors and keeps the last valid contents, so that the
+   * contents always match the parsed document. Saving the same invalid
+   * contents again then throws again.
    */
-  async update(): Promise<boolean> {
-    if (this.isOnDisk) {
-      const newContents = (await fs.readFile(this.filePath)).toString()
-
-      // If contents are identical, return.
-      if (newContents === this.fileContents) {
-        return false
-      }
-
-      this.fileContents = newContents
-      this.parsed = parse(newContents)
-      return true
+  async update(): Promise<'unchanged' | 'updated' | 'empty'> {
+    // Files not on disk never need update.
+    if (!this.isOnDisk) {
+      return 'unchanged'
     }
 
-    // Files not on disk never need update.
-    return false
+    const newContents = (await fs.readFile(this.filePath)).toString()
+    if (newContents === this.fileContents) {
+      return 'unchanged'
+    }
+
+    if (!newContents.trim()) {
+      return 'empty'
+    }
+
+    this.parsed = parse(newContents)
+    this.fileContents = newContents
+    return 'updated'
   }
 }

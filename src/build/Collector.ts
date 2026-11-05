@@ -844,24 +844,28 @@ export class Collector {
       return this.handleAdd(filePath)
     }
 
-    let needsUpdate: boolean
+    let result: Awaited<ReturnType<CollectedFile['update']>>
     try {
-      needsUpdate = await file.update()
+      result = await file.update()
     } catch (e) {
       // Report syntax errors, but keep the last valid version of the file.
       // Removing it would silently activate definitions it overrides.
-      if (e instanceof GraphQLError && file.fileContents.trim()) {
+      if (e instanceof GraphQLError) {
         throw new Error(
           `Failed to parse ${this.filePathToSourceRelative(filePath)}: ${e.message}`,
           { cause: e },
         )
       }
 
-      // The file is empty or can't be read anymore, so let's remove it.
+      // The file can't be read anymore, so let's remove it.
       return this.handleUnlink(filePath)
     }
 
-    if (!needsUpdate) {
+    if (result === 'empty') {
+      return this.handleUnlink(filePath)
+    }
+
+    if (result === 'unchanged') {
       return false
     }
 

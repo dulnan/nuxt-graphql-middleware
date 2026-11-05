@@ -382,23 +382,44 @@ describe('Collector', () => {
     expect(collector.getFragment('data')?.source).toContain('other')
   })
 
-  test('emptying an overriding file restores the definition of the layer', async () => {
-    const layerFragment = writeFile(
-      'layers/base/app/fragment.data.graphql',
-      'fragment data on Data { text }',
-    )
+  test('a syntax error saved again is reported again', async () => {
+    vi.spyOn(logger, 'error').mockImplementation(() => {})
     const appFragment = writeFile(
       'app/fragment.data.graphql',
       'fragment data on Data { other }',
     )
-    const collector = createCollector([layerFragment, appFragment])
+    const collector = createCollector([appFragment])
     await collector.init()
 
-    writeFile('app/fragment.data.graphql', '')
-    const result = await collector.handleWatchEvent('change', appFragment)
-    expect(result.error).toBeUndefined()
-    expect(collector.getFragment('data')?.filePath).toBe(layerFragment)
+    writeFile('app/fragment.data.graphql', 'fragment data on Data {')
+    const first = await collector.handleWatchEvent('change', appFragment)
+    expect(first.error?.message).toContain('Failed to parse')
+
+    // For example saved again by the editor, unchanged.
+    const second = await collector.handleWatchEvent('change', appFragment)
+    expect(second.error?.message).toContain('Failed to parse')
   })
+
+  test.each([[''], [' \n']])(
+    'emptying an overriding file restores the definition of the layer: %j',
+    async (contents) => {
+      const layerFragment = writeFile(
+        'layers/base/app/fragment.data.graphql',
+        'fragment data on Data { text }',
+      )
+      const appFragment = writeFile(
+        'app/fragment.data.graphql',
+        'fragment data on Data { other }',
+      )
+      const collector = createCollector([layerFragment, appFragment])
+      await collector.init()
+
+      writeFile('app/fragment.data.graphql', contents)
+      const result = await collector.handleWatchEvent('change', appFragment)
+      expect(result.error).toBeUndefined()
+      expect(collector.getFragment('data')?.filePath).toBe(layerFragment)
+    },
+  )
 
   test('an add event for a tracked file updates its contents', async () => {
     const file = writeFile(
