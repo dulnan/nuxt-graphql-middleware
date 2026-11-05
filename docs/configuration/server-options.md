@@ -252,6 +252,9 @@ Handle a fetch error from the GraphQL request.
 Note that errors are only thrown for responses that are not status 200-299. See
 https://github.com/unjs/ofetch#%EF%B8%8F-handling-errors for more information.
 
+The method also receives errors thrown by `onServerResponse`, including the 502
+for responses that aren't JSON. These are H3 errors instead of fetch errors.
+
 ```typescript
 type GraphqlMiddlewareOnServerErrorMethod = (
   event: H3Event,
@@ -262,7 +265,8 @@ type GraphqlMiddlewareOnServerErrorMethod = (
 ```
 
 If no method is provided, the middleware responds with a 500 status code, or
-with a 504 if the request timed out. In production the response only contains a
+with a 504 if the request timed out. Errors thrown by `onServerResponse` are
+passed on with their status code. In production the response only contains a
 generic message and the `errors` of the GraphQL server's response, if it is a
 GraphQL response. The error message, which contains the URL of the GraphQL
 server, is logged on the server. In dev mode the response also contains the

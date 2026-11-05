@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { vi, describe, expect, test } from 'vitest'
-import { H3Event } from 'h3'
+import { createError, H3Event } from 'h3'
 import {
   GraphqlMiddlewareOperation,
   SSR_EVENT_KEY,
@@ -275,6 +275,17 @@ describe('onServerError', () => {
     expect(result.statusMessage).toBe("Couldn't execute GraphQL query.")
     expect(result.data).toBeUndefined()
     expect(JSON.stringify(result)).not.toContain('10.0.0.5')
+  })
+
+  test('passes on errors thrown by onServerResponse', () => {
+    const error = createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized',
+    })
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleError.mockClear()
+    expect(callDefault(error)).toBe(error)
+    expect(consoleError).not.toHaveBeenCalled()
   })
 
   test('calls the method from the server options', () => {

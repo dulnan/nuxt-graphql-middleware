@@ -145,6 +145,35 @@ describe('doGraphqlRequest', () => {
     expect(graphqlEndpointCalls[0].operationName).toBe('testMutation')
   })
 
+  test('responds with a 502 if the response is not JSON', async () => {
+    const { doGraphqlRequest } =
+      await import('./../../../src/runtime/server/utils/doGraphqlRequest')
+
+    fetchMock.raw.mockResolvedValueOnce({
+      _data: '<html>Bad Gateway</html>',
+      headers: new Headers({ 'content-type': 'text/html' }),
+    } as any)
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleError.mockClear()
+
+    await expect(
+      doGraphqlRequest(
+        {
+          query: 'query TestQuery { test }',
+          variables: {},
+          operation: GraphqlMiddlewareOperation.Query,
+          operationName: 'testQuery',
+        },
+        null,
+        createEvent(),
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 502,
+      statusMessage: 'Invalid response from the GraphQL server.',
+    })
+    expect(consoleError).toHaveBeenCalledOnce()
+  })
+
   test.each([
     [GraphqlMiddlewareOperation.Query, true],
     [GraphqlMiddlewareOperation.Mutation, false],

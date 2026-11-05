@@ -3,6 +3,7 @@ import type { H3Event } from 'h3'
 import {
   createError,
   getRequestHeader,
+  isError,
   isEvent,
   readRawBody,
   setResponseHeader,
@@ -484,6 +485,13 @@ export function onServerError(
       context,
     )
   }
+
+  // Errors thrown by onServerResponse, such as the 502 for responses that
+  // aren't JSON, already have a status code, so they are passed on as they are.
+  if (isError(error)) {
+    throw error
+  }
+
   // Nobody receives the response, so there is nothing to log.
   if (isClientAborted(event)) {
     throw createError({
