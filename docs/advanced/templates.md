@@ -388,8 +388,8 @@ Used internally for the error overlay during development.
 **Alias: `#nuxt-graphql-middleware/upload-mutations`**
 
 Exports the names of the mutations that can be performed via the upload server
-endpoint: Mutations with a variable of the
-[`fileUploadScalar`](/configuration/module#fileuploadscalar) type, directly or
+endpoint: Mutations with a variable of one of the
+[`fileUploadScalar`](/configuration/module#fileuploadscalar) types, directly or
 in an input type. Empty if `enableFileUploads` is disabled.
 
 ### Exports

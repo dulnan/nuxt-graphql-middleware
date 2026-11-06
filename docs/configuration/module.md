@@ -34,7 +34,7 @@ const autoImportPatterns = [
 > `optional` **bodySizeLimit?**: `object`
 
 Defined in:
-[options.ts:97](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L97)
+[options.ts:103](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L103)
 
 The maximum size of request bodies in bytes.
 
@@ -76,7 +76,7 @@ The limit for file uploads, including all files of a request.
 > `optional` **clientCache?**: `object`
 
 Defined in:
-[options.ts:239](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L239)
+[options.ts:245](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L245)
 
 Client caching configuration.
 
@@ -115,7 +115,7 @@ The maximum number of cache entries.
 > `optional` **codegenConfig?**: `GeneratorOptions`
 
 Defined in:
-[options.ts:196](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L196)
+[options.ts:202](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L202)
 
 Options for graphql-typescript-deluxe code generator.
 
@@ -130,7 +130,7 @@ Options for graphql-typescript-deluxe code generator.
 > `optional` **codegenSchemaConfig?**: `object`
 
 Defined in:
-[options.ts:201](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L201)
+[options.ts:207](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L207)
 
 Configuration for graphql-codegen when downloading the schema.
 
@@ -173,7 +173,7 @@ const codegenSchemaConfig = {
 > `optional` **debug?**: `boolean`
 
 Defined in:
-[options.ts:133](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L133)
+[options.ts:139](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L139)
 
 Enable detailled debugging messages.
 
@@ -190,7 +190,7 @@ false
 > `optional` **devtools?**: `boolean`
 
 Defined in:
-[options.ts:234](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L234)
+[options.ts:240](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L240)
 
 Enable Nuxt DevTools integration.
 
@@ -241,7 +241,7 @@ const documents = [
 > `optional` **downloadSchema?**: `boolean` \| `"dev-only"`
 
 Defined in:
-[options.ts:162](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L162)
+[options.ts:168](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L168)
 
 Whether to download the GraphQL schema and store it on disk.
 
@@ -278,7 +278,7 @@ GraphQL mutations.
 > `optional` **errorOverlay?**: `boolean`
 
 Defined in:
-[options.ts:138](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L138)
+[options.ts:144](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L144)
 
 Displays GraphQL response errors in an overlay in dev mode.
 
@@ -289,7 +289,7 @@ Displays GraphQL response errors in an overlay in dev mode.
 > `optional` **experimental?**: `object`
 
 Defined in:
-[options.ts:262](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L262)
+[options.ts:268](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L268)
 
 Experimental features.
 
@@ -325,20 +325,27 @@ encoded using the __variables fallback where all variables are JSON encoded.
 
 ## fileUploadScalar?
 
-> `optional` **fileUploadScalar?**: `string`
+> `optional` **fileUploadScalar?**: `string` \| `string`[]
 
 Defined in:
-[options.ts:85](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L85)
+[options.ts:91](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L91)
 
-The name of the GraphQL scalar used for file uploads.
+The name of the GraphQL scalar used for file uploads, or a list of names if the
+schema has several.
 
-Only mutations with a variable of this type, directly or in an input type, can
-be performed via the upload server endpoint.
+Only mutations with a variable of one of these types, directly or in an input
+type, can be performed via the upload server endpoint.
 
 ### Default
 
 ```ts
 'Upload'
+```
+
+### Example
+
+```ts
+const fileUploadScalar = ['Upload', 'ImageUpload']
 ```
 
 ---
@@ -369,7 +376,7 @@ the module.
 > `optional` **graphqlEndpoint?**: `string`
 
 Defined in:
-[options.ts:150](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L150)
+[options.ts:156](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L156)
 
 The URL of the GraphQL server.
 
@@ -387,7 +394,7 @@ for more information.
 > `optional` **graphqlServerTimeout?**: `number` \| `false`
 
 Defined in:
-[options.ts:126](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L126)
+[options.ts:132](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L132)
 
 The timeout for requests to the GraphQL server in milliseconds.
 
@@ -430,7 +437,7 @@ true
 > `optional` **logOnlyErrors?**: `boolean`
 
 Defined in:
-[options.ts:189](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L189)
+[options.ts:195](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L195)
 
 Logs only errors.
 
@@ -444,7 +451,7 @@ operations. If false, all operations are logged, including valid ones.
 > `optional` **mcp?**: `object`
 
 Defined in:
-[options.ts:296](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L296)
+[options.ts:302](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L302)
 
 Configuration for the @nuxtjs/mcp-toolkit integration.
 
@@ -473,7 +480,7 @@ The route of the MCP server.
 > `optional` **schemaPath?**: `string`
 
 Defined in:
-[options.ts:172](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L172)
+[options.ts:178](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L178)
 
 Path to the GraphQL schema file.
 
@@ -494,7 +501,7 @@ order to generate types.
 > `optional` **serverApiPrefix?**: `string`
 
 Defined in:
-[options.ts:181](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L181)
+[options.ts:187](https://github.com/dulnan/nuxt-graphql-middleware/blob/main/src/build/types/options.ts#L187)
 
 The prefix for the server route.
 
