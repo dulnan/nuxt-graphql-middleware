@@ -1,6 +1,11 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { performRequest } from './../../../src/runtime/composables/nuxtApp'
+import {
+  getCachedResponse,
+  getRequestCacheKey,
+  getRequestParams,
+  performRequest,
+} from './../../../src/runtime/composables/nuxtApp'
 import { SSR_ABORT_SIGNAL_KEY } from './../../../src/runtime/settings'
 
 const state = vi.hoisted(() => {
@@ -48,7 +53,7 @@ vi.mock('#nuxt-graphql-middleware/config', () => {
 
 vi.mock('#nuxt-graphql-middleware/operation-hashes', () => {
   return {
-    operationHashes: {},
+    operationHashes: { foobar: 'abc' },
   }
 })
 
@@ -171,5 +176,68 @@ describe('performRequest', () => {
     })
     // The context of the fetch options is not changed.
     expect(context).toEqual({ foo: 'bar' })
+  })
+})
+
+describe('getRequestCacheKey', () => {
+  // Variables, fetch options, the global client context and the client
+  // context of the composable.
+  const args = [
+    { id: '1' },
+    { params: { fromCall: '1' } },
+    { language: 'de' },
+    { country: 'ch' },
+  ] as const
+
+  function getKey(client?: boolean) {
+    return getRequestCacheKey(
+      'query',
+      'foobar',
+      getRequestParams(state.app as any, 'query', 'foobar', ...args, client)
+        .params,
+    )
+  }
+
+  beforeEach(() => {
+    state.app = {
+      $graphqlState: { fetchOptions: { params: { fromState: '1' } } },
+    }
+    state.clientCacheEnabled = true
+    state.server = false
+  })
+
+  test('is the key a query is cached under', async () => {
+    await performRequest('query', 'foobar', ...args, { client: true })
+    expect(Object.keys(state.app.$graphqlCache.cache)).toEqual([getKey()])
+  })
+
+  test('is the key of the browser when built on the server for the client', () => {
+    const key = getKey()
+    state.server = true
+    expect(getKey(true)).toBe(key)
+    // The request of the server has no operation hash.
+    expect(getKey()).not.toBe(key)
+  })
+})
+
+describe('getCachedResponse', () => {
+  beforeEach(() => {
+    state.app = { $graphqlState: { fetchOptions: {} } }
+    state.clientCacheEnabled = true
+    state.server = false
+  })
+
+  test('returns the response of a cached request once it is loaded', async () => {
+    const promise = query(undefined, {}, true)
+    expect(getCachedResponse(promise)).toBeUndefined()
+
+    const response = await promise
+    expect(getCachedResponse(promise)).toBe(response)
+  })
+
+  test('does not return responses of requests that are not cached', async () => {
+    const promise = query(undefined, {}, false)
+    await promise
+    expect(getCachedResponse(promise)).toBeUndefined()
   })
 })

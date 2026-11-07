@@ -47,11 +47,35 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
 })
 ```
 
+A cached response is returned right away, without a `pending` status. It is only
+returned for the same request: if the variables or the client context differ,
+the query is performed again.
+
 If using SSR, the responses from the payload are stored in the cache during
-hydration. When navigating back to the page, the composable returns them from
-the cache, as long as they are still in it.
+hydration, for the request that the server made. When navigating back to the
+page, the composable returns them from the cache, as long as they are still in
+it.
+
+The data of a cached response depends on the `transform` and `pick` options:
+
+- For a response that was fetched in the browser, the `transform` of the call
+  runs on the cached response, during setup.
+- A response from the payload is only returned to calls with the same
+  `transform` and `pick`. Like in Nuxt, functions with the same source count as
+  the same `transform`.
 
 Calling `refresh()` skips the cache and performs the query again.
+
+Some cases don't use the cache right away:
+
+- With an `async` transform or Nuxt's `middleware` option, and after a trigger
+  of the `watch` option, the composable uses the cached request. No request is
+  made, but the status is `pending` for a moment.
+- The response from the payload that a component with delayed hydration uses is
+  not stored, so the next visit performs the query again.
+- On prerendered pages that share data with another page (Nuxt's
+  `experimental.sharedPrerenderData`), the responses from the payload are not
+  stored, and components with delayed hydration perform the query again.
 
 ### useGraphqlQuery
 
@@ -86,10 +110,6 @@ language. To prevent this, you have to vary the cache key, by either:
 - append the language as part of the fetch params (either using `fetchOptions`
   in the composable options or setting global `fetchOptions` via
   `useGraphqlState()`)
-
-The responses that `useAsyncGraphqlQuery` stores from the SSR payload are cached
-by the name of the query and the variables only, so they don't vary by the
-client context either.
 
 ## Purging the cache
 
