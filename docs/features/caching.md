@@ -31,6 +31,9 @@ In both composables the cache key is automatically derived from:
 - (if available) the client context built in
   [client options](/configuration/client-options)
 
+The `graphqlCaching.client` option has no effect if the client cache is
+disabled.
+
 ### useAsyncGraphqlQuery
 
 To opt-in to client side caching, set `client: true` on the `graphqlCaching`
@@ -43,6 +46,36 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
   },
 })
 ```
+
+A cached response is returned right away, without a `pending` status. It is only
+returned for the same request: if the variables or the client context differ,
+the query is performed again.
+
+If using SSR, the responses from the payload are stored in the cache during
+hydration, for the request that the server made. When navigating back to the
+page, the composable returns them from the cache, as long as they are still in
+it.
+
+The data of a cached response depends on the `transform` and `pick` options:
+
+- For a response that was fetched in the browser, the `transform` of the call
+  runs on the cached response, during setup.
+- A response from the payload is only returned to calls with the same
+  `transform` and `pick`. Like in Nuxt, functions with the same source count as
+  the same `transform`.
+
+Calling `refresh()` skips the cache and performs the query again.
+
+Some cases don't use the cache right away:
+
+- With an `async` transform or Nuxt's `middleware` option, and after a trigger
+  of the `watch` option, the composable uses the cached request. No request is
+  made, but the status is `pending` for a moment.
+- The response from the payload that a component with delayed hydration uses is
+  not stored, so the next visit performs the query again.
+- On prerendered pages that share data with another page (Nuxt's
+  `experimental.sharedPrerenderData`), the responses from the payload are not
+  stored, and components with delayed hydration perform the query again.
 
 ### useGraphqlQuery
 
@@ -59,9 +92,6 @@ const data = await useGraphqlQuery('users', null, {
 
 Now, the result of the `users` query is stored in memory and any subsequent call
 will resolve the cached response.
-
-In addition, if using SSR, the composable will return the response from the
-payload, even when navigating back and forth between a SSR and SPA page.
 
 ## Cache Key
 
@@ -96,6 +126,9 @@ if (app.$graphqlCache) {
   app.$graphqlCache.purge()
 }
 ```
+
+This also removes the responses stored from the SSR payload, so the composables
+perform the queries again.
 
 ## Disable caching
 

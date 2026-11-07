@@ -24,12 +24,9 @@ export class GraphqlMiddlewareCache {
       }
     } else if (this.keys.length >= this.maxSize) {
       // If we've reached the limit of our cache, remove the oldest entry.
-      const oldestKey = this.keys.shift()
+      const oldestKey = this.keys[0]
       if (oldestKey !== undefined) {
-        // eslint-disable-next-line
-        delete this.cache[oldestKey]
-        // eslint-disable-next-line
-        delete this.asyncDataKeyMap[oldestKey]
+        this.remove(oldestKey)
       }
     }
 
@@ -49,7 +46,10 @@ export class GraphqlMiddlewareCache {
         this.asyncDataKeyMap[asyncDataKey] = []
       }
 
-      this.asyncDataKeyMap[asyncDataKey]!.push(key)
+      const keys = this.asyncDataKeyMap[asyncDataKey]!
+      if (!keys.includes(key)) {
+        keys.push(key)
+      }
     }
   }
 
@@ -77,28 +77,49 @@ export class GraphqlMiddlewareCache {
     this.asyncDataKeyMap = {}
   }
 
+  /**
+   * Remove all entries linked to the async data key.
+   */
   purgeAsyncDataKey(asyncDataKey: string) {
     const keys = this.asyncDataKeyMap[asyncDataKey]
-    if (keys && keys.length) {
-      keys.forEach((key) => {
-        this.remove(key)
-      })
+    if (!keys) {
+      return
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete this.asyncDataKeyMap[asyncDataKey]
+    keys.forEach((key) => {
+      this.remove(key)
+    })
   }
 
   remove(key: string) {
-    if (Object.prototype.hasOwnProperty.call(this.cache, key)) {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete this.cache[key]
-
-      const index = this.keys.indexOf(key)
-      if (index > -1) {
-        this.keys.splice(index, 1)
-      }
-
-      return true
+    if (!Object.prototype.hasOwnProperty.call(this.cache, key)) {
+      return false
     }
 
-    return false
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+    delete this.cache[key]
+
+    const index = this.keys.indexOf(key)
+    if (index > -1) {
+      this.keys.splice(index, 1)
+    }
+
+    // Remove the links of the entry, so that the async data keys only link to
+    // entries that exist.
+    for (const asyncDataKey of Object.keys(this.asyncDataKeyMap)) {
+      const keys = this.asyncDataKeyMap[asyncDataKey]!
+      const linkIndex = keys.indexOf(key)
+      if (linkIndex > -1) {
+        keys.splice(linkIndex, 1)
+        if (!keys.length) {
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete this.asyncDataKeyMap[asyncDataKey]
+        }
+      }
+    }
+
+    return true
   }
 }
