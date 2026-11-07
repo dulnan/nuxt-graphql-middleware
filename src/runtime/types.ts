@@ -24,8 +24,10 @@ export type GraphqlResponseErrorLocation = {
 
 export type GraphqlResponseError = {
   message: string
-  locations: GraphqlResponseErrorLocation[]
-  path: string[]
+  // Only present when the error can be associated to a location in the document.
+  locations?: GraphqlResponseErrorLocation[]
+  // Only present for errors raised during the execution of a field.
+  path?: (string | number)[]
   extensions?: Record<string, unknown>
 }
 

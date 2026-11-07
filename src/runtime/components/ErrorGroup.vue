@@ -21,7 +21,7 @@
         <td v-text="stack" />
       </tr>
       <template v-for="error in uniqueErrors" :key="error.key">
-        <tr>
+        <tr v-if="error.path?.length">
           <td>Path</td>
           <td>{{ error.path.join(' - ') }}</td>
         </tr>
