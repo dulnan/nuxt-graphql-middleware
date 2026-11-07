@@ -14,9 +14,32 @@ import { useAsyncData, useAppConfig, useNuxtApp, computed } from '#imports'
 import { hash } from 'ohash'
 import type { GraphqlResponse } from '#nuxt-graphql-middleware/response'
 import type { RequestCacheOptions } from './../types'
-import type { AsyncData, AsyncDataOptions, NuxtError } from '#app'
+import type { AsyncData, AsyncDataOptions, NuxtApp, NuxtError } from '#app'
 import type { Query } from '#nuxt-graphql-middleware/operation-types'
 import { importMetaClient } from '#nuxt-graphql-middleware/config'
+
+/**
+ * The async data keys that were looked up in the client cache, per app.
+ */
+const lookedUpKeys = new WeakMap<NuxtApp, Set<string>>()
+
+/**
+ * Whether this is the first lookup of the async data key in the app.
+ */
+function isFirstLookup(app: NuxtApp, key: string): boolean {
+  let keys = lookedUpKeys.get(app)
+  if (!keys) {
+    keys = new Set()
+    lookedUpKeys.set(app, keys)
+  }
+
+  if (keys.has(key)) {
+    return false
+  }
+
+  keys.add(key)
+  return true
+}
 
 type AsyncGraphqlQueryOptions<
   FetchOptions,
@@ -175,37 +198,41 @@ export function useAsyncGraphqlQuery<
   const config = useAppConfig()
   const app = useNuxtApp()
 
-  if (importMetaClient) {
-    if (asyncDataOptions.graphqlCaching?.client && app.isHydrating) {
-      const cache = getOrCreateClientCache(app, config)
-      if (cache) {
-        // Store the initial payload in our GraphQL cache.
-        const key = asyncDataKey.value
-        const payload = app.payload.data[asyncDataKey.value]
-        if (payload) {
-          cache.set(key, payload)
-        }
+  if (
+    importMetaClient &&
+    asyncDataOptions.graphqlCaching?.client &&
+    !asyncDataOptions.getCachedData &&
+    // Without a client cache (disabled in the module options or in the app
+    // config) the option has no effect, and Nuxt's default is used.
+    getOrCreateClientCache(app, config)
+  ) {
+    asyncDataOptions.getCachedData = function (key, nuxtApp, ctx) {
+      const cache = getOrCreateClientCache(nuxtApp, config)
+      if (!cache) {
+        return
       }
-    }
 
-    // On the client side, if client caching is requested, we can directly return
-    // data from the payload if possible.
-    if (
-      asyncDataOptions.graphqlCaching?.client &&
-      !asyncDataOptions.getCachedData
-    ) {
-      asyncDataOptions.getCachedData = function (key, app, ctx) {
-        if (ctx.cause === 'initial') {
-          return app.payload.data[key] ?? app.$graphqlCache?.get(key)
-        } else if (
-          ctx.cause === 'refresh:manual' ||
-          ctx.cause === 'refresh:hook'
-        ) {
-          if (app.$graphqlCache) {
-            app.$graphqlCache.purgeAsyncDataKey(key)
-            app.$graphqlCache.purgeAsyncDataKey(prevKey)
+      if (ctx.cause === 'initial') {
+        // Nuxt doesn't purge the payload if getCachedData is set, so the
+        // payload is only used for the first lookup of a key: During
+        // hydration, or later for a component with delayed hydration. The
+        // response is stored in the cache and linked to its own key, so that a
+        // refresh removes it.
+        if (isFirstLookup(nuxtApp, key)) {
+          const payload = nuxtApp.payload.data[key]
+          if (payload !== undefined) {
+            cache.set(key, payload, key)
+            return payload
           }
         }
+
+        return cache.get(key)
+      } else if (
+        ctx.cause === 'refresh:manual' ||
+        ctx.cause === 'refresh:hook'
+      ) {
+        cache.purgeAsyncDataKey(key)
+        cache.purgeAsyncDataKey(prevKey)
       }
     }
   }

@@ -87,7 +87,8 @@ const { data: users } = await useAsyncGraphqlQuery('users', null, {
 ### graphqlCaching
 
 Enable client-side caching for this query. Requires `clientCache.enabled: true`
-in module options. See [Caching](/features/caching) for more details.
+in module options, without it the option has no effect. See
+[Caching](/features/caching) for more details.
 
 ```typescript
 const { data } = await useAsyncGraphqlQuery('users', null, {
@@ -102,7 +103,8 @@ When enabled:
 - Results are cached in memory using an LRU cache
 - Subsequent calls with the same variables return cached data
 - Cache survives client-side navigation
-- SSR payload data is preserved during hydration
+- Responses from the SSR payload are stored in the cache during hydration
+- `refresh()` skips the cache and performs the query again
 
 ### fetchOptions
 
@@ -225,8 +227,9 @@ The request is aborted when `useAsyncData` cancels it, for example when it is
 refreshed while a previous request is still running. The middleware then also
 aborts its request to the GraphQL server.
 
-Requests that use the client cache (`graphqlCaching.client`) are not aborted, as
-several callers can share the same cached request.
+Requests that use the client cache (`graphqlCaching.client` with
+`clientCache.enabled`) are not aborted, as several callers can share the same
+cached request.
 
 During SSR, the queries are aborted when the client closes the connection of the
 page, for example when the user leaves before the page has loaded. Queries that

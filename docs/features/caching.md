@@ -31,6 +31,9 @@ In both composables the cache key is automatically derived from:
 - (if available) the client context built in
   [client options](/configuration/client-options)
 
+The `graphqlCaching.client` option has no effect if the client cache is
+disabled.
+
 ### useAsyncGraphqlQuery
 
 To opt-in to client side caching, set `client: true` on the `graphqlCaching`
@@ -43,6 +46,12 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
   },
 })
 ```
+
+If using SSR, the responses from the payload are stored in the cache during
+hydration. When navigating back to the page, the composable returns them from
+the cache, as long as they are still in it.
+
+Calling `refresh()` skips the cache and performs the query again.
 
 ### useGraphqlQuery
 
@@ -59,9 +68,6 @@ const data = await useGraphqlQuery('users', null, {
 
 Now, the result of the `users` query is stored in memory and any subsequent call
 will resolve the cached response.
-
-In addition, if using SSR, the composable will return the response from the
-payload, even when navigating back and forth between a SSR and SPA page.
 
 ## Cache Key
 
@@ -81,6 +87,10 @@ language. To prevent this, you have to vary the cache key, by either:
   in the composable options or setting global `fetchOptions` via
   `useGraphqlState()`)
 
+The responses that `useAsyncGraphqlQuery` stores from the SSR payload are cached
+by the name of the query and the variables only, so they don't vary by the
+client context either.
+
 ## Purging the cache
 
 The composable creates the cache instance as a property on `NuxtApp`. This
@@ -96,6 +106,9 @@ if (app.$graphqlCache) {
   app.$graphqlCache.purge()
 }
 ```
+
+This also removes the responses stored from the SSR payload, so the composables
+perform the queries again.
 
 ## Disable caching
 
