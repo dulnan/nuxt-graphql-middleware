@@ -89,9 +89,11 @@ Calling `refresh()` skips the cache and performs the query again.
 
 Some cases don't use the cache right away:
 
-- With an `async` transform or Nuxt's `middleware` option, and after a trigger
-  of the `watch` option, the composable uses the cached request. No request is
-  made, but the status is `pending` for a moment.
+- With an `async` transform or Nuxt's `middleware` option, a response that was
+  fetched in the browser goes through its cached request: no request is made,
+  but the status is `pending` for a moment.
+- A trigger of the `watch` option also goes through the cached request. A
+  response from the SSR payload has none, so the query is performed again.
 - Like in Nuxt, a component with delayed hydration (such as
   `hydrate-on-visible`) performs the query when it hydrates. The payload is only
   used while the page hydrates.
