@@ -34,11 +34,23 @@ import {
 } from '#nuxt-graphql-middleware/config'
 
 /**
- * The state with the request of each response in the payload, by async data
- * key. The server records it, so that the browser caches a response from the
- * payload for the request that was made.
+ * The state with the request of each response in the payload, and the call
+ * that made it, by async data key. The server records it, so that the browser
+ * caches a response from the payload for that request and call.
  */
 const REQUEST_KEYS_STATE = 'nuxt-graphql-middleware:request-keys'
+
+/**
+ * The request of a response in the payload, and the call that made it.
+ */
+type ServerRequest = {
+  request: string
+
+  /**
+   * The key of the call site that Nuxt's compiler adds, if any.
+   */
+  site?: string
+}
 
 /**
  * Matches the source of native and bound functions, like Nuxt does.
@@ -46,9 +58,9 @@ const REQUEST_KEYS_STATE = 'nuxt-graphql-middleware:request-keys'
 const NATIVE_CODE_RE = /\{\s*\[native code\]\s*\}/
 
 /**
- * Identify the transform and pick of a call. Like in Nuxt's check for
- * incompatible options, closures with the same source count as the same
- * function.
+ * Identify the transform and pick of a call by their source, like Nuxt's check
+ * for incompatible options. In minified code, different functions can have the
+ * same source, so the call site is part of the key too.
  */
 function getTransformSignature(
   transform?: (input: any) => unknown,
@@ -223,6 +235,12 @@ export function useAsyncGraphqlQuery<
       : NuxtError<NuxtErrorDataT>)
   | undefined
 > {
+  // Nuxt's compiler adds a key for the location of the call as the last
+  // argument (optimization.keyedComposables, set in module.ts).
+  const callSite =
+    typeof args[args.length - 1] === 'string'
+      ? ((args as unknown[]).pop() as string)
+      : undefined
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
   const asyncDataKey = computed(() => {
@@ -274,7 +292,7 @@ export function useAsyncGraphqlQuery<
     !asyncDataOptions.getCachedData
 
   const requestKeys = usesClientCache
-    ? useState<Record<string, string>>(REQUEST_KEYS_STATE, () => ({}))
+    ? useState<Record<string, ServerRequest>>(REQUEST_KEYS_STATE, () => ({}))
     : undefined
 
   if (
@@ -290,11 +308,11 @@ export function useAsyncGraphqlQuery<
     )
 
     /**
-     * The key of a response from the payload, which only fits the transform
-     * and pick that made it.
+     * The key of a response from the payload, which only fits the call that
+     * made it: the same call site, transform and pick.
      */
     const getPayloadKey = (requestKey: string) =>
-      `payload:${requestKey}:${signature}`
+      `payload:${requestKey}:${callSite || ''}:${signature}`
 
     // Nuxt's middleware option can change the response of the request, which
     // a cached response would skip.
@@ -381,10 +399,12 @@ export function useAsyncGraphqlQuery<
         if (nuxtApp.isHydrating) {
           const payload = nuxtApp.payload.data[key]
           if (payload !== undefined) {
-            // Cached for the request that the server made.
-            const serverRequestKey = requestKeys?.value[key]
-            if (serverRequestKey) {
-              cache.set(getPayloadKey(serverRequestKey), payload, key)
+            // Cached for the request that the server made, if this call made
+            // it. Another call that shares the key gets the data from Nuxt,
+            // but its transform didn't make it.
+            const server = requestKeys?.value[key]
+            if (server && server.site === callSite) {
+              cache.set(getPayloadKey(server.request), payload, key)
             }
             return payload
           }
@@ -427,11 +447,10 @@ export function useAsyncGraphqlQuery<
       const requestArgs = getRequestArgs()
 
       if (importMetaServer && requestKeys) {
-        requestKeys.value[asyncDataKey.value] = getRequestKey(
-          app,
-          requestArgs,
-          true,
-        )
+        requestKeys.value[asyncDataKey.value] = {
+          request: getRequestKey(app, requestArgs, true),
+          site: callSite,
+        }
       }
 
       return performRequest<any>(

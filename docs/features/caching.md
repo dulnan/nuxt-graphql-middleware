@@ -60,9 +60,29 @@ The data of a cached response depends on the `transform` and `pick` options:
 
 - For a response that was fetched in the browser, the `transform` of the call
   runs on the cached response, during setup.
-- A response from the payload is only returned to calls with the same
-  `transform` and `pick`. Like in Nuxt, functions with the same source count as
-  the same `transform`.
+- A response from the payload is only returned to the call that made it: the
+  same `useAsyncGraphqlQuery()` in your code, with the same `transform` and
+  `pick`.
+
+Values that a `transform` reads from elsewhere, such as props, are not part of
+the cache key, just as they are not part of the key of Nuxt's `useAsyncData`. On
+one page, Nuxt already shares the data of two calls with the same query and
+variables. On a later visit, the cache returns the response from the payload,
+which the `transform` made with the values of the first visit. Pass such values
+as variables, or apply them in a `computed`:
+
+```typescript
+const props = defineProps<{ limit: number }>()
+
+const { data } = await useAsyncGraphqlQuery('articles', null, {
+  transform: (v) => v.data.articles,
+  graphqlCaching: {
+    client: true,
+  },
+})
+
+const articles = computed(() => data.value?.slice(0, props.limit))
+```
 
 Calling `refresh()` skips the cache and performs the query again.
 

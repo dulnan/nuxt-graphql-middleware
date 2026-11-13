@@ -109,11 +109,23 @@ function createApp(isHydrating: boolean, data: Record<string, unknown> = {}) {
   return state.app
 }
 
-function call(options: Record<string, any> = {}, variables: any = null): Call {
-  useAsyncGraphqlQuery('foobar' as any, variables, {
-    graphqlCaching: { client: true },
-    ...options,
-  } as any)
+/**
+ * Call the composable, optionally with the key of the call site that Nuxt's
+ * compiler adds as the last argument.
+ */
+function call(
+  options: Record<string, any> = {},
+  variables: any = null,
+  site?: string,
+): Call {
+  const args: unknown[] = [
+    variables,
+    { graphqlCaching: { client: true }, ...options },
+  ]
+  if (site) {
+    args.push(site)
+  }
+  ;(useAsyncGraphqlQuery as any)('foobar', ...args)
   return state.calls[state.calls.length - 1]!
 }
 
@@ -124,8 +136,12 @@ function lookup(c: Call, cause = 'initial') {
 /**
  * Do what useAsyncData does: use the cached data, or perform the request.
  */
-async function visit(options: Record<string, any> = {}, variables: any = null) {
-  const c = call(options, variables)
+async function visit(
+  options: Record<string, any> = {},
+  variables: any = null,
+  site?: string,
+) {
+  const c = call(options, variables, site)
   const cached = lookup(c)
   if (cached !== undefined) {
     return { call: c, data: cached, cached: true }
@@ -148,10 +164,11 @@ async function visit(options: Record<string, any> = {}, variables: any = null) {
 async function renderOnServer(
   options: Record<string, any> = {},
   variables: any = null,
+  site?: string,
 ) {
   state.server = true
   state.app = { payload: { data: {} }, $graphqlState: { fetchOptions: {} } }
-  const c = call(options, variables)
+  const c = call(options, variables, site)
   const response = await c.handler(state.app, {})
   const data = options.transform ? options.transform(response) : response
   state.server = false
@@ -189,12 +206,62 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
   })
 
   test('records the request of a response on the server, as the browser builds it', async () => {
-    const { key } = await renderOnServer()
-    const requestKey = state.states[REQUEST_KEYS]?.value?.[key]
+    const { key } = await renderOnServer({}, null, '$site')
+    const server = state.states[REQUEST_KEYS]?.value?.[key]
+    expect(server?.site).toBe('$site')
 
     createApp(false)
-    await visit()
-    expect(Object.keys(state.app.$graphqlCache.cache)).toContain(requestKey)
+    await visit({}, null, '$site')
+    expect(Object.keys(state.app.$graphqlCache.cache)).toContain(
+      server?.request,
+    )
+  })
+
+  test('reads the key of the call site that the compiler adds', () => {
+    // Without variables and options: useAsyncGraphqlQuery('foobar', '$site')
+    ;(useAsyncGraphqlQuery as any)('foobar', '$site')
+    expect(state.calls[state.calls.length - 1]!.key.value).toBe(
+      `useAsyncGraphqlQuery:foobar:${hash(undefined)}`,
+    )
+
+    const c = call({}, { id: '1' }, '$site')
+    expect(c.key.value).toBe(`useAsyncGraphqlQuery:foobar:${hash({ id: '1' })}`)
+    expect(c.options.getCachedData).toBeTypeOf('function')
+  })
+
+  test('returns a response from the payload only to the call site that made it', async () => {
+    const { app, data } = await renderOnServer(
+      { transform: toTime },
+      null,
+      '$a',
+    )
+    await visit({ transform: toTime }, null, '$a')
+    app.isHydrating = false
+
+    // A transform with the same source at another call site, for example one
+    // that reads other props, or another function that minifies the same.
+    expect(await visit({ transform: toTime }, null, '$b')).toMatchObject({
+      cached: false,
+      data: 2,
+    })
+    expect(await visit({ transform: toTime }, null, '$a')).toMatchObject({
+      cached: true,
+      data,
+    })
+  })
+
+  test('does not cache the payload of another call site during hydration', async () => {
+    // Nuxt shares the data of a key between calls, so the call that hydrates
+    // first might not be the one that made the data on the server.
+    const { app, data } = await renderOnServer(
+      { transform: toTime },
+      null,
+      '$a',
+    )
+    expect((await visit({ transform: toTime }, null, '$b')).data).toBe(data)
+    app.isHydrating = false
+
+    expect((await visit({ transform: toTime }, null, '$b')).cached).toBe(false)
   })
 
   test('returns the response from the payload during hydration and later', async () => {
