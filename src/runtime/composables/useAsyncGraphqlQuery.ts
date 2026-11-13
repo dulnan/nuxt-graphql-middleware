@@ -293,6 +293,8 @@ export function useAsyncGraphqlQuery<
   }
 
   // useAsyncData sets its defaults on the options object, so it gets a copy.
+  // The transform and pick of a cached response are read from the copy too, so
+  // that a cache hit applies what Nuxt applies after a request.
   const options = { ...asyncDataOptions }
 
   const usesClientCache =
@@ -312,8 +314,8 @@ export function useAsyncGraphqlQuery<
     getOrCreateClientCache(app, config)
   ) {
     const signature = getTransformSignature(
-      asyncDataOptions.transform,
-      asyncDataOptions.pick as string[] | undefined,
+      options.transform,
+      options.pick as string[] | undefined,
     )
 
     /**
@@ -339,7 +341,7 @@ export function useAsyncGraphqlQuery<
       nuxtApp: NuxtApp,
       response: GraphqlResponse<unknown>,
     ) {
-      const transform = asyncDataOptions.transform as
+      const transform = options.transform as
         ((input: unknown) => any) | undefined
       // The data of an async transform isn't available right away.
       if (
@@ -358,8 +360,8 @@ export function useAsyncGraphqlQuery<
         return
       }
 
-      if (asyncDataOptions.pick) {
-        data = pickKeys(data, asyncDataOptions.pick as string[])
+      if (options.pick) {
+        data = pickKeys(data, options.pick as string[])
       }
 
       if (import.meta.dev && response.errors?.length) {

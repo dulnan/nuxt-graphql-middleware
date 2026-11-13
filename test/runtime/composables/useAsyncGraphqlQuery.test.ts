@@ -626,6 +626,25 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     expect(second.options.getCachedData).not.toBe(first.options.getCachedData)
   })
 
+  test('applies the same transform on a cache hit as Nuxt after a request', async () => {
+    // Options that are a class instance: the copy that Nuxt gets doesn't have
+    // the transform() of the prototype.
+    class Options {
+      graphqlCaching = { client: true }
+      transform(v: any) {
+        return v.data.time
+      }
+    }
+
+    ;(useAsyncGraphqlQuery as any)('foobar', null, new Options())
+    const first = state.calls[state.calls.length - 1]!
+    expect(first.options.transform).toBeUndefined()
+    const response = await first.handler(state.app, {})
+
+    ;(useAsyncGraphqlQuery as any)('foobar', null, new Options())
+    expect(lookup(state.calls[state.calls.length - 1]!)).toBe(response)
+  })
+
   test('keeps a getCachedData from the options', async () => {
     const getCachedData = () => 'custom'
     expect(call({ getCachedData }).options.getCachedData).toBe(getCachedData)
