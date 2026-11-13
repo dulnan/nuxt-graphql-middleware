@@ -20,11 +20,12 @@ import { getConnectionAbortSignal } from '../helpers/abort'
 
 /**
  * The responses of cached requests, by the promise in the client cache.
+ *
+ * Only in the browser: on the server, module state is shared by all requests.
  */
-const cachedResponses = new WeakMap<
-  Promise<GraphqlResponse<any>>,
-  GraphqlResponse<any>
->()
+const cachedResponses = importMetaClient
+  ? new WeakMap<Promise<GraphqlResponse<any>>, GraphqlResponse<any>>()
+  : undefined
 
 /**
  * Get the response of a request in the client cache, once it is loaded.
@@ -32,7 +33,7 @@ const cachedResponses = new WeakMap<
 export function getCachedResponse<T>(
   promise: Promise<GraphqlResponse<T>>,
 ): GraphqlResponse<T> | undefined {
-  return cachedResponses.get(promise)
+  return cachedResponses?.get(promise)
 }
 
 /**
@@ -275,7 +276,7 @@ export function performRequest<T>(
     promise.then(
       (response) => {
         // So that useAsyncGraphqlQuery can return the response right away.
-        cachedResponses.set(promise, response)
+        cachedResponses?.set(promise, response)
       },
       () => {
         // Failed requests are removed, so that they are performed again the
