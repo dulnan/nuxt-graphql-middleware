@@ -20,6 +20,8 @@ const state = vi.hoisted(() => {
     server: false,
     context: {} as Record<string, string>,
     contextError: null as Error | null,
+    // How often buildClientContext() was called.
+    contextCalls: 0,
     // Shared by the server and the client, like the state in the payload.
     states: {} as Record<string, { value: any }>,
     calls: [] as Call[],
@@ -64,6 +66,7 @@ vi.mock('#nuxt-graphql-middleware/client-options', () => {
   return {
     clientOptions: {
       buildClientContext() {
+        state.contextCalls++
         if (state.contextError) {
           throw state.contextError
         }
@@ -159,6 +162,15 @@ async function visit(
 }
 
 /**
+ * Start rendering a page on the server.
+ */
+function createServerApp() {
+  state.server = true
+  state.app = { payload: { data: {} }, $graphqlState: { fetchOptions: {} } }
+  return state.app
+}
+
+/**
  * Render the query on the server, then hydrate the payload in a new app.
  */
 async function renderOnServer(
@@ -166,8 +178,7 @@ async function renderOnServer(
   variables: any = null,
   site?: string,
 ) {
-  state.server = true
-  state.app = { payload: { data: {} }, $graphqlState: { fetchOptions: {} } }
+  createServerApp()
   const c = call(options, variables, site)
   const response = await c.handler(state.app, {})
   const data = options.transform ? options.transform(response) : response
@@ -188,6 +199,7 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     }
     state.context = { language: 'de' }
     state.contextError = null
+    state.contextCalls = 0
     state.states = {}
     state.calls = []
     time = 0
@@ -215,6 +227,51 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     expect(Object.keys(state.app.$graphqlCache.cache)).toContain(
       server?.request,
     )
+  })
+
+  test('records the request on the server during setup', () => {
+    // On a prerendered page that gets the data of another page from Nuxt, the
+    // handler isn't called.
+    createServerApp()
+    const c = call({}, null, '$site')
+    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toMatchObject({
+      request: expect.any(String),
+      site: '$site',
+    })
+  })
+
+  test('records the first call of a key on the server', () => {
+    // The first call creates Nuxt's entry, so its handler makes the data.
+    createServerApp()
+    const c = call({}, null, '$a')
+    call({}, null, '$b')
+    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]?.site).toBe('$a')
+  })
+
+  test.each([{ server: false }, { immediate: false }])(
+    'does not record a call that does not fetch on the server (%o)',
+    (options) => {
+      createServerApp()
+      const c = call(options)
+      expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toBeUndefined()
+    },
+  )
+
+  test('builds the client context once per call on the server', async () => {
+    createServerApp()
+    const c = call()
+    await c.handler(state.app, {})
+    expect(state.contextCalls).toBe(1)
+  })
+
+  test('performs the query on the server after the state was cleared', async () => {
+    // clearNuxtState() deletes the state that useState() returned.
+    createServerApp()
+    const c = call()
+    state.states[REQUEST_KEYS]!.value = undefined
+    await expect(c.handler(state.app, {})).resolves.toMatchObject({
+      data: { time: 1 },
+    })
   })
 
   test('reads the key of the call site that the compiler adds', () => {

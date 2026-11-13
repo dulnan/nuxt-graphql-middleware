@@ -440,23 +440,41 @@ export function useAsyncGraphqlQuery<
     }
   }
 
+  /**
+   * On the server, the request can't change during the render, so it's built
+   * once, for the record and for the handler.
+   */
+  let serverRequestArgs: ReturnType<typeof getRequestArgs> | undefined
+
+  if (
+    importMetaServer &&
+    requestKeys &&
+    options.server !== false &&
+    options.immediate !== false
+  ) {
+    try {
+      serverRequestArgs = getRequestArgs()
+      // Recorded during setup, because Nuxt doesn't run the handler on a
+      // prerendered page that gets the data from another page. The first call
+      // with the key creates Nuxt's entry, so its handler makes the data.
+      requestKeys.value[asyncDataKey.value] ??= {
+        request: getRequestKey(app, serverRequestArgs, true),
+        site: callSite,
+      }
+    } catch {
+      // The handler fails the same way and reports the error.
+    }
+  }
+
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     asyncDataKey,
     (_app, ctx) => {
       prevKey = asyncDataKey.value
-      const requestArgs = getRequestArgs()
-
-      if (importMetaServer && requestKeys) {
-        requestKeys.value[asyncDataKey.value] = {
-          request: getRequestKey(app, requestArgs, true),
-          site: callSite,
-        }
-      }
 
       return performRequest<any>(
         'query',
         name,
-        ...requestArgs,
+        ...(serverRequestArgs || getRequestArgs()),
         asyncDataOptions.graphqlCaching || {},
         asyncDataKey.value,
         // Aborted when the request isn't needed anymore, for example after a

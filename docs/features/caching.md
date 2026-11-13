@@ -94,9 +94,6 @@ Some cases don't use the cache right away:
 - Like in Nuxt, a component with delayed hydration (such as
   `hydrate-on-visible`) performs the query when it hydrates. The payload is only
   used while the page hydrates.
-- On prerendered pages that share data with another page (Nuxt's
-  `experimental.sharedPrerenderData`), the responses from the payload are not
-  stored.
 
 ### useGraphqlQuery
 
