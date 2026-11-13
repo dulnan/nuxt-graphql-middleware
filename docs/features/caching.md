@@ -133,6 +133,11 @@ language. To prevent this, you have to vary the cache key, by either:
   in the composable options or setting global `fetchOptions` via
   `useGraphqlState()`)
 
+The server and the browser must build the same fetch params, including the
+global ones from `useGraphqlState()`: the browser stores a response from the SSR
+payload for the request that the server made. If they differ, the first revisit
+of each query performs it again.
+
 ## Purging the cache
 
 The composable creates the cache instance as a property on `NuxtApp`. This
