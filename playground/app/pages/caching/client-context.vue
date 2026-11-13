@@ -11,7 +11,8 @@ import { definePageMeta, useAsyncGraphqlQuery, useRoute } from '#imports'
 
 // Without a page transition, the page is mounted right away, so the status
 // when it is mounted shows whether the cached response was returned right away.
-definePageMeta({ pageTransition: false })
+// The client context is read during setup, so each language gets its own page.
+definePageMeta({ pageTransition: false, key: (route) => route.fullPath })
 
 const route = useRoute()
 
