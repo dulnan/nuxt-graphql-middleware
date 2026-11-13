@@ -89,7 +89,9 @@ const { data } = await useAsyncGraphqlQuery('articles', null, {
 const articles = computed(() => data.value?.slice(0, props.limit))
 ```
 
-Calling `refresh()` skips the cache and performs the query again.
+With Nuxt's default `experimental.granularCachedData`, calling `refresh()` skips
+the cache and performs the query again. With the option turned off, it returns
+the cached response.
 
 Some cases don't use the cache right away:
 

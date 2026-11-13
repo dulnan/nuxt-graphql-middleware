@@ -106,7 +106,8 @@ When enabled:
 - Cache survives client-side navigation
 - Responses from the SSR payload are stored in the cache during hydration, for
   the request that the server made
-- `refresh()` skips the cache and performs the query again
+- With Nuxt's default `experimental.granularCachedData`, `refresh()` skips the
+  cache and performs the query again
 
 ### fetchOptions
 
