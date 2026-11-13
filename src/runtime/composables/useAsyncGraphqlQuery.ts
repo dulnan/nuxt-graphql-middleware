@@ -390,6 +390,13 @@ export function useAsyncGraphqlQuery<
             }
             return payload
           }
+
+          // The server didn't render the key, for example with server: false
+          // or after an error, so cached data wouldn't match the HTML. The
+          // handler still gets the cached request after hydration.
+          if (nuxtApp.payload.serverRendered) {
+            return
+          }
         }
 
         const fromPayload = cache.get<any>(getPayloadKey(requestKey))

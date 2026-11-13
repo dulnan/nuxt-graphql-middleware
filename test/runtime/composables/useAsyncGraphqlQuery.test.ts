@@ -102,7 +102,7 @@ const toObject = (v: any) => ({ time: v.data.time })
 function createApp(isHydrating: boolean, data: Record<string, unknown> = {}) {
   state.app = {
     isHydrating,
-    payload: { data },
+    payload: { data, serverRendered: true },
     $graphqlState: { fetchOptions: {} },
     callHook: vi.fn(),
   }
@@ -270,6 +270,27 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
       expect(await visit({ transform })).toMatchObject({ cached: false, data })
     },
   )
+
+  test('returns nothing during hydration for a key that the server did not render', async () => {
+    // For example with server: false, or after an error on the server. The
+    // request is cached, for example by a plugin.
+    createApp(true)
+    await useGraphqlQuery('foobar' as any, {} as any, {
+      graphqlCaching: { client: true },
+    })
+
+    expect(lookup(call({ server: false }))).toBeUndefined()
+  })
+
+  test('returns a cached response during the first render of a page that was not server-rendered', async () => {
+    const app = createApp(true)
+    app.payload.serverRendered = false
+    await useGraphqlQuery('foobar' as any, {} as any, {
+      graphqlCaching: { client: true },
+    })
+
+    expect(lookup(call())).toMatchObject({ data: { time: 1 } })
+  })
 
   test('returns a response fetched in the browser right away', async () => {
     const first = await visit({ transform: toTime })
