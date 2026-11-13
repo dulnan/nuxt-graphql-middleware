@@ -257,6 +257,13 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     },
   )
 
+  test('does not record requests on the server if the client cache is disabled in the app config', () => {
+    state.appConfig.graphqlMiddleware.clientCacheEnabled = false
+    createServerApp()
+    const c = call()
+    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toBeUndefined()
+  })
+
   test('builds the client context once per call on the server', async () => {
     createServerApp()
     const c = call()

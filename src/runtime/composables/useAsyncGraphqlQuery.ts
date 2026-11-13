@@ -296,6 +296,9 @@ export function useAsyncGraphqlQuery<
 
   const usesClientCache =
     clientCacheEnabledAtBuild &&
+    // Also checked on the server, so that it doesn't record the requests of
+    // the payload for nothing.
+    !!config.graphqlMiddleware.clientCacheEnabled &&
     !!asyncDataOptions.graphqlCaching?.client &&
     !asyncDataOptions.getCachedData
 
