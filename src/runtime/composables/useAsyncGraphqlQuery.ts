@@ -91,6 +91,15 @@ function isAsyncFunction(fn: unknown): boolean {
   return Object.prototype.toString.call(fn) === '[object AsyncFunction]'
 }
 
+/**
+ * The transforms that returned a promise for a cached response, by call site
+ * and signature. Nuxt runs them again on the cached request, so the lookup
+ * doesn't call them anymore.
+ *
+ * Only in the browser: on the server, module state is shared by all requests.
+ */
+const promiseTransforms = importMetaClient ? new Set<string>() : undefined
+
 type AsyncGraphqlQueryOptions<
   FetchOptions,
   ResT,
@@ -314,6 +323,9 @@ export function useAsyncGraphqlQuery<
     const getPayloadKey = (requestKey: string) =>
       `payload:${requestKey}:${callSite || ''}:${signature}`
 
+    // The transform of this call, in promiseTransforms.
+    const transformId = `${callSite || ''}:${signature}`
+
     // Nuxt's middleware option can change the response of the request, which
     // a cached response would skip.
     const hasMiddleware = !!(options as { middleware?: unknown[] }).middleware
@@ -330,12 +342,18 @@ export function useAsyncGraphqlQuery<
       const transform = asyncDataOptions.transform as
         ((input: unknown) => any) | undefined
       // The data of an async transform isn't available right away.
-      if (transform && isAsyncFunction(transform)) {
+      if (
+        transform &&
+        (isAsyncFunction(transform) || promiseTransforms?.has(transformId))
+      ) {
         return
       }
 
       let data = transform ? transform(response) : response
       if (data && typeof data.then === 'function') {
+        // Nuxt runs the transform again on the cached request, so that it
+        // isn't called twice on the next cache hits.
+        promiseTransforms?.add(transformId)
         Promise.resolve(data).catch(() => {})
         return
       }

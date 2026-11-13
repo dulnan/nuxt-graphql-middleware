@@ -95,6 +95,9 @@ Some cases don't use the cache right away:
   `hydrate-on-visible`) performs the query when it hydrates. The payload is only
   used while the page hydrates.
 
+Declare a `transform` that returns a promise as `async`. Otherwise it runs twice
+on the first cache hit of its call.
+
 ### useGraphqlQuery
 
 To opt-in to client side caching, set `client: true` on the `graphqlCaching`

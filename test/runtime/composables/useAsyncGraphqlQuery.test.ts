@@ -490,6 +490,21 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     expect(lookup(call({ transform }))).toBeUndefined()
   })
 
+  test('calls a transform that returns a promise once on later cache hits', async () => {
+    // For example an arrow function that calls an async helper.
+    const transform = vi.fn((v: any) => Promise.resolve(v.data.time))
+    await visit({ transform }, null, '$promise')
+    expect(transform).toHaveBeenCalledTimes(1)
+
+    // On the first cache hit, the lookup calls it, and Nuxt calls it again.
+    await visit({ transform }, null, '$promise')
+    expect(transform).toHaveBeenCalledTimes(3)
+
+    // On later cache hits, only Nuxt calls it.
+    await visit({ transform }, null, '$promise')
+    expect(transform).toHaveBeenCalledTimes(4)
+  })
+
   test('does not return a cached response if the transform throws', async () => {
     let calls = 0
     const transform = (v: any) => {
