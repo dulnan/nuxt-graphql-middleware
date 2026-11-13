@@ -572,6 +572,12 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
       expect(lookup(c, cause)).toBeUndefined()
       await c.handler(state.app, {})
       expect(fetchMock).toHaveBeenCalledTimes(2)
+
+      // A later visit gets the new response, not the one from the payload.
+      expect(await visit()).toMatchObject({
+        cached: true,
+        data: { data: { time: 2 } },
+      })
     },
   )
 
