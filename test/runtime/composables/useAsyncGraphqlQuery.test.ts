@@ -255,24 +255,21 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     expect((await visit()).cached).toBe(false)
   })
 
-  test('returns the payload after hydration for the request of the server, without caching it', async () => {
-    // For example for a component with delayed hydration.
-    const { app, data } = await renderOnServer()
-    app.isHydrating = false
+  test.each([
+    ['the same', toTime, 2],
+    ['another', toObject, { time: 2 }],
+  ])(
+    'does not return the payload after hydration to a call with %s transform',
+    async (_label, transform, data) => {
+      // For example to a component with delayed hydration, or to a component
+      // that is mounted later. The payload might be from a component that
+      // never hydrated, with another transform.
+      const { app } = await renderOnServer({ transform: toTime })
+      app.isHydrating = false
 
-    expect(await visit()).toMatchObject({ cached: true, data })
-    // Not cached, as the payload might be from a component that was never
-    // hydrated.
-    expect((await visit()).cached).toBe(false)
-  })
-
-  test('does not return the payload after hydration for another request', async () => {
-    const { app } = await renderOnServer()
-    app.isHydrating = false
-
-    state.context = { language: 'fr' }
-    expect((await visit()).cached).toBe(false)
-  })
+      expect(await visit({ transform })).toMatchObject({ cached: false, data })
+    },
+  )
 
   test('returns a response fetched in the browser right away', async () => {
     const first = await visit({ transform: toTime })

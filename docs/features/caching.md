@@ -71,11 +71,12 @@ Some cases don't use the cache right away:
 - With an `async` transform or Nuxt's `middleware` option, and after a trigger
   of the `watch` option, the composable uses the cached request. No request is
   made, but the status is `pending` for a moment.
-- The response from the payload that a component with delayed hydration uses is
-  not stored, so the next visit performs the query again.
+- Like in Nuxt, a component with delayed hydration (such as
+  `hydrate-on-visible`) performs the query when it hydrates. The payload is only
+  used while the page hydrates.
 - On prerendered pages that share data with another page (Nuxt's
   `experimental.sharedPrerenderData`), the responses from the payload are not
-  stored, and components with delayed hydration perform the query again.
+  stored.
 
 ### useGraphqlQuery
 

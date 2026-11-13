@@ -79,29 +79,6 @@ function isAsyncFunction(fn: unknown): boolean {
   return Object.prototype.toString.call(fn) === '[object AsyncFunction]'
 }
 
-/**
- * The async data keys that were looked up in the client cache, per app.
- */
-const lookedUpKeys = new WeakMap<NuxtApp, Set<string>>()
-
-/**
- * Whether this is the first lookup of the async data key in the app.
- */
-function isFirstLookup(app: NuxtApp, key: string): boolean {
-  let keys = lookedUpKeys.get(app)
-  if (!keys) {
-    keys = new Set()
-    lookedUpKeys.set(app, keys)
-  }
-
-  if (keys.has(key)) {
-    return false
-  }
-
-  keys.add(key)
-  return true
-}
-
 type AsyncGraphqlQueryOptions<
   FetchOptions,
   ResT,
@@ -399,26 +376,19 @@ export function useAsyncGraphqlQuery<
       try {
         const requestKey = getRequestKey(nuxtApp)
 
-        // Nuxt doesn't purge the payload if getCachedData is set, so the
-        // payload is only used for the first lookup of a key.
-        if (isFirstLookup(nuxtApp, key)) {
+        // Like Nuxt's default, the payload is only used during hydration.
+        // After that, it might be from another call with another transform:
+        // a component that never hydrated, or a request in the browser. Nuxt
+        // doesn't purge it, because getCachedData is set.
+        if (nuxtApp.isHydrating) {
           const payload = nuxtApp.payload.data[key]
           if (payload !== undefined) {
+            // Cached for the request that the server made.
             const serverRequestKey = requestKeys?.value[key]
-            if (nuxtApp.isHydrating) {
-              // Cached for the request that the server made.
-              if (serverRequestKey) {
-                cache.set(getPayloadKey(serverRequestKey), payload, key)
-              }
-              return payload
+            if (serverRequestKey) {
+              cache.set(getPayloadKey(serverRequestKey), payload, key)
             }
-
-            // After hydration, for example for a component with delayed
-            // hydration. The payload might also be from a component that was
-            // never hydrated and has another transform, so it isn't cached.
-            if (serverRequestKey === requestKey) {
-              return payload
-            }
+            return payload
           }
         }
 

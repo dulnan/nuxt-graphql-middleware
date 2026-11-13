@@ -122,10 +122,8 @@ describe('The client cache', () => {
     })
   })
 
-  it('uses the payload in a component with delayed hydration', () => {
-    cy.intercept('GET', /\/api\/graphql_middleware\/query\/getCurrentTime/).as(
-      'query',
-    )
+  it('performs the query in a component with delayed hydration', () => {
+    cy.intercept('GET', QUERY).as('query')
     cy.visit('/caching/delayed-hydration').waitForHydration()
 
     cy.get('#delayed-time')
@@ -133,13 +131,14 @@ describe('The client cache', () => {
       .then((time) => {
         expect(time).to.match(TIME)
 
-        // The component is hydrated after 500ms.
+        // The component is hydrated after 500ms, when the page has already
+        // hydrated. Like in Nuxt, it then performs the query.
         cy.get('#delayed-hydrated').should('exist')
-        // Give a request made during hydration time to finish.
-        cy.wait(500)
-
-        cy.get('#delayed-time').should('have.text', time)
-        cy.get('@query.all').should('have.length', 0)
+        cy.wait('@query')
+        cy.get('#delayed-time').should(($el) => {
+          expect($el.text()).to.match(TIME).and.not.equal(time)
+        })
+        cy.get('@query.all').should('have.length', 1)
       })
   })
 
