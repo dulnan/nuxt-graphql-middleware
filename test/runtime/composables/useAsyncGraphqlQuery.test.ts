@@ -595,6 +595,28 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     },
   )
 
+  test('keeps the responses of other variables on refresh', async () => {
+    const variables = ref({ id: '1' })
+    const c = call({}, variables)
+
+    // Variables 1, then 2, then 1 again, which is a cache hit.
+    expect(lookup(c)).toBeUndefined()
+    await c.handler(state.app, {})
+    variables.value = { id: '2' }
+    expect(lookup(c)).toBeUndefined()
+    await c.handler(state.app, {})
+    variables.value = { id: '1' }
+    expect(lookup(c)).toMatchObject({ data: { time: 1 } })
+
+    expect(lookup(c, 'refresh:manual')).toBeUndefined()
+    await c.handler(state.app, {})
+
+    // The response for 2 is still cached.
+    variables.value = { id: '2' }
+    expect(lookup(c)).toMatchObject({ data: { time: 2 } })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
   test('returns nothing for the watch option', async () => {
     await visit()
     expect(lookup(call(), 'watch')).toBeUndefined()

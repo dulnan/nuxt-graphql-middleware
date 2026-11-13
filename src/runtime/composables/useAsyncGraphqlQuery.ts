@@ -257,9 +257,6 @@ export function useAsyncGraphqlQuery<
     return `useAsyncGraphqlQuery:${name}:${hash(vars)}`
   })
 
-  // Store the previous key so that we can invlidate it.
-  let prevKey = ''
-
   const config = useAppConfig()
   const app = useNuxtApp()
 
@@ -388,8 +385,9 @@ export function useAsyncGraphqlQuery<
       const isCurrentKey = key === asyncDataKey.value
 
       if (ctx.cause === 'refresh:manual' || ctx.cause === 'refresh:hook') {
+        // Nuxt refreshes the entry of the current key, so the responses of
+        // other variables stay cached.
         cache.purgeAsyncDataKey(key)
-        cache.purgeAsyncDataKey(prevKey)
         if (isCurrentKey) {
           try {
             // Also remove a response that is not linked to the key, for
@@ -489,8 +487,6 @@ export function useAsyncGraphqlQuery<
   const result = useAsyncData<any, any, DataT, PickKeys, DefaultT>(
     asyncDataKey,
     (_app, ctx) => {
-      prevKey = asyncDataKey.value
-
       return performRequest<any>(
         'query',
         name,
