@@ -59,7 +59,8 @@ it.
 The data of a cached response depends on the `transform` and `pick` options:
 
 - For a response that was fetched in the browser, the `transform` of the call
-  runs on the cached response, during setup.
+  runs on the cached response right away, during the `useAsyncGraphqlQuery()`
+  call. Define what the `transform` uses before the call.
 - A response from the payload is only returned to the call that made it: the
   same `useAsyncGraphqlQuery()` in your code, with the same `transform` and
   `pick`.
