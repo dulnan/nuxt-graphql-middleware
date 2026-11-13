@@ -275,17 +275,17 @@ export function useAsyncGraphqlQuery<
   }
 
   /**
-   * The key of the request in the client cache.
+   * The key of the request in the client cache. It's always the key that the
+   * browser builds, also when the server records it.
    */
   function getRequestKey(
     nuxtApp: NuxtApp,
     requestArgs = getRequestArgs(),
-    client?: boolean,
   ): string {
     return getRequestCacheKey(
       'query',
       name,
-      getRequestParams(nuxtApp, 'query', name, ...requestArgs, client).params,
+      getRequestParams(nuxtApp, 'query', name, ...requestArgs, true).params,
     )
   }
 
@@ -479,7 +479,7 @@ export function useAsyncGraphqlQuery<
       // prerendered page that gets the data from another page. The first call
       // with the key creates Nuxt's entry, so its handler makes the data.
       requestKeys.value[asyncDataKey.value] ??= {
-        request: getRequestKey(app, serverRequestArgs, true),
+        request: getRequestKey(app, serverRequestArgs),
         site: callSite,
       }
     } catch {
