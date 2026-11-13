@@ -3,14 +3,13 @@ import { ref } from 'vue'
 import { hash } from 'ohash'
 import { useAsyncGraphqlQuery } from './../../../src/runtime/composables/useAsyncGraphqlQuery'
 import { useGraphqlQuery } from './../../../src/runtime/composables/useGraphqlQuery'
+import { REQUEST_KEYS_STATE } from './../../../src/runtime/settings'
 
 type Call = {
   key: { value: string }
   handler: (app: unknown, ctx: unknown) => Promise<any>
   options: Record<string, any>
 }
-
-const REQUEST_KEYS = 'nuxt-graphql-middleware:request-keys'
 
 const state = vi.hoisted(() => {
   return {
@@ -219,7 +218,7 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
 
   test('records the request of a response on the server, as the browser builds it', async () => {
     const { key } = await renderOnServer({}, null, '$site')
-    const server = state.states[REQUEST_KEYS]?.value?.[key]
+    const server = state.states[REQUEST_KEYS_STATE]?.value?.[key]
     expect(server?.site).toBe('$site')
 
     createApp(false)
@@ -234,7 +233,9 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     // handler isn't called.
     createServerApp()
     const c = call({}, null, '$site')
-    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toMatchObject({
+    expect(
+      state.states[REQUEST_KEYS_STATE]?.value?.[c.key.value],
+    ).toMatchObject({
       request: expect.any(String),
       site: '$site',
     })
@@ -245,7 +246,9 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     createServerApp()
     const c = call({}, null, '$a')
     call({}, null, '$b')
-    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]?.site).toBe('$a')
+    expect(state.states[REQUEST_KEYS_STATE]?.value?.[c.key.value]?.site).toBe(
+      '$a',
+    )
   })
 
   test.each([{ server: false }, { immediate: false }])(
@@ -253,7 +256,9 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     (options) => {
       createServerApp()
       const c = call(options)
-      expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toBeUndefined()
+      expect(
+        state.states[REQUEST_KEYS_STATE]?.value?.[c.key.value],
+      ).toBeUndefined()
     },
   )
 
@@ -261,7 +266,9 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     state.appConfig.graphqlMiddleware.clientCacheEnabled = false
     createServerApp()
     const c = call()
-    expect(state.states[REQUEST_KEYS]?.value?.[c.key.value]).toBeUndefined()
+    expect(
+      state.states[REQUEST_KEYS_STATE]?.value?.[c.key.value],
+    ).toBeUndefined()
   })
 
   test('builds the client context once per call on the server', async () => {
@@ -275,7 +282,7 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     // clearNuxtState() deletes the state that useState() returned.
     createServerApp()
     const c = call()
-    state.states[REQUEST_KEYS]!.value = undefined
+    state.states[REQUEST_KEYS_STATE]!.value = undefined
     await expect(c.handler(state.app, {})).resolves.toMatchObject({
       data: { time: 1 },
     })
@@ -680,6 +687,6 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
 
     // No request is recorded on the server either.
     const { key } = await renderOnServer({ getCachedData })
-    expect(state.states[REQUEST_KEYS]?.value?.[key]).toBeUndefined()
+    expect(state.states[REQUEST_KEYS_STATE]?.value?.[key]).toBeUndefined()
   })
 })

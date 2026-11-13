@@ -32,13 +32,7 @@ import {
   importMetaClient,
   importMetaServer,
 } from '#nuxt-graphql-middleware/config'
-
-/**
- * The state with the request of each response in the payload, and the call
- * that made it, by async data key. The server records it, so that the browser
- * caches a response from the payload for that request and call.
- */
-const REQUEST_KEYS_STATE = 'nuxt-graphql-middleware:request-keys'
+import { REQUEST_KEYS_STATE } from '../settings'
 
 /**
  * The request of a response in the payload, and the call that made it.
