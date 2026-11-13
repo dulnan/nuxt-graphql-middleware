@@ -374,8 +374,6 @@ export function useAsyncGraphqlQuery<
       }
 
       try {
-        const requestKey = getRequestKey(nuxtApp)
-
         // Like Nuxt's default, the payload is only used during hydration.
         // After that, it might be from another call with another transform:
         // a component that never hydrated, or a request in the browser. Nuxt
@@ -399,6 +397,9 @@ export function useAsyncGraphqlQuery<
           }
         }
 
+        // Built after the payload, so that hydration doesn't depend on
+        // buildClientContext().
+        const requestKey = getRequestKey(nuxtApp)
         const fromPayload = cache.get<any>(getPayloadKey(requestKey))
         if (fromPayload !== undefined) {
           return fromPayload

@@ -282,6 +282,15 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     expect(lookup(call({ server: false }))).toBeUndefined()
   })
 
+  test('returns the payload during hydration if the client context can not be built', async () => {
+    // For example if buildClientContext() reads a store that a plugin fills
+    // once the app is mounted.
+    const { data } = await renderOnServer()
+    state.contextError = new Error('No context')
+
+    expect(lookup(call())).toBe(data)
+  })
+
   test('returns a cached response during the first render of a page that was not server-rendered', async () => {
     const app = createApp(true)
     app.payload.serverRendered = false
