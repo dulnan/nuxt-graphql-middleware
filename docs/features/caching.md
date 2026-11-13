@@ -65,6 +65,10 @@ The data of a cached response depends on the `transform` and `pick` options:
   same `useAsyncGraphqlQuery()` in your code, with the same `transform` and
   `pick`.
 
+Treat the `data` of a cached response as read-only. Without a `transform`, or
+with one that returns part of the response, it's the cached object, which all
+calls with the same request share.
+
 Values that a `transform` reads from elsewhere, such as props, are not part of
 the cache key, just as they are not part of the key of Nuxt's `useAsyncData`. On
 one page, Nuxt already shares the data of two calls with the same query and
