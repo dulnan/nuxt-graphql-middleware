@@ -108,8 +108,7 @@ export class GraphqlMiddlewareCache {
 
     // Remove the links of the entry, so that the async data keys only link to
     // entries that exist.
-    for (const asyncDataKey of Object.keys(this.asyncDataKeyMap)) {
-      const keys = this.asyncDataKeyMap[asyncDataKey]!
+    for (const [asyncDataKey, keys] of Object.entries(this.asyncDataKeyMap)) {
       const linkIndex = keys.indexOf(key)
       if (linkIndex > -1) {
         keys.splice(linkIndex, 1)
