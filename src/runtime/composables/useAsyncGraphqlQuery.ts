@@ -312,8 +312,7 @@ export function useAsyncGraphqlQuery<
 
     // Nuxt's middleware option can change the response of the request, which
     // a cached response would skip.
-    const hasMiddleware = !!(options as { middleware?: unknown[] }).middleware
-      ?.length
+    const hasMiddleware = !!options.middleware?.length
 
     /**
      * Make the data of a cached response, like useAsyncData does after a
