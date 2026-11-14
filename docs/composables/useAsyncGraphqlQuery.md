@@ -87,7 +87,7 @@ const { data: users } = await useAsyncGraphqlQuery('users', null, {
 ### graphqlCaching
 
 Enable client-side caching for this query. Requires `clientCache.enabled: true`
-in module options, without it the option has no effect. See
+in the module options. Without it, the option has no effect. See
 [Caching](/features/caching) for more details.
 
 ```typescript
