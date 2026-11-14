@@ -266,7 +266,6 @@ export function useAsyncGraphqlQuery<
     requestArgs = getRequestArgs(),
   ): string {
     return getRequestCacheKey(
-      'query',
       name,
       getRequestParams(nuxtApp, 'query', name, ...requestArgs, true).params,
     )

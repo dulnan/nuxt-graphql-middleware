@@ -191,7 +191,6 @@ describe('getRequestCacheKey', () => {
 
   function getKey(client?: boolean) {
     return getRequestCacheKey(
-      'query',
       'foobar',
       getRequestParams(state.app as any, 'query', 'foobar', ...args, client)
         .params,

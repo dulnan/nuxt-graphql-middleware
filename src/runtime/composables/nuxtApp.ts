@@ -93,15 +93,14 @@ export function getRequestParams(
 }
 
 /**
- * The key of a request in the client cache. It includes the variables, the
+ * The key of a query in the client cache. It includes the variables, the
  * client context and the operation hash.
  */
 export function getRequestCacheKey(
-  operation: 'query' | 'mutation',
   operationName: string,
   params: Record<string, any>,
 ): string {
-  return `${operation}:${operationName}:${hash(params)}`
+  return `query:${operationName}:${hash(params)}`
 }
 
 export function performRequest<T>(
@@ -179,7 +178,7 @@ export function performRequest<T>(
     isQuery &&
     cacheOptions?.client &&
     config.graphqlMiddleware.clientCacheEnabled
-      ? getRequestCacheKey(operation, operationName, params)
+      ? getRequestCacheKey(operationName, params)
       : undefined
 
   // Try to return a cached query if possible.
