@@ -70,17 +70,6 @@ function getTransformSignature(
   return hash([source, pick || []])
 }
 
-/**
- * Pick the keys of the data, like useAsyncData does.
- */
-function pickKeys(data: Record<string, unknown>, keys: string[]) {
-  const picked: Record<string, unknown> = {}
-  for (const key of keys) {
-    picked[key] = data[key]
-  }
-  return picked
-}
-
 function isAsyncFunction(fn: unknown): boolean {
   return Object.prototype.toString.call(fn) === '[object AsyncFunction]'
 }
@@ -355,7 +344,7 @@ export function useAsyncGraphqlQuery<
       }
 
       if (options.pick) {
-        data = pickKeys(data, options.pick as string[])
+        data = Object.fromEntries(options.pick.map((key) => [key, data[key]]))
       }
 
       if (import.meta.dev && response.errors?.length) {

@@ -490,10 +490,10 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
 
   test('picks the keys of a cached response', async () => {
     await visit({ pick: ['data'] })
-    expect(await visit({ pick: ['data'] })).toMatchObject({
-      cached: true,
-      data: { data: { time: 1 } },
-    })
+    const hit = await visit({ pick: ['data'] })
+    expect(hit.cached).toBe(true)
+    // The response also has errors, which aren't picked.
+    expect(hit.data).toEqual({ data: { time: 1 } })
   })
 
   test.each([
