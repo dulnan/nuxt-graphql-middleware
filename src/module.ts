@@ -41,11 +41,12 @@ export default defineNuxtModule<ModuleOptions>({
     await schemaProvider.init()
 
     if (helper.options.enableFileUploads) {
-      const scalarName = helper.options.fileUploadScalar
-      if (!isScalarType(schemaProvider.getSchema().getType(scalarName))) {
-        logger.warn(
-          `The GraphQL schema has no "${scalarName}" scalar, so no mutations can be performed via the upload endpoint. Set the "fileUploadScalar" option to the name of the scalar used for file uploads.`,
-        )
+      for (const scalarName of [helper.options.fileUploadScalar].flat()) {
+        if (!isScalarType(schemaProvider.getSchema().getType(scalarName))) {
+          logger.warn(
+            `The GraphQL schema has no "${scalarName}" scalar. Set the "fileUploadScalar" option to the names of the scalars used for file uploads: only mutations with a variable of one of them can be performed via the upload endpoint.`,
+          )
+        }
       }
     }
 

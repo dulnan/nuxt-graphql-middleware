@@ -75,37 +75,38 @@ export function validateOptions(options: Partial<ModuleOptions>) {
 }
 
 /**
- * Determine whether the type is the scalar or an input type that contains it,
- * directly or nested.
+ * Determine whether the type is one of the scalars or an input type that
+ * contains one, directly or nested.
  *
  * The visited input types are skipped, as input types can reference each other.
  */
 function containsScalar(
   type: GraphQLNamedType,
-  scalarName: string,
+  scalarNames: ReadonlySet<string>,
   visited: Set<string>,
 ): boolean {
   if (isScalarType(type)) {
-    return type.name === scalarName
+    return scalarNames.has(type.name)
   } else if (!isInputObjectType(type) || visited.has(type.name)) {
     return false
   }
 
   visited.add(type.name)
   return Object.values(type.getFields()).some((field) =>
-    containsScalar(getNamedType(field.type), scalarName, visited),
+    containsScalar(getNamedType(field.type), scalarNames, visited),
   )
 }
 
 /**
- * Get the names of the mutations that have a variable of the given scalar,
- * directly or in an input type.
+ * Get the names of the mutations that have a variable of one of the given
+ * scalars, directly or in an input type.
  */
 export function getUploadMutations(
   schema: GraphQLSchema,
   operations: readonly { graphqlName: string; node: OperationDefinitionNode }[],
-  scalarName: string,
+  scalarName: string | string[],
 ): string[] {
+  const scalarNames = new Set([scalarName].flat())
   return operations
     .filter(
       ({ node }) =>
@@ -116,7 +117,7 @@ export function getUploadMutations(
           // for another variable may not have been checked completely.
           return (
             !!type &&
-            containsScalar(getNamedType(type), scalarName, new Set<string>())
+            containsScalar(getNamedType(type), scalarNames, new Set<string>())
           )
         }),
     )

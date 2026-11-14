@@ -81,6 +81,22 @@ describe('getUploadMutations', () => {
     ])
   })
 
+  test('finds mutations with any of several scalars', () => {
+    expect(getUploadMutations(schema, OPERATIONS, ['Upload', 'File'])).toEqual([
+      'otherFile',
+      'submitForm',
+      'treeWithFile',
+      'upload',
+      'uploadMany',
+    ])
+  })
+
+  test('ignores scalars that do not exist', () => {
+    expect(getUploadMutations(schema, OPERATIONS, ['Missing', 'File'])).toEqual(
+      ['otherFile'],
+    )
+  })
+
   test('returns no mutations if the scalar does not exist', () => {
     expect(getUploadMutations(schema, OPERATIONS, 'Missing')).toEqual([])
   })

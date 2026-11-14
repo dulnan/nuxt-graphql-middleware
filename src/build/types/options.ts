@@ -75,14 +75,20 @@ export interface ModuleOptions {
   enableFileUploads?: boolean
 
   /**
-   * The name of the GraphQL scalar used for file uploads.
+   * The name of the GraphQL scalar used for file uploads, or a list of names if
+   * the schema has several.
    *
-   * Only mutations with a variable of this type, directly or in an input type,
-   * can be performed via the upload server endpoint.
+   * Only mutations with a variable of one of these types, directly or in an
+   * input type, can be performed via the upload server endpoint.
    *
    * @default 'Upload'
+   *
+   * @example
+   * ```ts
+   * const fileUploadScalar = ['Upload', 'ImageUpload']
+   * ```
    */
-  fileUploadScalar?: string
+  fileUploadScalar?: string | string[]
 
   /**
    * The maximum size of request bodies in bytes.
