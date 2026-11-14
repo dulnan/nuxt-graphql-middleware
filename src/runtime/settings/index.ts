@@ -22,6 +22,14 @@ export const UPLOAD_HEADER = 'x-nuxt-graphql-middleware-upload'
 export const SSR_ABORT_SIGNAL_KEY = '__nuxtGraphqlMiddlewareSsrAbortSignal'
 
 /**
+ * The key of the state with the request of each response in the payload of
+ * useAsyncGraphqlQuery, and the call that made it, by async data key. The
+ * server records it, so that the browser caches a response from the payload
+ * for that request and call.
+ */
+export const REQUEST_KEYS_STATE = 'nuxt-graphql-middleware:request-keys'
+
+/**
  * The longest timeout in milliseconds. Node fires longer timers after 1 ms.
  */
 export const MAX_TIMEOUT = 2_147_483_647

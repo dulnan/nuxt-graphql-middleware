@@ -500,6 +500,19 @@ ${content.trim()}`
     })
   }
 
+  /**
+   * Let Nuxt's compiler add a key for the location of each call of the
+   * composable, as an additional argument after the last one, when a call
+   * passes less than argumentLength arguments.
+   */
+  public addKeyedComposable(name: ComposableName, argumentLength: number) {
+    this.nuxt.options.optimization.keyedComposables.push({
+      name,
+      source: this.resolvers.module.resolve('./runtime/composables/' + name),
+      argumentLength,
+    })
+  }
+
   public addServerUtil(name: ServerUtilName) {
     const serverUtil = SERVER_UTILS[name]
     addServerImports([

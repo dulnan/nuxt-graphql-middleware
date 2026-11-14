@@ -44,8 +44,8 @@ const variables = computed<UserByIdQueryVariables>(() => {
 const { data } = await useAsyncGraphqlQuery('userById', variables)
 ```
 
-The composable automatically adds reactive variables to the `watch` option of
-`useAsyncData`, triggering a refetch whenever the variables change.
+The key of the `useAsyncData` call is built from the variables, so the query is
+performed again whenever they change.
 
 ## Options
 
@@ -87,7 +87,8 @@ const { data: users } = await useAsyncGraphqlQuery('users', null, {
 ### graphqlCaching
 
 Enable client-side caching for this query. Requires `clientCache.enabled: true`
-in module options. See [Caching](/features/caching) for more details.
+in the module options. Without it, the option has no effect. See
+[Caching](/features/caching) for more details.
 
 ```typescript
 const { data } = await useAsyncGraphqlQuery('users', null, {
@@ -100,9 +101,13 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
 When enabled:
 
 - Results are cached in memory using an LRU cache
-- Subsequent calls with the same variables return cached data
+- Subsequent calls with the same variables and client context return the cached
+  data right away, without a `pending` status
 - Cache survives client-side navigation
-- SSR payload data is preserved during hydration
+- Responses from the SSR payload are stored in the cache during hydration, for
+  the request that the server made
+- With Nuxt's default `experimental.granularCachedData`, `refresh()` skips the
+  cache and performs the query again
 
 ### fetchOptions
 
@@ -215,9 +220,19 @@ The composable automatically generates a unique key for `useAsyncData` based on:
 
 - The operation name
 - A hash of the variables
+- A hash of the `clientContext`, `fetchOptions.query` and `fetchOptions.params`
+  options, if the call passes one of them
 
-This ensures that different variable combinations are cached separately and
-multiple instances don't conflict.
+Calls with the same key share their data, as with `useAsyncData`. Like Nuxt's
+`useFetch`, other fetch options such as headers aren't part of the key. For data
+that depends on them, use `useAsyncData` with
+[useGraphqlQuery](/composables/useGraphqlQuery) and a key of your own.
+
+The key doesn't call `buildClientContext()`, so the global client context isn't
+part of it. When prerendering, Nuxt shares the data of a key between pages
+([`experimental.sharedPrerenderData`](https://nuxt.com/docs/4.x/guide/going-further/experimental-features#sharedprerenderdata),
+on by default). If `buildClientContext()` returns another context on some pages,
+for example another language, disable the option.
 
 ### Aborted Requests
 
@@ -225,8 +240,9 @@ The request is aborted when `useAsyncData` cancels it, for example when it is
 refreshed while a previous request is still running. The middleware then also
 aborts its request to the GraphQL server.
 
-Requests that use the client cache (`graphqlCaching.client`) are not aborted, as
-several callers can share the same cached request.
+Requests that use the client cache (`graphqlCaching.client` with
+`clientCache.enabled`) are not aborted, as several callers can share the same
+cached request.
 
 During SSR, the queries are aborted when the client closes the connection of the
 page, for example when the user leaves before the page has loaded. Queries that

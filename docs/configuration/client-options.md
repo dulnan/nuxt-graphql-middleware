@@ -97,6 +97,14 @@ The composable will make a fetch request to this URL.
 Both the `language` and `country` properties we returned in the object in
 `buildClientContext()` are appended as prefixed query parameters.
 
+`buildClientContext()` should return the same context for the same state of the
+app, on the server and in the browser. With the
+[client cache](/features/caching), the context is part of the cache key, and
+`useAsyncGraphqlQuery` also calls the method to look up cached responses. The
+context isn't part of the async data key of `useAsyncGraphqlQuery`. For
+prerendered pages, see
+[Unique Keys](/composables/useAsyncGraphqlQuery#unique-keys).
+
 ## Using Client Context
 
 On the server you can then access this client context from within all

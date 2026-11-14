@@ -119,6 +119,9 @@ export default defineNuxtModule<ModuleOptions>({
       helper.addComposable('useGraphqlMutation')
       helper.addComposable('useGraphqlState')
       helper.addComposable('useAsyncGraphqlQuery')
+      // The key of the call site identifies the call that made a response in
+      // the payload: (name, variables, options, key).
+      helper.addKeyedComposable('useAsyncGraphqlQuery', 4)
 
       if (helper.options.enableFileUploads) {
         helper.addComposable('useGraphqlUploadMutation')
