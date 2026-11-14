@@ -220,9 +220,19 @@ The composable automatically generates a unique key for `useAsyncData` based on:
 
 - The operation name
 - A hash of the variables
+- A hash of the `clientContext`, `fetchOptions.query` and `fetchOptions.params`
+  options, if the call passes one of them
 
-This ensures that different variable combinations are cached separately and
-multiple instances don't conflict.
+Calls with the same key share their data, as with `useAsyncData`. Like Nuxt's
+`useFetch`, other fetch options such as headers aren't part of the key. For data
+that depends on them, use `useAsyncData` with
+[useGraphqlQuery](/composables/useGraphqlQuery) and a key of your own.
+
+The key doesn't call `buildClientContext()`, so the global client context isn't
+part of it. When prerendering, Nuxt shares the data of a key between pages
+([`experimental.sharedPrerenderData`](https://nuxt.com/docs/4.x/guide/going-further/experimental-features#sharedprerenderdata),
+on by default). If `buildClientContext()` returns another context on some pages,
+for example another language, disable the option.
 
 ### Aborted Requests
 

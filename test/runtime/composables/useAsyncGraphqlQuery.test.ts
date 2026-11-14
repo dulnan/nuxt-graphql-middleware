@@ -186,26 +186,26 @@ async function renderOnServer(
   return { app, data, key: c.key.value }
 }
 
-describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
-  beforeEach(() => {
-    state.clientCacheEnabledAtBuild = true
-    state.server = false
-    state.appConfig = {
-      graphqlMiddleware: {
-        clientCacheEnabled: true,
-        clientCacheMaxSize: 100,
-      },
-    }
-    state.context = { language: 'de' }
-    state.contextError = null
-    state.contextCalls = 0
-    state.states = {}
-    state.calls = []
-    time = 0
-    fetchMock.mockClear()
-    createApp(false)
-  })
+beforeEach(() => {
+  state.clientCacheEnabledAtBuild = true
+  state.server = false
+  state.appConfig = {
+    graphqlMiddleware: {
+      clientCacheEnabled: true,
+      clientCacheMaxSize: 100,
+    },
+  }
+  state.context = { language: 'de' }
+  state.contextError = null
+  state.contextCalls = 0
+  state.states = {}
+  state.calls = []
+  time = 0
+  fetchMock.mockClear()
+  createApp(false)
+})
 
+describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
   test('does not look up cached data if the client cache is disabled in the module options', () => {
     state.clientCacheEnabledAtBuild = false
     expect(call().options.getCachedData).toBeUndefined()
@@ -688,5 +688,47 @@ describe('useAsyncGraphqlQuery with graphqlCaching.client', () => {
     // No request is recorded on the server either.
     const { key } = await renderOnServer({ getCachedData })
     expect(state.states[REQUEST_KEYS_STATE]?.value?.[key]).toBeUndefined()
+  })
+})
+
+describe('the async data key of useAsyncGraphqlQuery', () => {
+  /**
+   * Call the composable without the client cache and return its key.
+   */
+  function keyOf(options?: Record<string, any>, variables: any = null) {
+    ;(useAsyncGraphqlQuery as any)('foobar', variables, options)
+    return state.calls[state.calls.length - 1]!.key.value
+  }
+
+  test('is built from the name and the variables', () => {
+    const key = `useAsyncGraphqlQuery:foobar:${hash({ id: '1' })}`
+    expect(keyOf(undefined, { id: '1' })).toBe(key)
+
+    // Options that don't change the query params don't change the key.
+    expect(
+      keyOf(
+        { fetchOptions: { headers: { foo: 'bar' } }, transform: toTime },
+        { id: '1' },
+      ),
+    ).toBe(key)
+  })
+
+  test('contains the client context of the call', () => {
+    const fr = keyOf({ clientContext: { language: 'fr' } })
+    expect(fr).not.toBe(keyOf())
+    expect(keyOf({ clientContext: { language: 'it' } })).not.toBe(fr)
+    expect(keyOf({ clientContext: { language: 'fr' } })).toBe(fr)
+
+    // The global client context isn't built for the key.
+    expect(state.contextCalls).toBe(0)
+  })
+
+  test('contains the query params of the fetch options of the call', () => {
+    for (const option of ['params', 'query']) {
+      const one = keyOf({ fetchOptions: { [option]: { foo: '1' } } })
+      expect(one).not.toBe(keyOf())
+      expect(keyOf({ fetchOptions: { [option]: { foo: '2' } } })).not.toBe(one)
+      expect(keyOf({ fetchOptions: { [option]: { foo: '1' } } })).toBe(one)
+    }
   })
 })

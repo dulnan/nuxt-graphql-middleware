@@ -100,7 +100,10 @@ Both the `language` and `country` properties we returned in the object in
 `buildClientContext()` should return the same context for the same state of the
 app, on the server and in the browser. With the
 [client cache](/features/caching), the context is part of the cache key, and
-`useAsyncGraphqlQuery` also calls the method to look up cached responses.
+`useAsyncGraphqlQuery` also calls the method to look up cached responses. The
+context isn't part of the async data key of `useAsyncGraphqlQuery`. For
+prerendered pages, see
+[Unique Keys](/composables/useAsyncGraphqlQuery#unique-keys).
 
 ## Using Client Context
 

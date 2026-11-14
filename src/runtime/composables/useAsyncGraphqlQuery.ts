@@ -235,9 +235,24 @@ export function useAsyncGraphqlQuery<
       : undefined
   const variables = args[0]
   const asyncDataOptions = args[1] || {}
+
+  /**
+   * The options of the call that change its request, like the query of Nuxt's
+   * useFetch. Calls with the same key share their data. Calls without these
+   * options keep the key of the variables.
+   */
+  function getOptionsKey(): string {
+    const { clientContext, fetchOptions } = asyncDataOptions
+    const params = fetchOptions?.params
+    const query = fetchOptions?.query
+    return clientContext || params || query
+      ? `:${hash([clientContext, params, query])}`
+      : ''
+  }
+
   const asyncDataKey = computed(() => {
     const vars = isRef(variables) ? variables.value : variables
-    return `useAsyncGraphqlQuery:${name}:${hash(vars)}`
+    return `useAsyncGraphqlQuery:${name}:${hash(vars)}${getOptionsKey()}`
   })
 
   const config = useAppConfig()
