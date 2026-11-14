@@ -2,28 +2,32 @@
 const TIME = /^\d{13}$/
 
 /**
- * Assert the time of the caching page.
+ * Assert the time in the element of the selector.
  *
  * During the page transition, the leaving page is still in the DOM, so this
  * requires exactly one element.
  */
-function expectTime(check: (time: string) => void = () => {}) {
-  return cy.get('#current-time').should(($el) => {
+function expectTime(selector: string, check?: (time: string) => void) {
+  return cy.get(selector).should(($el) => {
     expect($el).to.have.length(1)
     const time = $el.text()
     expect(time).to.match(TIME)
-    check(time)
+    check?.(time)
   })
 }
 
-function readTime() {
-  return expectTime().invoke('text')
+function readTime(selector: string) {
+  return expectTime(selector).invoke('text')
+}
+
+function goHome(selector: string) {
+  cy.get('#home-link').click()
+  // Wait until the page with the element of the selector has left.
+  cy.get(selector).should('not.exist')
 }
 
 function goHomeAndBack() {
-  cy.get('#home-link').click()
-  // Wait until the caching page has left.
-  cy.get('#current-time').should('not.exist')
+  goHome('#current-time')
   cy.get('#link-caching').click()
 }
 
@@ -34,24 +38,6 @@ function purgeCache() {
 }
 
 const QUERY = /\/api\/graphql_middleware\/query\/getCurrentTime/
-
-/**
- * Assert the time of the client context page.
- */
-function expectContextTime(check: (time: string) => void = () => {}) {
-  return cy.get('#context-time').should(($el) => {
-    expect($el).to.have.length(1)
-    const time = $el.text()
-    expect(time).to.match(TIME)
-    check(time)
-  })
-}
-
-function goHomeFromContextPage() {
-  cy.get('#home-link').click()
-  // Wait until the page has left.
-  cy.get('#context-time').should('not.exist')
-}
 
 /**
  * Go to the client context page, which sets the language of the client
@@ -70,10 +56,10 @@ describe('The client cache', () => {
     // Visit the page so that it contains the payload.
     cy.visit('/caching').waitForHydration()
 
-    readTime().then((time) => {
+    readTime('#current-time').then((time) => {
       goHomeAndBack()
       // The time should be the same, because the response from the payload was used.
-      expectTime((newTime) => expect(newTime).to.equal(time))
+      expectTime('#current-time', (newTime) => expect(newTime).to.equal(time))
     })
   })
 
@@ -84,10 +70,10 @@ describe('The client cache', () => {
     // Go to the caching page. This will make the query and then store it in the client cache.
     cy.get('#link-caching').click()
 
-    readTime().then((time) => {
+    readTime('#current-time').then((time) => {
       goHomeAndBack()
       // The time should be the same, because the response was stored in the cache.
-      expectTime((newTime) => expect(newTime).to.equal(time))
+      expectTime('#current-time', (newTime) => expect(newTime).to.equal(time))
     })
   })
 
@@ -95,19 +81,23 @@ describe('The client cache', () => {
     // The playground disables the client cache with this query parameter.
     cy.visit('/caching?clientCache=off').waitForHydration()
 
-    readTime().then((time) => {
+    readTime('#current-time').then((time) => {
       goHomeAndBack()
-      expectTime((newTime) => expect(newTime).not.to.equal(time))
+      expectTime('#current-time', (newTime) =>
+        expect(newTime).not.to.equal(time),
+      )
     })
   })
 
   it('requests a response from the payload again after the cache is purged', () => {
     cy.visit('/caching').waitForHydration()
 
-    readTime().then((time) => {
+    readTime('#current-time').then((time) => {
       purgeCache()
       goHomeAndBack()
-      expectTime((newTime) => expect(newTime).not.to.equal(time))
+      expectTime('#current-time', (newTime) =>
+        expect(newTime).not.to.equal(time),
+      )
     })
   })
 
@@ -115,10 +105,12 @@ describe('The client cache', () => {
     cy.visit('/').waitForHydration()
     cy.get('#link-caching').click()
 
-    readTime().then((time) => {
+    readTime('#current-time').then((time) => {
       purgeCache()
       goHomeAndBack()
-      expectTime((newTime) => expect(newTime).not.to.equal(time))
+      expectTime('#current-time', (newTime) =>
+        expect(newTime).not.to.equal(time),
+      )
     })
   })
 
@@ -126,47 +118,41 @@ describe('The client cache', () => {
     cy.intercept('GET', QUERY).as('query')
     cy.visit('/caching/delayed-hydration').waitForHydration()
 
-    cy.get('#delayed-time')
-      .invoke('text')
-      .then((time) => {
-        expect(time).to.match(TIME)
-
-        // The component is hydrated after 500ms, when the page has already
-        // hydrated. Like in Nuxt, it then performs the query.
-        cy.get('#delayed-hydrated').should('exist')
-        cy.wait('@query')
-        cy.get('#delayed-time').should(($el) => {
-          expect($el.text()).to.match(TIME).and.not.equal(time)
-        })
-        cy.get('@query.all').should('have.length', 1)
-      })
+    readTime('#delayed-time').then((time) => {
+      // The component is hydrated after 500ms, when the page has already
+      // hydrated. Like in Nuxt, it then performs the query.
+      cy.get('#delayed-hydrated').should('exist')
+      cy.wait('@query')
+      expectTime('#delayed-time', (newTime) =>
+        expect(newTime).not.to.equal(time),
+      )
+      cy.get('@query.all').should('have.length', 1)
+    })
   })
 
   it('performs the query again after the client context changed', () => {
     cy.intercept('GET', QUERY).as('query')
     cy.visit('/caching/client-context?lang=de').waitForHydration()
 
-    expectContextTime()
-      .invoke('text')
-      .then((de) => {
-        goHomeFromContextPage()
-        goToContextPage('fr')
-        expectContextTime((time) => expect(time).not.to.equal(de))
-          .invoke('text')
-          .then((fr) => {
-            cy.get('@query.all').should('have.length', 1)
+    readTime('#context-time').then((de) => {
+      goHome('#context-time')
+      goToContextPage('fr')
+      expectTime('#context-time', (time) => expect(time).not.to.equal(de))
+        .invoke('text')
+        .then((fr) => {
+          cy.get('@query.all').should('have.length', 1)
 
-            // Both responses are cached.
-            goHomeFromContextPage()
-            goToContextPage('de')
-            expectContextTime((time) => expect(time).to.equal(de))
+          // Both responses are cached.
+          goHome('#context-time')
+          goToContextPage('de')
+          expectTime('#context-time', (time) => expect(time).to.equal(de))
 
-            goHomeFromContextPage()
-            goToContextPage('fr')
-            expectContextTime((time) => expect(time).to.equal(fr))
-            cy.get('@query.all').should('have.length', 1)
-          })
-      })
+          goHome('#context-time')
+          goToContextPage('fr')
+          expectTime('#context-time', (time) => expect(time).to.equal(fr))
+          cy.get('@query.all').should('have.length', 1)
+        })
+    })
   })
 
   it('returns a cached response before the page is mounted', () => {
@@ -174,16 +160,14 @@ describe('The client cache', () => {
     cy.visit('/').waitForHydration()
     goToContextPage('fr')
 
-    expectContextTime()
-      .invoke('text')
-      .then((time) => {
-        goHomeFromContextPage()
-        goToContextPage('fr')
-        expectContextTime((newTime) => expect(newTime).to.equal(time))
-        // The page component doesn't await the query, so it is mounted with
-        // the status of the cache lookup.
-        cy.get('#context-mounted-status').should('have.text', 'success')
-        cy.get('@query.all').should('have.length', 1)
-      })
+    readTime('#context-time').then((time) => {
+      goHome('#context-time')
+      goToContextPage('fr')
+      expectTime('#context-time', (newTime) => expect(newTime).to.equal(time))
+      // The page component doesn't await the query, so it is mounted with
+      // the status of the cache lookup.
+      cy.get('#context-mounted-status').should('have.text', 'success')
+      cy.get('@query.all').should('have.length', 1)
+    })
   })
 })
