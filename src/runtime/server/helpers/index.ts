@@ -372,11 +372,15 @@ function throwBodyTooLarge(event: H3Event, limit: number): never {
  * Read the raw request body, refusing it if it's larger than the limit.
  *
  * 0, false and undefined disable the limit.
+ *
+ * The bytes are a Buffer with h3 v1, but a plain Uint8Array with the h3 v1
+ * compatibility layer of Nuxt on Nitro v3. Callers must not rely on Buffer
+ * methods.
  */
 export async function readLimitedBody(
   event: H3Event,
   limit: number | false | undefined,
-): Promise<Buffer | undefined> {
+): Promise<Uint8Array | undefined> {
   if (!limit) {
     return readRawBody(event, false)
   }
@@ -463,7 +467,10 @@ export async function readJsonBody(
     )
   }
 
-  const text = (await readLimitedBody(event, limit))?.toString('utf8')
+  // Not Buffer.toString(): on a plain Uint8Array it returns the bytes as a
+  // comma separated list of numbers ("123,34,..."), which is no JSON.
+  const bytes = await readLimitedBody(event, limit)
+  const text = bytes ? new TextDecoder().decode(bytes) : undefined
   if (!text) {
     return undefined
   }
