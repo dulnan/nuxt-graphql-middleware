@@ -31,6 +31,9 @@ In both composables the cache key is automatically derived from:
 - (if available) the client context built in
   [client options](/configuration/client-options)
 
+The `graphqlCaching.client` option has no effect if the client cache is
+disabled.
+
 ### useAsyncGraphqlQuery
 
 To opt-in to client side caching, set `client: true` on the `graphqlCaching`
@@ -43,6 +46,66 @@ const { data } = await useAsyncGraphqlQuery('users', null, {
   },
 })
 ```
+
+A cached response is returned right away, without a `pending` status. It is only
+returned for the same request: if the variables or the client context differ,
+the query is performed again.
+
+If using SSR, the responses from the payload are stored in the cache during
+hydration, for the request that the server made. When navigating back to the
+page, the composable returns them from the cache, as long as they are still in
+it.
+
+The data of a cached response depends on the `transform` and `pick` options:
+
+- For a response that was fetched in the browser, the `transform` of the call
+  runs on the cached response right away, during the `useAsyncGraphqlQuery()`
+  call. Define what the `transform` uses before the call.
+- A response from the payload is only returned to the call that made it: the
+  same `useAsyncGraphqlQuery()` in your code, with the same `transform` and
+  `pick`.
+
+Treat the `data` of a cached response as read-only. Without a `transform`, or
+with one that returns part of the response, it's the cached object, which all
+calls with the same request share.
+
+Values that a `transform` reads from elsewhere, such as props, are not part of
+the cache key, just as they are not part of the key of Nuxt's `useAsyncData`. On
+one page, Nuxt already shares the data of two calls with the same query and
+variables. On a later visit, the cache returns the response from the payload,
+which the `transform` made with the values of the first visit. Pass such values
+as variables, or apply them in a `computed`:
+
+```typescript
+const props = defineProps<{ limit: number }>()
+
+const { data } = await useAsyncGraphqlQuery('articles', null, {
+  transform: (v) => v.data.articles,
+  graphqlCaching: {
+    client: true,
+  },
+})
+
+const articles = computed(() => data.value?.slice(0, props.limit))
+```
+
+With Nuxt's default `experimental.granularCachedData`, calling `refresh()` skips
+the cache and performs the query again. With the option turned off, it returns
+the cached response.
+
+Some cases don't use the cache right away:
+
+- With an `async` transform or Nuxt's `middleware` option, a response that was
+  fetched in the browser goes through its cached request: no request is made,
+  but the status is `pending` for a moment.
+- A trigger of the `watch` option also goes through the cached request. A
+  response from the SSR payload has none, so the query is performed again.
+- Like in Nuxt, a component with delayed hydration (such as
+  `hydrate-on-visible`) performs the query when it hydrates. The payload is only
+  used while the page hydrates.
+
+Declare a `transform` that returns a promise as `async`. Otherwise it runs twice
+on the first cache hit of its call.
 
 ### useGraphqlQuery
 
@@ -59,9 +122,6 @@ const data = await useGraphqlQuery('users', null, {
 
 Now, the result of the `users` query is stored in memory and any subsequent call
 will resolve the cached response.
-
-In addition, if using SSR, the composable will return the response from the
-payload, even when navigating back and forth between a SSR and SPA page.
 
 ## Cache Key
 
@@ -81,6 +141,11 @@ language. To prevent this, you have to vary the cache key, by either:
   in the composable options or setting global `fetchOptions` via
   `useGraphqlState()`)
 
+The server and the browser must build the same fetch params, including the
+global ones from `useGraphqlState()`: the browser stores a response from the SSR
+payload for the request that the server made. If they differ, the first revisit
+of each query performs it again.
+
 ## Purging the cache
 
 The composable creates the cache instance as a property on `NuxtApp`. This
@@ -96,6 +161,9 @@ if (app.$graphqlCache) {
   app.$graphqlCache.purge()
 }
 ```
+
+This also removes the responses stored from the SSR payload, so the composables
+perform the queries again.
 
 ## Disable caching
 
