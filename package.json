@@ -145,7 +145,7 @@
     "@nuxtjs/mcp-toolkit": "^0.24.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/micromatch": "^4.0.10",
-    "cypress": "^16.2.1",
+    "cypress": "^16.4.0",
     "cypress-wait-until": "^3.0.2",
     "eslint": "^10.13.0",
     "eslint-config-prettier": "^10.1.8",
@@ -184,6 +184,6 @@
     "esbuild@0.21.5": true,
     "fsevents@2.3.3": true,
     "unrs-resolver@1.12.2": true,
-    "cypress@16.2.1": true
+    "cypress@16.4.0": true
   }
 }
