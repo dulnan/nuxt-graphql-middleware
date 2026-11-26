@@ -1,6 +1,6 @@
 import type { QueryObject } from 'ufo'
 import type { H3Event } from 'h3'
-import type { FetchOptions } from 'ofetch'
+import type { FetchOptions, FetchResponse, FetchError } from 'ofetch'
 import type {
   GraphqlMiddlewareRequestContext,
   GraphqlMiddlewareRuntimeConfig,
@@ -302,4 +302,227 @@ export function dropPrototypeKeys(key: string, value: unknown) {
     return undefined
   }
   return value
+}
+
+/**
+ * The functions of the server API that the helpers below call: h3 v1 on
+ * Nitro v2 and nuxt/server on other servers.
+ */
+export type ServerApi<E> = {
+  createError: (input: {
+    statusCode: number
+    statusMessage: string
+    data?: unknown
+  }) => Error
+  isError: (error: unknown) => boolean
+  getRequestHeader: (event: E, name: string) => string | undefined
+  readLimitedBody: (
+    event: E,
+    limit: number | false | undefined,
+  ) => Promise<Uint8Array | undefined>
+  isClientAborted: (event: E) => boolean
+}
+
+/**
+ * Create the helpers that use the server API.
+ *
+ * The server options are typed with the h3 v1 event, so the event is passed to
+ * them as one.
+ */
+export function createHelpers<E>(api: ServerApi<E>) {
+  function throwError(statusMessage: string, statusCode = 400): never {
+    throw api.createError({
+      statusCode,
+      statusMessage,
+    })
+  }
+
+  function getMediaType(event: E): string {
+    const contentType = api.getRequestHeader(event, 'content-type') || ''
+    return contentType.split(';')[0]!.trim().toLowerCase()
+  }
+
+  /**
+   * Read the JSON object from the request body.
+   *
+   * Only requests with the "application/json" content type are accepted. Forms
+   * and text can be sent by browsers from other origins without a CORS
+   * preflight, JSON only after one, which the middleware doesn't answer.
+   */
+  async function readJsonBody(
+    event: E,
+    limit: number | false | undefined,
+  ): Promise<Record<string, any> | undefined> {
+    if (getMediaType(event) !== 'application/json') {
+      return throwError(
+        'The request body must use the "application/json" content type.',
+        415,
+      )
+    }
+
+    // Not Buffer.toString(): on a plain Uint8Array it returns the bytes as a
+    // comma separated list of numbers ("123,34,..."), which is no JSON.
+    const bytes = await api.readLimitedBody(event, limit)
+    const text = bytes ? new TextDecoder().decode(bytes) : undefined
+    if (!text) {
+      return undefined
+    }
+
+    let body: unknown
+    try {
+      body = JSON.parse(text, dropPrototypeKeys)
+    } catch {
+      return throwError('Invalid JSON body.')
+    }
+
+    if (body === null) {
+      return undefined
+    } else if (typeof body !== 'object' || Array.isArray(body)) {
+      return throwError('The request body must be a JSON object.')
+    }
+
+    return body as Record<string, any>
+  }
+
+  /**
+   * Read the multipart form data from the request body.
+   */
+  async function readMultipartBody(
+    event: E,
+    limit: number | false | undefined,
+  ): Promise<FormData> {
+    if (getMediaType(event) !== 'multipart/form-data') {
+      return throwError('Failed to read multi part data.')
+    }
+
+    const body = await api.readLimitedBody(event, limit)
+
+    try {
+      // Uses the same parser as readFormData() from h3. It needs a fraction of
+      // the memory of readMultipartFormData(), which copies every byte into an
+      // array.
+      return await new Response(body as Uint8Array<ArrayBuffer> | undefined, {
+        headers: {
+          'content-type': api.getRequestHeader(event, 'content-type')!,
+        },
+      }).formData()
+    } catch {
+      return throwError('Failed to read multi part data.')
+    }
+  }
+
+  /**
+   * Handle GraphQL server response.
+   */
+  function onServerResponse(
+    serverOptions: GraphqlMiddlewareServerOptions<any, any>,
+    event: E,
+    response: FetchResponse<any>,
+    operation: string | null,
+    operationName: string | null,
+    context: GraphqlMiddlewareRequestContext<any> | null,
+  ) {
+    if (serverOptions.onServerResponse) {
+      return serverOptions.onServerResponse(
+        event as unknown as H3Event,
+        response,
+        operation,
+        operationName,
+        context,
+      )
+    }
+
+    const data = response._data
+    const prototype =
+      data && typeof data === 'object' ? Object.getPrototypeOf(data) : undefined
+    if (prototype === Object.prototype || prototype === null) {
+      return data
+    }
+
+    // Only GraphQL responses (JSON objects) are passed on. h3 would send other
+    // responses, such as text or an error page from a proxy, as HTML.
+    const details = `Invalid response from the GraphQL server for ${operation} "${operationName}" (content type: ${response.headers?.get('content-type') || 'none'}).`
+    if (import.meta.dev) {
+      throw api.createError({ statusCode: 502, statusMessage: details })
+    }
+    console.error('[nuxt-graphql-middleware] ' + details)
+    throw api.createError({
+      statusCode: 502,
+      statusMessage: 'Invalid response from the GraphQL server.',
+    })
+  }
+
+  /**
+   * Handle GraphQL server errors.
+   */
+  function onServerError(
+    serverOptions: GraphqlMiddlewareServerOptions<any, any>,
+    event: E,
+    error: FetchError,
+    operation: string | null,
+    operationName: string | null,
+    context: GraphqlMiddlewareRequestContext<any> | null,
+  ) {
+    if (serverOptions.onServerError) {
+      return serverOptions.onServerError(
+        event as unknown as H3Event,
+        error,
+        operation,
+        operationName,
+        context,
+      )
+    }
+
+    // Errors thrown by onServerResponse, such as the 502 for responses that
+    // aren't JSON, already have a status code, so they are passed on as they are.
+    if (api.isError(error)) {
+      throw error
+    }
+
+    // Nobody receives the response, so there is nothing to log.
+    if (api.isClientAborted(event)) {
+      throw api.createError({
+        statusCode: 499,
+        statusMessage: 'The client closed the connection.',
+      })
+    }
+
+    const message = error && 'message' in error ? error.message : ''
+    const data = error?.response?._data
+    const isTimeout = isTimeoutError(error)
+    const statusCode = isTimeout ? 504 : 500
+
+    if (import.meta.dev) {
+      throw api.createError({
+        statusCode,
+        statusMessage: "Couldn't execute GraphQL query: " + message,
+        data,
+      })
+    }
+
+    // The message contains the URL of the GraphQL server and the response may
+    // contain anything, for example an error page. So only the GraphQL errors
+    // are sent to the client and the message is logged instead.
+    console.error(
+      `[nuxt-graphql-middleware] Couldn't execute GraphQL ${operation} "${operationName}": ${message}`,
+    )
+    throw api.createError({
+      statusCode,
+      statusMessage: isTimeout
+        ? "The GraphQL server didn't respond in time."
+        : "Couldn't execute GraphQL query.",
+      data:
+        data && typeof data === 'object' && Array.isArray(data.errors)
+          ? { errors: data.errors }
+          : undefined,
+    })
+  }
+
+  return {
+    throwError,
+    readJsonBody,
+    readMultipartBody,
+    onServerResponse,
+    onServerError,
+  }
 }

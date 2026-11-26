@@ -6,17 +6,12 @@ import {
   readRawBody,
   setResponseHeader,
 } from 'h3'
-import type { FetchResponse, FetchError } from 'ofetch'
-import type {
-  GraphqlMiddlewareRequestContext,
-  GraphqlMiddlewareServerOptions,
-} from './../../types'
 import { SSR_ABORT_SIGNAL_KEY } from './../../settings'
 import {
   getConnectionAbortSignal,
   isConnectionAborted,
 } from './../../helpers/abort'
-import { dropPrototypeKeys, isTimeoutError } from './shared'
+import { createHelpers } from './shared'
 
 export * from './shared'
 
@@ -60,18 +55,6 @@ export function isClientAborted(event: H3Event | null | undefined): boolean {
     return false
   }
   return getSsrAbortSignal(event)?.aborted ?? isConnectionAborted(event)
-}
-
-export function throwError(statusMessage: string, statusCode = 400): never {
-  throw createError({
-    statusCode,
-    statusMessage,
-  })
-}
-
-function getMediaType(event: H3Event): string {
-  const contentType = getRequestHeader(event, 'content-type') || ''
-  return contentType.split(';')[0]!.trim().toLowerCase()
 }
 
 /**
@@ -153,176 +136,16 @@ export async function readLimitedBody(
   }
 }
 
-/**
- * Read the JSON object from the request body.
- *
- * Only requests with the "application/json" content type are accepted. Forms
- * and text can be sent by browsers from other origins without a CORS
- * preflight, JSON only after one, which the middleware doesn't answer.
- */
-export async function readJsonBody(
-  event: H3Event,
-  limit: number | false | undefined,
-): Promise<Record<string, any> | undefined> {
-  if (getMediaType(event) !== 'application/json') {
-    return throwError(
-      'The request body must use the "application/json" content type.',
-      415,
-    )
-  }
-
-  // Not Buffer.toString(): on a plain Uint8Array it returns the bytes as a
-  // comma separated list of numbers ("123,34,..."), which is no JSON.
-  const bytes = await readLimitedBody(event, limit)
-  const text = bytes ? new TextDecoder().decode(bytes) : undefined
-  if (!text) {
-    return undefined
-  }
-
-  let body: unknown
-  try {
-    body = JSON.parse(text, dropPrototypeKeys)
-  } catch {
-    return throwError('Invalid JSON body.')
-  }
-
-  if (body === null) {
-    return undefined
-  } else if (typeof body !== 'object' || Array.isArray(body)) {
-    return throwError('The request body must be a JSON object.')
-  }
-
-  return body as Record<string, any>
-}
-
-/**
- * Read the multipart form data from the request body.
- */
-export async function readMultipartBody(
-  event: H3Event,
-  limit: number | false | undefined,
-): Promise<FormData> {
-  if (getMediaType(event) !== 'multipart/form-data') {
-    return throwError('Failed to read multi part data.')
-  }
-
-  const body = await readLimitedBody(event, limit)
-
-  try {
-    // Uses the same parser as readFormData() from h3. It needs a fraction of
-    // the memory of readMultipartFormData(), which copies every byte into an
-    // array.
-    return await new Response(body as Uint8Array<ArrayBuffer> | undefined, {
-      headers: { 'content-type': getRequestHeader(event, 'content-type')! },
-    }).formData()
-  } catch {
-    return throwError('Failed to read multi part data.')
-  }
-}
-
-/**
- * Handle GraphQL server response.
- */
-export function onServerResponse(
-  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
-  event: H3Event,
-  response: FetchResponse<any>,
-  operation: string | null,
-  operationName: string | null,
-  context: GraphqlMiddlewareRequestContext<any> | null,
-) {
-  if (serverOptions.onServerResponse) {
-    return serverOptions.onServerResponse(
-      event,
-      response,
-      operation,
-      operationName,
-      context,
-    )
-  }
-
-  const data = response._data
-  const prototype =
-    data && typeof data === 'object' ? Object.getPrototypeOf(data) : undefined
-  if (prototype === Object.prototype || prototype === null) {
-    return data
-  }
-
-  // Only GraphQL responses (JSON objects) are passed on. h3 would send other
-  // responses, such as text or an error page from a proxy, as HTML.
-  const details = `Invalid response from the GraphQL server for ${operation} "${operationName}" (content type: ${response.headers?.get('content-type') || 'none'}).`
-  if (import.meta.dev) {
-    throw createError({ statusCode: 502, statusMessage: details })
-  }
-  console.error('[nuxt-graphql-middleware] ' + details)
-  throw createError({
-    statusCode: 502,
-    statusMessage: 'Invalid response from the GraphQL server.',
-  })
-}
-
-/**
- * Handle GraphQL server errors.
- */
-export function onServerError(
-  serverOptions: GraphqlMiddlewareServerOptions<any, any>,
-  event: H3Event,
-  error: FetchError,
-  operation: string | null,
-  operationName: string | null,
-  context: GraphqlMiddlewareRequestContext<any> | null,
-) {
-  if (serverOptions.onServerError) {
-    return serverOptions.onServerError(
-      event,
-      error,
-      operation,
-      operationName,
-      context,
-    )
-  }
-
-  // Errors thrown by onServerResponse, such as the 502 for responses that
-  // aren't JSON, already have a status code, so they are passed on as they are.
-  if (isError(error)) {
-    throw error
-  }
-
-  // Nobody receives the response, so there is nothing to log.
-  if (isClientAborted(event)) {
-    throw createError({
-      statusCode: 499,
-      statusMessage: 'The client closed the connection.',
-    })
-  }
-
-  const message = error && 'message' in error ? error.message : ''
-  const data = error?.response?._data
-  const isTimeout = isTimeoutError(error)
-  const statusCode = isTimeout ? 504 : 500
-
-  if (import.meta.dev) {
-    throw createError({
-      statusCode,
-      statusMessage: "Couldn't execute GraphQL query: " + message,
-      data,
-    })
-  }
-
-  // The message contains the URL of the GraphQL server and the response may
-  // contain anything, for example an error page. So only the GraphQL errors
-  // are sent to the client and the message is logged instead.
-  console.error(
-    `[nuxt-graphql-middleware] Couldn't execute GraphQL ${operation} "${operationName}": ${message}`,
-  )
-  throw createError({
-    statusCode,
-    statusMessage: isTimeout
-      ? "The GraphQL server didn't respond in time."
-      : "Couldn't execute GraphQL query.",
-    data:
-      data && typeof data === 'object' && Array.isArray(data.errors)
-        ? { errors: data.errors }
-        : undefined,
-  })
-}
+export const {
+  throwError,
+  readJsonBody,
+  readMultipartBody,
+  onServerResponse,
+  onServerError,
+} = createHelpers<H3Event>({
+  createError,
+  isError,
+  getRequestHeader,
+  readLimitedBody,
+  isClientAborted,
+})

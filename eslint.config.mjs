@@ -6,6 +6,7 @@ import importPlugin from 'eslint-plugin-import-x'
 
 const nuxtProvidedPackages = [
   // Nuxt ecosystem.
+  'nuxt',
   'vue',
   'h3',
   'nitropack',

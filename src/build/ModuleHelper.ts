@@ -479,7 +479,14 @@ ${content.trim()}`
 
   public addServerHandler(name: string, path: string, method: RouterMethod) {
     addServerHandler({
-      handler: this.resolvers.module.resolve('./runtime/server/api/' + name),
+      // Nuxt runs the nitro2 handler on Nitro v2 and the portable one, which
+      // only imports from nuxt/server, on Nitro v3.
+      handler: {
+        nitro2: this.resolvers.module.resolve('./runtime/server/api/' + name),
+        nuxt: this.resolvers.module.resolve(
+          './runtime/server/portable/' + name,
+        ),
+      },
       route: this.options.serverApiPrefix + path,
       method,
     })
