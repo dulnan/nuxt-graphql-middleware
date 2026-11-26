@@ -21,6 +21,10 @@ export default defineConfig({
         __dirname,
         './.nuxt/nuxt-graphql-middleware/operation-variables.js',
       ),
+      '#nuxt-graphql-middleware/upload-mutations': path.resolve(
+        __dirname,
+        './.nuxt/nuxt-graphql-middleware/upload-mutations.js',
+      ),
       'graphql/language/printer': 'graphql/language/printer.js',
       'graphql/language': 'graphql/language/index.js',
       graphql: 'graphql/index.js',
