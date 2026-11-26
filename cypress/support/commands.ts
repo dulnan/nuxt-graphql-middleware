@@ -6,6 +6,8 @@ Cypress.Commands.add('initState', () => {
 
 Cypress.Commands.add('waitForHydration', () => {
   return cy.waitUntil(() =>
-    cy.window().then((win) => (win as any).useNuxtApp().isHydrating === false),
+    cy
+      .window()
+      .then((win) => (win as any).useNuxtApp?.().isHydrating === false),
   )
 })
